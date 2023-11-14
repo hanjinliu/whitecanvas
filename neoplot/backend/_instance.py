@@ -2,22 +2,22 @@ _INSTALLED_MODULES = {}
 
 
 class Backend:
-    def __init__(self, name: str | None = None) -> None:
+    def __init__(self, name: "Backend | str | None" = None) -> None:
         if name is None:
             name = "pyqtgraph"
+        elif isinstance(name, Backend):
+            name = name._name
         if name in _INSTALLED_MODULES:
             self._mod = _INSTALLED_MODULES[name]
         else:
             from importlib import import_module
-            
-            _INSTALLED_MODULES[name] = self._mod = import_module(
-                f"neoplot.backend.{name}"
-            )
+
+            _INSTALLED_MODULES[name] = self._mod = import_module(f"neoplot.backend.{name}")
         self._name = name
-    
+
     def __repr__(self) -> str:
         return f"<Backend {self._name!r}>"
-    
+
     def get(self, attr: str):
         """Get an object from the current backend."""
         out = getattr(self._mod, attr, None)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
+
 class _strEnum(Enum):
     def __eq__(self, other):
         if isinstance(other, str):
@@ -13,14 +14,19 @@ class _strEnum(Enum):
                 return False
         return super().__eq__(other)
 
-class LineStyle(Enum):
+    def __hash__(self):
+        return hash(self.value)
+
+
+class LineStyle(_strEnum):
     SOLID = "-"
     DASH = "--"
     DASH_DOT = "-."
     DOT = ":"
-    
-    
-class Symbol(Enum):
+    NONE = " "
+
+
+class Symbol(_strEnum):
     CIRCLE = "o"
     SQUARE = "s"
     TRIANGLE_UP = "^"
@@ -32,4 +38,6 @@ class Symbol(Enum):
     PLUS = "+"
     STAR = "*"
     DOT = "."
+    VBAR = "|"
+    HBAR = "_"
     NONE = " "

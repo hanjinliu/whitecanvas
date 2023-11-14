@@ -1,153 +1,162 @@
 from __future__ import annotations
-from typing import Generic, overload, TypeVar
+from typing import Any, Generic, overload, TypeVar
 from abc import ABC, abstractmethod
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from neoplot import protocols
 from neoplot.layers import Layer, Line, Scatter
-from neoplot.types import LineDict, MarkerDict
-from neoplot.canvas import canvas_namespace as _ns
+from neoplot.types import LineStyle, Symbol
+from neoplot.canvas import canvas_namespace as _ns, layerlist as _ll
+from neoplot.utils.normalize import normalize_xy
 from neoplot.backend import Backend
+
 
 _T = TypeVar("_T", bound=protocols.HasVisibility)
 
+
 class CanvasBase(ABC, Generic[_T]):
+    """Base class for any canvas object."""
+
     title = _ns.TitleNamespace()
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
+    layers = _ll.LayerList()
 
     def __init__(self, backend: str | None = None):
         self._backend_installer = Backend(backend)
         self._backend = self._create_backend()
-        self.layers = []
-    
+
+        # connect events
+        self.layers.events.inserted.connect(self._cb_inserted)
+        self.layers.events.removed.connect(self._cb_removed)
+        self.layers.events.reordered.connect(self._cb_reordered)
+
     @abstractmethod
     def _create_backend(self) -> _T:
         """Create a backend object."""
-    
+
     @abstractmethod
     def _canvas(self) -> protocols.CanvasProtocol:
         """Return the canvas object."""
-    
+
     @property
     def native(self) -> _T:
+        """The native backend object."""
         return self._backend
 
     def show(self):
+        """Show the canvas."""
         self._backend._plt_set_visible(True)
-    
-    def close(self):
+
+    def hide(self):
+        """Hide the canvas."""
         self._backend._plt_set_visible(False)
-    
+
     @overload
     def add_line(
-        self,
-        ydata: ArrayLike,
-        *,
-        name: str | None = None,
-        line: LineDict = {},
-        marker: MarkerDict = {},
-        **kwargs,
-    ) -> Line:
+        self, ydata: ArrayLike, *, name: str | None = None,
+        color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
+    ) -> Line:  # fmt: skip
         ...
 
     @overload
     def add_line(
-        self,
-        xdata: ArrayLike,
-        ydata: ArrayLike,
-        *,
-        name: str | None = None,
-        line: LineDict = {},
-        marker: MarkerDict = {},
-        **kwargs,
-    ) -> Line:
+        self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
+        color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
+    ) -> Line:  # fmt: skip
         ...
-    
 
-    def add_line(
-        self,
-        *args,
-        name=None,
-        line={},
-        marker={},
-        **kwargs,
-    ):
-        xdata, ydata = _normalize_xy(*args)
+    def add_line(self, *args, name=None, color="blue", width=1.0, style=LineStyle.SOLID, antialias=True):
+        """
+        Add a Line layer to the canvas.
+
+        >>> canvas.add_line(y, ...)
+        >>> canvas.add_line(x, y, ...)
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+
+        Returns
+        -------
+        Line
+            The line layer.
+        """
+        xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(Line, name)
-        # TODO: extract info from kwargs
         layer = Line(
-            xdata,
-            ydata,
-            name=name, 
-            line=line,
-            marker=marker,
-            backend=self._backend_installer,
-        )
-        self._canvas()._plt_insert_layer(len(self.layers), layer._backend)
+            xdata, ydata, name=name, color=color, width=width, style=style,
+            antialias=antialias, backend=self._backend_installer,
+        )  # fmt: skip
         self.layers.append(layer)
         return layer
-    
+
+    @overload
+    def add_scatter(
+        ydata: ArrayLike, *,
+        name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
+        size: float = 6, face_color: Any = "blue", edge_color: Any = "black",
+        edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
+    ):  # fmt: skip
+        ...
+
+    @overload
+    def add_scatter(
+        xdata: ArrayLike, ydata: ArrayLike, *,
+        name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
+        size: float = 6, face_color: Any = "blue", edge_color: Any = "black",
+        edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
+    ):  # fmt: skip
+        ...
+
     def add_scatter(
         self,
         *args,
-        name: str | None = None,
-        marker: MarkerDict = {},
-        **kwargs,
+        name=None,
+        symbol=Symbol.CIRCLE,
+        size=6,
+        face_color="blue",
+        edge_color="black",
+        edge_width=0,
+        edge_style=LineStyle.SOLID,
     ):
-        xdata, ydata = _normalize_xy(*args)
+        xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(Scatter, name)
         layer = Scatter(
-            xdata,
-            ydata,
-            name=name, 
-            marker=marker,
+            xdata, ydata, name=name, symbol=symbol, size=size, face_color=face_color,
+            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
             backend=self._backend_installer,
-        )
-        self._canvas()._plt_insert_layer(len(self.layers), layer._backend)
+        )  # fmt: skip
         self.layers.append(layer)
         return layer
-    
-    def add_lines(
-        self,
-        *args,
-        name: str | None = None,
-        line: LineDict = {},
-        marker: MarkerDict = {},
-        **kwargs,
-    ):
-        if len(args) == 1:
-            ydatas = [_as_array_1d(args[0])]
-            xdata = np.arange(ydatas[0].size)
-        else :
-            xdata = _as_array_1d(args[0])
-            ydatas = [_as_array_1d(a) for a in args[1:]]
-        layers = []
-        for ydata in ydatas:
-            name = self._coerce_name(Line, name)
-            layer = Line(
-                xdata,
-                ydata,
-                name=name,
-                line=line,
-                marker=marker,
-                backend=self._backend_installer,
-            )
-            self._canvas()._plt_insert_layer(len(self.layers), layer._backend)
-            self.layers.append(layer)
-            layers.append(layer)
-        return layers
 
     def _coerce_name(self, layer_type: type[Layer], name: str | None) -> str:
         if name is None:
             name = layer_type.__name__
         basename = name
         i = 0
-        while name in self.layers:
+        _exists = {layer.name for layer in self.layers}
+        while name in _exists:
             name = f"{basename}-{i}"
             i += 1
         return name
+
+    def _cb_inserted(self, idx: int, layer: Layer):
+        if idx < 0:
+            idx = len(self.layers) + idx
+        self._canvas()._plt_insert_layer(idx, layer._backend)
+
+    def _cb_removed(self, idx: int, layer: Layer):
+        self._canvas()._plt_remove_layer(layer._backend)
+
+    def _cb_reordered(self):
+        for i, layer in enumerate(self.layers):
+            layer._backend._plt_set_zorder(i)
+
 
 def _as_array_1d(x: ArrayLike) -> NDArray[np.number]:
     x = np.asarray(x)
@@ -156,17 +165,3 @@ def _as_array_1d(x: ArrayLike) -> NDArray[np.number]:
     if x.dtype.kind not in "iuf":
         raise ValueError(f"Input {x!r} did not return a numeric array")
     return x
-
-def _normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
-    if len(args) == 1:
-        ydata = _as_array_1d(args[0])
-        xdata = np.arange(ydata.size)
-    elif len(args) == 2:
-        xdata = _as_array_1d(args[0])
-        ydata = _as_array_1d(args[1])
-    else:
-        raise TypeError(
-            f"Expected 1 or 2 positional arguments, got {len(args)}"
-        )
-    return xdata, ydata
-    

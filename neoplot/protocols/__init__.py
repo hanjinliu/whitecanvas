@@ -1,12 +1,10 @@
+from typing import TypeVar, Callable
 from .layer_protocols import (
-    LineProtocol, 
-    BarProtocol,
-    RangesProtocol,
-    ScatterProtocol,
     BaseProtocol,
-    HasLine,
-    HasRanges,
-    HasSymbol,
+    LineProtocol,
+    MarkersProtocol,
+    BarProtocol,
+    RangeDataProtocol,
     HasText,
 )
 from .canvas_protocol import (
@@ -18,18 +16,27 @@ from .canvas_protocol import (
 )
 
 __all__ = [
-    "LineProtocol",
-    "BarProtocol",
-    "RangesProtocol",
-    "ScatterProtocol",
     "BaseProtocol",
-    "HasLine",
-    "HasRanges",
-    "HasSymbol",
+    "LineProtocol",
+    "MarkersProtocol",
+    "BarProtocol",
+    "RangeDataProtocol",
     "HasText",
     "CanvasProtocol",
     "MainWindowProtocol",
     "HasVisibility",
     "TextLabelProtocol",
-    "AxisProtocol,"
+    "AxisProtocol",
 ]
+
+_C = TypeVar("_C")
+
+
+def check_protocol(p: "type[BaseProtocol]") -> Callable[[_C], _C]:
+    def _inner(c):
+        if not isinstance(c, p):
+            missing = set(filter(lambda x: x.startswith("_plt"), dir(p))) - set(dir(c))
+            raise TypeError(f"{c!r} does not implement {p.__name__}. \n" f"Missing methods: {missing!r}")
+        return c
+
+    return _inner

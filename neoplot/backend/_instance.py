@@ -18,6 +18,10 @@ class Backend:
     def __repr__(self) -> str:
         return f"<Backend {self._name!r}>"
 
+    def has(self, attr: str) -> bool:
+        """Check if the current backend has an object."""
+        return hasattr(self._mod, attr)
+
     def get(self, attr: str):
         """Get an object from the current backend."""
         out = getattr(self._mod, attr, None)

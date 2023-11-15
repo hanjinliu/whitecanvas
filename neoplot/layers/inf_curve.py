@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
+from typing_extensions import ParamSpec, Concatenate
 
 import numpy as np
 
@@ -15,9 +16,9 @@ if TYPE_CHECKING:
 class InfCurve(Line):
     def __init__(
         self,
-        model: Callable[[np.ndarray], np.ndarray],
+        model: Callable[[Concatenate[np.ndarray, ...]], np.ndarray],
+        params: dict[str, Any] = {},
         bounds: tuple[float, float] = (-np.inf, np.inf),
-        *,
         name: str | None = None,
         color=None,
         width: float = 1,
@@ -30,13 +31,15 @@ class InfCurve(Line):
             _lower = 0
         if not np.isfinite(_upper):
             _upper = 1
+        params = params.copy()
         xdata = np.array([_lower, _upper])
-        ydata = model(xdata)
+        ydata = model(xdata, **params)
         super().__init__(
             xdata, ydata, name=name, color=color, width=width, style=style, antialias=antialias, backend=backend
         )
         self._bounds = bounds
         self._model = model
+        self._params = params
         self._linspace_num = 256
 
     @property
@@ -46,6 +49,13 @@ class InfCurve(Line):
     def set_data(self, xdata=None, ydata=None) -> NoReturn:
         raise NotImplementedError("Cannot set data to an InfCurve layer.")
 
+    def set_params(self, **params) -> NoReturn:
+        xdata, _ = self._backend._plt_get_data()
+        params = params.copy()
+        ydata = self._model(xdata, **self._params)
+        self._backend._plt_set_data(xdata, ydata)
+        self._params = params
+
     @property
     def model(self) -> Callable[[np.ndarray], np.ndarray]:
         """The model function of the layer."""
@@ -53,6 +63,7 @@ class InfCurve(Line):
 
     def _connect_canvas(self, canvas: Canvas):
         canvas.x.lim_changed.connect(self._recalculate_line)
+        self._recalculate_line(canvas.x.lim)
 
     def _disconnect_canvas(self, canvas: Canvas):
         canvas.x.lim_changed.disconnect(self._recalculate_line)
@@ -66,5 +77,5 @@ class InfCurve(Line):
             xdata, ydata = np.array([]), np.array([])
         else:
             xdata = np.linspace(x0, x1, self._linspace_num)
-            ydata = self._model(xdata)
+            ydata = self._model(xdata, **self._params)
         self._backend._plt_set_data(xdata, ydata)

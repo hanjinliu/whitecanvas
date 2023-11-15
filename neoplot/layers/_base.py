@@ -54,7 +54,11 @@ class Layer(Generic[_P]):
 
     def _create_backend(self, backend: Backend, *args) -> _P:
         """Create a backend object."""
-        return backend.get(type(self).__name__)(*args)
+        for mro in reversed(type(self).__mro__):
+            name = mro.__name__
+            if issubclass(mro, Layer) and mro is not Layer and backend.has(name):
+                return backend.get(name)(*args)
+        raise TypeError(f"Cannot create a backend for {type(self).__name__}")
 
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"

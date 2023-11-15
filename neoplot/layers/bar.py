@@ -18,7 +18,43 @@ def _to_backend_arrays(xdata, height, width: float):
     return x0, x1, y0, y1
 
 
-class Bar(Layer[BarProtocol]):
+class BarBase(Layer[BarProtocol]):
+    @property
+    def face_color(self):
+        """Face color of the marker symbol."""
+        return self._backend._plt_get_face_color()
+
+    @face_color.setter
+    def face_color(self, color):
+        self._backend._plt_set_face_color(norm_color(color))
+
+    @property
+    def edge_color(self):
+        """Edge color of the marker symbol."""
+        return self._backend._plt_get_edge_color()
+
+    @edge_color.setter
+    def edge_color(self, color):
+        self._backend._plt_set_edge_color(norm_color(color))
+
+    @property
+    def edge_width(self) -> float:
+        return self._backend._plt_get_edge_width()
+
+    @edge_width.setter
+    def edge_width(self, width: float):
+        self._backend._plt_set_edge_width(width)
+
+    @property
+    def edge_style(self) -> LineStyle:
+        return self._backend._plt_get_edge_style()
+
+    @edge_style.setter
+    def edge_style(self, style: str | LineStyle):
+        self._backend._plt_set_edge_style(LineStyle(style))
+
+
+class Bar(BarBase):
     def __init__(
         self,
         xdata: ArrayLike,
@@ -61,40 +97,6 @@ class Bar(Layer[BarProtocol]):
             h = as_array_1d(height)
         x0, x1, y0, y1 = _to_backend_arrays(xc, h, self.width)
         self._backend._plt_set_data(x0, x1, y0, y1)
-
-    @property
-    def face_color(self):
-        """Face color of the marker symbol."""
-        return self._backend._plt_get_face_color()
-
-    @face_color.setter
-    def face_color(self, color):
-        self._backend._plt_set_face_color(norm_color(color))
-
-    @property
-    def edge_color(self):
-        """Edge color of the marker symbol."""
-        return self._backend._plt_get_edge_color()
-
-    @edge_color.setter
-    def edge_color(self, color):
-        self._backend._plt_set_edge_color(norm_color(color))
-
-    @property
-    def edge_width(self) -> float:
-        return self._backend._plt_get_edge_width()
-
-    @edge_width.setter
-    def edge_width(self, width: float):
-        self._backend._plt_set_edge_width(width)
-
-    @property
-    def edge_style(self) -> LineStyle:
-        return self._backend._plt_get_edge_style()
-
-    @edge_style.setter
-    def edge_style(self, style: str | LineStyle):
-        self._backend._plt_set_edge_style(LineStyle(style))
 
     @property
     def width(self) -> float:

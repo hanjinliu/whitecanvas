@@ -12,7 +12,7 @@ from neoplot import layers
 from neoplot.layers import Layer
 from neoplot.types import LineStyle, Symbol
 from neoplot.canvas import canvas_namespace as _ns, layerlist as _ll
-from neoplot.utils.normalize import normalize_xy
+from neoplot.utils.normalize import as_array_1d, normalize_xy
 from neoplot.backend import Backend
 
 
@@ -95,9 +95,7 @@ class CanvasBase(ABC, Generic[_T]):
     ) -> layers.Line:  # fmt: skip
         ...
 
-    def add_line(
-        self, *args, name=None, color="blue", width=1.0, style=LineStyle.SOLID, alpha: float = 1.0, antialias=True
-    ):
+    def add_line(self, *args, name=None, color="blue", width=1.0, style=LineStyle.SOLID, antialias=True):
         """
         Add a Line layer to the canvas.
 
@@ -179,14 +177,61 @@ class CanvasBase(ABC, Generic[_T]):
         )  # fmt: skip
         return self.add_layer(layer)
 
+    def add_hist(
+        self,
+        data: ArrayLike,
+        *,
+        bins: int | ArrayLike | None = None,
+        range: tuple[float, float] | None = None,
+        density: bool = False,
+        name: str | None = None,
+        face_color="blue",
+        edge_color="black",
+        edge_width=0,
+        edge_style=LineStyle.SOLID,
+    ):
+        data = as_array_1d(data)
+        name = self._coerce_name("histogram", name)
+        counts, edges = np.histogram(data, bins, density=density, range=range)
+        centers = (edges[:-1] + edges[1:]) / 2
+        width = edges[1] - edges[0]
+        layer = layers.Bar(
+            centers, counts, width=width, name=name, face_color=face_color,
+            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
+            backend=self._backend_installer,
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_infcurve(
+        self,
+        model,
+        params: dict[str, Any] = {},
+        bounds: tuple[float, float] = (-np.inf, np.inf),
+        name=None,
+        color="blue",
+        width=1.0,
+        style=LineStyle.SOLID,
+        antialias=True,
+    ):
+        name = self._coerce_name(layers.InfCurve, name)
+        layer = layers.InfCurve(
+            model, params=params, bounds=bounds, name=name, color=color,
+            width=width, style=style, antialias=antialias,
+            backend=self._backend_installer,
+        )  # fmt: skip
+        return self.add_layer(layer)
+
     def add_layer(self, layer: _L) -> _L:
         """Add a layer to the canvas."""
         self.layers.append(layer)
         return layer
 
-    def _coerce_name(self, layer_type: type[Layer], name: str | None) -> str:
+    def _coerce_name(self, layer_type: type[Layer] | str, name: str | None) -> str:
         if name is None:
-            name = layer_type.__name__
+            if isinstance(layer_type, str):
+                name = layer_type
+            else:
+                name = layer_type.__name__.lower()
         basename = name
         i = 0
         _exists = {layer.name for layer in self.layers}

@@ -41,3 +41,26 @@ class Symbol(_strEnum):
     VBAR = "|"
     HBAR = "_"
     NONE = " "
+
+
+class Modifier(_strEnum):
+    SHIFT = "shift"
+    CTRL = "ctrl"
+    ALT = "alt"
+    META = "meta"
+
+
+class MouseButton(_strEnum):
+    NONE = "none"
+    LEFT = "left"
+    MIDDLE = "middle"
+    RIGHT = "right"
+    BACK = "back"
+    FORWARD = "forward"
+
+
+class MouseEventType(_strEnum):
+    MOVE = "move"
+    CLICK = "click"
+    RELEASE = "release"
+    DOUBLE_CLICK = "double_click"

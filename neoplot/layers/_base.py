@@ -7,6 +7,7 @@ from neoplot.protocols import BaseProtocol
 from neoplot.backend import Backend
 
 _P = TypeVar("_P", bound=BaseProtocol)
+_L = TypeVar("_L", bound="Layer")
 
 
 class Layer(Generic[_P]):
@@ -33,7 +34,23 @@ class Layer(Generic[_P]):
         """Set the name of this layer."""
         self._name = str(name)
 
+    def expect(self, layer_type: _L, /) -> _L:
+        """
+        A type guard for layers.
+
+        >>> canvas.layers["scatter-layer-name"].expect(Scatter).face_color
+        """
+        if not isinstance(layer_type, type) or issubclass(layer_type, Layer):
+            raise TypeError(
+                "Argument of `expect` must be a layer class, "
+                f"got {layer_type!r} (type: {type(layer_type).__name__}))"
+            )
+        if not isinstance(self, layer_type):
+            raise TypeError(f"Expected {layer_type.__name__}, got {type(self).__name__}")
+        return self
+
     def _create_backend(self, backend: Backend, *args) -> _P:
+        """Create a backend object."""
         return backend.get(type(self).__name__)(*args)
 
     def __repr__(self):

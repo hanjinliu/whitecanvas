@@ -68,6 +68,7 @@ class Line(Layer[LineProtocol]):
 
     @property
     def antialias(self) -> bool:
+        """Whether to use antialiasing."""
         return self._backend._plt_get_antialias()
 
     @antialias.setter

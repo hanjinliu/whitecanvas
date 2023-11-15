@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+
 from neoplot import protocols
 from neoplot.layers import Layer, Line, Scatter
 from neoplot.types import LineStyle, Symbol
@@ -22,15 +23,25 @@ class CanvasBase(ABC, Generic[_T]):
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
     layers = _ll.LayerList()
+    mouse = _ns.MouseNamespace()
 
     def __init__(self, backend: str | None = None):
         self._backend_installer = Backend(backend)
         self._backend = self._create_backend()
 
-        # connect events
+        # connect layer events
         self.layers.events.inserted.connect(self._cb_inserted)
         self.layers.events.removed.connect(self._cb_removed)
         self.layers.events.reordered.connect(self._cb_reordered)
+
+        canvas = self._canvas()
+        canvas._plt_connect_xlim_changed(self.x.lim_changed.emit)
+        canvas._plt_connect_ylim_changed(self.y.lim_changed.emit)
+        canvas._plt_connect_mouse_click(self.mouse.clicked.emit)
+        canvas._plt_connect_mouse_click(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_drag(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_double_click(self.mouse.double_clicked.emit)
+        canvas._plt_connect_mouse_double_click(self.mouse.moved.emit)
 
     @abstractmethod
     def _create_backend(self) -> _T:
@@ -57,7 +68,7 @@ class CanvasBase(ABC, Generic[_T]):
     def add_line(
         self, ydata: ArrayLike, *, name: str | None = None,
         color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = True,
+        alpha: float = 1.0, antialias: bool = True,
     ) -> Line:  # fmt: skip
         ...
 
@@ -65,11 +76,13 @@ class CanvasBase(ABC, Generic[_T]):
     def add_line(
         self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
         color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = True,
+        alpha: float = 1.0, antialias: bool = True,
     ) -> Line:  # fmt: skip
         ...
 
-    def add_line(self, *args, name=None, color="blue", width=1.0, style=LineStyle.SOLID, antialias=True):
+    def add_line(
+        self, *args, name=None, color="blue", width=1.0, style=LineStyle.SOLID, alpha: float = 1.0, antialias=True
+    ):
         """
         Add a Line layer to the canvas.
 

@@ -38,9 +38,6 @@ matplotlib = [
 pyqtgraph = [
   "pyqtgraph>=0.13.3",
   "qtpy>=2.4.1",
-  "qtconsole>=5.4.4",
-  "magicgui>=0.8.0",
-  "superqt>=0.6.1",
 ]
 
 testing = [

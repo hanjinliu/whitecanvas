@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Callable, Protocol, runtime_checkable
 from .layer_protocols import BaseProtocol
+from neoplot.types import MouseEvent
 
 
 @runtime_checkable
@@ -38,6 +39,21 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
 
     def _plt_get_ylabel(self) -> TextLabelProtocol:
         """Get y label handler"""
+
+    def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
+    def _plt_connect_mouse_drag(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
+    def _plt_connect_mouse_double_click(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
+    def _plt_connect_xlim_changed(self, callback: Callable[[tuple[float, float]], None]):
+        """Connect callback to x-limits changed event"""
+
+    def _plt_connect_ylim_changed(self, callback: Callable[[tuple[float, float]], None]):
+        """Connect callback to y-limits changed event"""
 
 
 @runtime_checkable

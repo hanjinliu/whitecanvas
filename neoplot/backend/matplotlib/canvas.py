@@ -6,6 +6,7 @@ from matplotlib.backend_bases import MouseEvent as mplMouseEvent, MouseButton as
 from neoplot import protocols
 from .line import Line
 from .scatter import Scatter
+from .bar import Bar
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel
 from neoplot.types import MouseEvent, Modifier, MouseButton, MouseEventType
 
@@ -41,6 +42,9 @@ class Canvas:
             self._axes.add_line(layer)
         elif isinstance(layer, Scatter):
             self._axes.add_collection(layer)
+        elif isinstance(layer, Bar):
+            for patch in layer.patches:
+                self._axes.add_patch(patch)
         else:
             raise NotImplementedError
         self._axes.autoscale_view()  # TODO: remove this line

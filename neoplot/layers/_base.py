@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Generic, TypeVar, NamedTuple
+from typing import Generic, TypeVar, NamedTuple, TYPE_CHECKING
 
 import numpy as np
 from neoplot.protocols import BaseProtocol
 from neoplot.backend import Backend
+
+if TYPE_CHECKING:
+    from neoplot.canvas import Canvas
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
@@ -55,6 +58,12 @@ class Layer(Generic[_P]):
 
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
+
+    def _connect_canvas(self, canvas: Canvas):
+        """If needed, do something when layer is added to a canvas."""
+
+    def _disconnect_canvas(self, canvas: Canvas):
+        """If needed, do something when layer is removed from a canvas."""
 
 
 AnyLayer = Layer[BaseProtocol]

@@ -7,14 +7,14 @@ from neoplot.protocols import LineProtocol
 from neoplot.layers._base import Layer, XYData
 from neoplot.backend import Backend
 from neoplot.types import LineStyle
-from neoplot.utils.normalize import normalize_xy, norm_color
+from neoplot.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 
 class Line(Layer[LineProtocol]):
     def __init__(
         self,
-        xdata: np.ndarray,
-        ydata: np.ndarray,
+        xdata: ArrayLike,
+        ydata: ArrayLike,
         *,
         name: str | None = None,
         color=None,
@@ -23,8 +23,9 @@ class Line(Layer[LineProtocol]):
         antialias: bool = False,
         backend: Backend | str | None = None,
     ):
+        xdata, ydata = normalize_xy(xdata, ydata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.name = name
+        self.name = name if name is not None else "Line"
         self.color = color
         self.width = width
         self.style = style
@@ -35,9 +36,19 @@ class Line(Layer[LineProtocol]):
         """Current data of the layer."""
         return XYData(*self._backend._plt_get_data())
 
-    def set_data(self, xdata: ArrayLike, ydata: ArrayLike):
-        x, y = normalize_xy(xdata, ydata)
-        self._backend._plt_set_data(x, y)
+    def set_data(
+        self,
+        xdata: ArrayLike | None = None,
+        ydata: ArrayLike | None = None,
+    ):
+        x0, y0 = self.data
+        if xdata is not None:
+            x0 = as_array_1d(xdata)
+        if ydata is not None:
+            y0 = as_array_1d(ydata)
+        if x0.size != y0.size:
+            raise ValueError("Expected xdata and ydata to have the same size, " f"got {x0.size} and {y0.size}")
+        self._backend._plt_set_data(x0, y0)
 
     @property
     def width(self):

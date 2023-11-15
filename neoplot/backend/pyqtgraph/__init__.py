@@ -1,4 +1,4 @@
 from .line import Line
 from .scatter import Scatter
+from .bar import Bar
 from .canvas import Canvas, MainCanvas
-from .app import run_app

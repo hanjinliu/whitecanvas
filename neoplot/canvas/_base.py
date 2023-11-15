@@ -6,7 +6,8 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from neoplot import protocols
-from neoplot.layers import Layer, Line, Scatter
+from neoplot import layers
+from neoplot.layers import Layer
 from neoplot.types import LineStyle, Symbol
 from neoplot.canvas import canvas_namespace as _ns, layerlist as _ll
 from neoplot.utils.normalize import normalize_xy
@@ -14,6 +15,7 @@ from neoplot.backend import Backend
 
 
 _T = TypeVar("_T", bound=protocols.HasVisibility)
+_L = TypeVar("_L", bound=Layer)
 
 
 class CanvasBase(ABC, Generic[_T]):
@@ -69,7 +71,7 @@ class CanvasBase(ABC, Generic[_T]):
         self, ydata: ArrayLike, *, name: str | None = None,
         color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1.0, antialias: bool = True,
-    ) -> Line:  # fmt: skip
+    ) -> layers.Line:  # fmt: skip
         ...
 
     @overload
@@ -77,7 +79,7 @@ class CanvasBase(ABC, Generic[_T]):
         self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
         color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1.0, antialias: bool = True,
-    ) -> Line:  # fmt: skip
+    ) -> layers.Line:  # fmt: skip
         ...
 
     def add_line(
@@ -100,13 +102,12 @@ class CanvasBase(ABC, Generic[_T]):
             The line layer.
         """
         xdata, ydata = normalize_xy(*args)
-        name = self._coerce_name(Line, name)
-        layer = Line(
+        name = self._coerce_name(layers.Line, name)
+        layer = layers.Line(
             xdata, ydata, name=name, color=color, width=width, style=style,
             antialias=antialias, backend=self._backend_installer,
         )  # fmt: skip
-        self.layers.append(layer)
-        return layer
+        return self.add_layer(layer)
 
     @overload
     def add_scatter(
@@ -138,12 +139,34 @@ class CanvasBase(ABC, Generic[_T]):
         edge_style=LineStyle.SOLID,
     ):
         xdata, ydata = normalize_xy(*args)
-        name = self._coerce_name(Scatter, name)
-        layer = Scatter(
+        name = self._coerce_name(layers.Scatter, name)
+        layer = layers.Scatter(
             xdata, ydata, name=name, symbol=symbol, size=size, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
             backend=self._backend_installer,
         )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_bar(
+        self,
+        *args,
+        name=None,
+        width: float = 0.8,
+        face_color="blue",
+        edge_color="black",
+        edge_width=0,
+        edge_style=LineStyle.SOLID,
+    ):
+        xdata, ydata = normalize_xy(*args)
+        name = self._coerce_name(layers.Bar, name)
+        layer = layers.Bar(
+            xdata, ydata, width=width, name=name, face_color=face_color,
+            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_layer(self, layer: _L) -> _L:
+        """Add a layer to the canvas."""
         self.layers.append(layer)
         return layer
 
@@ -162,9 +185,11 @@ class CanvasBase(ABC, Generic[_T]):
         if idx < 0:
             idx = len(self.layers) + idx
         self._canvas()._plt_insert_layer(idx, layer._backend)
+        layer._connect_canvas(self)
 
     def _cb_removed(self, idx: int, layer: Layer):
         self._canvas()._plt_remove_layer(layer._backend)
+        layer._disconnect_canvas(self)
 
     def _cb_reordered(self):
         for i, layer in enumerate(self.layers):

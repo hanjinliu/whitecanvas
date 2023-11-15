@@ -38,6 +38,15 @@ class XYYDataProtocol(BaseProtocol, Protocol):
 
 
 @runtime_checkable
+class XXYYDataProtocol(BaseProtocol, Protocol):
+    def _plt_get_data(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Return the x and y array."""
+
+    def _plt_set_data(self, xdata0: np.ndarray, xdata1: np.ndarray, ydata0: np.ndarray, ydata1: np.ndarray):
+        """Set the x and y array."""
+
+
+@runtime_checkable
 class HasFaces(Protocol):
     def _plt_get_face_color(self) -> NDArray[np.float32]:
         """Return the face color."""
@@ -110,14 +119,8 @@ class LineProtocol(XYDataProtocol, HasEdges, Protocol):
 
 
 @runtime_checkable
-class BarProtocol(XYYDataProtocol, HasFaces, HasEdges, Protocol):
+class BarProtocol(XXYYDataProtocol, HasFaces, HasEdges, Protocol):
     """Protocols for plt.bar, plt.errorbar"""
-
-    def _plt_get_bar_width(self) -> float:
-        """Return the bar width."""
-
-    def _plt_set_bar_width(self, width: float):
-        """Set the bar width."""
 
 
 @runtime_checkable

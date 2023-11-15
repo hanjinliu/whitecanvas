@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Any, Generic, overload, TypeVar
 from abc import ABC, abstractmethod
 
+from cmap import Color
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
@@ -31,6 +33,11 @@ class CanvasBase(ABC, Generic[_T]):
         self._backend_installer = Backend(backend)
         self._backend = self._create_backend()
 
+        # default colors
+        self.x.color = "black"
+        self.y.color = "black"
+        self.background_color = "white"
+
         # connect layer events
         self.layers.events.inserted.connect(self._cb_inserted)
         self.layers.events.removed.connect(self._cb_removed)
@@ -54,9 +61,12 @@ class CanvasBase(ABC, Generic[_T]):
         """Return the canvas object."""
 
     @property
-    def native(self) -> _T:
-        """The native backend object."""
-        return self._backend
+    def background_color(self):
+        return self._canvas()._plt_get_background_color()
+
+    @background_color.setter
+    def background_color(self, color):
+        self._canvas()._plt_set_background_color(np.array(Color(color)))
 
     def show(self):
         """Show the canvas."""
@@ -65,6 +75,9 @@ class CanvasBase(ABC, Generic[_T]):
     def hide(self):
         """Hide the canvas."""
         self._backend._plt_set_visible(False)
+
+    def screenshot(self):
+        return self._canvas()._plt_screenshot()
 
     @overload
     def add_line(
@@ -162,6 +175,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = layers.Bar(
             xdata, ydata, width=width, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
+            backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)
 

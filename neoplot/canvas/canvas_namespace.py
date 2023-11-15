@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 import weakref
+import numpy as np
 
 from psygnal import Signal
 from cmap import Color
@@ -87,7 +88,7 @@ class _TextLabelNamespace(Namespace):
 
     @color.setter
     def color(self, color):
-        self._get_object()._plt_set_color(Color(color).name)
+        self._get_object()._plt_set_color(np.array(Color(color)))
 
     @property
     def size(self) -> float:
@@ -134,6 +135,14 @@ class _AxisNamespace(Namespace):
     @lim.setter
     def lim(self, lim: tuple[float, float]):
         return self._get_object()._plt_set_limits(lim)
+
+    @property
+    def color(self):
+        return self._get_object()._plt_get_color()
+
+    @color.setter
+    def color(self, color):
+        self._get_object()._plt_set_color(np.array(Color(color)))
 
 
 class XAxisNamespace(_AxisNamespace):

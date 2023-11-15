@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import Callable, cast
 
-from qtpy import QtWidgets as QtW, QtCore
+import qtpy
+from qtpy import QtWidgets as QtW, QtCore, QtGui
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene.mouseEvents import (
     MouseClickEvent as pgMouseClickEvent,
@@ -12,7 +13,7 @@ import numpy as np
 from neoplot import protocols
 from neoplot.types import MouseButton, Modifier, MouseEventType, MouseEvent
 from .app import run_app, get_app
-from ._labels import Title, XLabel, YLabel, XAxis, YAxis
+from ._labels import Title, AxisLabel, Axis
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -24,25 +25,24 @@ class Canvas(QtW.QWidget):
         viewbox = pg.ViewBox()
         self._plot_item = pg.PlotItem(viewBox=viewbox)
 
-        # This ROI is not editable. Mouse click event will use it to determine
-        # the origin of the coordinate system.
-        self._coordinate_fiducial = pg.ROI((0, 0))
-        self._coordinate_fiducial.setVisible(False)
-        self._viewbox().addItem(self._coordinate_fiducial, ignoreBounds=True)
-
         _layoutwidget = pg.GraphicsLayoutWidget()
         _layoutwidget.addItem(self._plot_item)
+        self._layoutwidget = _layoutwidget
+        self._plt_set_background_color(np.array([1, 1, 1, 1]))
 
         super().__init__(parent)
         layout = QtW.QVBoxLayout()
         layout.addWidget(_layoutwidget)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
-        self._xaxis = XAxis(self)
-        self._yaxis = YAxis(self)
+        self._xaxis = Axis(self, axis="bottom")
+        self._yaxis = Axis(self, axis="left")
         self._title = Title(self)
-        self._xlabel = XLabel(self)
-        self._ylabel = YLabel(self)
+        self._xlabel = AxisLabel(self, axis="bottom")
+        self._ylabel = AxisLabel(self, axis="left")
+        # self._xaxis._plt_set_color(np.array([0, 0, 0, 1]))
+        # self._yaxis._plt_set_color(np.array([0, 0, 0, 1]))
+        self._title = Title(self)
 
     def _plt_get_title(self):
         return self._title
@@ -58,6 +58,30 @@ class Canvas(QtW.QWidget):
 
     def _plt_get_ylabel(self):
         return self._ylabel
+
+    def _get_background_brush(self) -> QtGui.QBrush:
+        return self._layoutwidget.backgroundBrush()
+
+    def _plt_get_background_color(self):
+        brush = self._get_background_brush()
+        return np.array(brush.color().getRgbF())
+
+    def _plt_set_background_color(self, color):
+        brush = self._get_background_brush()
+        brush.setColor(QtGui.QColor.fromRgbF(*color))
+        self._layoutwidget.setBackgroundBrush(brush)
+
+    def _plt_screenshot(self):
+        img = self.grab().toImage()
+        bits = img.constBits()
+        h, w, c = img.height(), img.width(), 4
+        if qtpy.API_NAME.startswith("PySide"):
+            arr = np.asarray(bits).reshape(h, w, c)
+        else:
+            bits.setsize(h * w * c)
+            arr = np.frombuffer(bits, np.uint8).reshape(h, w, c)
+
+        return arr[:, :, [2, 1, 0, 3]]
 
     def _viewbox(self) -> pg.ViewBox:
         return self._plot_item.vb

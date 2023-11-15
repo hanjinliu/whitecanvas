@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Callable, Protocol, runtime_checkable
+import numpy as np
+from numpy.typing import NDArray
 from .layer_protocols import BaseProtocol
 from neoplot.types import MouseEvent
 
@@ -25,6 +27,15 @@ class HasLayers(Protocol):
 
 @runtime_checkable
 class CanvasProtocol(HasVisibility, HasLayers, Protocol):
+    def _plt_get_background_color(self):
+        """Get background color of canvas"""
+
+    def _plt_set_background_color(self, color):
+        """Set background color of canvas"""
+
+    def _plt_screenshot(self) -> NDArray[np.uint8]:
+        """Get screenshot of canvas"""
+
     def _plt_get_title(self) -> TextLabelProtocol:
         """Get title handler"""
 
@@ -90,6 +101,12 @@ class AxisProtocol(Protocol):
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         """Set limits of axis"""
+
+    def _plt_get_color(self) -> np.ndarray:
+        """Get color of axis"""
+
+    def _plt_set_color(self, color):
+        """Set color of axis"""
 
 
 @runtime_checkable

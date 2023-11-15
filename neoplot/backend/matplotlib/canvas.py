@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 from typing import Callable
+
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backend_bases import MouseEvent as mplMouseEvent, MouseButton as mplMouseButton
-from neoplot import protocols
 from .line import Line
 from .scatter import Scatter
 from .bar import Bar
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel
+from neoplot import protocols
 from neoplot.types import MouseEvent, Modifier, MouseButton, MouseEventType
 
 
+@protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
     def __init__(self, *, ax: plt.Axes | None = None):
         if ax is None:
@@ -21,6 +24,12 @@ class Canvas:
         self._title = Title(self)
         self._xlabel = XLabel(self)
         self._ylabel = YLabel(self)
+
+    def _plt_get_background_color(self):
+        self._axes.get_facecolor()
+
+    def _plt_set_background_color(self, color):
+        self._axes.set_facecolor(color)
 
     def _plt_get_title(self):
         return self._title
@@ -37,6 +46,18 @@ class Canvas:
     def _plt_get_ylabel(self):
         return self._ylabel
 
+    def _plt_screenshot(self):
+        import io
+
+        fig = self._axes.figure
+        with io.BytesIO() as buff:
+            fig.savefig(buff, format="raw")
+            buff.seek(0)
+            data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
+        w, h = fig.canvas.get_width_height()
+        img = data.reshape((int(h), int(w), -1))
+        return img
+
     def _plt_insert_layer(self, idx: int, layer: protocols.BaseProtocol):
         if isinstance(layer, Line):
             self._axes.add_line(layer)
@@ -46,7 +67,7 @@ class Canvas:
             for patch in layer.patches:
                 self._axes.add_patch(patch)
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"{layer}")
         self._axes.autoscale_view()  # TODO: remove this line
 
     def _plt_remove_layer(self, layer):

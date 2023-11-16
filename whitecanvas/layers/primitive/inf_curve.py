@@ -18,6 +18,7 @@ class InfCurve(Line):
         self,
         model: Callable[[Concatenate[np.ndarray, ...]], np.ndarray],
         params: dict[str, Any] = {},
+        *,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
         color=None,

@@ -1,7 +1,7 @@
 from .line import Line
-from .bar import Bars
+from .bars import Bars
 from .markers import Markers
-from .fillbetween import FillBetween
+from .fillbetween import Band
 from .errorbar import Errorbars
 from .inf_curve import InfCurve
 
@@ -9,7 +9,7 @@ __all__ = [
     "Line",
     "Bars",
     "Markers",
-    "FillBetween",
+    "Band",
     "Errorbars",
     "InfCurve",
 ]

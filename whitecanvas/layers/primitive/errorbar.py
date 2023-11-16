@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 import numpy as np
 from numpy.typing import ArrayLike
 
@@ -10,8 +10,6 @@ from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, _Void
 from whitecanvas.utils.normalize import as_array_1d, norm_color
 
-if TYPE_CHECKING:
-    from whitecanvas.layers.group import LineMarkers
 
 _void = _Void()
 
@@ -123,30 +121,6 @@ class Errorbars(PrimitiveLayer[ErrorbarProtocol]):
     # @antialias.setter
     # def antialias(self, antialias: bool):
     #     self._backend._plt_set_antialias(antialias)
-
-    # def with_markers(
-    #     self,
-    #     symbol: Symbol | str = Symbol.CIRCLE,
-    #     size: float = 10,
-    #     face_color: ColorType | _Void = _void,
-    #     edge_color: ColorType | _Void = _void,
-    #     edge_width: float = 0,
-    #     edge_style: str | LineStyle = LineStyle.SOLID,
-    # ) -> LineMarkers:
-    #     from whitecanvas.layers.group import LineMarkers
-    #     from whitecanvas.layers.primitive import Markers
-
-    #     if face_color is _void:
-    #         face_color = self.color
-    #     if edge_color is _void:
-    #         edge_color = self.color
-
-    #     markers = Markers(
-    #         *self.data, symbol=symbol, size=size, face_color=face_color,
-    #         edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-    #         backend=self._backend_name,
-    #     )  # fmt: skip
-    #     return LineMarkers(self, markers, name=self.name)
 
     def setup(
         self,

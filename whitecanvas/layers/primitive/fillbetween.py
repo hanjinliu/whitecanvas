@@ -1,24 +1,17 @@
 from __future__ import annotations
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from whitecanvas.protocols import FillBetweenProtocol
+from whitecanvas.protocols import BandProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, FacePattern
-from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
+from whitecanvas.types import LineStyle, FacePattern, ColorType
+from whitecanvas.utils.normalize import as_array_1d, norm_color
 
 
-def _to_backend_arrays(xdata, height, width: float):
-    xc, y1 = normalize_xy(xdata, height)
-    x0 = xc - width / 2
-    x1 = xc + width / 2
-    y0 = np.zeros_like(y1)
-    return x0, x1, y0, y1
-
-
-class Filled(PrimitiveLayer[FillBetweenProtocol]):
+class Filled(PrimitiveLayer[BandProtocol]):
     @property
     def face_color(self):
         """Face color of the bar."""
@@ -63,49 +56,65 @@ class Filled(PrimitiveLayer[FillBetweenProtocol]):
         self._backend._plt_set_edge_style(LineStyle(style))
 
 
-class FillBetween(Filled):
+class Band(Filled):
     def __init__(
         self,
-        xdata: ArrayLike,
-        ydata0: ArrayLike,
-        ydata1: ArrayLike,
+        t: ArrayLike,
+        edge_low: ArrayLike,
+        edge_high: ArrayLike,
+        orient: Literal["vertical", "horizontal"] = "vertical",
         *,
         name: str | None = None,
-        face_color="blue",
-        edge_color="black",
-        edge_width=0,
-        edge_style=LineStyle.SOLID,
+        face_color: ColorType = "blue",
+        edge_color: ColorType = "black",
+        edge_width: float = 0,
+        edge_style: LineStyle | str = LineStyle.SOLID,
         backend: Backend | str | None = None,
     ):
-        x = as_array_1d(xdata)
-        y0 = as_array_1d(ydata0)
-        y1 = as_array_1d(ydata1)
+        x = as_array_1d(t)
+        y0 = as_array_1d(edge_low)
+        y1 = as_array_1d(edge_high)
         if x.size != y0.size or x.size != y1.size:
             raise ValueError(
                 "Expected xdata, ydata0, ydata1 to have the same size, " f"got {x.size}, {y0.size}, {y1.size}"
             )
-        self._backend = self._create_backend(Backend(backend), x, y0, y1)
-        self.name = name if name is not None else "FillBetween"
+        self._backend = self._create_backend(Backend(backend), x, y0, y1, orient)
+        self.name = name if name is not None else "Band"
         self.face_color = face_color
         self.edge_color = edge_color
         self.edge_width = edge_width
         self.edge_style = edge_style
+        self._orient = orient
 
     @property
     def data(self) -> XYData:
         """Current data of the layer."""
-        x, y0, y1 = self._backend._plt_get_data()
+        if self._orient == "vertical":
+            x, y0, y1 = self._backend._plt_get_vertical_data()
+        elif self._orient == "horizontal":
+            x, y0, y1 = self._backend._plt_get_horizontal_data()
+        else:
+            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         return x, y0, y1
 
     def set_data(
         self,
-        xdata: ArrayLike | None = None,
-        height: ArrayLike | None = None,
+        t: ArrayLike | None = None,
+        edge_low: ArrayLike | None = None,
+        edge_high: ArrayLike | None = None,
     ):
-        xc, h = self.data
-        if xdata is not None:
-            xc = as_array_1d(xdata)
-        if height is not None:
-            h = as_array_1d(height)
-        x0, x1, y0, y1 = _to_backend_arrays(xc, h, self.bar_width)
-        self._backend._plt_set_data(x0, x1, y0, y1)
+        t0, y0, y1 = self.data
+        if t is not None:
+            t0 = t
+        if edge_low is not None:
+            y0 = as_array_1d(edge_low)
+        if edge_high is not None:
+            y1 = as_array_1d(edge_high)
+        if t0.size != y0.size or t0.size != y1.size:
+            raise ValueError("Expected data to have the same size," f"got {t0.size}, {y0.size}, {y1.size}")
+        if self._orient == "vertical":
+            self._backend._plt_set_vertical_data(t0, y0, y1)
+        elif self._orient == "horizontal":
+            self._backend._plt_set_horizontal_data(t0, y0, y1)
+        else:
+            raise ValueError(f"orient must be 'vertical' or 'horizontal'")

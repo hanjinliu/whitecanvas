@@ -8,7 +8,7 @@ from matplotlib.collections import PathCollection
 import matplotlib.markers as mmarkers
 import matplotlib.transforms as mtransforms
 from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, FacePattern
+from whitecanvas.types import Symbol, FacePattern, LineStyle
 
 
 def _get_path(symbol: Symbol):
@@ -28,6 +28,7 @@ class Markers(PathCollection):
             offset_transform=plt.gca().transData,
         )
         self.set_transform(mtransforms.IdentityTransform())
+        self._edge_style = LineStyle.SOLID
 
     ##### LayerProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -88,11 +89,12 @@ class Markers(PathCollection):
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         self.set_edgecolor([color] * len(self.get_offsets()))
 
-    def _plt_get_edge_style(self) -> str:
-        return self.get_linestyle()[0]
+    def _plt_get_edge_style(self) -> LineStyle:
+        return self._edge_style
 
-    def _plt_set_edge_style(self, style: str):
-        self.set_linestyle([style] * len(self.get_offsets()))
+    def _plt_set_edge_style(self, style: LineStyle):
+        self.set_linestyle([style.value] * len(self.get_offsets()))
+        self._edge_style = style
 
     def _plt_get_edge_width(self) -> float:
         return self.get_linewidth()[0]

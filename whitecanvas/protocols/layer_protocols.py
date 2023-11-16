@@ -162,7 +162,7 @@ class MarkersProtocol(XYDataProtocol, HasFaces, HasEdges, Protocol):
 
 
 @runtime_checkable
-class FillBetweenProtocol(XYYDataProtocol, HasFaces, HasEdges, Protocol):
+class BandProtocol(OrientedXYYDataProtocol, HasFaces, HasEdges, Protocol):
     pass
 
 

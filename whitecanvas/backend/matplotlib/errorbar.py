@@ -52,6 +52,8 @@ class Errorbars(LineCollection):
     ##### OrientedXYYDataProtocol #####
     def _plt_get_data_all(self):
         seg, _, _ = self._plt_get_segments()
+        if len(seg) == 0:
+            return np.array([]), np.array([]), np.array([]), np.array([])
         seg_arr = np.stack(seg, axis=0)
         x0 = seg_arr[:, 0, 0]
         x1 = seg_arr[:, 1, 0]

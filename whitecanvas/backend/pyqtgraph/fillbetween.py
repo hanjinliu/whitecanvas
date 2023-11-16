@@ -1,10 +1,11 @@
 from __future__ import annotations
+from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
 from qtpy import QtGui
 import pyqtgraph as pg
-from whitecanvas.protocols import FillBetweenProtocol, check_protocol
+from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import LineStyle, FacePattern
 from ._qt_utils import (
     array_to_qcolor,
@@ -15,11 +16,17 @@ from ._qt_utils import (
 )
 
 
-@check_protocol(FillBetweenProtocol)
-class FillBetween(pg.FillBetweenItem):
-    def __init__(self, xdata, ydata0, ydata1):
-        c0 = pg.PlotCurveItem(xdata, ydata0)
-        c1 = pg.PlotCurveItem(xdata, ydata1)
+@check_protocol(BandProtocol)
+class Band(pg.FillBetweenItem):
+    def __init__(self, t, ydata0, ydata1, orient: Literal["vertical", "horizontal"]):
+        if orient == "vertical":
+            c0 = pg.PlotCurveItem(t, ydata0)
+            c1 = pg.PlotCurveItem(t, ydata1)
+        elif orient == "horizontal":
+            c0 = pg.PlotCurveItem(ydata0, t)
+            c1 = pg.PlotCurveItem(ydata1, t)
+        else:
+            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
         super().__init__(c0, c1, pen=pen, brush=QtGui.QBrush(QtGui.QColor(0, 0, 0)))
@@ -38,11 +45,27 @@ class FillBetween(pg.FillBetweenItem):
         self.setZValue(zorder)
 
     ##### XYDataProtocol #####
-    def _plt_get_data(self):
-        return self.getData()
+    def _plt_get_vertical_data(self):
+        c0: pg.PlotCurveItem = self.curves[0]
+        c1: pg.PlotCurveItem = self.curves[1]
+        return c0.xData, c0.yData, c1.yData
 
-    def _plt_set_data(self, xdata, ydata):
-        self.setData(xdata, ydata)
+    def _plt_set_vertical_data(self, t, ydata0, ydata1):
+        c0: pg.PlotCurveItem = self.curves[0]
+        c1: pg.PlotCurveItem = self.curves[1]
+        c0.setData(t, ydata0)
+        c1.setData(t, ydata1)
+
+    def _plt_get_horizontal_data(self):
+        c0: pg.PlotCurveItem = self.curves[0]
+        c1: pg.PlotCurveItem = self.curves[1]
+        return c0.yData, c0.xData, c1.xData
+
+    def _plt_set_horizontal_data(self, y, xdata0, xdata1):
+        c0: pg.PlotCurveItem = self.curves[0]
+        c1: pg.PlotCurveItem = self.curves[1]
+        c0.setData(xdata0, y)
+        c1.setData(xdata1, y)
 
     ##### HasFace protocol #####
     def _get_brush(self) -> QtGui.QBrush:

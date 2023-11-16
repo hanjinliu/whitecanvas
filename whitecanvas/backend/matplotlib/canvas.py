@@ -8,7 +8,7 @@ from matplotlib.backend_bases import MouseEvent as mplMouseEvent, MouseButton as
 from .line import Line
 from .markers import Markers
 from .bar import Bars
-from .fillbetween import FillBetween
+from .fillbetween import Band
 from .errorbar import Errorbars
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel
 from whitecanvas import protocols
@@ -63,7 +63,7 @@ class Canvas:
     def _plt_insert_layer(self, idx: int, layer: protocols.BaseProtocol):
         if isinstance(layer, Line):
             self._axes.add_line(layer)
-        elif isinstance(layer, (Markers, FillBetween, Errorbars)):
+        elif isinstance(layer, (Markers, Band, Errorbars)):
             self._axes.add_collection(layer)
         elif isinstance(layer, Bars):
             for patch in layer.patches:

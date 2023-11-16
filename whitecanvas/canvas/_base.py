@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Generic, Iterator, overload, TypeVar
+from typing import Any, Generic, Iterator, Literal, overload, TypeVar
 from abc import ABC, abstractmethod
 
 from cmap import Color
@@ -158,22 +158,25 @@ class CanvasBase(ABC, Generic[_T]):
         )  # fmt: skip
         return self.add_layer(layer)
 
-    def add_bar(
+    def add_bars(
         self,
-        *args,
+        center: ArrayLike,
+        top: ArrayLike,
+        bottom: ArrayLike | None = None,
+        *,
         name=None,
-        width: float = 0.8,
+        orient: Literal["vertical", "horizontal"] = "vertical",
+        bar_width: float = 0.8,
         face_color="blue",
         edge_color="black",
         edge_width=0,
         edge_style=LineStyle.SOLID,
     ):
-        xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Bars, name)
         layer = _l.Bars(
-            xdata, ydata, width=width, name=name, face_color=face_color,
-            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-            backend=self._backend_installer,
+            center, top, bottom, bar_width=bar_width, name=name, orient=orient,
+            face_color=face_color, edge_color=edge_color, edge_width=edge_width,
+            edge_style=edge_style, backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -196,7 +199,7 @@ class CanvasBase(ABC, Generic[_T]):
         centers = (edges[:-1] + edges[1:]) / 2
         width = edges[1] - edges[0]
         layer = _l.Bars(
-            centers, counts, width=width, name=name, face_color=face_color,
+            centers, counts, bar_width=width, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
             backend=self._backend_installer,
         )  # fmt: skip
@@ -233,21 +236,22 @@ class CanvasBase(ABC, Generic[_T]):
         edge_width=0,
         edge_style=LineStyle.SOLID,
     ):
-        name = self._coerce_name(_l.FillBetween, name)
-        layer = _l.FillBetween(
+        name = self._coerce_name(_l.Band, name)
+        layer = _l.Band(
             xdata, ydata0, ydata1, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
             backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)
 
-    def add_errorbar(
+    def add_errorbars(
         self,
         xdata: ArrayLike,
         ylow: ArrayLike,
         yhigh: ArrayLike,
         *,
         name: str | None = None,
+        orient: Literal["vertical", "horizontal"] = "vertical",
         color: ColorType = "blue",
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
@@ -258,7 +262,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = _l.Errorbars(
             xdata, ylow, yhigh, name=name, color=color, line_width=width,
             line_style=style, antialias=antialias, capsize=capsize,
-            backend=self._backend_installer,
+            orient=orient, backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)
 

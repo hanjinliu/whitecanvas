@@ -143,7 +143,16 @@ class XYData(NamedTuple):
     x: np.ndarray
     y: np.ndarray
 
+
+class XYYData(NamedTuple):
+    x: np.ndarray
+    y0: np.ndarray
+    y1: np.ndarray
+
     @property
-    def concat(self) -> np.ndarray:
-        """Concatenate x and y data into a single (N, 2) array."""
-        return np.stack([self.x, self.y], axis=1)
+    def ycenter(self) -> np.ndarray:
+        return (self.y0 + self.y1) / 2
+
+    @property
+    def ydiff(self) -> np.ndarray:
+        return self.y1 - self.y0

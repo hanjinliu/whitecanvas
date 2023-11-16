@@ -33,12 +33,10 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         xdata, ydata = normalize_xy(xdata, ydata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
-        self.symbol = symbol
-        self.size = size
-        self.face_color = face_color
-        self.edge_color = edge_color
-        self.edge_width = edge_width
-        self.edge_style = edge_style
+        self.setup(
+            symbol=symbol, size=size, face_color=face_color, edge_color=edge_color,
+            edge_width=edge_width, edge_style=edge_style
+        )  # fmt: skip
 
     @property
     def data(self) -> XYData:
@@ -120,6 +118,7 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
 
     def setup(
         self,
+        *,
         symbol: Symbol | str | _Void = _void,
         size: float | _Void = _void,
         face_color: ColorType | _Void = _void,
@@ -150,8 +149,8 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         line_style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.LineErrorbars:
-        from whitecanvas.layers.group import LineErrorbars
+    ) -> _lg.MarkerErrorbars:
+        from whitecanvas.layers.group import MarkerErrorbars
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -169,8 +168,8 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
             line_width=line_width, line_style=line_style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars([], [], [], backend=self._backend_name)
-        return LineErrorbars(self, xerr, yerr, name=self.name)
+        yerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
+        return MarkerErrorbars(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -181,8 +180,8 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         line_style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-    ) -> _lg.LineErrorbars:
-        from whitecanvas.layers.group import LineErrorbars
+    ) -> _lg.MarkerErrorbars:
+        from whitecanvas.layers.group import MarkerErrorbars
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -200,5 +199,5 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
             line_width=line_width, line_style=line_style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars([], [], [], backend=self._backend_name)
-        return LineErrorbars(self, xerr, yerr, name=self.name)
+        xerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
+        return MarkerErrorbars(self, xerr, yerr, name=self.name)

@@ -31,10 +31,7 @@ class Line(XYDataLayer[LineProtocol]):
         xdata, ydata = normalize_xy(xdata, ydata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
-        self.color = color
-        self.line_width = line_width
-        self.line_style = line_style
-        self.antialias = antialias
+        self.setup(color=color, line_width=line_width, style=line_style, antialias=antialias)
 
     @property
     def data(self) -> XYData:
@@ -93,6 +90,7 @@ class Line(XYDataLayer[LineProtocol]):
 
     def setup(
         self,
+        *,
         color: ColorType | _Void = _void,
         line_width: float | _Void = _void,
         style: str | _Void = _void,
@@ -160,7 +158,7 @@ class Line(XYDataLayer[LineProtocol]):
             line_width=line_width, line_style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars([], [], [], backend=self._backend_name)
+        yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
         return LineErrorbars(self, xerr, yerr, name=self.name)
 
     def with_yerr(
@@ -191,5 +189,71 @@ class Line(XYDataLayer[LineProtocol]):
             line_width=line_width, line_style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars([], [], [], backend=self._backend_name)
+        xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
         return LineErrorbars(self, xerr, yerr, name=self.name)
+
+    def with_xband(
+        self,
+        err: ArrayLike,
+        err_high: ArrayLike | None = None,
+        face_color: ColorType | _Void = _void,
+        edge_color: ColorType = (0.0, 0.0, 0.0, 0.0),
+        edge_width: float = 0.0,
+        edge_style: str | _Void = _void,
+    ) -> _lg.LineBand:
+        from whitecanvas.layers.group import LineBand
+        from whitecanvas.layers.primitive import Band
+
+        if err_high is None:
+            err_high = err
+        if face_color is _void:
+            face_color = self.color
+            face_color[3] *= 0.5
+        if edge_style is _void:
+            edge_style = self.line_style
+        data = self.data
+        band = Band(
+            data.y,
+            data.x - err,
+            data.x + err_high,
+            orient="horizontal",
+            face_color=face_color,
+            edge_width=edge_width,
+            edge_color=edge_color,
+            edge_style=edge_style,
+            backend=self._backend_name,
+        )
+        return LineBand(self, band, name=self.name)
+
+    def with_yband(
+        self,
+        err: ArrayLike,
+        err_high: ArrayLike | None = None,
+        face_color: ColorType | _Void = _void,
+        edge_color: ColorType = (0.0, 0.0, 0.0, 0.0),
+        edge_width: float = 0.0,
+        edge_style: str | _Void = _void,
+    ) -> _lg.LineBand:
+        from whitecanvas.layers.group import LineBand
+        from whitecanvas.layers.primitive import Band
+
+        if err_high is None:
+            err_high = err
+        if face_color is _void:
+            face_color = self.color
+            face_color[3] *= 0.5
+        if edge_style is _void:
+            edge_style = self.line_style
+        data = self.data
+        band = Band(
+            data.x,
+            data.y - err,
+            data.y + err_high,
+            orient="vertical",
+            face_color=face_color,
+            edge_width=edge_width,
+            edge_color=edge_color,
+            edge_style=edge_style,
+            backend=self._backend_name,
+        )
+        return LineBand(self, band, name=self.name)

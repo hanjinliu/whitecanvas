@@ -5,7 +5,7 @@ from .layer_protocols import (
     MarkersProtocol,
     BarProtocol,
     RangeDataProtocol,
-    FillBetweenProtocol,
+    BandProtocol,
     ErrorbarProtocol,
 )
 from .canvas_protocol import (
@@ -21,7 +21,7 @@ __all__ = [
     "LineProtocol",
     "MarkersProtocol",
     "BarProtocol",
-    "FillBetweenProtocol",
+    "BandProtocol",
     "ErrorbarProtocol",
     "RangeDataProtocol",
     "CanvasProtocol",

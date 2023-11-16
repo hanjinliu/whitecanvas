@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from whitecanvas.types import ColorType, _Void, Symbol, LineStyle
 from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
-from whitecanvas.layers._base import LayerGroup, PrimitiveLayer, XYData
+from whitecanvas.layers._base import LayerGroup, XYData
 
 
 _void = _Void()
 
 
 class _WithErrorbars(LayerGroup):
-    def _main_data_layer(self) -> PrimitiveLayer:
-        return self._children[0]
+    def _set_data(self, xdata=None, ydata=None):
+        self._children[0].set_data(xdata, ydata)
 
     @property
     def xerr(self) -> Errorbars:
@@ -22,7 +22,7 @@ class _WithErrorbars(LayerGroup):
 
     @property
     def data(self) -> XYData:
-        return self._main_data_layer().data
+        return self._children[0].data
 
     def set_data(self, xdata=None, ydata=None):
         data = self.data
@@ -34,7 +34,7 @@ class _WithErrorbars(LayerGroup):
             dy = 0
         else:
             dy = ydata - data.y
-        self._main_data_layer().set_data(xdata, ydata)
+        self._set_data(xdata, ydata)
         if self.xerr.ndata > 0:
             y, x0, x1 = self.xerr.data
             self.xerr.set_data(y + dy, x0 + dx, x1 + dx)
@@ -66,7 +66,17 @@ class _WithErrorbars(LayerGroup):
         self.yerr.setup(color=color, line_width=width, line_style=style, antialias=antialias, capsize=capsize)
         return self
 
-    def set_xerr(self, len_lower: float, len_higher: float | None = None):
+    def with_xerr(
+        self,
+        len_lower: float,
+        len_higher: float | None = None,
+        *,
+        color: ColorType | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
+        antialias: bool | _Void = _void,
+        capsize: float | _Void = _void,
+    ):
         """
         Set the x error bar data.
 
@@ -79,11 +89,21 @@ class _WithErrorbars(LayerGroup):
         """
         if len_higher is None:
             len_higher = len_lower
-        x, y = self._main_data_layer().data
+        x, y = self.data
         self.xerr.set_data(y, x - len_lower, x + len_higher)
-        return self
+        return self.setup_xerr(color=color, width=width, style=style, antialias=antialias, capsize=capsize)
 
-    def set_yerr(self, len_lower: float, len_higher: float | None = None):
+    def with_yerr(
+        self,
+        len_lower: float,
+        len_higher: float | None = None,
+        *,
+        color: ColorType | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
+        antialias: bool | _Void = _void,
+        capsize: float | _Void = _void,
+    ):
         """
         Set the y error bar data.
 
@@ -96,9 +116,9 @@ class _WithErrorbars(LayerGroup):
         """
         if len_higher is None:
             len_higher = len_lower
-        x, y = self._main_data_layer().data
+        x, y = self.data
         self.yerr.set_data(x, y - len_lower, y + len_higher)
-        return self
+        return self.setup_yerr(color=color, width=width, style=style, antialias=antialias, capsize=capsize)
 
 
 class LineErrorbars(_WithErrorbars):
@@ -113,6 +133,7 @@ class LineErrorbars(_WithErrorbars):
 
     @property
     def line(self) -> Line:
+        """The line layer."""
         return self._children[0]
 
     def setup_line(
@@ -174,7 +195,17 @@ class BarErrorbars(_WithErrorbars):
 
     @property
     def bars(self) -> Bars:
+        """The bars layer."""
         return self._children[0]
+
+    @property
+    def data(self) -> XYData:
+        x, top, _ = self.bars.data
+        return XYData(x, top)
+
+    def _set_data(self, xdata=None, ydata=None):
+        _, _, bottom = self.bars.data
+        self.bars.set_data(xdata, ydata, bottom)
 
     def setup_bars(
         self,

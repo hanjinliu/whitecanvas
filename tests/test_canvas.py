@@ -1,6 +1,6 @@
 import pytest
-import neoplot
-from neoplot.layers import Line, Scatter
+import whitecanvas
+from whitecanvas.layers import Line, Markers
 import numpy as np
 from numpy.testing import assert_allclose
 from cmap import Color
@@ -17,7 +17,7 @@ def test_color(backend: str):
 
     assert Color(layer.color) == Color("red")
 
-    layer = Scatter(np.arange(10), np.zeros(10), backend=backend, face_color="cyan", edge_color="white")
+    layer = Markers(np.arange(10), np.zeros(10), backend=backend, face_color="cyan", edge_color="white")
 
     assert _is_color_array(layer.face_color)
     assert _is_color_array(layer.edge_color)
@@ -27,7 +27,7 @@ def test_color(backend: str):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_line(backend: str):
-    canvas = neoplot.Canvas(backend=backend)
+    canvas = whitecanvas.Canvas(backend=backend)
     canvas.add_line(np.arange(10), np.zeros(10))
     layer = canvas.add_line(np.zeros(10))
     layer.color = [1.0, 0.0, 0.0, 1.0]

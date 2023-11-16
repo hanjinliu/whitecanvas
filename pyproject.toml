@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "neoplot"
+name = "whitecanvas"
 dynamic = ["version"]
 description = 'A next generation, backend independent plotting library'
 readme = "README.md"
@@ -48,12 +48,12 @@ testing = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/neoplot#readme"
-Issues = "https://github.com/unknown/neoplot/issues"
-Source = "https://github.com/unknown/neoplot"
+Documentation = "https://github.com/unknown/whitecanvas#readme"
+Issues = "https://github.com/unknown/whitecanvas/issues"
+Source = "https://github.com/unknown/whitecanvas"
 
 [tool.hatch.version]
-path = "neoplot/__init__.py"
+path = "whitecanvas/__init__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -83,7 +83,7 @@ dependencies = [
   "ruff>=0.0.243",
 ]
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --install-types --non-interactive {args:neoplot tests}"
+typing = "mypy --install-types --non-interactive {args:whitecanvas tests}"
 style = [
   "ruff {args:.}",
   "black --check --diff {args:.}",
@@ -149,7 +149,7 @@ unfixable = [
 ]
 
 [tool.ruff.isort]
-known-first-party = ["neoplot"]
+known-first-party = ["whitecanvas"]
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -159,16 +159,16 @@ ban-relative-imports = "all"
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 
 [tool.coverage.run]
-source_pkgs = ["neoplot", "tests"]
+source_pkgs = ["whitecanvas", "tests"]
 branch = true
 parallel = true
 omit = [
-  "neoplot/__about__.py",
+  "whitecanvas/__about__.py",
 ]
 
 [tool.coverage.paths]
-neoplot = ["neoplot", "*/neoplot/neoplot"]
-tests = ["tests", "*/neoplot/tests"]
+whitecanvas = ["whitecanvas", "*/whitecanvas/whitecanvas"]
+tests = ["tests", "*/whitecanvas/tests"]
 
 [tool.coverage.report]
 exclude_lines = [

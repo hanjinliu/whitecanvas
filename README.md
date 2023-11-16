@@ -1,7 +1,7 @@
-# neoplot
+# whitecanvas
 
-[![PyPI - Version](https://img.shields.io/pypi/v/neoplot.svg)](https://pypi.org/project/neoplot)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/neoplot.svg)](https://pypi.org/project/neoplot)
+[![PyPI - Version](https://img.shields.io/pypi/v/whitecanvas.svg)](https://pypi.org/project/whitecanvas)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/whitecanvas.svg)](https://pypi.org/project/whitecanvas)
 
 A next generation, backend independent plotting library.
 
@@ -10,5 +10,5 @@ A next generation, backend independent plotting library.
 ## Installation
 
 ```console
-pip install neoplot -U
+pip install whitecanvas -U
 ```

@@ -1,7 +1,7 @@
 from typing import Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.types import LineStyle, Symbol
+from whitecanvas.types import LineStyle, Symbol, FacePattern
 
 
 @runtime_checkable
@@ -53,6 +53,12 @@ class HasFaces(Protocol):
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         """Set the face color."""
+
+    def _plt_get_face_pattern(self) -> FacePattern:
+        """Return the face pattern."""
+
+    def _plt_set_face_pattern(self, pattern: FacePattern):
+        """Set the face pattern."""
 
 
 @runtime_checkable

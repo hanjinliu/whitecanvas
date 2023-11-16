@@ -6,8 +6,9 @@ from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 from matplotlib.collections import PathCollection
 import matplotlib.markers as mmarkers
+import matplotlib.transforms as mtransforms
 from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol
+from whitecanvas.types import Symbol, FacePattern
 
 
 def _get_path(symbol: Symbol):
@@ -20,12 +21,13 @@ class Markers(PathCollection):
     def __init__(self, xdata, ydata):
         offsets = np.stack([xdata, ydata], axis=1)
         self._symbol = Symbol.CIRCLE
-
         super().__init__(
             (_get_path(self._symbol),),
             sizes=[6] * len(offsets),
             offsets=offsets,
+            offset_transform=plt.gca().transData,
         )
+        self.set_transform(mtransforms.IdentityTransform())
 
     ##### LayerProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -57,19 +59,28 @@ class Markers(PathCollection):
     def _plt_set_symbol(self, symbol: Symbol):
         path = _get_path(symbol)
         self.set_paths([path] * len(self.get_offsets()))
+        self._symbol = symbol
 
     def _plt_get_symbol_size(self) -> float:
-        return self.get_sizes()[0]
+        return float(np.sqrt(self.get_sizes()[0]))
 
     def _plt_set_symbol_size(self, size: float):
-        return
-        self.set_sizes([size] * len(self.get_offsets()))
+        self.set_sizes([size**2] * len(self.get_offsets()))
 
+    ##### HasFaces protocol #####
     def _plt_get_face_color(self) -> NDArray[np.float32]:
         return self.get_facecolor()[0]
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         self.set_facecolor([color] * len(self.get_offsets()))
+
+    def _plt_get_face_pattern(self) -> FacePattern:
+        return FacePattern(self.get_hatch())
+
+    def _plt_set_face_pattern(self, pattern: FacePattern):
+        self.set_hatch(pattern.value)
+
+    ##### HasEdges protocol #####
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return self.get_edgecolor()[0]

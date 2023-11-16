@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle
+from whitecanvas.types import LineStyle, FacePattern
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 
@@ -27,6 +27,15 @@ class BarBase(PrimitiveLayer[BarProtocol]):
     @face_color.setter
     def face_color(self, color):
         self._backend._plt_set_face_color(norm_color(color))
+
+    @property
+    def face_pattern(self) -> FacePattern:
+        """Face fill pattern of the bars."""
+        return self._backend._plt_get_face_pattern()
+
+    @face_pattern.setter
+    def face_pattern(self, style: str | FacePattern):
+        self._backend._plt_set_face_pattern(FacePattern(style))
 
     @property
     def edge_color(self):
@@ -95,15 +104,16 @@ class Bar(BarBase):
             xc = as_array_1d(xdata)
         if height is not None:
             h = as_array_1d(height)
-        x0, x1, y0, y1 = _to_backend_arrays(xc, h, self.width)
+        x0, x1, y0, y1 = _to_backend_arrays(xc, h, self.bar_width)
         self._backend._plt_set_data(x0, x1, y0, y1)
 
     @property
-    def width(self) -> float:
+    def bar_width(self) -> float:
+        """Width of the bars."""
         return self._width
 
-    @width.setter
-    def width(self, w: float):
+    @bar_width.setter
+    def bar_width(self, w: float):
         if w <= 0:
             raise ValueError(f"Expected width > 0, got {w}")
         x0, x1, y0, y1 = self._backend._plt_get_data()

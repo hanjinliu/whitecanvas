@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 from matplotlib.container import BarContainer
 from matplotlib.patches import Rectangle
 from whitecanvas.protocols import BarProtocol, check_protocol
+from whitecanvas.types import FacePattern
 
 
 @check_protocol(BarProtocol)
@@ -68,6 +69,13 @@ class Bar(BarContainer):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         for patch in self.patches:
             patch.set_facecolor(color)
+
+    def _plt_get_face_pattern(self) -> FacePattern:
+        return FacePattern(self.patches[0].get_hatch())
+
+    def _plt_set_face_pattern(self, pattern: FacePattern):
+        for patch in self.patches:
+            patch.set_hatch(pattern.value)
 
     ##### HasEdges protocol #####
 

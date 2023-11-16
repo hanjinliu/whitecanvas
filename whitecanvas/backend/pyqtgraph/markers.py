@@ -7,22 +7,28 @@ import pyqtgraph as pg
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, LineStyle
-from ._qt_utils import array_to_qcolor, from_qt_line_style, to_qt_line_style
+from whitecanvas.types import Symbol, LineStyle, FacePattern
+from ._qt_utils import (
+    array_to_qcolor,
+    from_qt_line_style,
+    to_qt_line_style,
+    from_qt_symbol,
+    to_qt_symbol,
+    from_qt_brush_style,
+    to_qt_brush_style,
+)
 
 
 @check_protocol(MarkersProtocol)
 class Markers(pg.ScatterPlotItem):
     def __init__(self, xdata, ydata):
-        pen = pg.mkPen("white", width=1, style=Qt.PenStyle.SolidLine)
-        brush = pg.mkBrush("white")
+        pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
+        pen.setCosmetic(True)
         super().__init__(
             xdata,
             ydata,
             pen=pen,
-            brush=brush,
-            symbol="o",
-            size=6,
+            brush=QtGui.QBrush(QtGui.QColor(0, 0, 0)),
             antialias=False,
         )
 
@@ -51,10 +57,10 @@ class Markers(pg.ScatterPlotItem):
         return self.opts["brush"]
 
     def _plt_get_symbol(self) -> Symbol:
-        return self.opts["symbol"]
+        return from_qt_symbol(self.opts["symbol"])
 
     def _plt_set_symbol(self, symbol: Symbol):
-        self.setSymbol(symbol.value)  # TODO
+        self.setSymbol(to_qt_symbol(symbol))
 
     def _plt_get_symbol_size(self) -> float:
         return self.opts["size"]
@@ -62,6 +68,7 @@ class Markers(pg.ScatterPlotItem):
     def _plt_set_symbol_size(self, size: float):
         self.setSize(size)
 
+    ##### HasFace protocol #####
     def _plt_get_face_color(self) -> NDArray[np.float32]:
         rgba = self._get_brush().color().getRgbF()
         return np.array(rgba)
@@ -71,6 +78,15 @@ class Markers(pg.ScatterPlotItem):
         brush.setColor(array_to_qcolor(color))
         self.setBrush(brush)
 
+    def _plt_get_face_pattern(self) -> FacePattern:
+        return from_qt_brush_style(self._get_brush().style())
+
+    def _plt_set_face_pattern(self, pattern: FacePattern):
+        brush = self._get_brush()
+        brush.setStyle(to_qt_brush_style(pattern))
+        self.setBrush(brush)
+
+    ##### HasEdges protocol #####
     def _get_pen(self) -> QtGui.QPen:
         return self.opts["pen"]
 

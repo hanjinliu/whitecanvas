@@ -17,6 +17,9 @@ class _strEnum(Enum):
     def __hash__(self):
         return hash(self.value)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self.name}"
+
 
 class LineStyle(_strEnum):
     SOLID = "-"
@@ -24,6 +27,17 @@ class LineStyle(_strEnum):
     DASH_DOT = "-."
     DOT = ":"
     NONE = " "
+
+
+class FacePattern(_strEnum):
+    SOLID = " "
+    HORIZONTAL = "-"
+    VERTICAL = "|"
+    CROSS = "+"
+    DIAGONAL_BACK = "/"
+    DIAGONAL_FORWARD = "\\"
+    DIAGONAL_CROSS = "x"
+    DOTS = "."
 
 
 class Symbol(_strEnum):

@@ -155,7 +155,9 @@ _MOUSE_MOD_MAP = {
 
 class MainCanvas:
     def __init__(self):
-        self._canvas = Canvas()
+        fig, ax = plt.subplots()
+        self._canvas = Canvas(ax=ax)
+        self._figure = fig
 
     def _plt_get_canvas(self) -> protocols.CanvasProtocol:
         return self._canvas
@@ -164,4 +166,7 @@ class MainCanvas:
         return True
 
     def _plt_set_visible(self, visible: bool):
-        pass
+        if visible:
+            self._figure.show()
+        else:
+            pass

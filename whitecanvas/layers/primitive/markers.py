@@ -5,7 +5,7 @@ from numpy.typing import ArrayLike
 from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import Symbol, LineStyle
+from whitecanvas.types import Symbol, LineStyle, ColorType, FacePattern
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 
@@ -16,12 +16,12 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         ydata: ArrayLike,
         *,
         name: str | None = None,
-        symbol=Symbol.CIRCLE,
-        size=6,
-        face_color="blue",
-        edge_color="black",
-        edge_width=0,
-        edge_style=LineStyle.SOLID,
+        symbol: Symbol | str = Symbol.CIRCLE,
+        size: float = 10,
+        face_color: ColorType = "blue",
+        edge_color: ColorType = "black",
+        edge_width: float = 0,
+        edge_style: LineStyle | str = LineStyle.SOLID,
         backend: Backend | str | None = None,
     ):
         xdata, ydata = normalize_xy(xdata, ydata)
@@ -77,6 +77,15 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
     @face_color.setter
     def face_color(self, color):
         self._backend._plt_set_face_color(norm_color(color))
+
+    @property
+    def face_pattern(self) -> str:
+        """Face fill pattern of the marker symbol."""
+        return self._backend._plt_get_face_pattern()
+
+    @face_pattern.setter
+    def face_pattern(self, style: FacePattern | str):
+        self._backend._plt_set_face_pattern(FacePattern(style))
 
     @property
     def edge_color(self):

@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-from whitecanvas.types import ColorType
+from whitecanvas.types import ColorType, _Void
 from whitecanvas.layers.primitive import Line, Markers
 from whitecanvas.layers._base import LayerGroup
-
-
-class _Void:
-    pass
 
 
 _void = _Void()

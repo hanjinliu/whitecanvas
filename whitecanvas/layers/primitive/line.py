@@ -7,11 +7,13 @@ from numpy.typing import ArrayLike
 from whitecanvas.protocols import LineProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, Symbol, ColorType
+from whitecanvas.types import LineStyle, Symbol, ColorType, _Void
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers.group import LineMarkers
+
+_void = _Void()
 
 
 class Line(PrimitiveLayer[LineProtocol]):
@@ -92,15 +94,20 @@ class Line(PrimitiveLayer[LineProtocol]):
 
     def with_markers(
         self,
-        symbol=Symbol.CIRCLE,
-        size=6,
-        face_color: ColorType = "blue",
-        edge_color: ColorType = "black",
+        symbol: Symbol | str = Symbol.CIRCLE,
+        size: float = 10,
+        face_color: ColorType | _Void = _void,
+        edge_color: ColorType | _Void = _void,
         edge_width: float = 0,
         edge_style: str | LineStyle = LineStyle.SOLID,
     ) -> LineMarkers:
         from whitecanvas.layers.group import LineMarkers
         from whitecanvas.layers.primitive import Markers
+
+        if face_color is _void:
+            face_color = self.color
+        if edge_color is _void:
+            edge_color = self.color
 
         markers = Markers(
             *self.data, symbol=symbol, size=size, face_color=face_color,

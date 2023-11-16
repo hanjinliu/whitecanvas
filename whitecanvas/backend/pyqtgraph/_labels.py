@@ -126,5 +126,6 @@ class Axis(_CanvasComponent):
 
     def _plt_set_color(self, color):
         pen = QPen(array_to_qcolor(color))
+        pen.setCosmetic(True)
         self._plt_get_axis().setTextPen(pen)
         self._plt_get_axis().setPen(pen)

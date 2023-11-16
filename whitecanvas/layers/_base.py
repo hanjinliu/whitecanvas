@@ -1,17 +1,22 @@
 from __future__ import annotations
 
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod, abstractproperty
 from typing import Generic, Iterable, Iterator, TypeVar, NamedTuple, TYPE_CHECKING
 from psygnal import Signal, SignalGroup
 import numpy as np
+from numpy.typing import ArrayLike
+from whitecanvas.types import ColorType, _Void
 from whitecanvas.protocols import BaseProtocol
 from whitecanvas.backend import Backend
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
+    from whitecanvas.layers import group as _lg
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
+
+_void = _Void()
 
 
 class Layer(ABC):
@@ -84,7 +89,21 @@ class PrimitiveLayer(Layer, Generic[_P]):
             if issubclass(mro, PrimitiveLayer) and mro is not PrimitiveLayer and backend.has(name):
                 self._backend_name = backend.name
                 return backend.get(name)(*args)
-        raise TypeError(f"Cannot create a backend for {type(self).__name__}")
+        raise TypeError(f"Cannot create a {backend.name} backend for {type(self).__name__}")
+
+
+class XYDataLayer(PrimitiveLayer[_P]):
+    @abstractproperty
+    def data(self) -> XYData:
+        """Current data of the layer."""
+
+    @abstractmethod
+    def set_data(
+        self,
+        xdata: ArrayLike | None = None,
+        ydata: ArrayLike | None = None,
+    ):
+        """Set the x and y data of the layer."""
 
 
 class LayerGroup(Layer):

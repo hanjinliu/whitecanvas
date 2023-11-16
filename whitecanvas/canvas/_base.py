@@ -9,7 +9,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas import protocols
 from whitecanvas import layers as _l
-from whitecanvas.types import LineStyle, Symbol
+from whitecanvas.types import LineStyle, Symbol, ColorType
 from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend
@@ -82,9 +82,9 @@ class CanvasBase(ABC, Generic[_T]):
     @overload
     def add_line(
         self, ydata: ArrayLike, *, name: str | None = None,
-        color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
+        color: ColorType = "blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1.0, antialias: bool = True,
-    ) -> layers.Line:  # fmt: skip
+    ) -> _l.Line:  # fmt: skip
         ...
 
     @overload
@@ -92,7 +92,7 @@ class CanvasBase(ABC, Generic[_T]):
         self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
         color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1.0, antialias: bool = True,
-    ) -> layers.Line:  # fmt: skip
+    ) -> _l.Line:  # fmt: skip
         ...
 
     def add_line(self, *args, name=None, color="blue", width=1.0, style=LineStyle.SOLID, antialias=True):
@@ -115,7 +115,7 @@ class CanvasBase(ABC, Generic[_T]):
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Line, name)
         layer = _l.Line(
-            xdata, ydata, name=name, color=color, width=width, style=style,
+            xdata, ydata, name=name, color=color, line_width=width, line_style=style,
             antialias=antialias, backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)
@@ -169,8 +169,8 @@ class CanvasBase(ABC, Generic[_T]):
         edge_style=LineStyle.SOLID,
     ):
         xdata, ydata = normalize_xy(*args)
-        name = self._coerce_name(_l.Bar, name)
-        layer = _l.Bar(
+        name = self._coerce_name(_l.Bars, name)
+        layer = _l.Bars(
             xdata, ydata, width=width, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
             backend=self._backend_installer,
@@ -195,7 +195,7 @@ class CanvasBase(ABC, Generic[_T]):
         counts, edges = np.histogram(data, bins, density=density, range=range)
         centers = (edges[:-1] + edges[1:]) / 2
         width = edges[1] - edges[0]
-        layer = _l.Bar(
+        layer = _l.Bars(
             centers, counts, width=width, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
             backend=self._backend_installer,
@@ -216,7 +216,48 @@ class CanvasBase(ABC, Generic[_T]):
         name = self._coerce_name(_l.InfCurve, name)
         layer = _l.InfCurve(
             model, params=params, bounds=bounds, name=name, color=color,
-            width=width, style=style, antialias=antialias,
+            line_width=width, line_style=style, antialias=antialias,
+            backend=self._backend_installer,
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_fillbetween(
+        self,
+        xdata: ArrayLike,
+        ydata0: ArrayLike,
+        ydata1: ArrayLike,
+        *,
+        name: str | None = None,
+        face_color="blue",
+        edge_color="black",
+        edge_width=0,
+        edge_style=LineStyle.SOLID,
+    ):
+        name = self._coerce_name(_l.FillBetween, name)
+        layer = _l.FillBetween(
+            xdata, ydata0, ydata1, name=name, face_color=face_color,
+            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
+            backend=self._backend_installer,
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_errorbar(
+        self,
+        xdata: ArrayLike,
+        ylow: ArrayLike,
+        yhigh: ArrayLike,
+        *,
+        name: str | None = None,
+        color: ColorType = "blue",
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = False,
+        capsize: float = 0.0,
+    ):
+        name = self._coerce_name(_l.Errorbars, name)
+        layer = _l.Errorbars(
+            xdata, ylow, yhigh, name=name, color=color, line_width=width,
+            line_style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)

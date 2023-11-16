@@ -5,8 +5,6 @@ from matplotlib.lines import Line2D
 from whitecanvas.protocols import LineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 
-from whitecanvas.backend._const import DEFAULT_COLOR
-
 
 @check_protocol(LineProtocol)
 class Line(Line2D):
@@ -16,7 +14,7 @@ class Line(Line2D):
             ydata,
             linewidth=1,
             linestyle="-",
-            color=DEFAULT_COLOR,
+            color="blue",
             markersize=7,
         )
 

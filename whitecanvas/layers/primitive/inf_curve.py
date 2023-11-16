@@ -21,8 +21,8 @@ class InfCurve(Line):
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
         color=None,
-        width: float = 1,
-        style: LineStyle | str = LineStyle.SOLID,
+        line_width: float = 1,
+        line_style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
     ):
@@ -35,7 +35,14 @@ class InfCurve(Line):
         xdata = np.array([_lower, _upper])
         ydata = model(xdata, **params)
         super().__init__(
-            xdata, ydata, name=name, color=color, width=width, style=style, antialias=antialias, backend=backend
+            xdata,
+            ydata,
+            name=name,
+            color=color,
+            line_width=line_width,
+            line_style=line_style,
+            antialias=antialias,
+            backend=backend,
         )
         self._bounds = bounds
         self._model = model

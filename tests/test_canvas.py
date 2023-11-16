@@ -32,7 +32,7 @@ def test_line(backend: str):
     layer = canvas.add_line(np.zeros(10))
     layer.color = [1.0, 0.0, 0.0, 1.0]
     assert_allclose(layer.color, [1.0, 0.0, 0.0, 1.0])
-    layer.style = ":"
-    assert layer.style == ":"
-    layer.width = 2
-    assert layer.width == 2
+    layer.line_style = ":"
+    assert layer.line_style == ":"
+    layer.line_width = 2
+    assert layer.line_width == 2

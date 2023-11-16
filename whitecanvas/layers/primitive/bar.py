@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, FacePattern
+from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
+
+if TYPE_CHECKING:
+    from whitecanvas.layers import group as _lg
 
 
 def _to_backend_arrays(xdata, height, width: float):
@@ -16,6 +20,9 @@ def _to_backend_arrays(xdata, height, width: float):
     x1 = xc + width / 2
     y0 = np.zeros_like(y1)
     return x0, x1, y0, y1
+
+
+_void = _Void()
 
 
 class BarBase(PrimitiveLayer[BarProtocol]):
@@ -63,7 +70,7 @@ class BarBase(PrimitiveLayer[BarProtocol]):
         self._backend._plt_set_edge_style(LineStyle(style))
 
 
-class Bar(BarBase):
+class Bars(BarBase):
     def __init__(
         self,
         xdata: ArrayLike,
@@ -82,7 +89,7 @@ class Bar(BarBase):
         x0, x1, y0, y1 = _to_backend_arrays(xdata, height, width)
         self._backend = self._create_backend(Backend(backend), x0, x1, y0, y1)
         self._width = width
-        self.name = name if name is not None else "Line"
+        self.name = name if name is not None else "Bars"
         self.face_color = face_color
         self.edge_color = edge_color
         self.edge_width = edge_width
@@ -121,3 +128,83 @@ class Bar(BarBase):
         x0 = x0 - dx
         x1 = x1 + dx
         self._backend._plt_set_data(x0, x1, y0, y1)
+
+    def setup(
+        self,
+        *,
+        face_color: ColorType | _Void = _void,
+        edge_color: ColorType | _Void = _void,
+        edge_width: float | _Void = _void,
+        edge_style: LineStyle | str | _Void = _void,
+    ):
+        if face_color is not _void:
+            self.face_color = face_color
+        if edge_color is not _void:
+            self.edge_color = edge_color
+        if edge_width is not _void:
+            self.edge_width = edge_width
+        if edge_style is not _void:
+            self.edge_style = edge_style
+        return self
+
+    def with_xerr(
+        self,
+        err: ArrayLike,
+        err_high: ArrayLike | None = None,
+        color: ColorType | _Void = _void,
+        line_width: float | _Void = _void,
+        line_style: str | _Void = _void,
+        antialias: bool | _Void = True,
+        capsize: float = 0,
+    ) -> _lg.LineErrorbars:
+        from whitecanvas.layers.group import LineErrorbars
+        from whitecanvas.layers.primitive import Errorbars
+
+        if err_high is None:
+            err_high = err
+        if color is _void:
+            color = self.edge_color
+        if line_width is _void:
+            line_width = self.edge_width
+        if line_style is _void:
+            line_style = self.edge_style
+        # if antialias is _void:
+        #     antialias = self.antialias
+        xerr = Errorbars(
+            self.data.y, self.data.x - err, self.data.x + err_high, color=color,
+            line_width=line_width, line_style=line_style, antialias=antialias, capsize=capsize,
+            backend=self._backend_name
+        )  # fmt: skip
+        yerr = Errorbars([], [], [], backend=self._backend_name)
+        return LineErrorbars(self, xerr, yerr, name=self.name)
+
+    def with_yerr(
+        self,
+        err: ArrayLike,
+        err_high: ArrayLike | None = None,
+        color: ColorType | _Void = _void,
+        line_width: float | _Void = _void,
+        line_style: str | _Void = _void,
+        antialias: bool = True,
+        capsize: float = 0,
+    ) -> _lg.LineErrorbars:
+        from whitecanvas.layers.group import LineErrorbars
+        from whitecanvas.layers.primitive import Errorbars
+
+        if err_high is None:
+            err_high = err
+        if color is _void:
+            color = self.edge_color
+        if line_width is _void:
+            line_width = self.edge_width
+        if line_style is _void:
+            line_style = self.edge_style
+        # if antialias is _void:
+        #     antialias = self.antialias
+        yerr = Errorbars(
+            self.data.x, self.data.y - err, self.data.y + err_high, color=color,
+            line_width=line_width, line_style=line_style, antialias=antialias, capsize=capsize,
+            backend=self._backend_name
+        )  # fmt: skip
+        xerr = Errorbars([], [], [], backend=self._backend_name)
+        return LineErrorbars(self, xerr, yerr, name=self.name)

@@ -5,4 +5,11 @@ ColorType = Union[str, Iterable["int | float"], Color]
 
 
 class _Void:
-    """Internal sentinel class."""
+    """A singleton class that represents a void value."""
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance

@@ -1,7 +1,9 @@
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.types import LineStyle, Symbol, FacePattern
+
+Array1D = NDArray[np.number]
 
 
 @runtime_checkable
@@ -21,28 +23,43 @@ class BaseProtocol(Protocol):
 
 @runtime_checkable
 class XYDataProtocol(BaseProtocol, Protocol):
-    def _plt_get_data(self) -> tuple[np.ndarray, np.ndarray]:
+    def _plt_get_data(self) -> tuple[Array1D, Array1D]:
         """Return the x and y array."""
 
-    def _plt_set_data(self, xdata: np.ndarray, ydata: np.ndarray):
+    def _plt_set_data(self, xdata: Array1D, ydata: Array1D):
         """Set the x and y array."""
 
 
 @runtime_checkable
 class XYYDataProtocol(BaseProtocol, Protocol):
-    def _plt_get_data(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _plt_get_data(self) -> tuple[Array1D, Array1D, Array1D]:
         """Return the x and y array."""
 
-    def _plt_set_data(self, xdata: np.ndarray, ydata0: np.ndarray, ydata1: np.ndarray):
+    def _plt_set_data(self, xdata: Array1D, ydata0: Array1D, ydata1: Array1D):
         """Set the x and y array."""
 
 
 @runtime_checkable
+class OrientedXYYDataProtocol(BaseProtocol, Protocol):
+    def _plt_get_vertical_data(self) -> tuple[Array1D, Array1D, Array1D]:
+        """Return the vertical representative data."""
+
+    def _plt_get_horizontal_data(self) -> tuple[Array1D, Array1D, Array1D]:
+        """Return the horizontal representative data."""
+
+    def _plt_set_vertical_data(self, xdata: Array1D, ydata0: Array1D, ydata1: Array1D):
+        """Set the vertical representative data."""
+
+    def _plt_set_horizontal_data(self, xdata: Array1D, ydata0: Array1D, ydata1: Array1D):
+        """Set the horizontal representative data."""
+
+
+@runtime_checkable
 class XXYYDataProtocol(BaseProtocol, Protocol):
-    def _plt_get_data(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def _plt_get_data(self) -> tuple[Array1D, Array1D, Array1D, Array1D]:
         """Return the x and y array."""
 
-    def _plt_set_data(self, xdata0: np.ndarray, xdata1: np.ndarray, ydata0: np.ndarray, ydata1: np.ndarray):
+    def _plt_set_data(self, xdata0: Array1D, xdata1: Array1D, ydata0: Array1D, ydata1: Array1D):
         """Set the x and y array."""
 
 
@@ -150,9 +167,18 @@ class FillBetweenProtocol(XYYDataProtocol, HasFaces, HasEdges, Protocol):
 
 
 @runtime_checkable
+class ErrorbarProtocol(OrientedXYYDataProtocol, HasEdges, Protocol):
+    def _plt_get_capsize(self) -> float:
+        """Return the capsize of the error bar edges."""
+
+    def _plt_set_capsize(self, capsize: float, orient: Literal["v", "h"] = "v"):
+        """Set the capsize of the error bar edges."""
+
+
+@runtime_checkable
 class RangeDataProtocol(HasFaces, HasEdges, Protocol):
-    def _plt_get_ranges(self) -> np.ndarray:  # (N, 2)
+    def _plt_get_ranges(self) -> NDArray[np.number]:  # (N, 2)
         """Return the ranges."""
 
-    def _plt_set_ranges(self, range: np.ndarray):
+    def _plt_set_ranges(self, range: NDArray[np.number]):
         """Set the ranges."""

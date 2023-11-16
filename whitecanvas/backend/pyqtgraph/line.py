@@ -2,19 +2,18 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from qtpy.QtCore import Qt
 from qtpy import QtGui
 import pyqtgraph as pg
 from whitecanvas.protocols import LineProtocol, check_protocol
 from whitecanvas.types import LineStyle
-from whitecanvas.backend._const import DEFAULT_COLOR
 from ._qt_utils import array_to_qcolor, from_qt_line_style, to_qt_line_style
 
 
 @check_protocol(LineProtocol)
 class Line(pg.PlotCurveItem):
     def __init__(self, xdata, ydata):
-        pen = pg.mkPen(DEFAULT_COLOR, width=1, style=Qt.PenStyle.SolidLine)
+        pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
+        pen.setCosmetic(True)
         super().__init__(xdata, ydata, pen=pen, antialias=False)
 
     ##### BaseProtocol #####

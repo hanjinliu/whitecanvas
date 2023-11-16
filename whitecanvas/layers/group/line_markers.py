@@ -27,14 +27,7 @@ class LineMarkers(LayerGroup):
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
     ):
-        if color is not _void:
-            self.line.color = color
-        if width is not _void:
-            self.line.width = width
-        if style is not _void:
-            self.line.style = style
-        if antialias is not _void:
-            self.line.antialias = antialias
+        self.line.setup(color=color, line_width=width, style=style, antialias=antialias)
         return self
 
     def setup_markers(

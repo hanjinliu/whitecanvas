@@ -10,7 +10,7 @@ from whitecanvas.types import FacePattern
 
 
 @check_protocol(BarProtocol)
-class Bar(BarContainer):
+class Bars(BarContainer):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         patches = []
         width = xhigh - xlow

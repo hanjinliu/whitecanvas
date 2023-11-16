@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 
 from qtpy import QtGui
 import pyqtgraph as pg
-from whitecanvas.protocols import BarProtocol, check_protocol
+from whitecanvas.protocols import FillBetweenProtocol, check_protocol
 from whitecanvas.types import LineStyle, FacePattern
 from ._qt_utils import (
     array_to_qcolor,
@@ -15,16 +15,14 @@ from ._qt_utils import (
 )
 
 
-@check_protocol(BarProtocol)
-class Bars(pg.BarGraphItem):
-    def __init__(self, xlow, xhigh, ylow, yhigh):
+@check_protocol(FillBetweenProtocol)
+class FillBetween(pg.FillBetweenItem):
+    def __init__(self, xdata, ydata0, ydata1):
+        c0 = pg.PlotCurveItem(xdata, ydata0)
+        c1 = pg.PlotCurveItem(xdata, ydata1)
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
-        super().__init__(
-            x0=xlow, x1=xhigh, y0=ylow, y1=yhigh,
-            pen=pen,
-            brush=QtGui.QBrush(QtGui.QColor(0, 0, 0)),
-        )  # fmt: skip
+        super().__init__(c0, c1, pen=pen, brush=QtGui.QBrush(QtGui.QColor(0, 0, 0)))
 
     ##### LayerProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -41,15 +39,14 @@ class Bars(pg.BarGraphItem):
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
-        return self.opts["x0"], self.opts["x1"], self.opts["y0"], self.opts["y1"]
+        return self.getData()
 
-    def _plt_set_data(self, xlow, xhigh, ylow, yhigh):
-        self.setOpts(x0=xlow, x1=xhigh, y0=ylow, y1=yhigh)
+    def _plt_set_data(self, xdata, ydata):
+        self.setData(xdata, ydata)
 
     ##### HasFace protocol #####
-
     def _get_brush(self) -> QtGui.QBrush:
-        return self.opts["brush"]
+        return self.brush()
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
         rgba = self._get_brush().color().getRgbF()
@@ -58,21 +55,19 @@ class Bars(pg.BarGraphItem):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         brush = self._get_brush()
         brush.setColor(array_to_qcolor(color))
-        self.setOpts(brush=brush)
+        self.setBrush(brush)
 
     def _plt_get_face_pattern(self) -> FacePattern:
         return from_qt_brush_style(self._get_brush().style())
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
-        # BUG: pyqtgraph does not support setting brush style correctly
         brush = self._get_brush()
         brush.setStyle(to_qt_brush_style(pattern))
-        self.setOpts(brush=brush)
+        self.setBrush(brush)
 
     ##### HasEdges protocol #####
-
     def _get_pen(self) -> QtGui.QPen:
-        return self.opts["pen"]
+        return self.pen()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         rgba = self._get_pen().color().getRgbF()
@@ -81,7 +76,7 @@ class Bars(pg.BarGraphItem):
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         pen = self._get_pen()
         pen.setColor(array_to_qcolor(color))
-        self.setOpts(pen=pen)
+        self.setPen(pen)
 
     def _plt_get_edge_width(self) -> float:
         return self._get_pen().widthF()
@@ -89,7 +84,7 @@ class Bars(pg.BarGraphItem):
     def _plt_set_edge_width(self, width: float):
         pen = self._get_pen()
         pen.setWidthF(width)
-        self.setOpts(pen=pen)
+        self.setPen(pen)
 
     def _plt_get_edge_style(self) -> LineStyle:
         return from_qt_line_style(self._get_pen().style())
@@ -97,4 +92,4 @@ class Bars(pg.BarGraphItem):
     def _plt_set_edge_style(self, style: LineStyle):
         pen = self._get_pen()
         pen.setStyle(to_qt_line_style(style))
-        self.setOpts(pen=pen)
+        self.setPen(pen)

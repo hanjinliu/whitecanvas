@@ -1,5 +1,5 @@
 from ._base import PrimitiveLayer, Layer, LayerGroup
-from .primitive import Line, InfCurve, Markers, Bars, Band, Errorbars, Text
+from .primitive import Line, InfCurve, Markers, Bars, Band, Errorbars, Text, Image
 
 __all__ = [
     "Layer",
@@ -12,4 +12,5 @@ __all__ = [
     "Band",
     "InfCurve",
     "Text",
+    "Image",
 ]

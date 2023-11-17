@@ -51,6 +51,12 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     def _plt_get_ylabel(self) -> TextLabelProtocol:
         """Get y label handler"""
 
+    def _plt_get_aspect_ratio(self) -> float | None:
+        """Get aspect ratio of canvas"""
+
+    def _plt_set_aspect_ratio(self, ratio: float | None):
+        """Set aspect ratio of canvas"""
+
     def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
 
@@ -107,6 +113,30 @@ class AxisProtocol(Protocol):
 
     def _plt_set_color(self, color):
         """Set color of axis"""
+
+    def _plt_flip(self) -> None:
+        """Flip axis"""
+
+
+@runtime_checkable
+class AxisGridProtocol(Protocol):
+    def _plt_get_visible(self) -> bool:
+        """Get visibility of axis grid"""
+
+    def _plt_set_visible(self, visible: bool):
+        """Set visibility of axis grid"""
+
+    def _plt_get_color(self) -> np.ndarray:
+        """Get color of axis grid"""
+
+    def _plt_set_color(self, color):
+        """Set color of axis grid"""
+
+    def _plt_get_width(self) -> float:
+        """Get width of axis grid"""
+
+    def _plt_set_width(self, width: float):
+        """Set width of axis grid"""
 
 
 @runtime_checkable

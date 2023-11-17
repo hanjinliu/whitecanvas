@@ -160,6 +160,9 @@ class XAxis(AxisBase):
         ax.xaxis.set_tick_params(color=color, labelcolor=color)
         ax.spines["bottom"].set_color(color)
 
+    def _plt_flip(self):
+        self._canvas()._axes.invert_xaxis()
+
 
 class YAxis(AxisBase):
     def __init__(self, canvas: Canvas):
@@ -179,3 +182,6 @@ class YAxis(AxisBase):
         color = tuple(color)
         ax.yaxis.set_tick_params(color=color, labelcolor=color)
         ax.spines["left"].set_color(color)
+
+    def _plt_flip(self):
+        self._canvas()._axes.invert_yaxis()

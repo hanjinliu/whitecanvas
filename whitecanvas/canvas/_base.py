@@ -10,9 +10,9 @@ from numpy.typing import ArrayLike, NDArray
 from whitecanvas import protocols
 from whitecanvas import layers as _l
 from whitecanvas.layers import group as _lg
-from whitecanvas.types import LineStyle, Symbol, ColorType, Alignment
+from whitecanvas.types import LineStyle, Symbol, ColorType, Alignment, ColormapType
 from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
-from whitecanvas.utils.normalize import as_array_1d, normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 from whitecanvas.backend import Backend
 
 
@@ -62,12 +62,23 @@ class CanvasBase(ABC, Generic[_T]):
         """Return the canvas object."""
 
     @property
-    def background_color(self):
-        return self._canvas()._plt_get_background_color()
+    def background_color(self) -> NDArray[np.floating]:
+        """Background color of the canvas."""
+        return norm_color(self._canvas()._plt_get_background_color())
 
     @background_color.setter
     def background_color(self, color):
         self._canvas()._plt_set_background_color(np.array(Color(color)))
+
+    @property
+    def aspect_ratio(self) -> float | None:
+        return self._canvas()._plt_get_aspect_ratio()
+
+    @aspect_ratio.setter
+    def aspect_ratio(self, ratio: float | None):
+        if ratio is not None:
+            ratio = float(ratio)
+        self._canvas()._plt_set_aspect_ratio(ratio)
 
     def show(self):
         """Show the canvas."""
@@ -305,7 +316,58 @@ class CanvasBase(ABC, Generic[_T]):
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str = "sans-serif",
     ) -> _lg.TextGroup:
-        layer = _lg.TextGroup.from_strings(x, y, texts, name=name, backend=self._backend_installer)
+        layer = _lg.TextGroup.from_strings(
+            x,
+            y,
+            texts,
+            name=name,
+            color=color,
+            size=size,
+            rotation=rotation,
+            anchor=anchor,
+            fontfamily=fontfamily,
+            backend=self._backend_installer,
+        )
+        return self.add_layer(layer)
+
+    def add_image(
+        self,
+        image: ArrayLike,
+        *,
+        cmap: ColormapType = "gray",
+        clim: tuple[float | None, float | None] | None = None,
+        flip_canvas: bool = True,
+        lock_aspect: bool = True,
+    ) -> _l.Image:
+        """
+        Add an image layer to the canvas.
+
+        This method automatically flips the image vertically by default.
+
+        Parameters
+        ----------
+        image : ArrayLike
+            Image data. Must be 2D or 3D array. If 3D, the last dimension must be
+            RGB(A). Note that the first dimension is the vertical axis.
+        cmap : ColormapType, default is "gray"
+            Colormap used for the image.
+        clim : (float or None, float or None) or None
+            Contrast limits. If None, the limits are automatically determined by
+            min and max of the data. You can also pass None separately to either
+            limit to use the default behavior.
+        flip_canvas : bool, default is True
+            If True, flip the canvas vertically so that the image looks normal.
+
+        Returns
+        -------
+        Image
+            The image layer.
+        """
+        layer = _l.Image(image, cmap=cmap, clim=clim, backend=self._backend_installer)
+        if flip_canvas and not self.y.flipped:
+            self.y.flipped = True
+        if lock_aspect:
+            self.aspect_ratio = 1.0
         return self.add_layer(layer)
 
     def add_layer(self, layer: _L) -> _L:

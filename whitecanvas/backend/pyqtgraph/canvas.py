@@ -83,6 +83,20 @@ class Canvas(QtW.QWidget):
 
         return arr[:, :, [2, 1, 0, 3]]
 
+    def _plt_get_aspect_ratio(self) -> float | None:
+        """Get aspect ratio of canvas"""
+        locked = self._viewbox().state['aspectLocked']
+        if locked == False:
+            return None
+        return float(locked)
+
+    def _plt_set_aspect_ratio(self, ratio: float | None):
+        """Set aspect ratio of canvas"""
+        if ratio is None:
+            self._viewbox().setAspectLocked(lock=False)
+        else:
+            self._viewbox().setAspectLocked(lock=True, ratio=ratio)
+
     def _viewbox(self) -> pg.ViewBox:
         return self._plot_item.vb
 

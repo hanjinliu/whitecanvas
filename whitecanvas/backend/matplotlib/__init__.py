@@ -4,4 +4,5 @@ from .bar import Bars
 from .fillbetween import Band
 from .errorbar import Errorbars
 from .text import Text
+from .image import Image
 from .canvas import Canvas, MainCanvas

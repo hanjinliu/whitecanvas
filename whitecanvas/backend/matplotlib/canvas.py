@@ -11,6 +11,7 @@ from .bar import Bars
 from .fillbetween import Band
 from .errorbar import Errorbars
 from .text import Text
+from .image import Image
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
@@ -61,6 +62,18 @@ class Canvas:
         img = data.reshape((int(h), int(w), -1))
         return img
 
+    def _plt_get_aspect_ratio(self) -> float | None:
+        out = self._axes.get_aspect()
+        if out == "auto":
+            return None
+        return out
+
+    def _plt_set_aspect_ratio(self, ratio: float | None):
+        if ratio is None:
+            self._axes.set_aspect("auto")
+        else:
+            self._axes.set_aspect(ratio)
+
     def _plt_insert_layer(self, idx: int, layer: protocols.BaseProtocol):
         if isinstance(layer, Line):
             self._axes.add_line(layer)
@@ -71,6 +84,8 @@ class Canvas:
                 self._axes.add_patch(patch)
         elif isinstance(layer, Text):
             self._axes._add_text(layer)
+        elif isinstance(layer, Image):
+            self._axes.add_image(layer)
         else:
             raise NotImplementedError(f"{layer}")
         self._axes.autoscale_view()  # TODO: remove this line

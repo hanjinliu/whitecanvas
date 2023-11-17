@@ -1,7 +1,8 @@
-from typing import Union, Iterable
-from cmap import Color
+from typing import Any, Union, Iterable
+from cmap import Color, Colormap
 
 ColorType = Union[str, Iterable["int | float"], Color]
+ColormapType = Union[str, Any]
 
 
 class _Void:

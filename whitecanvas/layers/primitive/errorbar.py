@@ -38,11 +38,10 @@ class Errorbars(PrimitiveLayer[ErrorbarProtocol]):
         self._backend = self._create_backend(Backend(backend), t0, y0, y1, orient)
         self._orient = orient
         self.name = name if name is not None else "Errorbar"
-        self.color = color
-        self.line_width = line_width
-        self.line_style = line_style
-        # self.antialias = antialias  TODO
-        self.capsize = capsize
+        self.setup(
+            color=color, line_width=line_width, line_style=line_style,
+            antialias=antialias, capsize=capsize
+        )  # fmt: skip
 
     @property
     def data(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

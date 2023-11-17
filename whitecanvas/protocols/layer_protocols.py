@@ -1,6 +1,7 @@
 from typing import Literal, Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
+from cmap import Colormap
 from whitecanvas.types import LineStyle, Symbol, FacePattern
 
 Array1D = NDArray[np.number]
@@ -190,6 +191,27 @@ class ErrorbarProtocol(OrientedXYYDataProtocol, HasEdges, Protocol):
 @runtime_checkable
 class TextProtocol(HasText, HasEdges, HasFaces, Protocol):
     pass
+
+
+@runtime_checkable
+class ImageProtocol(BaseProtocol, Protocol):
+    def _plt_get_data(self) -> NDArray[np.number]:
+        """Return the image data."""
+
+    def _plt_set_data(self, data: NDArray[np.number]):
+        """Set the image data."""
+
+    def _plt_get_colormap(self) -> Colormap:
+        """Return the colormap."""
+
+    def _plt_set_colormap(self, colormap: Colormap):
+        """Set the colormap."""
+
+    def _plt_get_clim(self) -> tuple[float, float]:
+        """Return the clim."""
+
+    def _plt_set_clim(self, clim: tuple[float, float]):
+        """Set the clim."""
 
 
 @runtime_checkable

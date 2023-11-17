@@ -49,7 +49,8 @@ class Errorbars(pg.ErrorBarItem):
         return x, yc - dy, yc + dy
 
     def _plt_set_vertical_data(self, t, y0, y1):
-        self.setData(x=t, y=y0, height=y1 - y0)
+        yc = (y0 + y1) / 2
+        self.setData(x=t, y=yc, height=y1 - y0)
 
     def _plt_get_horizontal_data(self):
         y = self.opts["y"]
@@ -58,7 +59,8 @@ class Errorbars(pg.ErrorBarItem):
         return y, xc - dx, xc + dx
 
     def _plt_set_horizontal_data(self, y, x0, x1):
-        self.setData(y=y, x=x0, width=x1 - x0)
+        xc = (x0 + x1) / 2
+        self.setData(y=y, x=xc, width=x1 - x0)
 
     ##### HasEdges protocol #####
     def _get_pen(self) -> QtGui.QPen:

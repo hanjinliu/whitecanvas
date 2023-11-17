@@ -125,6 +125,10 @@ class YLabelNamespace(_TextLabelNamespace):
 class _AxisNamespace(Namespace):
     lim_changed = Signal(tuple)
 
+    def __init__(self, canvas: CanvasBase | None = None):
+        super().__init__(canvas)
+        self._flipped = False
+
     def _get_object(self) -> protocols.AxisProtocol:
         raise NotImplementedError
 
@@ -143,6 +147,17 @@ class _AxisNamespace(Namespace):
     @color.setter
     def color(self, color):
         self._get_object()._plt_set_color(np.array(Color(color)))
+
+    @property
+    def flipped(self) -> bool:
+        """Return true if the axis is flipped."""
+        return self._flipped
+
+    @flipped.setter
+    def flipped(self, flipped: bool):
+        """Set the axis to be flipped."""
+        if flipped != self._flipped:
+            self._get_object()._plt_flip()
 
 
 class XAxisNamespace(_AxisNamespace):

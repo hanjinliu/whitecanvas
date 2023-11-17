@@ -8,6 +8,7 @@ from .layer_protocols import (
     BandProtocol,
     ErrorbarProtocol,
     TextProtocol,
+    ImageProtocol,
 )
 from .canvas_protocol import (
     CanvasProtocol,
@@ -25,6 +26,7 @@ __all__ = [
     "BandProtocol",
     "ErrorbarProtocol",
     "TextProtocol",
+    "ImageProtocol",
     "RangeDataProtocol",
     "CanvasProtocol",
     "MainWindowProtocol",

@@ -5,18 +5,14 @@ from typing import Generic, Iterable, Iterator, TypeVar, NamedTuple, TYPE_CHECKI
 from psygnal import Signal, SignalGroup
 import numpy as np
 from numpy.typing import ArrayLike
-from whitecanvas.types import ColorType, _Void
 from whitecanvas.protocols import BaseProtocol
 from whitecanvas.backend import Backend
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
-    from whitecanvas.layers import group as _lg
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
-
-_void = _Void()
 
 
 class Layer(ABC):
@@ -69,6 +65,8 @@ class Layer(ABC):
 
 
 class PrimitiveLayer(Layer, Generic[_P]):
+    """Layers that are composed of a single component."""
+
     _backend: _P
     _backend_name: str
 

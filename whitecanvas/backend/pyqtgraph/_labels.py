@@ -129,3 +129,10 @@ class Axis(_CanvasComponent):
         pen.setCosmetic(True)
         self._plt_get_axis().setTextPen(pen)
         self._plt_get_axis().setPen(pen)
+
+    def _plt_flip(self) -> None:
+        viewbox: pg.ViewBox = self._plt_get_axis().linkedView()
+        if self._axis == "bottom":
+            viewbox.invertX()
+        elif self._axis == "left":
+            viewbox.invertY()

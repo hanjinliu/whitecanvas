@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 from whitecanvas.protocols import LineProtocol
 from whitecanvas.layers._base import XYDataLayer, XYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, Symbol, ColorType, _Void
+from whitecanvas.types import LineStyle, Symbol, ColorType, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 if TYPE_CHECKING:
@@ -114,8 +114,8 @@ class Line(XYDataLayer[LineProtocol]):
         edge_color: ColorType | _Void = _void,
         edge_width: float = 0,
         edge_style: str | LineStyle = LineStyle.SOLID,
-    ) -> _lg.LineMarkers:
-        from whitecanvas.layers.group import LineMarkers
+    ) -> _lg.Plot:
+        from whitecanvas.layers.group import Plot
         from whitecanvas.layers.primitive import Markers
 
         if face_color is _void:
@@ -128,7 +128,7 @@ class Line(XYDataLayer[LineProtocol]):
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
             backend=self._backend_name,
         )  # fmt: skip
-        return LineMarkers(self, markers, name=self.name)
+        return Plot(self, markers, name=self.name)
 
     def with_xerr(
         self,
@@ -139,8 +139,8 @@ class Line(XYDataLayer[LineProtocol]):
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> _lg.LineErrorbars:
-        from whitecanvas.layers.group import LineErrorbars
+    ) -> _lg.AnnotatedLine:
+        from whitecanvas.layers.group import AnnotatedLine
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -159,7 +159,7 @@ class Line(XYDataLayer[LineProtocol]):
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
-        return LineErrorbars(self, xerr, yerr, name=self.name)
+        return AnnotatedLine(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -170,8 +170,8 @@ class Line(XYDataLayer[LineProtocol]):
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> _lg.LineErrorbars:
-        from whitecanvas.layers.group import LineErrorbars
+    ) -> _lg.AnnotatedLine:
+        from whitecanvas.layers.group import AnnotatedLine
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -190,7 +190,7 @@ class Line(XYDataLayer[LineProtocol]):
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
-        return LineErrorbars(self, xerr, yerr, name=self.name)
+        return AnnotatedLine(self, xerr, yerr, name=self.name)
 
     def with_xband(
         self,
@@ -257,3 +257,36 @@ class Line(XYDataLayer[LineProtocol]):
             backend=self._backend_name,
         )
         return LineBand(self, band, name=self.name)
+
+    def with_text(
+        self,
+        strings: list[str],
+        *,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        fontfamily: str = "sans-serif",
+    ) -> _lg.AnnotatedLine:
+        from whitecanvas.layers import Errorbars
+        from whitecanvas.layers.group import TextGroup, AnnotatedLine
+
+        if isinstance(strings, str):
+            strings = [strings] * self.data.x.size
+        texts = TextGroup.from_strings(
+            *self.data,
+            strings,
+            color=color,
+            size=size,
+            rotation=rotation,
+            anchor=anchor,
+            fontfamily=fontfamily,
+            backend=self._backend_name,
+        )
+        return AnnotatedLine(
+            self,
+            Errorbars([], [], [], orient="horizontal", backend=self._backend_name),
+            Errorbars([], [], [], orient="vertical", backend=self._backend_name),
+            texts=texts,
+            name=self.name,
+        )

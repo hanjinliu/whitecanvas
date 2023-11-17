@@ -7,7 +7,7 @@ from numpy.typing import ArrayLike
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void
+from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color
 
 if TYPE_CHECKING:
@@ -186,7 +186,7 @@ class Bars(BarBase):
         line_style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.LineErrorbars:
+    ) -> _lg.AnnotatedLine:
         if self.orient == "vertical":
             return self.with_yerr(
                 err, err_high, color=color, line_width=line_width,
@@ -210,8 +210,8 @@ class Bars(BarBase):
         line_style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.BarErrorbars:
-        from whitecanvas.layers.group import BarErrorbars
+    ) -> _lg.AnnotatedBars:
+        from whitecanvas.layers.group import AnnotatedBars
         from whitecanvas.layers.primitive import Errorbars
 
         xerr = self._create_errorbars(
@@ -219,7 +219,7 @@ class Bars(BarBase):
             antialias=antialias, capsize=capsize, orient="horizontal",
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
-        return BarErrorbars(self, xerr, yerr, name=self.name)
+        return AnnotatedBars(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -231,8 +231,8 @@ class Bars(BarBase):
         line_style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-    ) -> _lg.BarErrorbars:
-        from whitecanvas.layers.group import BarErrorbars
+    ) -> _lg.AnnotatedBars:
+        from whitecanvas.layers.group import AnnotatedBars
         from whitecanvas.layers.primitive import Errorbars
 
         yerr = self._create_errorbars(
@@ -240,7 +240,40 @@ class Bars(BarBase):
             antialias=antialias, capsize=capsize, orient="vertical",
         )  # fmt: skip
         xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
-        return BarErrorbars(self, xerr, yerr, name=self.name)
+        return AnnotatedBars(self, xerr, yerr, name=self.name)
+
+    def with_text(
+        self,
+        strings: list[str],
+        *,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        fontfamily: str = "sans-serif",
+    ) -> _lg.AnnotatedBars:
+        from whitecanvas.layers import Errorbars
+        from whitecanvas.layers.group import TextGroup, AnnotatedBars
+
+        if isinstance(strings, str):
+            strings = [strings] * self.data.x.size
+        texts = TextGroup.from_strings(
+            *self.data,
+            strings,
+            color=color,
+            size=size,
+            rotation=rotation,
+            anchor=anchor,
+            fontfamily=fontfamily,
+            backend=self._backend_name,
+        )
+        return AnnotatedBars(
+            self,
+            Errorbars([], [], [], orient="horizontal", backend=self._backend_name),
+            Errorbars([], [], [], orient="vertical", backend=self._backend_name),
+            texts=texts,
+            name=self.name,
+        )
 
     def _create_errorbars(
         self,
@@ -279,58 +312,3 @@ class Bars(BarBase):
             line_style=line_style, antialias=antialias, capsize=capsize,
             orient=orient, backend=self._backend_name
         )  # fmt: skip
-
-
-_void = _Void()
-
-
-class Boxes(BarBase):
-    def __init__(
-        self,
-        t: ArrayLike,
-        edge_low: ArrayLike,
-        edge_high: ArrayLike,
-        *,
-        orient: Literal["vertical", "horizontal"] = "vertical",
-        bar_width: float = 0.8,
-        name: str | None = None,
-        face_color: ColorType = "blue",
-        edge_color: ColorType = "black",
-        edge_width: float = 0.0,
-        edge_style: LineStyle | str = LineStyle.SOLID,
-        backend: Backend | str | None = None,
-    ):
-        x0, x1, y0, y1 = _norm_bar_inputs(t, edge_low, edge_high, orient, bar_width)
-        self._backend = self._create_backend(Backend(backend), x0, x1, y0, y1)
-        self._orient = orient
-        self.name = name if name is not None else "Boxes"
-        self._bar_width = bar_width
-        self.face_color = face_color
-        self.edge_color = edge_color
-        self.edge_width = edge_width
-        self.edge_style = edge_style
-
-    @property
-    def bar_width(self) -> float:
-        """Width of the bars."""
-        return self._bar_width
-
-    @bar_width.setter
-    def bar_width(self, w: float):
-        if w <= 0:
-            raise ValueError(f"Expected width > 0, got {w}")
-        x0, x1, y0, y1 = self._backend._plt_get_data()
-        if self._orient == "vertical":
-            dx = (w - self._bar_width) / 2
-            x0 = x0 - dx
-            x1 = x1 + dx
-        else:
-            dy = (w - self._bar_width) / 2
-            y0 = y0 - dy
-            y1 = y1 + dy
-        self._backend._plt_set_data(x0, x1, y0, y1)
-
-    @property
-    def orient(self) -> Literal["vertical", "horizontal"]:
-        """Orientation of the bars."""
-        return self._orient

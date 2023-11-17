@@ -26,7 +26,6 @@ class LineStyle(_strEnum):
     DASH = "--"
     DASH_DOT = "-."
     DOT = ":"
-    NONE = " "
 
 
 class FacePattern(_strEnum):
@@ -78,3 +77,61 @@ class MouseEventType(_strEnum):
     CLICK = "click"
     RELEASE = "release"
     DOUBLE_CLICK = "double_click"
+
+
+class Alignment(_strEnum):
+    TOP = "top"
+    BOTTOM = "bottom"
+    LEFT = "left"
+    RIGHT = "right"
+    CENTER = "center"
+    TOP_LEFT = "top_left"
+    TOP_RIGHT = "top_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM_RIGHT = "bottom_right"
+
+    @classmethod
+    def merge(cls, vertical, horizontal: Alignment) -> Alignment:
+        if vertical not in (Alignment.TOP, Alignment.BOTTOM, Alignment.CENTER):
+            raise ValueError(f"{vertical} is not a vertical alignment")
+        if horizontal not in (Alignment.LEFT, Alignment.RIGHT, Alignment.CENTER):
+            raise ValueError(f"{horizontal} is not a horizontal alignment")
+        if vertical is Alignment.TOP:
+            if horizontal is Alignment.LEFT:
+                return Alignment.TOP_LEFT
+            elif horizontal is Alignment.RIGHT:
+                return Alignment.TOP_RIGHT
+            elif horizontal is Alignment.CENTER:
+                return Alignment.TOP
+            else:
+                raise RuntimeError  # unreachable
+        elif vertical is Alignment.BOTTOM:
+            if horizontal is Alignment.LEFT:
+                return Alignment.BOTTOM_LEFT
+            elif horizontal is Alignment.RIGHT:
+                return Alignment.BOTTOM_RIGHT
+            elif horizontal is Alignment.CENTER:
+                return Alignment.BOTTOM
+            else:
+                raise RuntimeError  # unreachable
+        elif vertical is Alignment.CENTER:
+            return horizontal
+        else:
+            raise RuntimeError  # unreachable
+
+    def split(self) -> tuple[Alignment, Alignment]:
+        """Split the alignment into vertical and horizontal components."""
+        name = self.name
+        if "TOP" in name:
+            vertical = Alignment.TOP
+        elif "BOTTOM" in name:
+            vertical = Alignment.BOTTOM
+        else:
+            vertical = Alignment.CENTER
+        if "LEFT" in name:
+            horizontal = Alignment.LEFT
+        elif "RIGHT" in name:
+            horizontal = Alignment.RIGHT
+        else:
+            horizontal = Alignment.CENTER
+        return vertical, horizontal

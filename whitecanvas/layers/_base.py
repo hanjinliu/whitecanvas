@@ -138,6 +138,13 @@ class LayerGroup(Layer):
             else:
                 yield child
 
+    @property
+    def _backend_name(self) -> str:
+        """The backend name of this layer group."""
+        for child in self._iter_children():
+            return child._backend_name
+        raise RuntimeError(f"No backend name found for {self!r}")
+
 
 class XYData(NamedTuple):
     x: np.ndarray

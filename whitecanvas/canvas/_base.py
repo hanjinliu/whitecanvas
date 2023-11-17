@@ -9,7 +9,8 @@ from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas import protocols
 from whitecanvas import layers as _l
-from whitecanvas.types import LineStyle, Symbol, ColorType
+from whitecanvas.layers import group as _lg
+from whitecanvas.types import LineStyle, Symbol, ColorType, Alignment
 from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend
@@ -126,7 +127,7 @@ class CanvasBase(ABC, Generic[_T]):
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 6, face_color: Any = "blue", edge_color: Any = "black",
         edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
-    ):  # fmt: skip
+    ) -> _l.Markers:  # fmt: skip
         ...
 
     @overload
@@ -135,7 +136,7 @@ class CanvasBase(ABC, Generic[_T]):
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 6, face_color: Any = "blue", edge_color: Any = "black",
         edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
-    ):  # fmt: skip
+    ) -> _l.Markers:  # fmt: skip
         ...
 
     def add_markers(
@@ -215,7 +216,7 @@ class CanvasBase(ABC, Generic[_T]):
         width=1.0,
         style=LineStyle.SOLID,
         antialias=True,
-    ):
+    ) -> _l.InfCurve:
         name = self._coerce_name(_l.InfCurve, name)
         layer = _l.InfCurve(
             model, params=params, bounds=bounds, name=name, color=color,
@@ -224,18 +225,18 @@ class CanvasBase(ABC, Generic[_T]):
         )  # fmt: skip
         return self.add_layer(layer)
 
-    def add_fillbetween(
+    def add_band(
         self,
         xdata: ArrayLike,
         ydata0: ArrayLike,
         ydata1: ArrayLike,
         *,
         name: str | None = None,
-        face_color="blue",
-        edge_color="black",
+        face_color: ColorType = "blue",
+        edge_color: ColorType = "black",
         edge_width=0,
         edge_style=LineStyle.SOLID,
-    ):
+    ) -> _l.Band:
         name = self._coerce_name(_l.Band, name)
         layer = _l.Band(
             xdata, ydata0, ydata1, name=name, face_color=face_color,
@@ -257,13 +258,54 @@ class CanvasBase(ABC, Generic[_T]):
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = False,
         capsize: float = 0.0,
-    ):
+    ) -> _l.Errorbars:
         name = self._coerce_name(_l.Errorbars, name)
         layer = _l.Errorbars(
             xdata, ylow, yhigh, name=name, color=color, line_width=width,
             line_style=style, antialias=antialias, capsize=capsize,
             orient=orient, backend=self._backend_installer,
         )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_text(
+        self,
+        x: float,
+        y: float,
+        text: str,
+        *,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        fontfamily: str = "sans-serif",
+    ) -> _l.Text:
+        layer = _l.Text(
+            x,
+            y,
+            text,
+            color=color,
+            size=size,
+            rotation=rotation,
+            anchor=anchor,
+            fontfamily=fontfamily,
+            backend=self._backend_installer,
+        )
+        return self.add_layer(layer)
+
+    def add_texts(
+        self,
+        x: ArrayLike,
+        y: ArrayLike,
+        texts: list[str],
+        *,
+        name: str | None = None,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        fontfamily: str = "sans-serif",
+    ) -> _lg.TextGroup:
+        layer = _lg.TextGroup.from_strings(x, y, texts, name=name, backend=self._backend_installer)
         return self.add_layer(layer)
 
     def add_layer(self, layer: _L) -> _L:
@@ -334,6 +376,23 @@ class CanvasBase(ABC, Generic[_T]):
                     child._connect_canvas(self)
             finally:
                 self._is_grouping = False
+
+    def _repr_png_(self):
+        """Return PNG representation of the widget for QtConsole."""
+        from io import BytesIO
+
+        try:
+            from imageio import imwrite
+        except ImportError:
+            return None
+
+        rendered = self.screenshot()
+        if rendered is not None:
+            with BytesIO() as file_obj:
+                imwrite(file_obj, rendered, format="png")
+                file_obj.seek(0)
+                return file_obj.read()
+        return None
 
 
 def _iter_layers(layer: _l.Layer) -> Iterator[_l.PrimitiveLayer[protocols.BaseProtocol]]:

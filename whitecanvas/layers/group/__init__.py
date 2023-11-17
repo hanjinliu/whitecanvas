@@ -1,11 +1,14 @@
-from .line_markers import LineMarkers
+from .line_markers import Plot
 from .line_band import LineBand
-from .with_errorbars import LineErrorbars, MarkerErrorbars, BarErrorbars
+from .annotated import AnnotatedLine, AnnotatedMarkers, AnnotatedBars, AnnotatedPlot
+from .text_group import TextGroup
 
 __all__ = [
-    "LineMarkers",
+    "Plot",
     "LineBand",
-    "LineErrorbars",
-    "MarkerErrorbars",
-    "BarErrorbars",
+    "AnnotatedLine",
+    "AnnotatedMarkers",
+    "AnnotatedBars",
+    "AnnotatedPlot",
+    "TextGroup",
 ]

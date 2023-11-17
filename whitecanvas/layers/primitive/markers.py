@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
 from whitecanvas.backend import Backend
-from whitecanvas.types import Symbol, LineStyle, ColorType, FacePattern, _Void
+from whitecanvas.types import Symbol, LineStyle, ColorType, FacePattern, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 if TYPE_CHECKING:
@@ -149,8 +149,8 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         line_style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.MarkerErrorbars:
-        from whitecanvas.layers.group import MarkerErrorbars
+    ) -> _lg.AnnotatedMarkers:
+        from whitecanvas.layers.group import AnnotatedMarkers
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -169,7 +169,7 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
-        return MarkerErrorbars(self, xerr, yerr, name=self.name)
+        return AnnotatedMarkers(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -180,8 +180,8 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         line_style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-    ) -> _lg.MarkerErrorbars:
-        from whitecanvas.layers.group import MarkerErrorbars
+    ) -> _lg.AnnotatedMarkers:
+        from whitecanvas.layers.group import AnnotatedMarkers
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -200,4 +200,37 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
-        return MarkerErrorbars(self, xerr, yerr, name=self.name)
+        return AnnotatedMarkers(self, xerr, yerr, name=self.name)
+
+    def with_text(
+        self,
+        strings: list[str],
+        *,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        fontfamily: str = "sans-serif",
+    ) -> _lg.AnnotatedMarkers:
+        from whitecanvas.layers import Errorbars
+        from whitecanvas.layers.group import TextGroup, AnnotatedMarkers
+
+        if isinstance(strings, str):
+            strings = [strings] * self.data.x.size
+        texts = TextGroup.from_strings(
+            *self.data,
+            strings,
+            color=color,
+            size=size,
+            rotation=rotation,
+            anchor=anchor,
+            fontfamily=fontfamily,
+            backend=self._backend_name,
+        )
+        return AnnotatedMarkers(
+            self,
+            Errorbars([], [], [], orient="horizontal", backend=self._backend_name),
+            Errorbars([], [], [], orient="vertical", backend=self._backend_name),
+            texts=texts,
+            name=self.name,
+        )

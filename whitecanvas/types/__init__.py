@@ -1,6 +1,5 @@
 from ._alias import ColorType, _Void
-from ._enums import LineStyle, Symbol, FacePattern, Modifier, MouseButton, MouseEventType
-from ._dicts import LineDict, MarkerDict
+from ._enums import LineStyle, Symbol, FacePattern, Modifier, MouseButton, MouseEventType, Alignment
 from ._mouse import MouseEvent
 
 __all__ = [
@@ -12,6 +11,5 @@ __all__ = [
     "MouseButton",
     "MouseEvent",
     "MouseEventType",
-    "LineDict",
-    "MarkerDict",
+    "Alignment",
 ]

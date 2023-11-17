@@ -10,6 +10,7 @@ from .markers import Markers
 from .bar import Bars
 from .fillbetween import Band
 from .errorbar import Errorbars
+from .text import Text
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
@@ -68,6 +69,8 @@ class Canvas:
         elif isinstance(layer, Bars):
             for patch in layer.patches:
                 self._axes.add_patch(patch)
+        elif isinstance(layer, Text):
+            self._axes._add_text(layer)
         else:
             raise NotImplementedError(f"{layer}")
         self._axes.autoscale_view()  # TODO: remove this line

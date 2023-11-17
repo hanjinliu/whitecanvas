@@ -119,6 +119,12 @@ class HasText(BaseProtocol, Protocol):
     def _plt_set_text_size(self, size: float):
         """Set the text size."""
 
+    def _plt_get_text_position(self) -> tuple[float, float]:
+        """Return the text position."""
+
+    def _plt_set_text_position(self, position: tuple[float, float]):
+        """Set the text position."""
+
     def _plt_get_text_anchor(self) -> tuple[float, float]:
         """Return the text position."""
 
@@ -126,10 +132,16 @@ class HasText(BaseProtocol, Protocol):
         """Set the text position."""
 
     def _plt_get_text_rotation(self) -> float:
-        """Return the text rotation."""
+        """Return the text rotation in degree."""
 
     def _plt_set_text_rotation(self, rotation: float):
-        """Set the text rotation."""
+        """Set the text rotation in degree."""
+
+    def _plt_get_text_fontfamily(self) -> str:
+        """Return the text font family."""
+
+    def _plt_set_text_fontfamily(self, family: str):
+        """Set the text font family."""
 
 
 @runtime_checkable
@@ -173,6 +185,11 @@ class ErrorbarProtocol(OrientedXYYDataProtocol, HasEdges, Protocol):
 
     def _plt_set_capsize(self, capsize: float, orient: Literal["v", "h"] = "v"):
         """Set the capsize of the error bar edges."""
+
+
+@runtime_checkable
+class TextProtocol(HasText, HasEdges, HasFaces, Protocol):
+    pass
 
 
 @runtime_checkable

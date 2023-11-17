@@ -99,25 +99,25 @@ class Errorbars(LineCollection):
 
     ##### HasEdges #####
     def _plt_get_edge_width(self) -> float:
-        return self.get_linewidth()
+        return self.get_linewidth()[0]
 
     def _plt_set_edge_width(self, width: float):
         self.set_linewidth(width)
 
     def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle(self.get_linestyle())
+        return LineStyle(self.get_linestyle()[0])
 
     def _plt_set_edge_style(self, style: LineStyle):
         self.set_linestyle(style.value)
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return self.get_color()
+        return self.get_color()[0]
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         self.set_color(color)
 
     def _plt_get_antialias(self) -> bool:
-        return self.get_antialiased()
+        return self.get_antialiased()[0]
 
     def _plt_set_antialias(self, antialias: bool):
         self.set_antialiased(antialias)

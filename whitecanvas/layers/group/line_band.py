@@ -14,8 +14,10 @@ class LineBand(LayerGroup):
 
     @property
     def line(self) -> Line:
+        """The central line layer."""
         return self._children[0]
 
     @property
     def band(self) -> Band:
+        """The band region layer."""
         return self._children[1]

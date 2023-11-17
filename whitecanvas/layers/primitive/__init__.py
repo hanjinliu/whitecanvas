@@ -1,9 +1,10 @@
 from .line import Line
 from .bars import Bars
 from .markers import Markers
-from .fillbetween import Band
+from .band import Band
 from .errorbar import Errorbars
 from .inf_curve import InfCurve
+from .text import Text
 
 __all__ = [
     "Line",
@@ -12,4 +13,5 @@ __all__ = [
     "Band",
     "Errorbars",
     "InfCurve",
+    "Text",
 ]

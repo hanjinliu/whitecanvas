@@ -2,9 +2,13 @@ _INSTALLED_MODULES = {}
 
 
 class Backend:
+    """The backend of plots."""
+
+    _default: str = "matplotlib"
+
     def __init__(self, name: "Backend | str | None" = None) -> None:
         if name is None:
-            name = "pyqtgraph"
+            name = self._default
         elif isinstance(name, Backend):
             name = name._name
         if name in _INSTALLED_MODULES:
@@ -14,6 +18,7 @@ class Backend:
 
             _INSTALLED_MODULES[name] = self._mod = import_module(f"whitecanvas.backend.{name}")
         self._name = name
+        self.__class__._default = name
 
     def __repr__(self) -> str:
         return f"<Backend {self._name!r}>"

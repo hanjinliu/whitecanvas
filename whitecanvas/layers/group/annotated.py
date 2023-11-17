@@ -1,16 +1,75 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
 from whitecanvas.types import ColorType, _Void, Symbol, LineStyle, Alignment
-from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
+from whitecanvas.layers.primitive import Line, Markers, Bars
+from whitecanvas.layers.primitive.errorbar import Errorbars
 from whitecanvas.layers._base import LayerGroup, XYData, PrimitiveLayer
 from whitecanvas.layers.group.text_group import TextGroup
+from whitecanvas.utils.normalize import as_array_1d
 
 _void = _Void()
 
 if TYPE_CHECKING:
     from typing_extensions import Self
     from whitecanvas.layers.group.line_markers import Plot
+
+
+class _TextOffset:
+    def _asarray(self) -> tuple[Any, Any]:
+        raise NotImplementedError
+
+    def _add(self, dx, dy) -> _TextOffset:
+        raise NotImplementedError
+
+
+class NoOffset(_TextOffset):
+    def _asarray(self):
+        return (0, 0)
+
+    def _add(self, dx, dy) -> _TextOffset:
+        if dx == 0 and dy == 0:
+            return self
+        if np.isscalar(dx) and np.isscalar(dy):
+            return ConstantOffset(dx, dy)
+        else:
+            return CustomOffset(as_array_1d(dx), as_array_1d(dy))
+
+    def __repr__(self) -> str:
+        return "<NoOffset>"
+
+
+class ConstantOffset(_TextOffset):
+    def __init__(self, x: float, y: float):
+        self._x, self._y = x, y
+
+    def _asarray(self) -> tuple[float, float]:
+        return (self._x, self._y)
+
+    def _add(self, dx, dy) -> _TextOffset:
+        if np.isscalar(dx) and np.isscalar(dy):
+            return ConstantOffset(self._x + dx, self._y + dy)
+        else:
+            return CustomOffset(as_array_1d(dx) + self._x, as_array_1d(dy) + self._y)
+
+    def __repr__(self) -> str:
+        return f"<ConstantOffset({self._x}, {self._y})>"
+
+
+class CustomOffset(_TextOffset):
+    def __init__(self, x: Any, y: Any):
+        self._x, self._y = x, y
+
+    def _asarray(self) -> tuple[Any, Any]:
+        return (self._x, self._y)
+
+    def _add(self, dx, dy) -> _TextOffset:
+        return CustomOffset(as_array_1d(dx + self._x), as_array_1d(dy + self._y))
+
+    def __repr__(self) -> str:
+        return f"<CustomOffset({self._x}, {self._y})>"
 
 
 class _AnnotatedLayerBase(LayerGroup):
@@ -21,13 +80,15 @@ class _AnnotatedLayerBase(LayerGroup):
         yerr: Errorbars,
         texts: TextGroup | None = None,
         name: str | None = None,
+        offset: _TextOffset = NoOffset(),
     ):
         if texts is None:
             texts = TextGroup([])
 
         super().__init__([layer, xerr, yerr, texts], name=name)
+        self._text_offset = offset
 
-    def _set_data(self, xdata=None, ydata=None):
+    def _set_data_to_first_layer(self, xdata=None, ydata=None):
         self._children[0].set_data(xdata, ydata)
 
     @property
@@ -61,13 +122,30 @@ class _AnnotatedLayerBase(LayerGroup):
             dy = 0
         else:
             dy = ydata - data.y
-        self._set_data(xdata, ydata)
+        self._set_data_to_first_layer(xdata, ydata)
         if self.xerr.ndata > 0:
             y, x0, x1 = self.xerr.data
             self.xerr.set_data(y + dy, x0 + dx, x1 + dx)
         if self.yerr.ndata > 0:
             x, y0, y1 = self.yerr.data
             self.yerr.set_data(x + dx, y0 + dy, y1 + dy)
+        if self.texts.ntexts > 0:
+            dx, dy = self._text_offset._asarray()
+            self.texts.set_pos(data.x + dx, data.y + dy)
+
+    @property
+    def text_offset(self) -> _TextOffset:
+        """Return the text offset."""
+        return self._text_offset
+
+    def add_text_offset(self, dx: Any, dy: Any):
+        """Add offset to text positions."""
+        _offset = self._text_offset._add(dx, dy)
+        if self.texts.ntexts > 0:
+            data = self.data
+            xoff, yoff = _offset._asarray()
+            self.texts.set_pos(data.x + xoff, data.y + yoff)
+        self._text_offset = _offset
 
     def setup_xerr(
         self,
@@ -181,6 +259,7 @@ class _AnnotatedLayerBase(LayerGroup):
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str = "sans-serif",
+        offset: tuple[Any, Any] | None = None,
     ) -> Self:
         """
         Add texts to the layer.
@@ -200,16 +279,25 @@ class _AnnotatedLayerBase(LayerGroup):
             Text anchoring position.
         fontfamily : str, default is "sans-serif"
             The font family of the text.
+        offset : tuple, default is None
+            The offset of the text from the data point.
 
         Returns
         -------
         Self
-            _description_
+            Same layer with texts added.
         """
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
+        if offset is None:
+            _offset = self._text_offset
+        else:
+            _offset = NoOffset()._add(*offset)
+
+        xdata, ydata = self.data
+        dx, dy = _offset._asarray()
         texts = TextGroup.from_strings(
-            *self.data, strings, color=color, size=size, rotation=rotation,
+            xdata + dx, ydata + dy, strings, color=color, size=size, rotation=rotation,
             anchor=anchor, fontfamily=fontfamily, backend=self._backend_name,
         )  # fmt: skip
         return self.__class__(
@@ -218,6 +306,7 @@ class _AnnotatedLayerBase(LayerGroup):
             self.yerr,
             texts=texts,
             name=self.name,
+            offset=_offset,
         )
 
 
@@ -240,18 +329,6 @@ class AnnotatedLine(_AnnotatedLayerBase):
             antialias=antialias
         )  # fmt: skip
         return self
-
-    def with_text(
-        self,
-        strings: list[str],
-    ):
-        return type(self)(
-            self.line,
-            self.xerr,
-            self.yerr,
-            texts=TextGroup(strings),
-            name=self.name,
-        )
 
 
 class AnnotatedMarkers(_AnnotatedLayerBase):
@@ -291,7 +368,7 @@ class AnnotatedBars(_AnnotatedLayerBase):
         x, top, _ = self.bars.data
         return XYData(x, top)
 
-    def _set_data(self, xdata=None, ydata=None):
+    def _set_data_to_first_layer(self, xdata=None, ydata=None):
         _, _, bottom = self.bars.data
         self.bars.set_data(xdata, ydata, bottom)
 

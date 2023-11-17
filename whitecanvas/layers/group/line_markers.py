@@ -8,7 +8,6 @@ from whitecanvas.layers.primitive import Line, Markers, Errorbars
 from whitecanvas.layers._base import LayerGroup
 
 if TYPE_CHECKING:
-    from .text_group import TextGroup
     from .annotated import AnnotatedPlot
 
 _void = _Void()

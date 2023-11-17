@@ -1,14 +1,13 @@
 from __future__ import annotations
 from typing import Sequence
 
-from enum import Enum
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
 from whitecanvas.types import ColorType, _Void, Alignment
 from whitecanvas.layers.primitive import Text
 from whitecanvas.layers._base import LayerGroup
 from whitecanvas.backend import Backend
-from whitecanvas.utils.normalize import normalize_xy, norm_color
+from whitecanvas.utils.normalize import normalize_xy, norm_color, as_any_1d_array, as_color_array
 
 _void = _Void()
 
@@ -48,11 +47,11 @@ class TextGroup(LayerGroup):
             xs,
             ys,
             strings,
-            _as_color_array(color, ndata),
-            _asarray_1d(size, ndata, dtype=np.float32),
-            _asarray_1d(rotation, ndata, dtype=np.float32),
-            _asarray_1d(anchor, ndata, dtype=object),
-            _asarray_1d(fontfamily, ndata, dtype=object),
+            as_color_array(color, ndata),
+            as_any_1d_array(size, ndata, dtype=np.float32),
+            as_any_1d_array(rotation, ndata, dtype=np.float32),
+            as_any_1d_array(anchor, ndata, dtype=object),
+            as_any_1d_array(fontfamily, ndata, dtype=object),
         )
         texts = [
             Text(
@@ -65,7 +64,43 @@ class TextGroup(LayerGroup):
 
     def nth(self, n: int) -> Text:
         """The central text layer."""
-        return self._children[n]
+        return self._children[int(n)]
+
+    @property
+    def ntexts(self) -> int:
+        """The number of text layers."""
+        return len(self._children)
+
+    @property
+    def pos(self) -> np.ndarray:
+        """The (x, y) positions of the child text layers."""
+        return np.array([tl.pos for tl in self._children], dtype=np.float64)
+
+    def set_pos(self, xs: ArrayLike | None, ys: ArrayLike | None):
+        """Set the (x, y) positions of the child text layers."""
+        # normalize input
+        if xs is None and ys is None:
+            raise ValueError("At least one of xs or ys must be specified")
+        if xs is not None:
+            xs = np.asarray(xs)
+            if xs.shape != (len(self._children),):
+                raise ValueError(f"Expected shape ({len(self._children)},), got {xs.shape}")
+        if ys is not None:
+            ys = np.asarray(ys)
+            if ys.shape != (len(self._children),):
+                raise ValueError(f"Expected shape ({len(self._children)},), got {ys.shape}")
+        # update positions
+        if xs is None and ys is not None:
+            for tl, y in zip(self._children, ys):
+                tl.pos = (tl.pos[0], y)
+        elif xs is not None and ys is None:
+            for tl, x in zip(self._children, xs):
+                tl.pos = (x, tl.pos[1])
+        elif xs is not None and ys is not None:
+            for tl, x, y in zip(self._children, xs, ys):
+                tl.pos = (x, y)
+        else:
+            raise RuntimeError  # unreachable
 
     @property
     def string(self) -> list[str]:
@@ -86,7 +121,7 @@ class TextGroup(LayerGroup):
 
     @color.setter
     def color(self, colors: ColorType):
-        values = _as_color_array(colors, len(self._children))
+        values = as_color_array(colors, len(self._children))
         for tl, v in zip(self._children, values):
             tl.color = v
 
@@ -97,7 +132,7 @@ class TextGroup(LayerGroup):
 
     @size.setter
     def size(self, values: float):
-        sizes = _asarray_1d(values, len(self._children), dtype=np.float32)
+        sizes = as_any_1d_array(values, len(self._children), dtype=np.float32)
         for tl, v in zip(self._children, sizes):
             tl.size = v
 
@@ -108,7 +143,7 @@ class TextGroup(LayerGroup):
 
     @rotation.setter
     def rotation(self, values: float):
-        rots = _asarray_1d(values, len(self._children), dtype=np.float32)
+        rots = as_any_1d_array(values, len(self._children), dtype=np.float32)
         for tl, v in zip(self._children, rots):
             tl.rotation = v
 
@@ -119,7 +154,7 @@ class TextGroup(LayerGroup):
 
     @anchor.setter
     def anchor(self, values: str | Alignment):
-        anchors = _asarray_1d(values, len(self._children), dtype=object)
+        anchors = as_any_1d_array(values, len(self._children), dtype=object)
         for tl, v in zip(self._children, anchors):
             tl.anchor = v
 
@@ -130,7 +165,7 @@ class TextGroup(LayerGroup):
 
     @fontfamily.setter
     def fontfamily(self, values: str):
-        ffs = _asarray_1d(values, len(self._children), dtype=object)
+        ffs = as_any_1d_array(values, len(self._children), dtype=object)
         for tl, v in zip(self._children, ffs):
             tl.fontfamily = v
 
@@ -154,33 +189,3 @@ class TextGroup(LayerGroup):
         if fontfamily is not _void:
             self.fontfamily = fontfamily
         return self
-
-
-def _asarray_1d(x: float, size: int, dtype=None) -> np.ndarray:
-    if np.isscalar(x) or isinstance(x, Enum):
-        out = np.full((size,), x, dtype=dtype)
-    else:
-        out = np.asarray(x, dtype=dtype)
-        if out.shape != (size,):
-            raise ValueError(f"Expected shape ({size},), got {out.shape}")
-    return out
-
-
-def _as_color_array(color, size: int) -> NDArray[np.float32]:
-    if isinstance(color, str):  # e.g. color = "black"
-        col = norm_color(color)
-        return np.repeat(col[np.newaxis, :], size, axis=0)
-    if isinstance(color, np.ndarray):
-        if color.shape in [(3,), (4,)]:
-            col = norm_color(color)
-            return np.repeat(col[np.newaxis, :], size, axis=0)
-        elif color.shape in [(size, 3), (size, 4)]:
-            return color
-        else:
-            raise ValueError("Color array must have shape (3,), (4,), (N, 3), or (N, 4) " f"but got {color.shape}")
-    arr = np.array(color)
-    if arr.dtype == object:
-        if arr.shape != (size,):
-            raise ValueError(f"Expected color array of shape ({size},), got {arr.shape}")
-        return np.stack([norm_color(each) for each in arr], axis=0)
-    return _as_color_array(arr, size)

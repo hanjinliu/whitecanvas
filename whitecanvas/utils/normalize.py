@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from cmap import Color
@@ -31,3 +32,33 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
 def norm_color(color) -> np.ndarray:
     """Normalize a color input to a 4-element float array."""
     return np.array(Color(color).rgba, dtype=np.float32)
+
+
+def as_any_1d_array(x: float, size: int, dtype=None) -> np.ndarray:
+    if np.isscalar(x) or isinstance(x, Enum):
+        out = np.full((size,), x, dtype=dtype)
+    else:
+        out = np.asarray(x, dtype=dtype)
+        if out.shape != (size,):
+            raise ValueError(f"Expected shape ({size},), got {out.shape}")
+    return out
+
+
+def as_color_array(color, size: int) -> NDArray[np.float32]:
+    if isinstance(color, str):  # e.g. color = "black"
+        col = norm_color(color)
+        return np.repeat(col[np.newaxis, :], size, axis=0)
+    if isinstance(color, np.ndarray):
+        if color.shape in [(3,), (4,)]:
+            col = norm_color(color)
+            return np.repeat(col[np.newaxis, :], size, axis=0)
+        elif color.shape in [(size, 3), (size, 4)]:
+            return color
+        else:
+            raise ValueError("Color array must have shape (3,), (4,), (N, 3), or (N, 4) " f"but got {color.shape}")
+    arr = np.array(color)
+    if arr.dtype == object:
+        if arr.shape != (size,):
+            raise ValueError(f"Expected color array of shape ({size},), got {arr.shape}")
+        return np.stack([norm_color(each) for each in arr], axis=0)
+    return as_color_array(arr, size)

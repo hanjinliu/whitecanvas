@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Any, Generic, Iterator, Literal, overload, TypeVar
+from typing import Any, Callable, Generic, Iterator, Literal, overload, TypeVar
 from abc import ABC, abstractmethod
 
-from cmap import Color
+from cmap import Color, Colormap
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -12,6 +12,7 @@ from whitecanvas import layers as _l
 from whitecanvas.layers import group as _lg
 from whitecanvas.types import LineStyle, Symbol, ColorType, Alignment, ColormapType
 from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
+from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 from whitecanvas.backend import Backend
 
@@ -29,9 +30,15 @@ class CanvasBase(ABC, Generic[_T]):
     layers = _ll.LayerList()
     mouse = _ns.MouseNamespace()
 
-    def __init__(self, backend: str | None = None):
+    def __init__(
+        self,
+        backend: str | None = None,
+        *,
+        palette: ColormapType = "tab10",
+    ):
         self._backend_installer = Backend(backend)
         self._backend = self._create_backend()
+        self._color_palette = ColorPalette(palette)
 
         # default colors
         self.x.color = "black"
@@ -93,21 +100,29 @@ class CanvasBase(ABC, Generic[_T]):
 
     @overload
     def add_line(
-        self, ydata: ArrayLike, *, name: str | None = None,
-        color: ColorType = "blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1.0, antialias: bool = True,
+        self, ydata: ArrayLike, *, name: str | None = None, color: ColorType | None = None,
+        line_width: float = 1.0, line_style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
     @overload
     def add_line(
         self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
-        color="blue", width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1.0, antialias: bool = True,
+        color: ColorType | None = None, line_width: float = 1.0,
+        line_style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
-    def add_line(self, *args, name=None, color="blue", width=1.0, style=LineStyle.SOLID, antialias=True):
+    def add_line(
+        self,
+        *args,
+        name=None,
+        color=None,
+        line_width=1.0,
+        line_style=LineStyle.SOLID,
+        antialias=True,
+    ):
         """
         Add a Line layer to the canvas.
 
@@ -126,8 +141,9 @@ class CanvasBase(ABC, Generic[_T]):
         """
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Line, name)
+        (color,) = self._generate_colors(color)
         layer = _l.Line(
-            xdata, ydata, name=name, color=color, line_width=width, line_style=style,
+            xdata, ydata, name=name, color=color, line_width=line_width, line_style=line_style,
             antialias=antialias, backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)
@@ -136,7 +152,7 @@ class CanvasBase(ABC, Generic[_T]):
     def add_markers(
         ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, face_color: Any = "blue", edge_color: Any = "black",
+        size: float = 6, face_color: ColorType | None = None, edge_color: ColorType | None = None,
         edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
     ) -> _l.Markers:  # fmt: skip
         ...
@@ -145,7 +161,7 @@ class CanvasBase(ABC, Generic[_T]):
     def add_markers(
         xdata: ArrayLike, ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, face_color: Any = "blue", edge_color: Any = "black",
+        size: float = 6, face_color: ColorType | None = None, edge_color: ColorType | None = None,
         edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
     ) -> _l.Markers:  # fmt: skip
         ...
@@ -156,13 +172,14 @@ class CanvasBase(ABC, Generic[_T]):
         name=None,
         symbol=Symbol.CIRCLE,
         size=6,
-        face_color="blue",
-        edge_color="black",
+        face_color=None,
+        edge_color=None,
         edge_width=0,
         edge_style=LineStyle.SOLID,
     ):
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Markers, name)
+        face_color, edge_color = self._generate_colors(face_color, edge_color)
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
@@ -179,12 +196,13 @@ class CanvasBase(ABC, Generic[_T]):
         name=None,
         orient: Literal["vertical", "horizontal"] = "vertical",
         bar_width: float = 0.8,
-        face_color="blue",
-        edge_color="black",
+        face_color: ColorType | None = None,
+        edge_color: ColorType | None = None,
         edge_width=0,
         edge_style=LineStyle.SOLID,
     ):
         name = self._coerce_name(_l.Bars, name)
+        face_color, edge_color = self._generate_colors(face_color, edge_color)
         layer = _l.Bars(
             center, top, bottom, bar_width=bar_width, name=name, orient=orient,
             face_color=face_color, edge_color=edge_color, edge_width=edge_width,
@@ -200,16 +218,17 @@ class CanvasBase(ABC, Generic[_T]):
         range: tuple[float, float] | None = None,
         density: bool = False,
         name: str | None = None,
-        face_color="blue",
-        edge_color="black",
-        edge_width=0,
-        edge_style=LineStyle.SOLID,
+        face_color: ColorType | None = None,
+        edge_color: ColorType | None = None,
+        edge_width: float = 0,
+        edge_style: str | LineStyle = LineStyle.SOLID,
     ):
         data = as_array_1d(data)
         name = self._coerce_name("histogram", name)
         counts, edges = np.histogram(data, bins, density=density, range=range)
         centers = (edges[:-1] + edges[1:]) / 2
         width = edges[1] - edges[0]
+        face_color, edge_color = self._generate_colors(face_color, edge_color)
         layer = _l.Bars(
             centers, counts, bar_width=width, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
@@ -219,16 +238,17 @@ class CanvasBase(ABC, Generic[_T]):
 
     def add_infcurve(
         self,
-        model,
+        model: Callable[..., NDArray[np.floating]],
         params: dict[str, Any] = {},
         bounds: tuple[float, float] = (-np.inf, np.inf),
-        name=None,
-        color="blue",
-        width=1.0,
-        style=LineStyle.SOLID,
-        antialias=True,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+        antialias: bool = True,
     ) -> _l.InfCurve:
         name = self._coerce_name(_l.InfCurve, name)
+        (color,) = self._generate_colors(color)
         layer = _l.InfCurve(
             model, params=params, bounds=bounds, name=name, color=color,
             line_width=width, line_style=style, antialias=antialias,
@@ -243,12 +263,13 @@ class CanvasBase(ABC, Generic[_T]):
         ydata1: ArrayLike,
         *,
         name: str | None = None,
-        face_color: ColorType = "blue",
-        edge_color: ColorType = "black",
+        face_color: ColorType | None = None,
+        edge_color: ColorType | None = None,
         edge_width=0,
         edge_style=LineStyle.SOLID,
     ) -> _l.Band:
         name = self._coerce_name(_l.Band, name)
+        face_color, edge_color = self._generate_colors(face_color, edge_color)
         layer = _l.Band(
             xdata, ydata0, ydata1, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
@@ -271,6 +292,7 @@ class CanvasBase(ABC, Generic[_T]):
         capsize: float = 0.0,
     ) -> _l.Errorbars:
         name = self._coerce_name(_l.Errorbars, name)
+        (color,) = self._generate_colors(color)
         layer = _l.Errorbars(
             xdata, ylow, yhigh, name=name, color=color, line_width=width,
             line_style=style, antialias=antialias, capsize=capsize,
@@ -282,7 +304,7 @@ class CanvasBase(ABC, Generic[_T]):
         self,
         x: float,
         y: float,
-        text: str,
+        string: str,
         *,
         color: ColorType = "black",
         size: float = 12,
@@ -290,10 +312,38 @@ class CanvasBase(ABC, Generic[_T]):
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str = "sans-serif",
     ) -> _l.Text:
+        """
+        Add a text layer to the canvas.
+
+        Parameters
+        ----------
+        x : float
+            X position of the text.
+        y : float
+            Y position of the text.
+        string : str
+            Text string to display.
+        color : ColorType, optional
+            Color of the text string.
+        size : float, default is 12
+            Point size of the text.
+        rotation : float, default is 0.0
+            Rotation angle of the text in degrees.
+        anchor : str or Alignment, default is Alignment.BOTTOM_LEFT
+            Anchor position of the text. The anchor position will be the coordinate
+            given by (x, y).
+        fontfamily : str, default is "sans-serif"
+            Font family of the text.
+
+        Returns
+        -------
+        Text
+            The text layer.
+        """
         layer = _l.Text(
             x,
             y,
-            text,
+            string,
             color=color,
             size=size,
             rotation=rotation,
@@ -438,6 +488,12 @@ class CanvasBase(ABC, Generic[_T]):
                     child._connect_canvas(self)
             finally:
                 self._is_grouping = False
+
+    def _generate_colors(self, color: ColorType | None, *colors: ColorType | None) -> tuple[Color, ...]:
+        if color is None:
+            color = self._color_palette.next()
+        others = [color if c is None else c for c in colors]
+        return color, *others
 
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""

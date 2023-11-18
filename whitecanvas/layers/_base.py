@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Generic, Iterable, Iterator, TypeVar, NamedTuple, TYPE_CHECKING
+from typing import Generic, Iterator, TypeVar, NamedTuple, TYPE_CHECKING
 from psygnal import Signal, SignalGroup
 import numpy as np
 from numpy.typing import ArrayLike
@@ -109,11 +109,13 @@ class LayerGroup(Layer):
     A group of layers that will be treated as a single layer in the canvas.
     """
 
-    def __init__(self, children: Iterable[Layer], name: str | None = None):
-        self._children = list(children)
-        self._name = name if name is not None else "LayerGroup"
-        self._visible = True
-        for c in children:
+    @abstractmethod
+    def _iter_children(self) -> Iterator[PrimitiveLayer[BaseProtocol]]:
+        """Recursively iterate over all children."""
+
+    def _emit_layer_grouped(self):
+        """Emit all the grouped signal."""
+        for c in self._iter_children():
             c._layer_grouped.emit(self)
 
     @property
@@ -125,16 +127,8 @@ class LayerGroup(Layer):
     def visible(self, visible: bool):
         """Set the visibility of the layer"""
         self._visible = visible
-        for child in self._children:
+        for child in self._iter_children():
             child.visible = visible
-
-    def _iter_children(self) -> Iterator[PrimitiveLayer[BaseProtocol]]:
-        """Recursively iterate over all children."""
-        for child in self._children:
-            if isinstance(child, LayerGroup):
-                yield from child._iter_children()
-            else:
-                yield child
 
     @property
     def _backend_name(self) -> str:

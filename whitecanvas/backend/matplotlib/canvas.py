@@ -8,7 +8,7 @@ from matplotlib.backend_bases import MouseEvent as mplMouseEvent, MouseButton as
 from .line import Line
 from .markers import Markers
 from .bar import Bars
-from .fillbetween import Band
+from .band import Band
 from .errorbar import Errorbars
 from .text import Text
 from .image import Image

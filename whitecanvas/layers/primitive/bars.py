@@ -6,6 +6,7 @@ from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYYData
+from whitecanvas.layers._mixin import FaceMixin, EdgeMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color
@@ -15,51 +16,6 @@ if TYPE_CHECKING:
 
 
 _void = _Void()
-
-
-class BarBase(PrimitiveLayer[BarProtocol]):
-    @property
-    def face_color(self):
-        """Face color of the bar."""
-        return self._backend._plt_get_face_color()
-
-    @face_color.setter
-    def face_color(self, color):
-        self._backend._plt_set_face_color(norm_color(color))
-
-    @property
-    def face_pattern(self) -> FacePattern:
-        """Face fill pattern of the bars."""
-        return self._backend._plt_get_face_pattern()
-
-    @face_pattern.setter
-    def face_pattern(self, style: str | FacePattern):
-        self._backend._plt_set_face_pattern(FacePattern(style))
-
-    @property
-    def edge_color(self):
-        """Edge color of the bar."""
-        return self._backend._plt_get_edge_color()
-
-    @edge_color.setter
-    def edge_color(self, color):
-        self._backend._plt_set_edge_color(norm_color(color))
-
-    @property
-    def edge_width(self) -> float:
-        return self._backend._plt_get_edge_width()
-
-    @edge_width.setter
-    def edge_width(self, width: float):
-        self._backend._plt_set_edge_width(width)
-
-    @property
-    def edge_style(self) -> LineStyle:
-        return self._backend._plt_get_edge_style()
-
-    @edge_style.setter
-    def edge_style(self, style: str | LineStyle):
-        self._backend._plt_set_edge_style(LineStyle(style))
 
 
 def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
@@ -83,7 +39,7 @@ def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
     return x0, x1, y0, y1
 
 
-class Bars(BarBase):
+class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarProtocol]):
     def __init__(
         self,
         x: ArrayLike,
@@ -94,6 +50,7 @@ class Bars(BarBase):
         bar_width: float = 0.8,
         name: str | None = None,
         face_color: ColorType = "blue",
+        face_pattern: str | FacePattern = FacePattern.SOLID,
         edge_color: ColorType = "black",
         edge_width: float = 0.0,
         edge_style: LineStyle | str = LineStyle.SOLID,
@@ -104,7 +61,13 @@ class Bars(BarBase):
         self._bar_width = bar_width
         self.name = name if name is not None else "Bars"
         self._orient = orient
-        self.setup(face_color=face_color, edge_color=edge_color, edge_width=edge_width, edge_style=edge_style)
+        self.setup(
+            face_color=face_color,
+            face_pattern=face_pattern,
+            edge_color=edge_color,
+            edge_width=edge_width,
+            edge_style=edge_style,
+        )
 
     @property
     def data(self) -> XYYData:
@@ -152,6 +115,7 @@ class Bars(BarBase):
             y0 = y0 - dy
             y1 = y1 + dy
         self._backend._plt_set_data(x0, x1, y0, y1)
+        self._bar_width = w
 
     @property
     def orient(self) -> Literal["vertical", "horizontal"]:
@@ -162,12 +126,15 @@ class Bars(BarBase):
         self,
         *,
         face_color: ColorType | _Void = _void,
+        face_pattern: FacePattern | str | _Void = _void,
         edge_color: ColorType | _Void = _void,
         edge_width: float | _Void = _void,
         edge_style: LineStyle | str | _Void = _void,
     ):
         if face_color is not _void:
             self.face_color = face_color
+        if face_pattern is not _void:
+            self.face_pattern = face_pattern
         if edge_color is not _void:
             self.edge_color = edge_color
         if edge_width is not _void:

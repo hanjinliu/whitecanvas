@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from numpy.typing import ArrayLike
 from whitecanvas.types import ColorType, _Void, Alignment
 from whitecanvas.layers.primitive import Line, Markers, Errorbars
-from whitecanvas.layers._base import LayerGroup
+from whitecanvas.layers.group._base import ListLayerGroup
 
 if TYPE_CHECKING:
     from .annotated import AnnotatedPlot
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-class Plot(LayerGroup):
+class Plot(ListLayerGroup):
     """A Plot layer is composed of a line and a markers layer."""
 
     def __init__(

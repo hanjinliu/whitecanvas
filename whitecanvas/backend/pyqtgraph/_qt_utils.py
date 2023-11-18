@@ -69,4 +69,5 @@ def from_qt_brush_style(hatch: Qt.BrushStyle) -> FacePattern:
 
 
 def to_qt_brush_style(hatch: FacePattern) -> Qt.BrushStyle:
+    # BUG: pyqtgraph does not support setting brush style correctly
     return _PAINT_STYLE[hatch]

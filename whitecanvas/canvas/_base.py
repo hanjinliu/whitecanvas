@@ -10,7 +10,7 @@ from numpy.typing import ArrayLike, NDArray
 from whitecanvas import protocols
 from whitecanvas import layers as _l
 from whitecanvas.layers import group as _lg
-from whitecanvas.types import LineStyle, Symbol, ColorType, Alignment, ColormapType
+from whitecanvas.types import LineStyle, Symbol, ColorType, Alignment, ColormapType, FacePattern
 from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
@@ -150,19 +150,19 @@ class CanvasBase(ABC, Generic[_T]):
 
     @overload
     def add_markers(
-        ydata: ArrayLike, *,
+        self, ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, face_color: ColorType | None = None, edge_color: ColorType | None = None,
-        edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
+        size: float = 6, face_color: ColorType | None = None, face_pattern: str | FacePattern = FacePattern.SOLID,
+        edge_color: ColorType | None = None, edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
     ) -> _l.Markers:  # fmt: skip
         ...
 
     @overload
     def add_markers(
-        xdata: ArrayLike, ydata: ArrayLike, *,
+        self, xdata: ArrayLike, ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, face_color: ColorType | None = None, edge_color: ColorType | None = None,
-        edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
+        size: float = 6, face_color: ColorType | None = None, face_pattern: str | FacePattern = FacePattern.SOLID,
+        edge_color: ColorType | None = None, edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
     ) -> _l.Markers:  # fmt: skip
         ...
 
@@ -173,6 +173,7 @@ class CanvasBase(ABC, Generic[_T]):
         symbol=Symbol.CIRCLE,
         size=6,
         face_color=None,
+        face_pattern=FacePattern.SOLID,
         edge_color=None,
         edge_width=0,
         edge_style=LineStyle.SOLID,
@@ -182,8 +183,8 @@ class CanvasBase(ABC, Generic[_T]):
         face_color, edge_color = self._generate_colors(face_color, edge_color)
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, face_color=face_color,
-            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-            backend=self._backend_installer,
+            face_pattern=face_pattern, edge_color=edge_color, edge_width=edge_width,
+            edge_style=edge_style, backend=self._backend_installer,
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -200,7 +201,7 @@ class CanvasBase(ABC, Generic[_T]):
         edge_color: ColorType | None = None,
         edge_width=0,
         edge_style=LineStyle.SOLID,
-    ):
+    ) -> _l.Bars:
         name = self._coerce_name(_l.Bars, name)
         face_color, edge_color = self._generate_colors(face_color, edge_color)
         layer = _l.Bars(
@@ -222,7 +223,7 @@ class CanvasBase(ABC, Generic[_T]):
         edge_color: ColorType | None = None,
         edge_width: float = 0,
         edge_style: str | LineStyle = LineStyle.SOLID,
-    ):
+    ) -> _l.Bars:
         data = as_array_1d(data)
         name = self._coerce_name("histogram", name)
         counts, edges = np.histogram(data, bins, density=density, range=range)
@@ -462,11 +463,11 @@ class CanvasBase(ABC, Generic[_T]):
         for layer in self.layers:
             if isinstance(layer, _l.PrimitiveLayer):
                 layer._backend._plt_set_zorder(zorder)
-            elif isinstance(layer, _l.LayerGroup):
+            elif isinstance(layer, _l.ListLayerGroup):
                 for child in layer._iter_children():
                     child._backend._plt_set_zorder(zorder)
 
-    def _group_layers(self, group: _l.LayerGroup):
+    def _group_layers(self, group: _l.ListLayerGroup):
         # TODO: do not remove the backend objects!
         indices: list[int] = []
         not_found: list[_l.PrimitiveLayer] = []
@@ -516,7 +517,7 @@ class CanvasBase(ABC, Generic[_T]):
 def _iter_layers(layer: _l.Layer) -> Iterator[_l.PrimitiveLayer[protocols.BaseProtocol]]:
     if isinstance(layer, _l.PrimitiveLayer):
         yield layer
-    elif isinstance(layer, _l.LayerGroup):
+    elif isinstance(layer, _l.ListLayerGroup):
         for child in layer._iter_children():
             yield from _iter_layers(child)
     else:

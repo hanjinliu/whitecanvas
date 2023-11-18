@@ -107,7 +107,11 @@ class Text(mplText):
         return FacePattern(patch.get_hatch())
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
-        self._bbox_props['hatch'] = pattern.value
+        if pattern is FacePattern.SOLID:
+            ptn = None
+        else:
+            ptn = pattern.value
+        self._bbox_props['hatch'] = ptn
         self.set_bbox(self._bbox_props)
 
     def _plt_get_edge_color(self):

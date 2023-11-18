@@ -5,6 +5,7 @@ from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
+from whitecanvas.layers._mixin import FaceMixin, EdgeMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import Symbol, LineStyle, ColorType, FacePattern, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-class Markers(PrimitiveLayer[MarkersProtocol]):
+class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveLayer[MarkersProtocol]):
     def __init__(
         self,
         xdata: ArrayLike,
@@ -25,6 +26,7 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
         face_color: ColorType = "blue",
+        face_pattern: str | FacePattern = FacePattern.SOLID,
         edge_color: ColorType = "black",
         edge_width: float = 0,
         edge_style: LineStyle | str = LineStyle.SOLID,
@@ -34,8 +36,8 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
         self.setup(
-            symbol=symbol, size=size, face_color=face_color, edge_color=edge_color,
-            edge_width=edge_width, edge_style=edge_style
+            symbol=symbol, size=size, face_color=face_color, face_pattern=face_pattern,
+            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style
         )  # fmt: skip
 
     @property
@@ -73,55 +75,13 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
     def size(self, size: float):
         self._backend._plt_set_symbol_size(size)
 
-    @property
-    def face_color(self):
-        """Face color of the marker symbol."""
-        return self._backend._plt_get_face_color()
-
-    @face_color.setter
-    def face_color(self, color):
-        self._backend._plt_set_face_color(norm_color(color))
-
-    @property
-    def face_pattern(self) -> str:
-        """Face fill pattern of the marker symbol."""
-        return self._backend._plt_get_face_pattern()
-
-    @face_pattern.setter
-    def face_pattern(self, style: FacePattern | str):
-        self._backend._plt_set_face_pattern(FacePattern(style))
-
-    @property
-    def edge_color(self):
-        """Edge color of the marker symbol."""
-        return self._backend._plt_get_edge_color()
-
-    @edge_color.setter
-    def edge_color(self, color):
-        self._backend._plt_set_edge_color(norm_color(color))
-
-    @property
-    def edge_width(self) -> float:
-        return self._backend._plt_get_edge_width()
-
-    @edge_width.setter
-    def edge_width(self, width: float):
-        self._backend._plt_set_edge_width(width)
-
-    @property
-    def edge_style(self) -> LineStyle:
-        return self._backend._plt_get_edge_style()
-
-    @edge_style.setter
-    def edge_style(self, style: str | LineStyle):
-        self._backend._plt_set_edge_style(LineStyle(style))
-
     def setup(
         self,
         *,
         symbol: Symbol | str | _Void = _void,
         size: float | _Void = _void,
         face_color: ColorType | _Void = _void,
+        face_pattern: str | FacePattern | _Void = _void,
         edge_color: ColorType | _Void = _void,
         edge_width: float | _Void = _void,
         edge_style: LineStyle | str | _Void = _void,
@@ -132,6 +92,8 @@ class Markers(PrimitiveLayer[MarkersProtocol]):
             self.size = size
         if face_color is not _void:
             self.face_color = face_color
+        if face_pattern is not _void:
+            self.face_pattern = face_pattern
         if edge_color is not _void:
             self.edge_color = edge_color
         if edge_width is not _void:

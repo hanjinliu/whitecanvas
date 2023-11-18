@@ -26,6 +26,7 @@ class Band(PolyCollection):
         else:
             raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         verts = np.concatenate([fw, bw], axis=0)
+        self._edge_style = LineStyle.SOLID
         super().__init__([verts], closed=True)
         self._t = t
         self._y0 = ydata0
@@ -85,8 +86,12 @@ class Band(PolyCollection):
     def _plt_get_face_pattern(self) -> FacePattern:
         return FacePattern(self.get_hatch())
 
-    def _plt_set_face_pattern(self, style: FacePattern):
-        self.set_hatch(style.value)
+    def _plt_set_face_pattern(self, pattern: FacePattern):
+        if pattern is FacePattern.SOLID:
+            ptn = None
+        else:
+            ptn = pattern.value
+        self.set_hatch(ptn)
 
     def _plt_get_edge_color(self):
         return self.get_edgecolor()[0]
@@ -101,10 +106,11 @@ class Band(PolyCollection):
         self.set_linewidth(width)
 
     def _plt_get_edge_style(self):
-        return LineStyle(self.get_linestyle()[0])
+        return self._edge_style
 
     def _plt_set_edge_style(self, style: LineStyle):
         self.set_linestyle(style.value)
+        self._edge_style = style
 
     def _plt_get_antialias(self):
         return self.get_antialiased()

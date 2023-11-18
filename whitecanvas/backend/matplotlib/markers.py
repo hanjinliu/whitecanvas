@@ -79,7 +79,11 @@ class Markers(PathCollection):
         return FacePattern(self.get_hatch())
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
-        self.set_hatch(pattern.value)
+        if pattern is FacePattern.SOLID:
+            ptn = None
+        else:
+            ptn = pattern.value
+        self.set_hatch(ptn)
 
     ##### HasEdges protocol #####
 

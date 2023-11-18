@@ -1,16 +1,33 @@
 from __future__ import annotations
+from typing import Iterator, NamedTuple
+from whitecanvas.protocols import BaseProtocol
 
 from whitecanvas.types import ColorType, _Void
 from whitecanvas.layers.primitive import Markers, Bars, Errorbars
-from whitecanvas.layers._base import LayerGroup
+from whitecanvas.layers._base import LayerGroup, PrimitiveLayer
 
 
 _void = _Void()
 
 
+class BoxTuple(NamedTuple):
+    bars: Bars
+    errorbars: Errorbars
+    markers: Markers
+
+
 class BoxPlot(LayerGroup):
-    def __init__(self, bars: Bars, err: Errorbars, markers: Markers, name: str | None = None):
+    """Box-plot is a list of bars, errorbars and markers."""
+
+    def __init__(
+        self,
+        components: list[tuple[Bars, Errorbars, Markers]],
+        name: str | None = None,
+    ):
         super().__init__([bars, err, markers], name=name)
+
+    def _iter_children(self) -> Iterator[PrimitiveLayer[BaseProtocol]]:
+        return super()._iter_children()
 
     @property
     def bars(self) -> Bars:
@@ -23,12 +40,3 @@ class BoxPlot(LayerGroup):
     @property
     def markers(self) -> Markers:
         return self._children[2]
-
-    @property
-    def edge_color(self) -> ColorType:
-        return self.bars.edge_color
-
-    @edge_color.setter
-    def edge_color(self, color: ColorType):
-        self.bars.edge_color = color
-        self.errorbars.color = color

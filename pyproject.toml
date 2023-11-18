@@ -26,7 +26,7 @@ dependencies = [
   "typing_extensions>=4.5.0",
   "numpy>=1.23.2",
   "psygnal>=0.9.4",
-  "cmap>=0.1.1",
+  "cmap>=0.1.2",
 ]
 
 

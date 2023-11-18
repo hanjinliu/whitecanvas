@@ -42,7 +42,8 @@ class Image(pg.ImageItem):
         self.setColorMap(pg_cmap)
 
     def _plt_get_clim(self) -> tuple[float, float]:
-        return self.getLevels()
+        low, high = self.getLevels()
+        return low, high
 
     def _plt_set_clim(self, clim: tuple[float, float]):
         self.setLevels(clim)

@@ -6,15 +6,16 @@ from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import ErrorbarProtocol
 from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, _Void
-from whitecanvas.utils.normalize import as_array_1d, norm_color
+from whitecanvas.utils.normalize import as_array_1d
 
 
 _void = _Void()
 
 
-class Errorbars(PrimitiveLayer[ErrorbarProtocol]):
+class Errorbars(LineMixin[ErrorbarProtocol], PrimitiveLayer[ErrorbarProtocol]):
     def __init__(
         self,
         t: ArrayLike,
@@ -23,7 +24,7 @@ class Errorbars(PrimitiveLayer[ErrorbarProtocol]):
         orient: Literal["vertical", "horizontal"] = "vertical",
         *,
         name: str | None = None,
-        color=None,
+        color: ColorType = "black",
         line_width: float = 1,
         line_style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = False,
@@ -75,33 +76,6 @@ class Errorbars(PrimitiveLayer[ErrorbarProtocol]):
     def ndata(self) -> int:
         """Number of data points."""
         return self.data[0].size
-
-    @property
-    def line_width(self):
-        """Width of the line."""
-        return self._backend._plt_get_edge_width()
-
-    @line_width.setter
-    def line_width(self, width):
-        self._backend._plt_set_edge_width(width)
-
-    @property
-    def line_style(self) -> LineStyle:
-        """Style of the line."""
-        return self._backend._plt_get_edge_style()
-
-    @line_style.setter
-    def line_style(self, style: str | LineStyle):
-        self._backend._plt_set_edge_style(LineStyle(style))
-
-    @property
-    def color(self):
-        """Color of the line."""
-        return self._backend._plt_get_edge_color()
-
-    @color.setter
-    def color(self, color: ColorType):
-        self._backend._plt_set_edge_color(norm_color(color))
 
     @property
     def capsize(self) -> float:

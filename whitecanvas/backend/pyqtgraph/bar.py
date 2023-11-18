@@ -64,7 +64,6 @@ class Bars(pg.BarGraphItem):
         return from_qt_brush_style(self._get_brush().style())
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
-        # BUG: pyqtgraph does not support setting brush style correctly
         brush = self._get_brush()
         brush.setStyle(to_qt_brush_style(pattern))
         self.setOpts(brush=brush)

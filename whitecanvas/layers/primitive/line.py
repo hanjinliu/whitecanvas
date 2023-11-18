@@ -5,6 +5,7 @@ from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import LineProtocol
 from whitecanvas.layers._base import XYDataLayer, XYData
+from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, Symbol, ColorType, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-class Line(XYDataLayer[LineProtocol]):
+class Line(LineMixin[LineProtocol], XYDataLayer[LineProtocol]):
     def __init__(
         self,
         xdata: ArrayLike,
@@ -51,33 +52,6 @@ class Line(XYDataLayer[LineProtocol]):
         if x0.size != y0.size:
             raise ValueError("Expected xdata and ydata to have the same size, " f"got {x0.size} and {y0.size}")
         self._backend._plt_set_data(x0, y0)
-
-    @property
-    def line_width(self):
-        """Width of the line."""
-        return self._backend._plt_get_edge_width()
-
-    @line_width.setter
-    def line_width(self, width):
-        self._backend._plt_set_edge_width(width)
-
-    @property
-    def line_style(self) -> LineStyle:
-        """Style of the line."""
-        return self._backend._plt_get_edge_style()
-
-    @line_style.setter
-    def line_style(self, style: str | LineStyle):
-        self._backend._plt_set_edge_style(LineStyle(style))
-
-    @property
-    def color(self):
-        """Color of the line."""
-        return self._backend._plt_get_edge_color()
-
-    @color.setter
-    def color(self, color):
-        self._backend._plt_set_edge_color(norm_color(color))
 
     @property
     def antialias(self) -> bool:

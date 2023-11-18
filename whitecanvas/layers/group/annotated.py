@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from whitecanvas.types import ColorType, _Void, Symbol, LineStyle, Alignment
-from whitecanvas.layers.primitive import Line, Markers, Bars
-from whitecanvas.layers.primitive.errorbar import Errorbars
-from whitecanvas.layers._base import LayerGroup, XYData, PrimitiveLayer
+from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
+from whitecanvas.layers._base import XYData, PrimitiveLayer
+from whitecanvas.layers.group._base import ListLayerGroup
 from whitecanvas.layers.group.text_group import TextGroup
 from whitecanvas.utils.normalize import as_array_1d
 
@@ -72,7 +72,7 @@ class CustomOffset(_TextOffset):
         return f"<CustomOffset({self._x}, {self._y})>"
 
 
-class _AnnotatedLayerBase(LayerGroup):
+class _AnnotatedLayerBase(ListLayerGroup):
     def __init__(
         self,
         layer: PrimitiveLayer,

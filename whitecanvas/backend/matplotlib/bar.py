@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from matplotlib.container import BarContainer
 from matplotlib.patches import Rectangle
 from whitecanvas.protocols import BarProtocol, check_protocol
-from whitecanvas.types import FacePattern
+from whitecanvas.types import FacePattern, LineStyle
 
 
 @check_protocol(BarProtocol)
@@ -74,8 +74,12 @@ class Bars(BarContainer):
         return FacePattern(self.patches[0].get_hatch())
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
+        if pattern is FacePattern.SOLID:
+            ptn = None
+        else:
+            ptn = pattern.value
         for patch in self.patches:
-            patch.set_hatch(pattern.value)
+            patch.set_hatch(ptn)
 
     ##### HasEdges protocol #####
 
@@ -89,9 +93,10 @@ class Bars(BarContainer):
     def _plt_get_edge_style(self) -> str:
         return self.patches[0].get_linestyle()
 
-    def _plt_set_edge_style(self, style: str):
+    def _plt_set_edge_style(self, style: LineStyle):
+        s = style.value
         for patch in self.patches:
-            patch.set_linestyle(style)
+            patch.set_linestyle(s)
 
     def _plt_get_edge_width(self) -> float:
         return self.patches[0].get_linewidth()

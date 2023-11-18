@@ -5,14 +5,14 @@ import numpy as np
 from numpy.typing import NDArray, ArrayLike
 from whitecanvas.types import ColorType, _Void, Alignment
 from whitecanvas.layers.primitive import Text
-from whitecanvas.layers._base import LayerGroup
+from whitecanvas.layers.group._base import ListLayerGroup
 from whitecanvas.backend import Backend
 from whitecanvas.utils.normalize import normalize_xy, norm_color, as_any_1d_array, as_color_array
 
 _void = _Void()
 
 
-class TextGroup(LayerGroup):
+class TextGroup(ListLayerGroup):
     _children: list[Text]
 
     def __init__(self, texts: list[Text], name: str | None = None):

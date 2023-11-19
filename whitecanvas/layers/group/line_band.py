@@ -3,7 +3,7 @@ from __future__ import annotations
 from whitecanvas.types import _Void
 from whitecanvas.layers.primitive import Line, Band
 from whitecanvas.layers._base import XYData
-from whitecanvas.layers.group._base import ListLayerGroup
+from whitecanvas.layers.group._collections import ListLayerGroup
 
 
 class LineBand(ListLayerGroup):

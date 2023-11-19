@@ -5,9 +5,14 @@ import numpy as np
 from numpy.typing import NDArray, ArrayLike
 from whitecanvas.types import ColorType, _Void, Alignment
 from whitecanvas.layers.primitive import Text
-from whitecanvas.layers.group._base import ListLayerGroup
+from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.backend import Backend
-from whitecanvas.utils.normalize import normalize_xy, norm_color, as_any_1d_array, as_color_array
+from whitecanvas.utils.normalize import (
+    normalize_xy,
+    norm_color,
+    as_any_1d_array,
+    as_color_array,
+)
 
 _void = _Void()
 
@@ -84,11 +89,15 @@ class TextGroup(ListLayerGroup):
         if xs is not None:
             xs = np.asarray(xs)
             if xs.shape != (len(self._children),):
-                raise ValueError(f"Expected shape ({len(self._children)},), got {xs.shape}")
+                raise ValueError(
+                    f"Expected shape ({len(self._children)},), got {xs.shape}"
+                )
         if ys is not None:
             ys = np.asarray(ys)
             if ys.shape != (len(self._children),):
-                raise ValueError(f"Expected shape ({len(self._children)},), got {ys.shape}")
+                raise ValueError(
+                    f"Expected shape ({len(self._children)},), got {ys.shape}"
+                )
         # update positions
         if xs is None and ys is not None:
             for tl, y in zip(self._children, ys):
@@ -110,7 +119,9 @@ class TextGroup(ListLayerGroup):
     @string.setter
     def string(self, values: list[str]):
         if len(values) != len(self._children):
-            raise ValueError(f"Expected {len(self._children)} values, got {len(values)}")
+            raise ValueError(
+                f"Expected {len(self._children)} values, got {len(values)}"
+            )
         for tl, v in zip(self._children, values):
             tl.string = v
 

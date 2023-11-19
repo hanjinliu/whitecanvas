@@ -10,7 +10,7 @@ from ._qt_utils import array_to_qcolor, from_qt_line_style, to_qt_line_style
 
 
 @check_protocol(LineProtocol)
-class Line(pg.PlotCurveItem):
+class MonoLine(pg.PlotCurveItem):
     def __init__(self, xdata, ydata):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)

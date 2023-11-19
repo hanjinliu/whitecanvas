@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import LineProtocol
-from whitecanvas.layers._base import XYDataLayer, XYData
+from whitecanvas.layers._base import XYDataLayer, XYData, PrimitiveLayer
 from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, Symbol, ColorType, _Void, Alignment
-from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -16,43 +16,7 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-class Line(LineMixin[LineProtocol], XYDataLayer[LineProtocol]):
-    def __init__(
-        self,
-        xdata: ArrayLike,
-        ydata: ArrayLike,
-        *,
-        name: str | None = None,
-        color=None,
-        line_width: float = 1,
-        line_style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = False,
-        backend: Backend | str | None = None,
-    ):
-        xdata, ydata = normalize_xy(xdata, ydata)
-        self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.name = name if name is not None else "Line"
-        self.setup(color=color, line_width=line_width, style=line_style, antialias=antialias)
-
-    @property
-    def data(self) -> XYData:
-        """Current data of the layer."""
-        return XYData(*self._backend._plt_get_data())
-
-    def set_data(
-        self,
-        xdata: ArrayLike | None = None,
-        ydata: ArrayLike | None = None,
-    ):
-        x0, y0 = self.data
-        if xdata is not None:
-            x0 = as_array_1d(xdata)
-        if ydata is not None:
-            y0 = as_array_1d(ydata)
-        if x0.size != y0.size:
-            raise ValueError("Expected xdata and ydata to have the same size, " f"got {x0.size} and {y0.size}")
-        self._backend._plt_set_data(x0, y0)
-
+class MonoLine(LineMixin[LineProtocol], PrimitiveLayer[LineProtocol]):
     @property
     def antialias(self) -> bool:
         """Whether to use antialiasing."""
@@ -80,13 +44,56 @@ class Line(LineMixin[LineProtocol], XYDataLayer[LineProtocol]):
             self.antialias = antialias
         return self
 
+
+class Line(MonoLine):
+    def __init__(
+        self,
+        xdata: ArrayLike,
+        ydata: ArrayLike,
+        *,
+        name: str | None = None,
+        color=None,
+        line_width: float = 1,
+        line_style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = False,
+        backend: Backend | str | None = None,
+    ):
+        xdata, ydata = normalize_xy(xdata, ydata)
+        self._backend = self._create_backend(Backend(backend), xdata, ydata)
+        self.name = name if name is not None else "Line"
+        self.setup(
+            color=color, line_width=line_width, style=line_style, antialias=antialias
+        )
+
+    @property
+    def data(self) -> XYData:
+        """Current data of the layer."""
+        return XYData(*self._backend._plt_get_data())
+
+    def set_data(
+        self,
+        xdata: ArrayLike | None = None,
+        ydata: ArrayLike | None = None,
+    ):
+        x0, y0 = self.data
+        if xdata is not None:
+            x0 = as_array_1d(xdata)
+        if ydata is not None:
+            y0 = as_array_1d(ydata)
+        if x0.size != y0.size:
+            raise ValueError(
+                "Expected xdata and ydata to have the same size, "
+                f"got {x0.size} and {y0.size}"
+            )
+        self._backend._plt_set_data(x0, y0)
+
     def with_markers(
         self,
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
         face_color: ColorType | _Void = _void,
         edge_color: ColorType | _Void = _void,
-        edge_width: float = 0,
+        edge_width: float = 1,
         edge_style: str | LineStyle = LineStyle.SOLID,
     ) -> _lg.Plot:
         from whitecanvas.layers.group import Plot

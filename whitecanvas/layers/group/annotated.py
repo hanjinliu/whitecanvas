@@ -6,7 +6,7 @@ import numpy as np
 from whitecanvas.types import ColorType, _Void, Symbol, LineStyle, Alignment
 from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
 from whitecanvas.layers._base import XYData, PrimitiveLayer
-from whitecanvas.layers.group._base import ListLayerGroup
+from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group.text_group import TextGroup
 from whitecanvas.utils.normalize import as_array_1d
 
@@ -87,6 +87,10 @@ class _AnnotatedLayerBase(ListLayerGroup):
 
         super().__init__([layer, xerr, yerr, texts], name=name)
         self._text_offset = offset
+
+    def _default_ordering(self, n: int) -> list[int]:
+        assert n == 4
+        return [2, 0, 1, 3]
 
     def _set_data_to_first_layer(self, xdata=None, ydata=None):
         self._children[0].set_data(xdata, ydata)
@@ -217,7 +221,11 @@ class _AnnotatedLayerBase(ListLayerGroup):
         x, y = self.data
         self.xerr.set_data(y, x - len_lower, x + len_higher)
         return self.setup_xerr(
-            color=color, line_width=line_width, line_style=line_style, antialias=antialias, capsize=capsize
+            color=color,
+            line_width=line_width,
+            line_style=line_style,
+            antialias=antialias,
+            capsize=capsize,
         )
 
     def with_yerr(
@@ -380,13 +388,19 @@ class AnnotatedBars(_AnnotatedLayerBase):
         edge_width: float | _Void = _void,
         edge_style: LineStyle | str | _Void = _void,
     ):
-        self.bars.setup(face_color=face_color, edge_color=edge_color, edge_width=edge_width, edge_style=edge_style)
+        self.bars.setup(
+            face_color=face_color,
+            edge_color=edge_color,
+            edge_width=edge_width,
+            edge_style=edge_style,
+        )
         return self
 
 
 class AnnotatedPlot(_AnnotatedLayerBase):
     @property
     def plot(self) -> Plot:
+        """The plot (line + markers) layer."""
         return self._children[0]
 
     @property
@@ -398,13 +412,3 @@ class AnnotatedPlot(_AnnotatedLayerBase):
     def markers(self) -> Markers:
         """The markers layer."""
         return self.plot.markers
-
-    @property
-    def xerr(self) -> Errorbars:
-        """The x error bars layer."""
-        return self._children[2]
-
-    @property
-    def yerr(self) -> Errorbars:
-        """The y error bars layer."""
-        return self._children[3]

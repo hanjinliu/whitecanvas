@@ -6,6 +6,7 @@ from cmap import Color
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from psygnal import Signal
 
 from whitecanvas import protocols
 from whitecanvas import layers as _l
@@ -32,6 +33,7 @@ _L = TypeVar("_L", bound=_l.Layer)
 class CanvasBase(ABC):
     """Base class for any canvas object."""
 
+    lims_changed = Signal(tuple)
     title = _ns.TitleNamespace()
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
@@ -56,8 +58,8 @@ class CanvasBase(ABC):
         self.layers.events.reordered.connect(self._cb_reordered, unique=True)
 
         canvas = self._canvas()
-        canvas._plt_connect_xlim_changed(self.x.lim_changed.emit)
-        canvas._plt_connect_ylim_changed(self.y.lim_changed.emit)
+        canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
+        canvas._plt_connect_ylim_changed(self._emit_ylim_changed)
 
     def _install_mouse_events(self):
         canvas = self._canvas()
@@ -66,6 +68,14 @@ class CanvasBase(ABC):
         canvas._plt_connect_mouse_drag(self.mouse.moved.emit)
         canvas._plt_connect_mouse_double_click(self.mouse.double_clicked.emit)
         canvas._plt_connect_mouse_double_click(self.mouse.moved.emit)
+
+    def _emit_xlim_changed(self, lim):
+        self.x.lim_changed.emit(lim)
+        self.lims_changed.emit((lim, self.y.lim))
+
+    def _emit_ylim_changed(self, lim):
+        self.y.lim_changed.emit(lim)
+        self.lims_changed.emit((self.x.lim, lim))
 
     @abstractmethod
     def _get_backend(self) -> Backend:
@@ -77,6 +87,7 @@ class CanvasBase(ABC):
 
     @property
     def aspect_ratio(self) -> float | None:
+        """Aspect ratio of the canvas (None if not locked)."""
         return self._canvas()._plt_get_aspect_ratio()
 
     @aspect_ratio.setter
@@ -94,6 +105,17 @@ class CanvasBase(ABC):
     def visible(self):
         """Hide the canvas."""
         self._canvas()._plt_set_visible(False)
+
+    @property
+    def lims(self) -> tuple[tuple[float, float], tuple[float, float]]:
+        """Return the x/y limits of the canvas."""
+        return self.x.lim, self.y.lim
+
+    @lims.setter
+    def lims(self, lims: tuple[tuple[float, float], tuple[float, float]]):
+        xlim, ylim = lims
+        self.x.lim = xlim
+        self.y.lim = ylim
 
     @overload
     def add_line(
@@ -439,12 +461,14 @@ class CanvasBase(ABC):
 
     def _cb_inserted(self, idx: int, layer: _l.Layer):
         if self._is_grouping:
+            # this happens when the grouped layer is inserted
+            layer._connect_canvas(self)
             return
         if idx < 0:
             idx = len(self.layers) + idx
         _canvas = self._canvas()
         for l in _iter_layers(layer):
-            _canvas._plt_insert_layer(idx, l._backend)
+            _canvas._plt_add_layer(l._backend)
             l._connect_canvas(self)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):
@@ -460,32 +484,42 @@ class CanvasBase(ABC):
         for layer in self.layers:
             if isinstance(layer, _l.PrimitiveLayer):
                 layer._backend._plt_set_zorder(zorder)
+                zorder += 1
             elif isinstance(layer, _l.LayerGroup):
-                for child in layer._iter_children():
+                for child in layer.iter_children_recursive():
                     child._backend._plt_set_zorder(zorder)
+                    zorder += 1
+            else:
+                raise RuntimeError(f"type {type(layer)} not expected")
 
     def _group_layers(self, group: _l.LayerGroup):
-        # TODO: do not remove the backend objects!
-        indices: list[int] = []
-        not_found: list[_l.PrimitiveLayer] = []
-        for layer in group._iter_children():
+        for child in group.iter_children():
+            child._connect_canvas(self)
+        indices: list[int] = []  # layers to remove
+        not_found: list[_l.PrimitiveLayer] = []  # primitive layers to add
+        id_exists = set(map(id, self.layers.iter_primitives()))
+        for layer in group.iter_children():
             try:
                 idx = self.layers.index(layer)
                 indices.append(idx)
             except ValueError:
                 not_found.extend(_iter_layers(layer))
-        if len(indices) > 0:
-            self._is_grouping = True
-            try:
-                for idx in reversed(indices):
-                    self.layers.pop(idx)
-                self.layers.append(group)
-                _canvas = self._canvas()
-                for child in not_found:
-                    _canvas._plt_insert_layer(idx, child._backend)
-                    child._connect_canvas(self)
-            finally:
-                self._is_grouping = False
+        self._is_grouping = True
+        try:
+            for idx in reversed(indices):
+                # remove from the layer list since it is directly grouped
+                self.layers.pop(idx)
+            self.layers.append(group)
+            _canvas = self._canvas()
+            for child in not_found:
+                if id(child) in id_exists:
+                    # skip since it is already in the canvas
+                    continue
+                child._connect_canvas(self)
+                _canvas._plt_add_layer(child._backend)
+        finally:
+            self._is_grouping = False
+        self._cb_reordered()
 
     def _generate_colors(
         self, color: ColorType | None, *colors: ColorType | None
@@ -539,7 +573,6 @@ def _iter_layers(
     if isinstance(layer, _l.PrimitiveLayer):
         yield layer
     elif isinstance(layer, _l.LayerGroup):
-        for child in layer._iter_children():
-            yield from _iter_layers(child)
+        yield from layer.iter_children_recursive()
     else:
         raise TypeError(f"Unknown layer type: {type(layer).__name__}")

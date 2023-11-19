@@ -49,7 +49,9 @@ class Layer(ABC):
                 f"got {layer_type!r} (type: {type(layer_type).__name__}))"
             )
         if not isinstance(self, layer_type):
-            raise TypeError(f"Expected {layer_type.__name__}, got {type(self).__name__}")
+            raise TypeError(
+                f"Expected {layer_type.__name__}, got {type(self).__name__}"
+            )
         return self
 
     def __repr__(self):
@@ -57,7 +59,7 @@ class Layer(ABC):
 
     def _connect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is added to a canvas."""
-        self._layer_grouped.connect(canvas._group_layers)
+        self._layer_grouped.connect(canvas._group_layers, unique=True)
 
     def _disconnect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is removed from a canvas."""
@@ -84,10 +86,16 @@ class PrimitiveLayer(Layer, Generic[_P]):
         """Create a backend object."""
         for mro in reversed(type(self).__mro__):
             name = mro.__name__
-            if issubclass(mro, PrimitiveLayer) and mro is not PrimitiveLayer and backend.has(name):
+            if (
+                issubclass(mro, PrimitiveLayer)
+                and mro is not PrimitiveLayer
+                and backend.has(name)
+            ):
                 self._backend_name = backend.name
                 return backend.get(name)(*args)
-        raise TypeError(f"Cannot create a {backend.name} backend for {type(self).__name__}")
+        raise TypeError(
+            f"Cannot create a {backend.name} backend for {type(self).__name__}"
+        )
 
 
 class XYDataLayer(PrimitiveLayer[_P]):
@@ -109,13 +117,24 @@ class LayerGroup(Layer):
     A group of layers that will be treated as a single layer in the canvas.
     """
 
+    def __init__(self, name: str | None = None):
+        self._name = name if name is not None else "LayerGroup"
+        self._visible = True
+
     @abstractmethod
-    def _iter_children(self) -> Iterator[PrimitiveLayer[BaseProtocol]]:
-        """Recursively iterate over all children."""
+    def iter_children(self) -> Iterator[Layer]:
+        """Iterate over all children."""
+
+    def iter_children_recursive(self) -> Iterator[PrimitiveLayer[BaseProtocol]]:
+        for child in self.iter_children():
+            if isinstance(child, LayerGroup):
+                yield from child.iter_children_recursive()
+            else:
+                yield child
 
     def _emit_layer_grouped(self):
         """Emit all the grouped signal."""
-        for c in self._iter_children():
+        for c in self.iter_children():
             c._layer_grouped.emit(self)
 
     @property
@@ -127,13 +146,13 @@ class LayerGroup(Layer):
     def visible(self, visible: bool):
         """Set the visibility of the layer"""
         self._visible = visible
-        for child in self._iter_children():
+        for child in self.iter_children():
             child.visible = visible
 
     @property
     def _backend_name(self) -> str:
         """The backend name of this layer group."""
-        for child in self._iter_children():
+        for child in self.iter_children():
             return child._backend_name
         raise RuntimeError(f"No backend name found for {self!r}")
 

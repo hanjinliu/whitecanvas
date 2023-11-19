@@ -4,7 +4,7 @@ from typing import Any, Iterable, overload, TypeVar
 from psygnal import Signal, SignalGroup
 from psygnal.containers import EventedList
 
-from whitecanvas.layers import Layer
+from whitecanvas.layers import Layer, LayerGroup, PrimitiveLayer
 
 _V = TypeVar("_V", bound=Any)
 
@@ -64,3 +64,10 @@ class LayerList(EventedList[Layer]):
                     return layer
             return default
         raise TypeError(f"LayerList.get() expected str, got {type(idx)}")
+
+    def iter_primitives(self) -> Iterable[PrimitiveLayer]:
+        for layer in self:
+            if isinstance(layer, LayerGroup):
+                yield from layer.iter_children_recursive()
+            else:
+                yield layer

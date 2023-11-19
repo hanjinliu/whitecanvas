@@ -18,7 +18,7 @@ class HasVisibility(Protocol):
 
 @runtime_checkable
 class HasLayers(Protocol):
-    def _plt_insert_layer(self, idx: int, layer: BaseProtocol):
+    def _plt_add_layer(self, layer: BaseProtocol):
         """Add layer to the canvas (no need for reordering)"""
 
     def _plt_remove_layer(self, layer: BaseProtocol):

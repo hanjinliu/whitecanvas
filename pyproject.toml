@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "whitecanvas"
 dynamic = ["version"]
-description = 'A next generation, backend independent plotting library'
+description = 'A type safe and backend independent plotting library for Python.'
 readme = "README.md"
 requires-python = ">=3.9"
 license = "BSD 3-Clause"

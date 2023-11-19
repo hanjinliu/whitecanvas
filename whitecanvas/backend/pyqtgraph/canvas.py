@@ -65,7 +65,7 @@ class Canvas:
     def _viewbox(self) -> pg.ViewBox:
         return self._plot_item.vb
 
-    def _plt_insert_layer(self, idx: int, layer: protocols.BaseProtocol):
+    def _plt_add_layer(self, layer: protocols.BaseProtocol):
         self._plot_item.addItem(layer)
 
     def _plt_remove_layer(self, layer):

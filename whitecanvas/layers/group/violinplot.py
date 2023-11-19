@@ -3,7 +3,7 @@ from typing import Literal
 
 from whitecanvas.types import ColorType, _Void
 from whitecanvas.layers.primitive import Band
-from whitecanvas.layers.group._base import ListLayerGroup
+from whitecanvas.layers.group._collections import ListLayerGroup
 
 
 class ViolinPlot(ListLayerGroup):

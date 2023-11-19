@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from numpy.typing import ArrayLike
 from whitecanvas.types import ColorType, _Void, Alignment
 from whitecanvas.layers.primitive import Line, Markers, Errorbars
-from whitecanvas.layers.group._base import ListLayerGroup
+from whitecanvas.layers.group._collections import ListLayerGroup
 
 if TYPE_CHECKING:
     from .annotated import AnnotatedPlot

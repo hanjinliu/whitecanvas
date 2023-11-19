@@ -1,4 +1,4 @@
-from .line import Line
+from .line import MonoLine
 from .markers import Markers
 from .bar import Bars
 from .band import Band

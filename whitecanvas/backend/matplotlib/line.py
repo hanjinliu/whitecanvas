@@ -7,7 +7,7 @@ from whitecanvas.types import LineStyle
 
 
 @check_protocol(LineProtocol)
-class Line(Line2D):
+class MonoLine(Line2D):
     def __init__(self, xdata, ydata):
         super().__init__(
             xdata,

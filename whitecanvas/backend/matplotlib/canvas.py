@@ -8,7 +8,7 @@ from matplotlib.backend_bases import (
     MouseEvent as mplMouseEvent,
     MouseButton as mplMouseButton,
 )
-from .line import Line
+from .line import MonoLine
 from .markers import Markers
 from .bar import Bars
 from .band import Band
@@ -59,8 +59,8 @@ class Canvas:
         else:
             self._axes.set_aspect(ratio)
 
-    def _plt_insert_layer(self, idx: int, layer: protocols.BaseProtocol):
-        if isinstance(layer, Line):
+    def _plt_add_layer(self, layer: protocols.BaseProtocol):
+        if isinstance(layer, MonoLine):
             self._axes.add_line(layer)
         elif isinstance(layer, (Markers, Band, Errorbars)):
             self._axes.add_collection(layer)

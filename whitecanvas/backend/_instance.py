@@ -1,3 +1,6 @@
+from contextlib import contextmanager
+
+
 _INSTALLED_MODULES = {}
 
 
@@ -16,7 +19,9 @@ class Backend:
         else:
             from importlib import import_module
 
-            _INSTALLED_MODULES[name] = self._mod = import_module(f"whitecanvas.backend.{name}")
+            _INSTALLED_MODULES[name] = self._mod = import_module(
+                f"whitecanvas.backend.{name}"
+            )
         self._name = name
         self.__class__._default = name
 
@@ -38,3 +43,31 @@ class Backend:
         if out is None:
             raise RuntimeError(f"Backend {self._name!r} does not have {attr!r}")
         return out
+
+
+class DummyObject:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+class DummyBackendModule:
+    def __init__(self):
+        self.Canvas = DummyObject
+
+    def __getattr__(self, key):
+        raise RuntimeError(f"Cannot install {key!r} before finishing layouting.")
+
+
+_dummy_backend_module = DummyBackendModule()
+
+
+@contextmanager
+def patch_dummy_backend():
+    dummy_name = "."
+    while dummy_name in _INSTALLED_MODULES:
+        dummy_name += "."
+    _INSTALLED_MODULES[dummy_name] = _dummy_backend_module
+    try:
+        yield dummy_name
+    finally:
+        del _INSTALLED_MODULES[dummy_name]

@@ -4,7 +4,10 @@ from typing import Callable
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.backend_bases import MouseEvent as mplMouseEvent, MouseButton as mplMouseButton
+from matplotlib.backend_bases import (
+    MouseEvent as mplMouseEvent,
+    MouseButton as mplMouseButton,
+)
 from .line import Line
 from .markers import Markers
 from .bar import Bars
@@ -19,7 +22,7 @@ from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
 
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
-    def __init__(self, *, ax: plt.Axes | None = None):
+    def __init__(self, ax: plt.Axes | None = None):
         if ax is None:
             ax = plt.gca()
         self._axes = ax
@@ -28,12 +31,6 @@ class Canvas:
         self._title = Title(self)
         self._xlabel = XLabel(self)
         self._ylabel = YLabel(self)
-
-    def _plt_get_background_color(self):
-        self._axes.get_facecolor()
-
-    def _plt_set_background_color(self, color):
-        self._axes.set_facecolor(color)
 
     def _plt_get_title(self):
         return self._title
@@ -49,18 +46,6 @@ class Canvas:
 
     def _plt_get_ylabel(self):
         return self._ylabel
-
-    def _plt_screenshot(self):
-        import io
-
-        fig = self._axes.figure
-        with io.BytesIO() as buff:
-            fig.savefig(buff, format="raw")
-            buff.seek(0)
-            data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
-        w, h = fig.canvas.get_width_height()
-        img = data.reshape((int(h), int(w), -1))
-        return img
 
     def _plt_get_aspect_ratio(self) -> float | None:
         out = self._axes.get_aspect()
@@ -132,7 +117,9 @@ class Canvas:
 
         self._axes.figure.canvas.mpl_connect("button_press_event", _cb)
 
-    def _translate_mouse_event(self, ev: mplMouseEvent, typ: MouseEventType) -> MouseEvent:
+    def _translate_mouse_event(
+        self, ev: mplMouseEvent, typ: MouseEventType
+    ) -> MouseEvent:
         if ev.key is None:
             modifiers = ()
         else:
@@ -148,11 +135,15 @@ class Canvas:
             type=typ,
         )
 
-    def _plt_connect_xlim_changed(self, callback: Callable[[tuple[float, float]], None]):
+    def _plt_connect_xlim_changed(
+        self, callback: Callable[[tuple[float, float]], None]
+    ):
         """Connect callback to x-limits changed event"""
         self._axes.callbacks.connect("xlim_changed", lambda ax: callback(ax.get_xlim()))
 
-    def _plt_connect_ylim_changed(self, callback: Callable[[tuple[float, float]], None]):
+    def _plt_connect_ylim_changed(
+        self, callback: Callable[[tuple[float, float]], None]
+    ):
         """Connect callback to y-limits changed event"""
         self._axes.callbacks.connect("ylim_changed", lambda ax: callback(ax.get_ylim()))
 
@@ -173,20 +164,41 @@ _MOUSE_MOD_MAP = {
 }
 
 
-class MainCanvas:
-    def __init__(self):
-        fig, ax = plt.subplots()
-        self._canvas = Canvas(ax=ax)
-        self._figure = fig
+@protocols.check_protocol(protocols.CanvasGridProtocol)
+class CanvasGrid:
+    def __init__(self, heights: list[int], widths: list[int]):
+        nr, nc = len(heights), len(widths)
+        self._gridspec = plt.GridSpec(
+            nr, nc, height_ratios=heights, width_ratios=widths
+        )
+        self._fig = plt.figure()
 
-    def _plt_get_canvas(self) -> protocols.CanvasProtocol:
-        return self._canvas
+    def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
+        r1 = row + rowspan
+        c1 = col + colspan
+        axes = self._fig.add_subplot(self._gridspec[row:r1, col:c1])
+        return Canvas(axes)
 
     def _plt_get_visible(self) -> bool:
-        return True
+        return self._fig.get_visible()
 
     def _plt_set_visible(self, visible: bool):
-        if visible:
-            self._figure.show()
-        else:
-            pass
+        self._fig.set_visible(visible)
+
+    def _plt_get_background_color(self):
+        self._fig.get_facecolor()
+
+    def _plt_set_background_color(self, color):
+        self._fig.set_facecolor(color)
+
+    def _plt_screenshot(self):
+        import io
+
+        fig = self._fig
+        with io.BytesIO() as buff:
+            fig.savefig(buff, format="raw")
+            buff.seek(0)
+            data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
+        w, h = fig.canvas.get_width_height()
+        img = data.reshape((int(h), int(w), -1))
+        return img

@@ -27,15 +27,6 @@ class HasLayers(Protocol):
 
 @runtime_checkable
 class CanvasProtocol(HasVisibility, HasLayers, Protocol):
-    def _plt_get_background_color(self):
-        """Get background color of canvas"""
-
-    def _plt_set_background_color(self, color):
-        """Set background color of canvas"""
-
-    def _plt_screenshot(self) -> NDArray[np.uint8]:
-        """Get screenshot of canvas"""
-
     def _plt_get_title(self) -> TextLabelProtocol:
         """Get title handler"""
 
@@ -66,10 +57,14 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     def _plt_connect_mouse_double_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
 
-    def _plt_connect_xlim_changed(self, callback: Callable[[tuple[float, float]], None]):
+    def _plt_connect_xlim_changed(
+        self, callback: Callable[[tuple[float, float]], None]
+    ):
         """Connect callback to x-limits changed event"""
 
-    def _plt_connect_ylim_changed(self, callback: Callable[[tuple[float, float]], None]):
+    def _plt_connect_ylim_changed(
+        self, callback: Callable[[tuple[float, float]], None]
+    ):
         """Connect callback to y-limits changed event"""
 
 
@@ -140,6 +135,17 @@ class AxisGridProtocol(Protocol):
 
 
 @runtime_checkable
-class MainWindowProtocol(HasVisibility, Protocol):
-    def _plt_get_canvas(self) -> CanvasProtocol:
-        """Get canvas of main window"""
+class CanvasGridProtocol(HasVisibility, Protocol):
+    def _plt_add_canvas(
+        self, row: int, col: int, rowspan: int, colspan: int
+    ) -> CanvasProtocol:
+        """Add canvas to the grid"""
+
+    def _plt_get_background_color(self):
+        """Get background color of canvas"""
+
+    def _plt_set_background_color(self, color):
+        """Set background color of canvas"""
+
+    def _plt_screenshot(self) -> NDArray[np.uint8]:
+        """Get screenshot of canvas"""

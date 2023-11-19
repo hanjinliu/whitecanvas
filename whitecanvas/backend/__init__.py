@@ -1,3 +1,3 @@
-from ._instance import Backend
+from ._instance import Backend, patch_dummy_backend
 
-__all__ = ["Backend"]
+__all__ = ["Backend", "patch_dummy_backend"]

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Callable, cast
 
 import qtpy
-from qtpy import QtWidgets as QtW, QtCore, QtGui
+from qtpy import QtCore, QtGui
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene.mouseEvents import (
     MouseClickEvent as pgMouseClickEvent,
@@ -17,31 +17,20 @@ from ._labels import Title, AxisLabel, Axis
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
-class Canvas(QtW.QWidget):
+class Canvas:
     """A 1-D data viewer that have similar API as napari Viewer."""
 
-    def __init__(self, parent: QtW.QWidget | None = None):
+    def __init__(self, item: pg.PlotItem | None = None):
         # prepare widget
-        viewbox = pg.ViewBox()
-        self._plot_item = pg.PlotItem(viewBox=viewbox)
-
-        _layoutwidget = pg.GraphicsLayoutWidget()
-        _layoutwidget.addItem(self._plot_item)
-        self._layoutwidget = _layoutwidget
-        self._plt_set_background_color(np.array([1, 1, 1, 1]))
-
-        super().__init__(parent)
-        layout = QtW.QVBoxLayout()
-        layout.addWidget(_layoutwidget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
+        if item is None:
+            viewbox = pg.ViewBox()
+            item = pg.PlotItem(viewBox=viewbox)
+        self._plot_item = item
         self._xaxis = Axis(self, axis="bottom")
         self._yaxis = Axis(self, axis="left")
         self._title = Title(self)
         self._xlabel = AxisLabel(self, axis="bottom")
         self._ylabel = AxisLabel(self, axis="left")
-        # self._xaxis._plt_set_color(np.array([0, 0, 0, 1]))
-        # self._yaxis._plt_set_color(np.array([0, 0, 0, 1]))
         self._title = Title(self)
 
     def _plt_get_title(self):
@@ -58,30 +47,6 @@ class Canvas(QtW.QWidget):
 
     def _plt_get_ylabel(self):
         return self._ylabel
-
-    def _get_background_brush(self) -> QtGui.QBrush:
-        return self._layoutwidget.backgroundBrush()
-
-    def _plt_get_background_color(self):
-        brush = self._get_background_brush()
-        return np.array(brush.color().getRgbF())
-
-    def _plt_set_background_color(self, color):
-        brush = self._get_background_brush()
-        brush.setColor(QtGui.QColor.fromRgbF(*color))
-        self._layoutwidget.setBackgroundBrush(brush)
-
-    def _plt_screenshot(self):
-        img = self.grab().toImage()
-        bits = img.constBits()
-        h, w, c = img.height(), img.width(), 4
-        if qtpy.API_NAME.startswith("PySide"):
-            arr = np.asarray(bits).reshape(h, w, c)
-        else:
-            bits.setsize(h * w * c)
-            arr = np.frombuffer(bits, np.uint8).reshape(h, w, c)
-
-        return arr[:, :, [2, 1, 0, 3]]
 
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""
@@ -109,11 +74,11 @@ class Canvas(QtW.QWidget):
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""
-        return self.isVisible()
+        return self._plot_item.isVisible()
 
     def _plt_set_visible(self, visible: bool):
         """Set visibility of canvas"""
-        self.setVisible(visible)
+        self._plot_item.setVisible(visible)
 
     def _get_scene(self) -> pg.GraphicsScene:
         return self._plot_item.scene()
@@ -146,11 +111,15 @@ class Canvas(QtW.QWidget):
 
         self._get_scene().sigMouseClicked.connect(_cb)
 
-    def _plt_connect_xlim_changed(self, callback: Callable[[tuple[float, float]], None]):
+    def _plt_connect_xlim_changed(
+        self, callback: Callable[[tuple[float, float]], None]
+    ):
         """Connect callback to x-limits changed event"""
         self._plot_item.sigXRangeChanged.connect(lambda _, x: callback(x))
 
-    def _plt_connect_ylim_changed(self, callback: Callable[[tuple[float, float]], None]):
+    def _plt_connect_ylim_changed(
+        self, callback: Callable[[tuple[float, float]], None]
+    ):
         """Connect callback to y-limits changed event"""
         self._plot_item.sigYRangeChanged.connect(lambda _, y: callback(y))
 
@@ -200,12 +169,16 @@ _QT_MODIFIERS_MAP = {
     QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.META,),
     QtCore.Qt.KeyboardModifier.ShiftModifier
     | QtCore.Qt.KeyboardModifier.ControlModifier: (Modifier.SHIFT, Modifier.CTRL),
-    QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.KeyboardModifier.AltModifier: (Modifier.SHIFT, Modifier.ALT),
-    QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.SHIFT, Modifier.META),
-    QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.AltModifier: (Modifier.CTRL, Modifier.ALT),
+    QtCore.Qt.KeyboardModifier.ShiftModifier
+    | QtCore.Qt.KeyboardModifier.AltModifier: (Modifier.SHIFT, Modifier.ALT),
+    QtCore.Qt.KeyboardModifier.ShiftModifier
+    | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.SHIFT, Modifier.META),
+    QtCore.Qt.KeyboardModifier.ControlModifier
+    | QtCore.Qt.KeyboardModifier.AltModifier: (Modifier.CTRL, Modifier.ALT),
     QtCore.Qt.KeyboardModifier.ControlModifier
     | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.CTRL, Modifier.META),
-    QtCore.Qt.KeyboardModifier.AltModifier | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.ALT, Modifier.META),
+    QtCore.Qt.KeyboardModifier.AltModifier
+    | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.ALT, Modifier.META),
 }
 _QT_BUTTON_MAP = {
     QtCore.Qt.MouseButton.LeftButton: MouseButton.LEFT,
@@ -216,26 +189,49 @@ _QT_BUTTON_MAP = {
 }
 
 
-@protocols.check_protocol(protocols.MainWindowProtocol)
-class MainCanvas(QtW.QMainWindow):
-    def __init__(self):
-        app = get_app()  # type: ignore
-        super().__init__()
-        self._canvas = Canvas(self)
-        self.setCentralWidget(self._canvas)
+@protocols.check_protocol(protocols.CanvasGridProtocol)
+class CanvasGrid:
+    def __init__(self, heights: list[int], widths: list[int]):
+        app = get_app()
+        nr, nc = len(heights), len(widths)
+        self._shape = (nr, nc)
+        self._layoutwidget = pg.GraphicsLayoutWidget()
 
-    def _plt_get_canvas(self) -> protocols.CanvasProtocol:
-        """Get canvas of main window"""
-        return self._canvas
+    def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
+        vb = pg.ViewBox()
+        item = pg.PlotItem(viewBox=vb)
+        self._layoutwidget.addItem(item, row, col, rowspan, colspan)
+        return Canvas(item)
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""
-        return self.isVisible()
+        self._layoutwidget.isVisible()
+        run_app()
 
     def _plt_set_visible(self, visible: bool):
         """Set visibility of canvas"""
-        if visible:
-            self.show()
-            run_app()
+        self._layoutwidget.setVisible(visible)
+
+    def _get_background_brush(self) -> QtGui.QBrush:
+        return self._layoutwidget.backgroundBrush()
+
+    def _plt_get_background_color(self):
+        brush = self._get_background_brush()
+        return np.array(brush.color().getRgbF())
+
+    def _plt_set_background_color(self, color):
+        brush = self._get_background_brush()
+        brush.setColor(QtGui.QColor.fromRgbF(*color))
+        self._layoutwidget.setBackgroundBrush(brush)
+
+    def _plt_screenshot(self):
+        img: QtGui.QImage = self._layoutwidget.grab().toImage()
+        bits = img.constBits()
+        h, w, c = img.height(), img.width(), 4
+        if qtpy.API_NAME.startswith("PySide"):
+            arr = np.asarray(bits).reshape(h, w, c)
         else:
-            self.hide()
+            bits.setsize(h * w * c)
+            arr = np.frombuffer(bits, np.uint8).reshape(h, w, c)
+
+        return arr[:, :, [2, 1, 0, 3]]

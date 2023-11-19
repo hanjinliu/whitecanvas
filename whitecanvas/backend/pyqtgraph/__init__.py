@@ -5,4 +5,4 @@ from .band import Band
 from .errorbar import Errorbars
 from .text import Text
 from .image import Image
-from .canvas import Canvas, MainCanvas
+from .canvas import Canvas, CanvasGrid

@@ -1,5 +1,11 @@
-from ._base import CanvasBase
-from ._widget import Canvas
-from ._main import MainCanvas
+from ._base import CanvasBase, Canvas
+from ._grid import CanvasGrid, CanvasHGrid, CanvasVGrid, SingleCanvas
 
-__all__ = ["CanvasBase", "Canvas"]
+__all__ = [
+    "CanvasBase",
+    "Canvas",
+    "CanvasGrid",
+    "CanvasHGrid",
+    "CanvasVGrid",
+    "SingleCanvas",
+]

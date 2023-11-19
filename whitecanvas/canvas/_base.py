@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Any, Callable, Generic, Iterator, Literal, overload, TypeVar
+from typing import Any, Callable, Iterator, Literal, overload, TypeVar, TYPE_CHECKING
 from abc import ABC, abstractmethod
 
-from cmap import Color, Colormap
+from cmap import Color
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -10,18 +10,26 @@ from numpy.typing import ArrayLike, NDArray
 from whitecanvas import protocols
 from whitecanvas import layers as _l
 from whitecanvas.layers import group as _lg
-from whitecanvas.types import LineStyle, Symbol, ColorType, Alignment, ColormapType, FacePattern
+from whitecanvas.types import (
+    LineStyle,
+    Symbol,
+    ColorType,
+    Alignment,
+    ColormapType,
+    FacePattern,
+)
 from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
-from whitecanvas.backend import Backend
+from whitecanvas.backend import Backend, patch_dummy_backend
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
-_T = TypeVar("_T", bound=protocols.HasVisibility)
 _L = TypeVar("_L", bound=_l.Layer)
 
 
-class CanvasBase(ABC, Generic[_T]):
+class CanvasBase(ABC):
     """Base class for any canvas object."""
 
     title = _ns.TitleNamespace()
@@ -30,30 +38,29 @@ class CanvasBase(ABC, Generic[_T]):
     layers = _ll.LayerList()
     mouse = _ns.MouseNamespace()
 
-    def __init__(
-        self,
-        backend: str | None = None,
-        *,
-        palette: ColormapType = "tab10",
-    ):
-        self._backend_installer = Backend(backend)
-        self._backend = self._create_backend()
+    def __init__(self, palette: ColormapType = "tab10"):
         self._color_palette = ColorPalette(palette)
+        self._is_grouping = False
+        if not self._get_backend().name.startswith("."):
+            self._init_canvas()
 
+    def _init_canvas(self):
         # default colors
         self.x.color = "black"
         self.y.color = "black"
         self.background_color = "white"
 
         # connect layer events
-        self.layers.events.inserted.connect(self._cb_inserted)
-        self.layers.events.removed.connect(self._cb_removed)
-        self.layers.events.reordered.connect(self._cb_reordered)
-        self._is_grouping = False
+        self.layers.events.inserted.connect(self._cb_inserted, unique=True)
+        self.layers.events.removed.connect(self._cb_removed, unique=True)
+        self.layers.events.reordered.connect(self._cb_reordered, unique=True)
 
         canvas = self._canvas()
         canvas._plt_connect_xlim_changed(self.x.lim_changed.emit)
         canvas._plt_connect_ylim_changed(self.y.lim_changed.emit)
+
+    def _install_mouse_events(self):
+        canvas = self._canvas()
         canvas._plt_connect_mouse_click(self.mouse.clicked.emit)
         canvas._plt_connect_mouse_click(self.mouse.moved.emit)
         canvas._plt_connect_mouse_drag(self.mouse.moved.emit)
@@ -61,21 +68,12 @@ class CanvasBase(ABC, Generic[_T]):
         canvas._plt_connect_mouse_double_click(self.mouse.moved.emit)
 
     @abstractmethod
-    def _create_backend(self) -> _T:
-        """Create a backend object."""
+    def _get_backend(self) -> Backend:
+        """Return the backend."""
 
     @abstractmethod
     def _canvas(self) -> protocols.CanvasProtocol:
         """Return the canvas object."""
-
-    @property
-    def background_color(self) -> NDArray[np.floating]:
-        """Background color of the canvas."""
-        return norm_color(self._canvas()._plt_get_background_color())
-
-    @background_color.setter
-    def background_color(self, color):
-        self._canvas()._plt_set_background_color(np.array(Color(color)))
 
     @property
     def aspect_ratio(self) -> float | None:
@@ -87,16 +85,15 @@ class CanvasBase(ABC, Generic[_T]):
             ratio = float(ratio)
         self._canvas()._plt_set_aspect_ratio(ratio)
 
-    def show(self):
+    @property
+    def visible(self):
         """Show the canvas."""
-        self._backend._plt_set_visible(True)
+        self._canvas()._plt_set_visible(True)
 
-    def hide(self):
+    @visible.setter
+    def visible(self):
         """Hide the canvas."""
-        self._backend._plt_set_visible(False)
-
-    def screenshot(self):
-        return self._canvas()._plt_screenshot()
+        self._canvas()._plt_set_visible(False)
 
     @overload
     def add_line(
@@ -144,7 +141,7 @@ class CanvasBase(ABC, Generic[_T]):
         (color,) = self._generate_colors(color)
         layer = _l.Line(
             xdata, ydata, name=name, color=color, line_width=line_width, line_style=line_style,
-            antialias=antialias, backend=self._backend_installer,
+            antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -184,7 +181,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, face_color=face_color,
             face_pattern=face_pattern, edge_color=edge_color, edge_width=edge_width,
-            edge_style=edge_style, backend=self._backend_installer,
+            edge_style=edge_style, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -207,7 +204,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = _l.Bars(
             center, top, bottom, bar_width=bar_width, name=name, orient=orient,
             face_color=face_color, edge_color=edge_color, edge_width=edge_width,
-            edge_style=edge_style, backend=self._backend_installer,
+            edge_style=edge_style, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -233,7 +230,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = _l.Bars(
             centers, counts, bar_width=width, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-            backend=self._backend_installer,
+            backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -253,7 +250,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = _l.InfCurve(
             model, params=params, bounds=bounds, name=name, color=color,
             line_width=width, line_style=style, antialias=antialias,
-            backend=self._backend_installer,
+            backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -274,7 +271,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = _l.Band(
             xdata, ydata0, ydata1, name=name, face_color=face_color,
             edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-            backend=self._backend_installer,
+            backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -297,7 +294,7 @@ class CanvasBase(ABC, Generic[_T]):
         layer = _l.Errorbars(
             xdata, ylow, yhigh, name=name, color=color, line_width=width,
             line_style=style, antialias=antialias, capsize=capsize,
-            orient=orient, backend=self._backend_installer,
+            orient=orient, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -350,7 +347,7 @@ class CanvasBase(ABC, Generic[_T]):
             rotation=rotation,
             anchor=anchor,
             fontfamily=fontfamily,
-            backend=self._backend_installer,
+            backend=self._get_backend(),
         )
         return self.add_layer(layer)
 
@@ -377,7 +374,7 @@ class CanvasBase(ABC, Generic[_T]):
             rotation=rotation,
             anchor=anchor,
             fontfamily=fontfamily,
-            backend=self._backend_installer,
+            backend=self._get_backend(),
         )
         return self.add_layer(layer)
 
@@ -414,7 +411,7 @@ class CanvasBase(ABC, Generic[_T]):
         Image
             The image layer.
         """
-        layer = _l.Image(image, cmap=cmap, clim=clim, backend=self._backend_installer)
+        layer = _l.Image(image, cmap=cmap, clim=clim, backend=self._get_backend())
         if flip_canvas and not self.y.flipped:
             self.y.flipped = True
         if lock_aspect:
@@ -463,11 +460,11 @@ class CanvasBase(ABC, Generic[_T]):
         for layer in self.layers:
             if isinstance(layer, _l.PrimitiveLayer):
                 layer._backend._plt_set_zorder(zorder)
-            elif isinstance(layer, _l.ListLayerGroup):
+            elif isinstance(layer, _l.LayerGroup):
                 for child in layer._iter_children():
                     child._backend._plt_set_zorder(zorder)
 
-    def _group_layers(self, group: _l.ListLayerGroup):
+    def _group_layers(self, group: _l.LayerGroup):
         # TODO: do not remove the backend objects!
         indices: list[int] = []
         not_found: list[_l.PrimitiveLayer] = []
@@ -490,34 +487,58 @@ class CanvasBase(ABC, Generic[_T]):
             finally:
                 self._is_grouping = False
 
-    def _generate_colors(self, color: ColorType | None, *colors: ColorType | None) -> tuple[Color, ...]:
+    def _generate_colors(
+        self, color: ColorType | None, *colors: ColorType | None
+    ) -> tuple[Color, ...]:
         if color is None:
             color = self._color_palette.next()
         others = [color if c is None else c for c in colors]
         return color, *others
 
-    def _repr_png_(self):
-        """Return PNG representation of the widget for QtConsole."""
-        from io import BytesIO
 
-        try:
-            from imageio import imwrite
-        except ImportError:
-            return None
+class Canvas(CanvasBase):
+    def __init__(
+        self,
+        backend: str | None = None,
+        *,
+        palette: ColormapType = "tab10",
+    ):
+        self._backend_installer = Backend(backend)
+        self._backend = self._create_backend_object()
+        super().__init__(palette=palette)
 
-        rendered = self.screenshot()
-        if rendered is not None:
-            with BytesIO() as file_obj:
-                imwrite(file_obj, rendered, format="png")
-                file_obj.seek(0)
-                return file_obj.read()
-        return None
+    @classmethod
+    def from_backend(
+        cls,
+        obj: protocols.CanvasProtocol,
+        *,
+        palette: ColormapType = "tab10",
+        backend: str | None = None,
+    ) -> Self:
+        """Create a canvas object from a backend object."""
+        with patch_dummy_backend() as name:
+            self = cls(backend=name, palette=palette)
+        self._backend_installer = Backend(backend)
+        self._backend = obj
+        self._init_canvas()
+        return self
+
+    def _create_backend_object(self) -> protocols.CanvasProtocol:
+        return self._backend_installer.get("Canvas")()
+
+    def _get_backend(self):
+        return self._backend_installer
+
+    def _canvas(self) -> protocols.CanvasProtocol:
+        return self._backend
 
 
-def _iter_layers(layer: _l.Layer) -> Iterator[_l.PrimitiveLayer[protocols.BaseProtocol]]:
+def _iter_layers(
+    layer: _l.Layer,
+) -> Iterator[_l.PrimitiveLayer[protocols.BaseProtocol]]:
     if isinstance(layer, _l.PrimitiveLayer):
         yield layer
-    elif isinstance(layer, _l.ListLayerGroup):
+    elif isinstance(layer, _l.LayerGroup):
         for child in layer._iter_children():
             yield from _iter_layers(child)
     else:

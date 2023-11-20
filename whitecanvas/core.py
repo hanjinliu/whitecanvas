@@ -6,50 +6,64 @@ def grid(
     nrows: int = 1,
     ncols: int = 1,
     *,
+    link_x: bool = False,
+    link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
-    return CanvasGrid.uniform(nrows, ncols, backend=backend)
+    return CanvasGrid.uniform(
+        nrows, ncols, link_x=link_x, link_y=link_y, backend=backend
+    )
 
 
 def grid_nonuniform(
     heights: list[int],
     widths: list[int],
     *,
+    link_x: bool = False,
+    link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
-    return CanvasGrid(heights, widths, backend=backend)
+    return CanvasGrid(heights, widths, link_x=link_x, link_y=link_y, backend=backend)
 
 
 def vgrid(
     nrows: int = 1,
     *,
+    link_x: bool = False,
+    link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasVGrid:
-    return CanvasVGrid.uniform(nrows, backend=backend)
+    return CanvasVGrid.uniform(nrows, link_x=link_x, link_y=link_y, backend=backend)
 
 
 def vgrid_nonuniform(
     heights: list[int],
     *,
+    link_x: bool = False,
+    link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasVGrid:
-    return CanvasVGrid(heights, backend=backend)
+    return CanvasVGrid(heights, link_x=link_x, link_y=link_y, backend=backend)
 
 
 def hgrid(
     ncols: int = 1,
     *,
+    link_x: bool = False,
+    link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasHGrid:
-    return CanvasHGrid.uniform(ncols, backend=backend)
+    return CanvasHGrid.uniform(ncols, link_x=link_x, link_y=link_y, backend=backend)
 
 
 def hgrid_nonuniform(
     widths: list[int],
     *,
+    link_x: bool = False,
+    link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasHGrid:
-    return CanvasHGrid(widths, backend=backend)
+    return CanvasHGrid(widths, link_x=link_x, link_y=link_y, backend=backend)
 
 
 def new_canvas(

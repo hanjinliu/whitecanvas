@@ -8,6 +8,7 @@ from whitecanvas import protocols
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
 from whitecanvas.utils.normalize import norm_color
+from whitecanvas.theme import get_theme
 
 
 class CanvasGrid:
@@ -16,6 +17,8 @@ class CanvasGrid:
         heights: list[int],
         widths: list[int],
         *,
+        link_x: bool = False,
+        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> None:
         self._heights = heights
@@ -25,8 +28,13 @@ class CanvasGrid:
         self._canvas_array = np.empty((len(heights), len(widths)), dtype=object)
         self._canvas_array.fill(None)
 
+        # link axes
+        self._x_linked = link_x
+        self._y_linked = link_y
+
         # update settings
-        self.background_color = "white"
+        theme = get_theme()
+        self.background_color = theme.background_color
 
     @classmethod
     def uniform(
@@ -34,6 +42,8 @@ class CanvasGrid:
         nrows: int = 1,
         ncols: int = 1,
         *,
+        link_x: bool = False,
+        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> CanvasGrid:
         """
@@ -48,12 +58,51 @@ class CanvasGrid:
         backend : backend-like, optional
             The backend to use for the grid.
         """
-        return CanvasGrid([1] * nrows, [1] * ncols, backend=backend)
+        return CanvasGrid(
+            [1] * nrows, [1] * ncols, link_x=link_x, link_y=link_y,
+            backend=backend,
+        )  # fmt: skip
 
     @property
     def shape(self) -> tuple[int, int]:
         """The (row, col) shape of the grid"""
         return self._canvas_array.shape
+
+    @property
+    def x_linked(self) -> bool:
+        """Whether the x-axis of all canvases are linked."""
+        return self._x_linked
+
+    @x_linked.setter
+    def x_linked(self, value: bool):
+        value = bool(value)
+        if value == self._x_linked:
+            return
+        if value:
+            for _, canvas in self.iter_canvas():
+                canvas.x.lim_changed.connect(self._align_xlims, unique=True)
+        else:
+            for _, canvas in self.iter_canvas():
+                canvas.x.lim_changed.disconnect(self._align_xlims)
+        self._x_linked = value
+
+    @property
+    def y_linked(self) -> bool:
+        """Whether the y-axis of all canvases are linked."""
+        return self._y_linked
+
+    @y_linked.setter
+    def y_linked(self, value: bool):
+        value = bool(value)
+        if value == self._y_linked:
+            return
+        if value:
+            for _, canvas in self.iter_canvas():
+                canvas.y.lim_changed.connect(self._align_ylims, unique=True)
+        else:
+            for _, canvas in self.iter_canvas():
+                canvas.y.lim_changed.disconnect(self._align_ylims)
+        self._y_linked = value
 
     def __repr__(self) -> str:
         cname = type(self).__name__
@@ -67,6 +116,16 @@ class CanvasGrid:
 
     def _create_backend(self) -> protocols.CanvasGridProtocol:
         return self._backend_installer.get("CanvasGrid")(self._heights, self._widths)
+
+    def _align_xlims(self, lim: tuple[float, float]):
+        for _, canvas in self.iter_canvas():
+            with canvas.x.lim_changed.blocked():
+                canvas.x.lim = lim
+
+    def _align_ylims(self, lim: tuple[float, float]):
+        for _, canvas in self.iter_canvas():
+            with canvas.y.lim_changed.blocked():
+                canvas.y.lim = lim
 
     def add_canvas(
         self,
@@ -94,6 +153,12 @@ class CanvasGrid:
         )
         # Now backend axes/viewbox are created, we can install mouse events
         canvas._install_mouse_events()
+
+        # link axes if needed
+        if self.x_linked:
+            canvas.x.lim_changed.connect(self._align_xlims, unique=True)
+        if self.y_linked:
+            canvas.y.lim_changed.connect(self._align_ylims, unique=True)
         return canvas
 
     def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
@@ -104,10 +169,11 @@ class CanvasGrid:
     def iter_canvas(self) -> Iterator[tuple[tuple[int, int], Canvas]]:
         yielded: set[int] = set()
         for idx, canvas in np.ndenumerate(self._canvas_array):
-            if canvas is None:
+            _id = id(canvas)
+            if canvas is None or _id in yielded:
                 continue
             yield idx, canvas
-            yielded.add(id(canvas))
+            yielded.add(_id)
 
     def show(self) -> None:
         """Show the grid."""
@@ -154,9 +220,11 @@ class CanvasVGrid(CanvasGrid):
         self,
         heights: list[int],
         *,
+        link_x: bool = False,
+        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> None:
-        super().__init__(heights, [1], backend=backend)
+        super().__init__(heights, [1], link_x=link_x, link_y=link_y, backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:
@@ -183,9 +251,11 @@ class CanvasHGrid(CanvasGrid):
         self,
         widths: list[int],
         *,
+        link_x: bool = False,
+        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> None:
-        super().__init__([1], widths, backend=backend)
+        super().__init__([1], widths, link_x=link_x, link_y=link_y, backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:

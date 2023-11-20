@@ -116,10 +116,13 @@ class Axis(_CanvasComponent):
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        return tuple(self._plt_get_axis().range)
+        return self._plt_get_axis().range
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        self._plt_get_axis().setRange(*limits)
+        if self._axis == "bottom":
+            self._canvas()._viewbox().setXRange(*limits, padding=0)
+        else:
+            self._canvas()._viewbox().setYRange(*limits, padding=0)
 
     def _plt_set_ticks(self, ticks: list[tuple[float, str]]):
         self._plt_get_axis().setTicks(ticks)

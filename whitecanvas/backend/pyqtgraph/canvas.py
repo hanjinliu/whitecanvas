@@ -208,7 +208,11 @@ class CanvasGrid:
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         vb = pg.ViewBox()
         item = pg.PlotItem(viewBox=vb)
-        self._layoutwidget.addItem(item, row, col, rowspan, colspan)
+        self._layoutwidget.addItem(item, row, col)
+        if rowspan != 1:
+            self._layoutwidget.ci.layout.setRowStretchFactor(row, rowspan)
+        if colspan != 1:
+            self._layoutwidget.ci.layout.setColumnStretchFactor(col, colspan)
         return Canvas(item)
 
     def _plt_get_visible(self) -> bool:

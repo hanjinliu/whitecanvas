@@ -131,24 +131,18 @@ class CanvasGrid:
         self,
         row: int,
         col: int,
-        rowspan: int = 1,
-        colspan: int = 1,
         **kwargs,
     ) -> Canvas:
         """Add a canvas to the grid at the given position"""
-        if rowspan < 1 or colspan < 1:
-            raise ValueError(
-                f"rowspan and colspan must be positive, got {rowspan} and {colspan}"
-            )
-        r1 = row + rowspan
-        c1 = col + colspan
-        for idx, item in np.ndenumerate(self._canvas_array[row:r1, col:c1]):
+        rowspan = self._heights[row]
+        colspan = self._widths[col]
+        for idx, item in np.ndenumerate(self._canvas_array[row, col]):
             if item is not None:
                 raise ValueError(f"Canvas already exists at {idx}")
         backend_canvas = self._backend_object._plt_add_canvas(
             row, col, rowspan, colspan
         )
-        canvas = self._canvas_array[row:r1, col:c1] = Canvas.from_backend(
+        canvas = self._canvas_array[row, col] = Canvas.from_backend(
             backend_canvas, backend=self._backend_installer, **kwargs
         )
         # Now backend axes/viewbox are created, we can install mouse events
@@ -241,8 +235,8 @@ class CanvasVGrid(CanvasGrid):
         return CanvasVGrid([1] * nrows, backend=backend)
 
     @override
-    def add_canvas(self, row: int, span: int = 1, **kwargs) -> Canvas:
-        return super().add_canvas(row, 0, span, 1, **kwargs)
+    def add_canvas(self, row: int, **kwargs) -> Canvas:
+        return super().add_canvas(row, 0, **kwargs)
 
 
 class CanvasHGrid(CanvasGrid):
@@ -272,8 +266,8 @@ class CanvasHGrid(CanvasGrid):
         return CanvasHGrid([1] * ncols, backend=backend)
 
     @override
-    def add_canvas(self, col: int, span: int = 1, **kwargs) -> Canvas:
-        return super().add_canvas(0, col, 1, span, **kwargs)
+    def add_canvas(self, col: int, **kwargs) -> Canvas:
+        return super().add_canvas(0, col, **kwargs)
 
 
 class SingleCanvas(CanvasBase):

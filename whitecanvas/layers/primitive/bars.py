@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYYData
-from whitecanvas.layers._mixin import FaceMixin, EdgeMixin
+from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color
@@ -25,7 +25,10 @@ def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
         e1 = np.zeros_like(t0)
     e1 = as_array_1d(e1)
     if not (t0.size == e0.size == e1.size):
-        raise ValueError("Expected all arrays to have the same size, " f"got {t0.size}, {e0.size}, {e1.size}")
+        raise ValueError(
+            "Expected all arrays to have the same size, "
+            f"got {t0.size}, {e0.size}, {e1.size}"
+        )
     if orient == "vertical":
         dx = bar_width / 2
         x0, x1 = t0 - dx, t0 + dx
@@ -39,7 +42,7 @@ def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
     return x0, x1, y0, y1
 
 
-class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarProtocol]):
+class Bars(FaceEdgeMixin[BarProtocol]):
     def __init__(
         self,
         x: ArrayLike,
@@ -49,11 +52,9 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         orient: Literal["vertical", "horizontal"] = "vertical",
         bar_width: float = 0.8,
         name: str | None = None,
-        face_color: ColorType = "blue",
-        face_pattern: str | FacePattern = FacePattern.SOLID,
-        edge_color: ColorType = "black",
-        edge_width: float = 0.0,
-        edge_style: LineStyle | str = LineStyle.SOLID,
+        color: ColorType = "blue",
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
         xxyy = _norm_bar_inputs(x, top, bottom, orient, bar_width)
@@ -61,13 +62,7 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         self._bar_width = bar_width
         self.name = name if name is not None else "Bars"
         self._orient = orient
-        self.setup(
-            face_color=face_color,
-            face_pattern=face_pattern,
-            edge_color=edge_color,
-            edge_width=edge_width,
-            edge_style=edge_style,
-        )
+        self.face.setup(color=color, alpha=alpha, pattern=pattern)
 
     @property
     def data(self) -> XYYData:
@@ -122,47 +117,26 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         """Orientation of the bars."""
         return self._orient
 
-    def setup(
-        self,
-        *,
-        face_color: ColorType | _Void = _void,
-        face_pattern: FacePattern | str | _Void = _void,
-        edge_color: ColorType | _Void = _void,
-        edge_width: float | _Void = _void,
-        edge_style: LineStyle | str | _Void = _void,
-    ):
-        if face_color is not _void:
-            self.face_color = face_color
-        if face_pattern is not _void:
-            self.face_pattern = face_pattern
-        if edge_color is not _void:
-            self.edge_color = edge_color
-        if edge_width is not _void:
-            self.edge_width = edge_width
-        if edge_style is not _void:
-            self.edge_style = edge_style
-        return self
-
     def with_err(
         self,
         err: ArrayLike,
         err_high: ArrayLike | None = None,
         *,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.AnnotatedLine:
         if self.orient == "vertical":
             return self.with_yerr(
-                err, err_high, color=color, line_width=line_width,
-                line_style=line_style, antialias=antialias, capsize=capsize
+                err, err_high, color=color, width=width,
+                style=style, antialias=antialias, capsize=capsize
             )  # fmt: skip
         elif self.orient == "horizontal":
             return self.with_xerr(
-                err, err_high, color=color, line_width=line_width,
-                line_style=line_style, antialias=antialias, capsize=capsize
+                err, err_high, color=color, width=width,
+                style=style, antialias=antialias, capsize=capsize
             )  # fmt: skip
         else:
             raise ValueError(f"orient must be 'vertical' or 'horizontal'")
@@ -173,8 +147,8 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         err_high: ArrayLike | None = None,
         *,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.AnnotatedBars:
@@ -182,7 +156,7 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         from whitecanvas.layers.primitive import Errorbars
 
         xerr = self._create_errorbars(
-            err, err_high, color=color, line_width=line_width, line_style=line_style,
+            err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient="horizontal",
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
@@ -194,8 +168,8 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         err_high: ArrayLike | None = None,
         *,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
     ) -> _lg.AnnotatedBars:
@@ -203,7 +177,7 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         from whitecanvas.layers.primitive import Errorbars
 
         yerr = self._create_errorbars(
-            err, err_high, color=color, line_width=line_width, line_style=line_style,
+            err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient="vertical",
         )  # fmt: skip
         xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
@@ -248,8 +222,8 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         err_high: ArrayLike | None = None,
         *,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
         orient: Literal["vertical", "horizontal"] = "vertical",
@@ -259,11 +233,11 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         if err_high is None:
             err_high = err
         if color is _void:
-            color = self.edge_color
-        if line_width is _void:
-            line_width = self.edge_width
-        if line_style is _void:
-            line_style = self.edge_style
+            color = self.edge.color
+        if width is _void:
+            width = self.edge.width
+        if style is _void:
+            style = self.edge.style
         # if antialias is _void:
         #     antialias = self.antialias
         if self.orient == "vertical":
@@ -275,7 +249,7 @@ class Bars(FaceMixin[BarProtocol], EdgeMixin[BarProtocol], PrimitiveLayer[BarPro
         else:
             raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         return Errorbars(
-            x, y - err, y + err_high, color=color, line_width=line_width,
-            line_style=line_style, antialias=antialias, capsize=capsize,
+            x, y - err, y + err_high, color=color, width=width,
+            style=style, antialias=antialias, capsize=capsize,
             orient=orient, backend=self._backend_name
         )  # fmt: skip

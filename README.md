@@ -22,11 +22,12 @@ layer = canvas.add_line(  # add a line
     xdata,
     ydata,
     color="blue",
-).with_markers(           # group with markers
-    face_color="violet",
-    edge_color="blue",
+).with_markers(     # group with markers
+    color="violet",
     symbol="s",
-).with_yerr(              # group with errorbars
+).with_edge(        # setup edges
+    color="blue",
+).with_yerr(        # group with errorbars
     np.ones(N) / 3,
     capsize=0.2,
     color="black",

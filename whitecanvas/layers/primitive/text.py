@@ -5,9 +5,16 @@ import weakref
 from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import TextProtocol
-from whitecanvas.layers._base import PrimitiveLayer, XYData
+from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.backend import Backend
-from whitecanvas.types import Symbol, LineStyle, ColorType, FacePattern, _Void, Alignment
+from whitecanvas.types import (
+    Symbol,
+    LineStyle,
+    ColorType,
+    FacePattern,
+    _Void,
+    Alignment,
+)
 from whitecanvas.utils.normalize import norm_color
 from whitecanvas._exceptions import ReferenceDeletedError
 
@@ -32,7 +39,8 @@ class Text(PrimitiveLayer[TextProtocol]):
         backend: Backend | str | None = None,
     ):
         self._backend = self._create_backend(Backend(backend), x, y, text)
-        self._background_namespace = TextBackground(self)
+        self._background_face = TextBackgroundFace(self)
+        self._background_edge = TextBackgroundEdge(self)
         self.setup(
             color=color,
             size=size,
@@ -128,30 +136,8 @@ class Text(PrimitiveLayer[TextProtocol]):
             self.fontfamily = fontfamily
         return self
 
-    def setup_background(
-        self,
-        face_color: ColorType | _Void = _void,
-        face_pattern: FacePattern | _Void = _void,
-        edge_color: ColorType | _Void = _void,
-        edge_width: float | _Void = _void,
-        edge_style: LineStyle | _Void = _void,
-    ) -> Text:
-        if face_color is not _void:
-            self._background_namespace.face_color = face_color
-        if face_pattern is not _void:
-            self._background_namespace.face_pattern = face_pattern
-        if edge_color is not _void:
-            self._background_namespace.edge_color = edge_color
-        if edge_width is not _void:
-            self._background_namespace.edge_width = edge_width
-        if edge_style is not _void:
-            self._background_namespace.edge_style = edge_style
-        return self
 
-
-class TextBackground:
-    """The background namespace for the Text layer."""
-
+class TextNamespace:
     def __init__(self, text_layer: Text):
         self._layer_ref = weakref.ref(text_layer)
 
@@ -161,12 +147,14 @@ class TextBackground:
             raise ReferenceDeletedError("The text layer has been deleted.")
         return layer
 
+
+class TextBackgroundFace(TextNamespace):
     @property
-    def face_color(self):
+    def color(self):
         return self._layer()._backend._plt_get_face_color()
 
-    @face_color.setter
-    def face_color(self, color: ColorType):
+    @color.setter
+    def color(self, color: ColorType):
         self._layer()._backend._plt_set_face_color(norm_color(color))
 
     @property
@@ -178,25 +166,78 @@ class TextBackground:
         self._layer()._backend._plt_set_face_pattern(pattern)
 
     @property
-    def edge_color(self):
+    def alpha(self):
+        return self.color[3]
+
+    @alpha.setter
+    def alpha(self, alpha: float):
+        if not 0 <= alpha <= 1:
+            raise ValueError("Alpha must be between 0 and 1.")
+        self.color = (*self.color[:3], alpha)
+
+    def setup(
+        self,
+        color: ColorType | _Void = _void,
+        pattern: FacePattern | str | _Void = _void,
+        alpha: float | _Void = _void,
+    ) -> Text:
+        if color is not _void:
+            self.color = color
+        if pattern is not _void:
+            self.pattern = pattern
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer()
+
+
+class TextBackgroundEdge(TextNamespace):
+    @property
+    def color(self):
         return self._layer()._backend._plt_get_edge_color()
 
-    @edge_color.setter
-    def edge_color(self, color: ColorType):
+    @color.setter
+    def color(self, color: ColorType):
         self._layer()._backend._plt_set_edge_color(norm_color(color))
 
     @property
-    def edge_width(self):
+    def width(self):
         return self._layer()._backend._plt_get_edge_width()
 
-    @edge_width.setter
-    def edge_width(self, width: float):
+    @width.setter
+    def width(self, width: float):
         self._layer()._backend._plt_set_edge_width(width)
 
     @property
-    def edge_style(self):
+    def style(self):
         return self._layer()._backend._plt_get_edge_style()
 
-    @edge_style.setter
-    def edge_style(self, style: LineStyle):
+    @style.setter
+    def style(self, style: LineStyle):
         self._layer()._backend._plt_set_edge_style(style)
+
+    @property
+    def alpha(self):
+        return self.color[3]
+
+    @alpha.setter
+    def alpha(self, alpha: float):
+        if not 0 <= alpha <= 1:
+            raise ValueError("Alpha must be between 0 and 1.")
+        self.color = (*self.color[:3], alpha)
+
+    def setup(
+        self,
+        color: ColorType | _Void = _void,
+        style: LineStyle | str | _Void = _void,
+        width: float | _Void = _void,
+        alpha: float | _Void = _void,
+    ) -> Text:
+        if color is not _void:
+            self.color = color
+        if style is not _void:
+            self.style = style
+        if width is not _void:
+            self.width = width
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer()

@@ -155,13 +155,13 @@ class _AnnotatedLayerBase(ListLayerGroup):
         self,
         *,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float | _Void = _void,
     ) -> Self:
         self.xerr.setup(
-            color=color, line_width=line_width, line_style=line_style,
+            color=color, width=width, style=style,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
         return self
@@ -170,13 +170,13 @@ class _AnnotatedLayerBase(ListLayerGroup):
         self,
         *,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float | _Void = _void,
     ) -> Self:
         self.yerr.setup(
-            color=color, line_width=line_width, line_style=line_style,
+            color=color, width=width, style=style,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
         return self
@@ -201,8 +201,8 @@ class _AnnotatedLayerBase(ListLayerGroup):
         len_higher: float | None = None,
         *,
         color: ColorType = "black",
-        line_width: float = 1.0,
-        line_style: str | LineStyle = LineStyle.SOLID,
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
         antialias: bool = True,
         capsize: float = 0,
     ) -> Self:
@@ -222,8 +222,8 @@ class _AnnotatedLayerBase(ListLayerGroup):
         self.xerr.set_data(y, x - len_lower, x + len_higher)
         return self.setup_xerr(
             color=color,
-            line_width=line_width,
-            line_style=line_style,
+            width=width,
+            style=style,
             antialias=antialias,
             capsize=capsize,
         )
@@ -234,8 +234,8 @@ class _AnnotatedLayerBase(ListLayerGroup):
         len_higher: float | None = None,
         *,
         color: ColorType = "black",
-        line_width: float = 1.0,
-        line_style: str | LineStyle = LineStyle.SOLID,
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
         antialias: bool = True,
         capsize: float = 0,
     ) -> Self:
@@ -254,7 +254,7 @@ class _AnnotatedLayerBase(ListLayerGroup):
         x, y = self.data
         self.yerr.set_data(x, y - len_lower, y + len_higher)
         return self.setup_yerr(
-            color=color, line_width=line_width, line_style=line_style,
+            color=color, width=width, style=style,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
 
@@ -328,12 +328,12 @@ class AnnotatedLine(_AnnotatedLayerBase):
         self,
         *,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool | _Void = _void,
     ):
         self.line.setup(
-            color=color, line_width=line_width, style=line_style,
+            color=color, width=width, style=style,
             antialias=antialias
         )  # fmt: skip
         return self
@@ -343,26 +343,6 @@ class AnnotatedMarkers(_AnnotatedLayerBase):
     @property
     def markers(self) -> Markers:
         return self._children[0]
-
-    def setup_markers(
-        self,
-        *,
-        symbol: Symbol | str | _Void = _void,
-        size: float | _Void = _void,
-        face_color: ColorType | _Void = _void,
-        edge_color: ColorType | _Void = _void,
-        edge_width: float | _Void = _void,
-        edge_style: LineStyle | str | _Void = _void,
-    ):
-        self.markers.setup(
-            symbol=symbol,
-            size=size,
-            face_color=face_color,
-            edge_color=edge_color,
-            edge_width=edge_width,
-            edge_style=edge_style,
-        )
-        return self
 
 
 class AnnotatedBars(_AnnotatedLayerBase):
@@ -379,22 +359,6 @@ class AnnotatedBars(_AnnotatedLayerBase):
     def _set_data_to_first_layer(self, xdata=None, ydata=None):
         _, _, bottom = self.bars.data
         self.bars.set_data(xdata, ydata, bottom)
-
-    def setup_bars(
-        self,
-        *,
-        face_color: ColorType | _Void = _void,
-        edge_color: ColorType | _Void = _void,
-        edge_width: float | _Void = _void,
-        edge_style: LineStyle | str | _Void = _void,
-    ):
-        self.bars.setup(
-            face_color=face_color,
-            edge_color=edge_color,
-            edge_width=edge_width,
-            edge_style=edge_style,
-        )
-        return self
 
 
 class AnnotatedPlot(_AnnotatedLayerBase):

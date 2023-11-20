@@ -25,8 +25,9 @@ class Errorbars(LineMixin[ErrorbarProtocol], PrimitiveLayer[ErrorbarProtocol]):
         *,
         name: str | None = None,
         color: ColorType = "black",
-        line_width: float = 1,
-        line_style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = False,
         capsize: float = 0.0,
         backend: Backend | str | None = None,
@@ -35,12 +36,15 @@ class Errorbars(LineMixin[ErrorbarProtocol], PrimitiveLayer[ErrorbarProtocol]):
         y0 = as_array_1d(edge_low)
         y1 = as_array_1d(edge_high)
         if not (t0.size == y0.size == y1.size):
-            raise ValueError("Expected all arrays to have the same size, " f"got {t0.size}, {y0.size}, {y1.size}")
+            raise ValueError(
+                "Expected all arrays to have the same size, "
+                f"got {t0.size}, {y0.size}, {y1.size}"
+            )
         self._backend = self._create_backend(Backend(backend), t0, y0, y1, orient)
         self._orient = orient
         self.name = name if name is not None else "Errorbar"
         self.setup(
-            color=color, line_width=line_width, line_style=line_style,
+            color=color, width=width, style=style, alpha=alpha,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
 
@@ -66,7 +70,9 @@ class Errorbars(LineMixin[ErrorbarProtocol], PrimitiveLayer[ErrorbarProtocol]):
         if edge_high is not None:
             y1 = as_array_1d(edge_high)
         if x0.size != y0.size or x0.size != y1.size:
-            raise ValueError("Expected data to have the same size, " f"got {x0.size}, {y0.size}")
+            raise ValueError(
+                "Expected data to have the same size, " f"got {x0.size}, {y0.size}"
+            )
         if self._orient == "vertical":
             self._backend._plt_set_vertical_data(x0, y0, y1)
         else:
@@ -98,19 +104,22 @@ class Errorbars(LineMixin[ErrorbarProtocol], PrimitiveLayer[ErrorbarProtocol]):
     def setup(
         self,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
+        alpha: float | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float | _Void = _void,
     ):
         if color is not _void:
             self.color = color
-        if line_width is not _void:
-            self.line_width = line_width
-        if line_style is not _void:
-            self.line_style = line_style
-        if antialias is not _void:
-            self.antialias = antialias
+        if width is not _void:
+            self.width = width
+        if style is not _void:
+            self.style = style
+        # if antialias is not _void:
+        #     self.antialias = antialias
+        if alpha is not _void:
+            self.alpha = alpha
         if capsize is not _void:
             self.capsize = capsize
         return self

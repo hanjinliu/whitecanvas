@@ -1,6 +1,6 @@
 import pytest
 import whitecanvas
-from whitecanvas.layers import Line, Markers
+from whitecanvas.layers import Line, Markers, Layer
 import numpy as np
 from cmap import Color
 
@@ -9,7 +9,7 @@ BACKENDS = ["matplotlib", "pyqtgraph"]
 def assert_color_equal(a, b):
     assert Color(a) == Color(b)
 
-def _test_visibility(layer):
+def _test_visibility(layer: Layer):
     layer.visible
     layer.visible = False
     layer.visible = True
@@ -24,13 +24,13 @@ def test_color(backend: str):
 
     assert_color_equal(layer.color, "red")
 
-    layer = Markers(np.arange(10), np.zeros(10), backend=backend, face_color="cyan", edge_color="white")
+    layer = Markers(np.arange(10), np.zeros(10), backend=backend, color="cyan").with_edge(color="white")
 
-    assert _is_color_array(layer.face_color)
-    assert _is_color_array(layer.edge_color)
+    assert _is_color_array(layer.face.color)
+    assert _is_color_array(layer.edge.color)
 
-    assert_color_equal(layer.face_color, "cyan")
-    assert_color_equal(layer.edge_color, "white")
+    assert_color_equal(layer.face.color, "cyan")
+    assert_color_equal(layer.edge.color, "white")
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_line(backend: str):
@@ -40,10 +40,10 @@ def test_line(backend: str):
 
     layer.color = [1.0, 0.0, 0.0, 1.0]
     assert_color_equal(layer.color, "red")
-    layer.line_style = ":"
-    assert layer.line_style == ":"
-    layer.line_width = 2
-    assert layer.line_width == 2
+    layer.style = ":"
+    assert layer.style == ":"
+    layer.width = 2
+    assert layer.width == 2
     _test_visibility(layer)
 
 @pytest.mark.parametrize("backend", BACKENDS)
@@ -52,17 +52,17 @@ def test_markers(backend: str):
     canvas.add_markers(np.arange(10), np.zeros(10))
     layer = canvas.add_markers(np.zeros(10))
 
-    layer.face_color = [1.0, 0.0, 0.0, 1.0]
-    assert_color_equal(layer.face_color, "red")
-    layer.face_pattern = "/"
-    assert layer.face_pattern == "/"
+    layer.face.color = [1.0, 0.0, 0.0, 1.0]
+    assert_color_equal(layer.face.color, "red")
+    layer.face.pattern = "/"
+    assert layer.face.pattern == "/"
 
-    layer.edge_color = [0.0, 0.0, 1.0, 1.0]
-    assert_color_equal(layer.edge_color, "blue")
-    layer.edge_style = ":"
-    assert layer.edge_style == ":"
-    layer.edge_width = 2
-    assert layer.edge_width == 2
+    layer.edge.color = [0.0, 0.0, 1.0, 1.0]
+    assert_color_equal(layer.edge.color, "blue")
+    layer.edge.style = ":"
+    assert layer.edge.style == ":"
+    layer.edge.width = 2
+    assert layer.edge.width == 2
 
     assert layer.symbol == "o"
     layer.symbol = "+"
@@ -78,17 +78,17 @@ def test_bars(backend: str):
     canvas.add_bars(np.arange(10), np.zeros(10), bottom=np.ones(10))
     layer = canvas.add_bars(np.arange(10), np.zeros(10))
 
-    layer.face_color = [1.0, 0.0, 0.0, 1.0]
-    assert_color_equal(layer.face_color, "red")
-    layer.face_pattern = "/"
-    assert layer.face_pattern == "/"
+    layer.face.color = [1.0, 0.0, 0.0, 1.0]
+    assert_color_equal(layer.face.color, "red")
+    layer.face.pattern = "/"
+    assert layer.face.pattern == "/"
 
-    layer.edge_color = [0.0, 0.0, 1.0, 1.0]
-    assert_color_equal(layer.edge_color, "blue")
-    layer.edge_style = ":"
-    assert layer.edge_style == ":"
-    layer.edge_width = 2
-    assert layer.edge_width == 2
+    layer.edge.color = [0.0, 0.0, 1.0, 1.0]
+    assert_color_equal(layer.edge.color, "blue")
+    layer.edge.style = ":"
+    assert layer.edge.style == ":"
+    layer.edge.width = 2
+    assert layer.edge.width == 2
 
     layer.bar_width = 0.5
     assert layer.bar_width == 0.5
@@ -102,10 +102,10 @@ def test_infcurve(backend: str):
 
     layer.color = [1.0, 0.0, 0.0, 1.0]
     assert_color_equal(layer.color, "red")
-    layer.line_style = ":"
-    assert layer.line_style == ":"
-    layer.line_width = 2
-    assert layer.line_width == 2
+    layer.style = ":"
+    assert layer.style == ":"
+    layer.width = 2
+    assert layer.width == 2
     _test_visibility(layer)
 
 @pytest.mark.parametrize("backend", BACKENDS)
@@ -115,17 +115,17 @@ def test_band(backend: str):
     x = np.arange(5)
     layer = canvas.add_band(x, x - 1, x ** 2 / 2)
 
-    layer.face_color = [1.0, 0.0, 0.0, 1.0]
-    assert_color_equal(layer.face_color, "red")
-    layer.face_pattern = "/"
-    assert layer.face_pattern == "/"
+    layer.face.color = [1.0, 0.0, 0.0, 1.0]
+    assert_color_equal(layer.face.color, "red")
+    layer.face.pattern = "/"
+    assert layer.face.pattern == "/"
 
-    layer.edge_color = [0.0, 0.0, 1.0, 1.0]
-    assert_color_equal(layer.edge_color, "blue")
-    layer.edge_style = ":"
-    assert layer.edge_style == ":"
-    layer.edge_width = 2
-    assert layer.edge_width == 2
+    layer.edge.color = [0.0, 0.0, 1.0, 1.0]
+    assert_color_equal(layer.edge.color, "blue")
+    layer.edge.style = ":"
+    assert layer.edge.style == ":"
+    layer.edge.width = 2
+    assert layer.edge.width == 2
     _test_visibility(layer)
 
 @pytest.mark.parametrize("backend", BACKENDS)

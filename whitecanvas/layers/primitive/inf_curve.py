@@ -6,7 +6,7 @@ import math
 import numpy as np
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle
+from whitecanvas.types import LineStyle, ColorType
 from whitecanvas.layers.primitive.line import MonoLine
 
 if TYPE_CHECKING:
@@ -22,9 +22,10 @@ class InfCurve(MonoLine):
         *,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
-        color=None,
-        line_width: float = 1,
-        line_style: LineStyle | str = LineStyle.SOLID,
+        color: ColorType = "blue",
+        alpha: float = 1,
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
     ):
@@ -39,8 +40,9 @@ class InfCurve(MonoLine):
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "InfCurve"
         self.setup(
-            color=color, line_width=line_width, style=line_style, antialias=antialias
-        )
+            color=color, width=width, style=style, alpha=alpha,
+            antialias=antialias
+        )  # fmt: skip
 
         self._bounds = bounds
         self._model = model
@@ -95,9 +97,10 @@ class InfLine(MonoLine):
         angle: float = 0.0,
         *,
         name: str | None = None,
-        color=None,
-        line_width: float = 1,
-        line_style: LineStyle | str = LineStyle.SOLID,
+        color: ColorType = "blue",
+        alpha: float = 1,
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
     ):
@@ -113,8 +116,9 @@ class InfLine(MonoLine):
         self._backend = self._create_backend(Backend(backend), np.zeros(1), np.zeros(1))
         self.name = name if name is not None else "InfCurve"
         self.setup(
-            color=color, line_width=line_width, style=line_style, antialias=antialias
-        )
+            color=color, width=width, style=style, alpha=alpha,
+            antialias=antialias,
+        )  # fmt: skip
 
     @property
     def data(self) -> NoReturn:

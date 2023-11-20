@@ -7,7 +7,14 @@ from whitecanvas.protocols import LineProtocol
 from whitecanvas.layers._base import XYDataLayer, XYData, PrimitiveLayer
 from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, Symbol, ColorType, _Void, Alignment
+from whitecanvas.types import (
+    LineStyle,
+    Symbol,
+    ColorType,
+    _Void,
+    Alignment,
+    FacePattern,
+)
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
@@ -26,24 +33,6 @@ class MonoLine(LineMixin[LineProtocol], PrimitiveLayer[LineProtocol]):
     def antialias(self, antialias: bool):
         self._backend._plt_set_antialias(antialias)
 
-    def setup(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool | _Void = _void,
-    ):
-        if color is not _void:
-            self.color = color
-        if line_width is not _void:
-            self.line_width = line_width
-        if style is not _void:
-            self.line_style = style
-        if antialias is not _void:
-            self.antialias = antialias
-        return self
-
 
 class Line(MonoLine):
     def __init__(
@@ -52,18 +41,16 @@ class Line(MonoLine):
         ydata: ArrayLike,
         *,
         name: str | None = None,
-        color=None,
-        line_width: float = 1,
-        line_style: LineStyle | str = LineStyle.SOLID,
+        color: ColorType = "vlue",
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = False,
         backend: Backend | str | None = None,
     ):
         xdata, ydata = normalize_xy(xdata, ydata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
-        self.setup(
-            color=color, line_width=line_width, style=line_style, antialias=antialias
-        )
+        self.setup(color=color, width=width, style=style, antialias=antialias)
 
     @property
     def data(self) -> XYData:
@@ -91,23 +78,19 @@ class Line(MonoLine):
         self,
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
-        face_color: ColorType | _Void = _void,
-        edge_color: ColorType | _Void = _void,
-        edge_width: float = 1,
-        edge_style: str | LineStyle = LineStyle.SOLID,
+        color: ColorType | _Void = _void,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.Plot:
         from whitecanvas.layers.group import Plot
         from whitecanvas.layers.primitive import Markers
 
-        if face_color is _void:
-            face_color = self.color
-        if edge_color is _void:
-            edge_color = self.color
+        if color is _void:
+            color = self.color
 
         markers = Markers(
-            *self.data, symbol=symbol, size=size, face_color=face_color,
-            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-            backend=self._backend_name,
+            *self.data, symbol=symbol, size=size, color=color, alpha=alpha,
+            pattern=pattern, backend=self._backend_name,
         )  # fmt: skip
         return Plot(self, markers, name=self.name)
 
@@ -116,7 +99,7 @@ class Line(MonoLine):
         err: ArrayLike,
         err_high: ArrayLike | None = None,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
+        width: float | _Void = _void,
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
@@ -128,15 +111,15 @@ class Line(MonoLine):
             err_high = err
         if color is _void:
             color = self.color
-        if line_width is _void:
-            line_width = self.line_width
+        if width is _void:
+            width = self.width
         if style is _void:
-            style = self.line_style
+            style = self.style
         if antialias is _void:
             antialias = self.antialias
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
-            line_width=line_width, line_style=style, antialias=antialias, capsize=capsize,
+            width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
@@ -147,7 +130,7 @@ class Line(MonoLine):
         err: ArrayLike,
         err_high: ArrayLike | None = None,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
+        width: float | _Void = _void,
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
@@ -159,15 +142,15 @@ class Line(MonoLine):
             err_high = err
         if color is _void:
             color = self.color
-        if line_width is _void:
-            line_width = self.line_width
+        if width is _void:
+            width = self.width
         if style is _void:
-            style = self.line_style
+            style = self.style
         if antialias is _void:
             antialias = self.antialias
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
-            line_width=line_width, line_style=style, antialias=antialias, capsize=capsize,
+            width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
@@ -177,66 +160,46 @@ class Line(MonoLine):
         self,
         err: ArrayLike,
         err_high: ArrayLike | None = None,
-        face_color: ColorType | _Void = _void,
-        edge_color: ColorType = (0.0, 0.0, 0.0, 0.0),
-        edge_width: float = 0.0,
-        edge_style: str | _Void = _void,
+        *,
+        color: ColorType | _Void = _void,
+        alpha: float = 0.5,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
         from whitecanvas.layers.primitive import Band
 
         if err_high is None:
             err_high = err
-        if face_color is _void:
-            face_color = self.color
-            face_color[3] *= 0.5
-        if edge_style is _void:
-            edge_style = self.line_style
+        if color is _void:
+            color = self.color
         data = self.data
         band = Band(
-            data.y,
-            data.x - err,
-            data.x + err_high,
-            orient="horizontal",
-            face_color=face_color,
-            edge_width=edge_width,
-            edge_color=edge_color,
-            edge_style=edge_style,
-            backend=self._backend_name,
-        )
+            data.y, data.x - err, data.x + err_high, orient="horizontal",
+            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+        )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
     def with_yband(
         self,
         err: ArrayLike,
         err_high: ArrayLike | None = None,
-        face_color: ColorType | _Void = _void,
-        edge_color: ColorType = (0.0, 0.0, 0.0, 0.0),
-        edge_width: float = 0.0,
-        edge_style: str | _Void = _void,
+        *,
+        color: ColorType | _Void = _void,
+        alpha: float = 0.5,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
         from whitecanvas.layers.primitive import Band
 
         if err_high is None:
             err_high = err
-        if face_color is _void:
-            face_color = self.color
-            face_color[3] *= 0.5
-        if edge_style is _void:
-            edge_style = self.line_style
+        if color is _void:
+            color = self.color
         data = self.data
         band = Band(
-            data.x,
-            data.y - err,
-            data.y + err_high,
-            orient="vertical",
-            face_color=face_color,
-            edge_width=edge_width,
-            edge_color=edge_color,
-            edge_style=edge_style,
-            backend=self._backend_name,
-        )
+            data.x, data.y - err, data.y + err_high, orient="vertical",
+            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+        )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
     def with_text(
@@ -254,6 +217,13 @@ class Line(MonoLine):
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
+        else:
+            strings = list(strings)
+            if len(strings) != self.data.x.size:
+                raise ValueError(
+                    f"Number of strings ({len(strings)}) does not match the "
+                    f"number of data ({self.data.x.size})."
+                )
         texts = TextGroup.from_strings(
             *self.data,
             strings,

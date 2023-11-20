@@ -41,7 +41,7 @@ class Layer(ABC):
         """
         A type guard for layers.
 
-        >>> canvas.layers["scatter-layer-name"].expect(Scatter).face_color
+        >>> canvas.layers["scatter-layer-name"].expect(Line).color
         """
         if not isinstance(layer_type, type) or issubclass(layer_type, PrimitiveLayer):
             raise TypeError(

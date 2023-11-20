@@ -120,7 +120,7 @@ class CanvasBase(ABC):
     @overload
     def add_line(
         self, ydata: ArrayLike, *, name: str | None = None, color: ColorType | None = None,
-        line_width: float = 1.0, line_style: LineStyle | str = LineStyle.SOLID,
+        width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
@@ -128,8 +128,8 @@ class CanvasBase(ABC):
     @overload
     def add_line(
         self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
-        color: ColorType | None = None, line_width: float = 1.0,
-        line_style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
+        color: ColorType | None = None, width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
@@ -138,8 +138,8 @@ class CanvasBase(ABC):
         *args,
         name=None,
         color=None,
-        line_width=1.0,
-        line_style=LineStyle.SOLID,
+        width=1.0,
+        style=LineStyle.SOLID,
         antialias=True,
     ):
         """
@@ -160,9 +160,9 @@ class CanvasBase(ABC):
         """
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Line, name)
-        (color,) = self._generate_colors(color)
+        color = self._generate_colors(color)
         layer = _l.Line(
-            xdata, ydata, name=name, color=color, line_width=line_width, line_style=line_style,
+            xdata, ydata, name=name, color=color, width=width, style=style,
             antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -171,8 +171,8 @@ class CanvasBase(ABC):
     def add_markers(
         self, ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, face_color: ColorType | None = None, face_pattern: str | FacePattern = FacePattern.SOLID,
-        edge_color: ColorType | None = None, edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
+        size: float = 6, color: ColorType | None = None, alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Markers:  # fmt: skip
         ...
 
@@ -180,8 +180,8 @@ class CanvasBase(ABC):
     def add_markers(
         self, xdata: ArrayLike, ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, face_color: ColorType | None = None, face_pattern: str | FacePattern = FacePattern.SOLID,
-        edge_color: ColorType | None = None, edge_width: float =0, edge_style: LineStyle | str = LineStyle.SOLID,
+        size: float = 6, color: ColorType | None = None, alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Markers:  # fmt: skip
         ...
 
@@ -191,19 +191,16 @@ class CanvasBase(ABC):
         name=None,
         symbol=Symbol.CIRCLE,
         size=6,
-        face_color=None,
-        face_pattern=FacePattern.SOLID,
-        edge_color=None,
-        edge_width=0,
-        edge_style=LineStyle.SOLID,
+        color=None,
+        alpha=1.0,
+        pattern=FacePattern.SOLID,
     ):
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Markers, name)
-        face_color, edge_color = self._generate_colors(face_color, edge_color)
+        color = self._generate_colors(color)
         layer = _l.Markers(
-            xdata, ydata, name=name, symbol=symbol, size=size, face_color=face_color,
-            face_pattern=face_pattern, edge_color=edge_color, edge_width=edge_width,
-            edge_style=edge_style, backend=self._get_backend(),
+            xdata, ydata, name=name, symbol=symbol, size=size, color=color,
+            alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -216,17 +213,15 @@ class CanvasBase(ABC):
         name=None,
         orient: Literal["vertical", "horizontal"] = "vertical",
         bar_width: float = 0.8,
-        face_color: ColorType | None = None,
-        edge_color: ColorType | None = None,
-        edge_width=0,
-        edge_style=LineStyle.SOLID,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars:
         name = self._coerce_name(_l.Bars, name)
-        face_color, edge_color = self._generate_colors(face_color, edge_color)
+        color = self._generate_colors(color)
         layer = _l.Bars(
             center, top, bottom, bar_width=bar_width, name=name, orient=orient,
-            face_color=face_color, edge_color=edge_color, edge_width=edge_width,
-            edge_style=edge_style, backend=self._get_backend(),
+            color=color, alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -238,21 +233,19 @@ class CanvasBase(ABC):
         range: tuple[float, float] | None = None,
         density: bool = False,
         name: str | None = None,
-        face_color: ColorType | None = None,
-        edge_color: ColorType | None = None,
-        edge_width: float = 0,
-        edge_style: str | LineStyle = LineStyle.SOLID,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars:
         data = as_array_1d(data)
         name = self._coerce_name("histogram", name)
         counts, edges = np.histogram(data, bins, density=density, range=range)
         centers = (edges[:-1] + edges[1:]) / 2
         width = edges[1] - edges[0]
-        face_color, edge_color = self._generate_colors(face_color, edge_color)
+        color = self._generate_colors(color)
         layer = _l.Bars(
-            centers, counts, bar_width=width, name=name, face_color=face_color,
-            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-            backend=self._get_backend(),
+            centers, counts, bar_width=width, name=name, color=color, alpha=alpha,
+            pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -268,10 +261,10 @@ class CanvasBase(ABC):
         antialias: bool = True,
     ) -> _l.InfCurve:
         name = self._coerce_name(_l.InfCurve, name)
-        (color,) = self._generate_colors(color)
+        color = self._generate_colors(color)
         layer = _l.InfCurve(
             model, params=params, bounds=bounds, name=name, color=color,
-            line_width=width, line_style=style, antialias=antialias,
+            width=width, style=style, antialias=antialias,
             backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -283,17 +276,16 @@ class CanvasBase(ABC):
         ydata1: ArrayLike,
         *,
         name: str | None = None,
-        face_color: ColorType | None = None,
-        edge_color: ColorType | None = None,
-        edge_width=0,
-        edge_style=LineStyle.SOLID,
+        orient: Literal["vertical", "horizontal"] = "vertical",
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Band:
         name = self._coerce_name(_l.Band, name)
-        face_color, edge_color = self._generate_colors(face_color, edge_color)
+        color = self._generate_colors(color)
         layer = _l.Band(
-            xdata, ydata0, ydata1, name=name, face_color=face_color,
-            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style,
-            backend=self._get_backend(),
+            xdata, ydata0, ydata1, name=name, orient=orient, color=color,
+            alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -312,13 +304,70 @@ class CanvasBase(ABC):
         capsize: float = 0.0,
     ) -> _l.Errorbars:
         name = self._coerce_name(_l.Errorbars, name)
-        (color,) = self._generate_colors(color)
+        color = self._generate_colors(color)
         layer = _l.Errorbars(
-            xdata, ylow, yhigh, name=name, color=color, line_width=width,
-            line_style=style, antialias=antialias, capsize=capsize,
+            xdata, ylow, yhigh, name=name, color=color, width=width,
+            style=style, antialias=antialias, capsize=capsize,
             orient=orient, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
+
+    def add_kde(
+        self,
+        data: ArrayLike,
+        band_width: float | str = "scott",
+        *,
+        name: str | None = None,
+        orient: Literal["vertical", "horizontal"] = "vertical",
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ):
+        from whitecanvas.utils.kde import gaussian_kde
+
+        data = as_array_1d(data)
+        name = self._coerce_name(_l.Band, name)
+        color = self._generate_colors(color)
+        kde = gaussian_kde(data, bw_method=band_width)
+
+        sigma = np.sqrt(kde.covariance[0, 0])
+        pad = sigma * 4
+        x = np.linspace(data.min() - pad, data.max() + pad, 100)
+        y1 = kde(x)
+        y0 = np.zeros_like(y1)
+        layer = _l.Band(
+            x, y0, y1, name=name, orient=orient, color=color, alpha=alpha,
+            pattern=pattern, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_violinplot(
+        self,
+        data: dict[str, ArrayLike],
+        *,
+        name: str | None = None,
+        orient: Literal["vertical", "horizontal"] = "vertical",
+        shape: Literal["both", "left", "right"] = "both",
+        violin_width: float = 0.5,
+        band_width: float | str = "scott",
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ):
+        name = self._coerce_name(_lg.ViolinPlot, name)
+        color = self._generate_colors(color)
+        group = _lg.ViolinPlot.from_dict(
+            data,
+            name=name,
+            shape=shape,
+            violin_width=violin_width,
+            orient=orient,
+            band_width=band_width,
+            color=color,
+            alpha=alpha,
+            pattern=pattern,
+        )
+        return self.add_layer(group)
 
     def add_text(
         self,
@@ -361,16 +410,9 @@ class CanvasBase(ABC):
             The text layer.
         """
         layer = _l.Text(
-            x,
-            y,
-            string,
-            color=color,
-            size=size,
-            rotation=rotation,
-            anchor=anchor,
-            fontfamily=fontfamily,
-            backend=self._get_backend(),
-        )
+            x, y, string, color=color, size=size, rotation=rotation, anchor=anchor,
+            fontfamily=fontfamily, backend=self._get_backend(),
+        )  # fmt: skip
         return self.add_layer(layer)
 
     def add_texts(
@@ -387,17 +429,9 @@ class CanvasBase(ABC):
         fontfamily: str = "sans-serif",
     ) -> _lg.TextGroup:
         layer = _lg.TextGroup.from_strings(
-            x,
-            y,
-            texts,
-            name=name,
-            color=color,
-            size=size,
-            rotation=rotation,
-            anchor=anchor,
-            fontfamily=fontfamily,
-            backend=self._get_backend(),
-        )
+            x, y, texts, name=name, color=color, size=size, rotation=rotation,
+            anchor=anchor, fontfamily=fontfamily, backend=self._get_backend(),
+        )  # fmt: skip
         return self.add_layer(layer)
 
     def add_image(
@@ -493,8 +527,6 @@ class CanvasBase(ABC):
                 raise RuntimeError(f"type {type(layer)} not expected")
 
     def _group_layers(self, group: _l.LayerGroup):
-        for child in group.iter_children():
-            child._connect_canvas(self)
         indices: list[int] = []  # layers to remove
         not_found: list[_l.PrimitiveLayer] = []  # primitive layers to add
         id_exists = set(map(id, self.layers.iter_primitives()))
@@ -521,13 +553,10 @@ class CanvasBase(ABC):
             self._is_grouping = False
         self._cb_reordered()
 
-    def _generate_colors(
-        self, color: ColorType | None, *colors: ColorType | None
-    ) -> tuple[Color, ...]:
+    def _generate_colors(self, color: ColorType | None) -> Color:
         if color is None:
             color = self._color_palette.next()
-        others = [color if c is None else c for c in colors]
-        return color, *others
+        return color
 
 
 class Canvas(CanvasBase):

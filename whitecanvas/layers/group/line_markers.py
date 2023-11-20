@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from numpy.typing import ArrayLike
-from whitecanvas.types import ColorType, _Void, Alignment
+from whitecanvas.types import ColorType, _Void, Alignment, LineStyle
 from whitecanvas.layers.primitive import Line, Markers, Errorbars
 from whitecanvas.layers.group._collections import ListLayerGroup
 
@@ -34,37 +34,14 @@ class Plot(ListLayerGroup):
         """The markers layer."""
         return self._children[1]
 
-    def setup_line(
+    def with_edge(
         self,
         color: ColorType | _Void = _void,
-        width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool | _Void = _void,
-    ):
-        self.line.setup(color=color, line_width=width, style=style, antialias=antialias)
-        return self
-
-    def setup_markers(
-        self,
-        symbol: str | _Void = _void,
-        size: float | _Void = _void,
-        face_color: ColorType | _Void = _void,
-        edge_color: ColorType | _Void = _void,
-        edge_width: float | _Void = _void,
-        edge_style: str | _Void = _void,
-    ):
-        if symbol is not _void:
-            self.markers.symbol = symbol
-        if size is not _void:
-            self.markers.size = size
-        if face_color is not _void:
-            self.markers.face_color = face_color
-        if edge_color is not _void:
-            self.markers.edge_color = edge_color
-        if edge_width is not _void:
-            self.markers.edge_width = edge_width
-        if edge_style is not _void:
-            self.markers.edge_style = edge_style
+        alpha: float = 1.0,
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Plot:
+        self.markers.with_edge(color=color, alpha=alpha, width=width, style=style)
         return self
 
     def with_text(
@@ -98,7 +75,7 @@ class Plot(ListLayerGroup):
         err: ArrayLike,
         err_high: ArrayLike | None = None,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
+        width: float | _Void = _void,
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
@@ -110,15 +87,15 @@ class Plot(ListLayerGroup):
             err_high = err
         if color is _void:
             color = self.line.color
-        if line_width is _void:
-            line_width = self.markers.edge_width
+        if width is _void:
+            width = self.markers.edge.width
         if style is _void:
-            style = self.markers.edge_style
+            style = self.markers.edge.style
         if antialias is _void:
             antialias = self.line.antialias
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
-            line_width=line_width, line_style=style, antialias=antialias, capsize=capsize,
+            width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
@@ -129,7 +106,7 @@ class Plot(ListLayerGroup):
         err: ArrayLike,
         err_high: ArrayLike | None = None,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
+        width: float | _Void = _void,
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
@@ -141,15 +118,15 @@ class Plot(ListLayerGroup):
             err_high = err
         if color is _void:
             color = self.line.color
-        if line_width is _void:
-            line_width = self.markers.edge_width
+        if width is _void:
+            width = self.markers.edge.width
         if style is _void:
-            style = self.markers.edge_style
+            style = self.markers.edge.style
         if antialias is _void:
             antialias = self.line.antialias
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
-            line_width=line_width, line_style=style, antialias=antialias, capsize=capsize,
+            width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)

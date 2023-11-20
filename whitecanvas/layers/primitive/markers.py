@@ -5,9 +5,16 @@ from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYData
-from whitecanvas.layers._mixin import FaceMixin, EdgeMixin
+from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.backend import Backend
-from whitecanvas.types import Symbol, LineStyle, ColorType, FacePattern, _Void, Alignment
+from whitecanvas.types import (
+    Symbol,
+    LineStyle,
+    ColorType,
+    FacePattern,
+    _Void,
+    Alignment,
+)
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 if TYPE_CHECKING:
@@ -16,7 +23,7 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveLayer[MarkersProtocol]):
+class Markers(FaceEdgeMixin[MarkersProtocol]):
     def __init__(
         self,
         xdata: ArrayLike,
@@ -25,19 +32,16 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
         name: str | None = None,
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
-        face_color: ColorType = "blue",
-        face_pattern: str | FacePattern = FacePattern.SOLID,
-        edge_color: ColorType = "black",
-        edge_width: float = 0,
-        edge_style: LineStyle | str = LineStyle.SOLID,
+        color: ColorType = "blue",
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
         xdata, ydata = normalize_xy(xdata, ydata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
         self.setup(
-            symbol=symbol, size=size, face_color=face_color, face_pattern=face_pattern,
-            edge_color=edge_color, edge_width=edge_width, edge_style=edge_style
+            symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha
         )  # fmt: skip
 
     @property
@@ -56,11 +60,15 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
         if ydata is not None:
             y0 = as_array_1d(ydata)
         if x0.size != y0.size:
-            raise ValueError("Expected xdata and ydata to have the same size, " f"got {x0.size} and {y0.size}")
+            raise ValueError(
+                "Expected xdata and ydata to have the same size, "
+                f"got {x0.size} and {y0.size}"
+            )
         self._backend._plt_set_data(x0, y0)
 
     @property
     def symbol(self) -> Symbol:
+        """Symbol used to mark the data points."""
         return self._backend._plt_get_symbol()
 
     @symbol.setter
@@ -69,6 +77,7 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
 
     @property
     def size(self) -> float:
+        """Size of the symbol."""
         return self._backend._plt_get_symbol_size()
 
     @size.setter
@@ -80,26 +89,20 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
         *,
         symbol: Symbol | str | _Void = _void,
         size: float | _Void = _void,
-        face_color: ColorType | _Void = _void,
-        face_pattern: str | FacePattern | _Void = _void,
-        edge_color: ColorType | _Void = _void,
-        edge_width: float | _Void = _void,
-        edge_style: LineStyle | str | _Void = _void,
+        color: ColorType | _Void = _void,
+        alpha: float | _Void = _void,
+        pattern: str | FacePattern | _Void = _void,
     ):
         if symbol is not _void:
             self.symbol = symbol
         if size is not _void:
             self.size = size
-        if face_color is not _void:
-            self.face_color = face_color
-        if face_pattern is not _void:
-            self.face_pattern = face_pattern
-        if edge_color is not _void:
-            self.edge_color = edge_color
-        if edge_width is not _void:
-            self.edge_width = edge_width
-        if edge_style is not _void:
-            self.edge_style = edge_style
+        if color is not _void:
+            self.face.color = color
+        if pattern is not _void:
+            self.face.pattern = pattern
+        if alpha is not _void:
+            self.face.alpha = alpha
         return self
 
     def with_xerr(
@@ -107,8 +110,8 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
         err: ArrayLike,
         err_high: ArrayLike | None = None,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.AnnotatedMarkers:
@@ -118,16 +121,16 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
         if err_high is None:
             err_high = err
         if color is _void:
-            color = self.edge_color
-        if line_width is _void:
-            line_width = self.edge_width
-        if line_style is _void:
-            line_style = self.edge_style
+            color = self.edge.color
+        if width is _void:
+            width = self.edge.width
+        if style is _void:
+            style = self.edge.style
         # if antialias is _void:
         #     antialias = self.antialias
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
-            line_width=line_width, line_style=line_style, antialias=antialias, capsize=capsize,
+            width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
@@ -138,8 +141,8 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
         err: ArrayLike,
         err_high: ArrayLike | None = None,
         color: ColorType | _Void = _void,
-        line_width: float | _Void = _void,
-        line_style: str | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
     ) -> _lg.AnnotatedMarkers:
@@ -149,16 +152,16 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
         if err_high is None:
             err_high = err
         if color is _void:
-            color = self.edge_color
-        if line_width is _void:
-            line_width = self.edge_width
-        if line_style is _void:
-            line_style = self.edge_style
+            color = self.edge.color
+        if width is _void:
+            width = self.edge.width
+        if style is _void:
+            style = self.edge.style
         # if antialias is _void:
         #     antialias = self.antialias
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
-            line_width=line_width, line_style=line_style, antialias=antialias, capsize=capsize,
+            width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
@@ -179,16 +182,17 @@ class Markers(FaceMixin[MarkersProtocol], EdgeMixin[MarkersProtocol], PrimitiveL
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
+        else:
+            strings = list(strings)
+            if len(strings) != self.data.x.size:
+                raise ValueError(
+                    f"Number of strings ({len(strings)}) does not match the "
+                    f"number of data ({self.data.x.size})."
+                )
         texts = TextGroup.from_strings(
-            *self.data,
-            strings,
-            color=color,
-            size=size,
-            rotation=rotation,
-            anchor=anchor,
-            fontfamily=fontfamily,
-            backend=self._backend_name,
-        )
+            *self.data, strings, color=color, size=size, rotation=rotation,
+            anchor=anchor, fontfamily=fontfamily, backend=self._backend_name,
+        )  # fmt: skip
         return AnnotatedMarkers(
             self,
             Errorbars([], [], [], orient="horizontal", backend=self._backend_name),

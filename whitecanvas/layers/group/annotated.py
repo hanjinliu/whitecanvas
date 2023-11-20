@@ -151,50 +151,6 @@ class _AnnotatedLayerBase(ListLayerGroup):
             self.texts.set_pos(data.x + xoff, data.y + yoff)
         self._text_offset = _offset
 
-    def setup_xerr(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool | _Void = _void,
-        capsize: float | _Void = _void,
-    ) -> Self:
-        self.xerr.setup(
-            color=color, width=width, style=style,
-            antialias=antialias, capsize=capsize
-        )  # fmt: skip
-        return self
-
-    def setup_yerr(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool | _Void = _void,
-        capsize: float | _Void = _void,
-    ) -> Self:
-        self.yerr.setup(
-            color=color, width=width, style=style,
-            antialias=antialias, capsize=capsize
-        )  # fmt: skip
-        return self
-
-    def setup_texts(
-        self,
-        color: ColorType = "black",
-        size: float = 12,
-        rotation: float = 0.0,
-        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
-    ) -> Self:
-        self.texts.setup(
-            color=color, size=size, rotation=rotation, anchor=anchor,
-            fontfamily=fontfamily
-        )  # fmt: skip
-        return self
-
     def with_xerr(
         self,
         len_lower: float,
@@ -266,7 +222,7 @@ class _AnnotatedLayerBase(ListLayerGroup):
         size: float = 12,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
+        fontfamily: str | None = None,
         offset: tuple[Any, Any] | None = None,
     ) -> Self:
         """
@@ -285,7 +241,7 @@ class _AnnotatedLayerBase(ListLayerGroup):
             Rotation of the text in degrees.
         anchor : str or Alignment, default is Alignment.BOTTOM_LEFT
             Text anchoring position.
-        fontfamily : str, default is "sans-serif"
+        fontfamily : str, optional
             The font family of the text.
         offset : tuple, default is None
             The offset of the text from the data point.

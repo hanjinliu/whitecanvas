@@ -3,6 +3,7 @@ from __future__ import annotations
 import weakref
 from typing import TYPE_CHECKING
 import numpy as np
+from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
 from cmap import Color
 from ._qt_utils import array_to_qcolor
@@ -48,7 +49,9 @@ class Title(_CanvasComponent):
         return self._canvas()._plot_item.titleLabel.item.font().family()
 
     def _plt_set_fontfamily(self, family: str):
-        self._canvas()._plot_item.titleLabel.item.setFont(QFont(family, self._plt_get_size()))
+        self._canvas()._plot_item.titleLabel.item.setFont(
+            QFont(family, self._plt_get_size())
+        )
 
 
 class AxisLabel(_CanvasComponent):
@@ -136,3 +139,93 @@ class Axis(_CanvasComponent):
             viewbox.invertX()
         elif self._axis == "left":
             viewbox.invertY()
+
+
+class Ticks(_CanvasComponent):
+    def __init__(self, canvas: Canvas, axis: str):
+        super().__init__(canvas)
+        self._axis = axis
+        self._pen = QPen(array_to_qcolor(np.array([0.0, 0.0, 0.0, 1.0])))
+        self._visible = True
+        self._plt_get_axis().setTickFont(QFont("sans-serif"))  # avoid None
+
+    def _plt_get_axis(self) -> pg.AxisItem:
+        return self._canvas()._plot_item.getAxis(self._axis)
+
+    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+        axis = self._plt_get_axis()
+        if axis._tickLevels is not None:
+            major: list[tuple[float, str]] = axis._tickLevels[0]
+            values = []
+            strings = []
+            for val, string in major:
+                values.append(val)
+                strings.append(string)
+        else:
+            bounds = axis.mapRectFromParent(axis.geometry())
+            span = (bounds.topLeft(), bounds.topRight())
+            p0: QtCore.QPointF = axis.mapToDevice(span[0])
+            p1: QtCore.QPointF = axis.mapToDevice(span[1])
+            length_in_pixel = np.hypot(p0.x() - p1.x(), p0.y() - p1.y())
+            tickvals = axis.tickValues(*axis.range, length_in_pixel)
+            values = []
+            for tickval in tickvals:
+                values += list(tickval[1])
+            values.sort()
+            strings = values
+        return (values, strings)
+
+    def _plt_set_text(self, text: tuple[list[float], list[str]]):
+        axis = self._plt_get_axis()
+        axis.setTicks([[(pos, label) for pos, label in zip(*text)]])
+
+    def _plt_get_text_color(self):
+        return np.array(self._plt_get_axis().textPen().color().toRgbF())
+
+    def _plt_set_color(self, color):
+        axis = self._plt_get_axis()
+        pen = QPen(array_to_qcolor(color))
+        axis.setTickPen(pen)
+        axis.setTextPen(pen)
+        self._pen = pen
+
+    def _plt_get_visible(self) -> bool:
+        return self._visible
+
+    def _plt_set_visible(self, visible: bool):
+        axis = self._plt_get_axis()
+        if visible:
+            pen = self._pen
+        else:
+            pen = QPen(array_to_qcolor(np.zeros(4)))
+        axis.setTickPen(pen)
+        axis.setTextPen(pen)
+        self._visible = visible
+
+    def _get_font(self) -> QFont:
+        return self._plt_get_axis().style['tickFont']
+
+    def _plt_get_size(self) -> float:
+        return self._get_font().pointSizeF()
+
+    def _plt_set_size(self, size: str):
+        font = self._get_font()
+        font.setPointSizeF(size)
+        self._plt_get_axis().setTickFont(font)
+
+    def _plt_get_fontfamily(self) -> str:
+        return self._get_font().family()
+
+    def _plt_set_fontfamily(self, font):
+        qfont = self._get_font()
+        qfont.setFamily(font)
+        self._plt_get_axis().setTickFont(qfont)
+
+    def _plt_get_color(self):
+        return np.array(self._pen.color().getRgbF())
+
+    def _plt_set_color(self, color):
+        pen = self._pen
+        pen.setColor(array_to_qcolor(color))
+        self._plt_get_axis().setTickPen(pen)
+        self._plt_get_axis().setTextPen(pen)

@@ -175,7 +175,7 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
         size: float = 12,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
+        fontfamily: str | None = None,
     ) -> _lg.AnnotatedMarkers:
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import TextGroup, AnnotatedMarkers

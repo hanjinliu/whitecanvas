@@ -78,7 +78,7 @@ class XLabel(SupportsText):
         self._canvas()._axes.set_xlabel(text, self._fontdict)
         self._text = text
 
-    def _plt_set_text_color(self, color):
+    def _plt_set_color(self, color):
         d = self._fontdict.copy()
         d["color"] = color
         self._canvas()._axes.set_xlabel(self._text, fontdict=d)
@@ -111,7 +111,7 @@ class YLabel(SupportsText):
         self._canvas()._axes.set_ylabel(text, self._fontdict)
         self._text = text
 
-    def _plt_set_text_color(self, color):
+    def _plt_set_color(self, color):
         d = self._fontdict.copy()
         d["color"] = color
         self._canvas()._axes.set_ylabel(self._text, fontdict=d)
@@ -134,6 +134,82 @@ class YLabel(SupportsText):
         d = self._fontdict.copy()
         d["family"] = font
         self._canvas()._axes.set_ylabel(self._text, fontdict=d)
+
+
+class XTicks(SupportsText):
+    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+        axes = self._canvas()._axes
+        return axes.get_xticks(), [x.get_text() for x in axes.get_xticklabels()]
+
+    def _plt_set_text(self, text: tuple[list[float], list[str]]):
+        pos, texts = text
+        self._canvas()._axes.set_xticks(pos, texts)
+
+    def _plt_set_color(self, color):
+        d = self._fontdict.copy()
+        d["color"] = color
+        for x in self._canvas()._axes.get_xticklabels():
+            x.set_color(color)
+
+    def _plt_get_visible(self) -> bool:
+        return self._canvas()._axes.get_xticklines()[0].get_visible()
+
+    def _plt_set_visible(self, visible: bool):
+        axes = self._canvas()._axes
+        for tick in axes.get_xticklines():
+            tick.set_visible(visible)
+        for text in axes.get_xticklabels():
+            text.set_visible(visible)
+
+    def _plt_set_size(self, size: str):
+        d = self._fontdict.copy()
+        d["fontsize"] = size
+        for x in self._canvas()._axes.get_xticklabels():
+            x.set_fontsize(size)
+
+    def _plt_set_fontfamily(self, font):
+        d = self._fontdict.copy()
+        d["family"] = font
+        for x in self._canvas()._axes.get_xticklabels():
+            x.set_fontfamily(font)
+
+
+class YTicks(SupportsText):
+    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+        axes = self._canvas()._axes
+        return axes.get_yticks(), [x.get_text() for x in axes.get_yticklabels()]
+
+    def _plt_set_text(self, text: tuple[list[float], list[str]]):
+        pos, texts = text
+        self._canvas()._axes.set_yticks(pos, texts)
+
+    def _plt_set_color(self, color):
+        d = self._fontdict.copy()
+        d["color"] = color
+        for x in self._canvas()._axes.get_yticklabels():
+            x.set_color(color)
+
+    def _plt_get_visible(self) -> bool:
+        return self._canvas()._axes.get_yticklines()[0].get_visible()
+
+    def _plt_set_visible(self, visible: bool):
+        axes = self._canvas()._axes
+        for tick in axes.get_yticklines():
+            tick.set_visible(visible)
+        for text in axes.get_yticklabels():
+            text.set_visible(visible)
+
+    def _plt_set_size(self, size: str):
+        d = self._fontdict.copy()
+        d["fontsize"] = size
+        for x in self._canvas()._axes.get_yticklabels():
+            x.set_fontsize(size)
+
+    def _plt_set_fontfamily(self, font):
+        d = self._fontdict.copy()
+        d["family"] = font
+        for x in self._canvas()._axes.get_yticklabels():
+            x.set_fontfamily(font)
 
 
 class AxisBase:

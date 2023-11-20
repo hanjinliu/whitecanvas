@@ -51,7 +51,7 @@ class Plot(ListLayerGroup):
         size: float = 12,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
+        fontfamily: str | None = None,
     ) -> Plot:
         from whitecanvas.layers.group.annotated import AnnotatedPlot
         from .text_group import TextGroup

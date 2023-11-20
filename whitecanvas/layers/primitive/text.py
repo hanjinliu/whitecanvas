@@ -8,7 +8,6 @@ from whitecanvas.protocols import TextProtocol
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
-    Symbol,
     LineStyle,
     ColorType,
     FacePattern,
@@ -16,6 +15,7 @@ from whitecanvas.types import (
     Alignment,
 )
 from whitecanvas.utils.normalize import norm_color
+from whitecanvas.theme import get_theme
 from whitecanvas._exceptions import ReferenceDeletedError
 
 if TYPE_CHECKING:
@@ -32,10 +32,10 @@ class Text(PrimitiveLayer[TextProtocol]):
         text: str,
         *,
         color: ColorType = "black",
-        size: float = 12,
+        size: float | None = None,
         rotation: float = 0.0,
         anchor: Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
+        fontfamily: str | None = None,
         backend: Backend | str | None = None,
     ):
         self._backend = self._create_backend(Backend(backend), x, y, text)
@@ -59,7 +59,9 @@ class Text(PrimitiveLayer[TextProtocol]):
         return self._backend._plt_get_text_color()
 
     @color.setter
-    def color(self, color: ColorType):
+    def color(self, color: ColorType | None):
+        if color is None:
+            color = get_theme().foreground_color
         self._backend._plt_set_text_color(norm_color(color))
 
     @property
@@ -68,7 +70,9 @@ class Text(PrimitiveLayer[TextProtocol]):
         return self._backend._plt_get_text_size()
 
     @size.setter
-    def size(self, size: float):
+    def size(self, size: float | None):
+        if size is None:
+            size = get_theme().fontsize
         self._backend._plt_set_text_size(float(size))
 
     @property
@@ -114,6 +118,8 @@ class Text(PrimitiveLayer[TextProtocol]):
 
     @fontfamily.setter
     def fontfamily(self, fontfamily: str):
+        if fontfamily is None:
+            fontfamily = get_theme()
         self._backend._plt_set_text_fontfamily(fontfamily)
 
     def setup(

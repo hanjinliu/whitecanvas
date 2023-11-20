@@ -15,7 +15,7 @@ from .band import Band
 from .errorbar import Errorbars
 from .text import Text
 from .image import Image
-from ._labels import Title, XAxis, YAxis, XLabel, YLabel
+from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
 
@@ -31,6 +31,8 @@ class Canvas:
         self._title = Title(self)
         self._xlabel = XLabel(self)
         self._ylabel = YLabel(self)
+        self._xticks = XTicks(self)
+        self._yticks = YTicks(self)
 
     def _plt_get_title(self):
         return self._title
@@ -46,6 +48,12 @@ class Canvas:
 
     def _plt_get_ylabel(self):
         return self._ylabel
+
+    def _plt_get_xticks(self):
+        return self._xticks
+
+    def _plt_get_yticks(self):
+        return self._yticks
 
     def _plt_get_aspect_ratio(self) -> float | None:
         out = self._axes.get_aspect()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterable
 import weakref
 import numpy as np
 
@@ -62,25 +62,9 @@ class Namespace:
             setattr(self, k, v)
 
 
-class _TextLabelNamespace(Namespace):
+class _TextBoundNamespace(Namespace):
     def _get_object(self) -> protocols.TextLabelProtocol:
         raise NotImplementedError
-
-    def __repr__(self) -> str:
-        text = self.text
-        color = self.color
-        size = self.size
-        fontfamily = self.fontfamily
-        name = type(self).__name__
-        return f"{name}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
-
-    @property
-    def text(self) -> protocols.TextLabelProtocol:
-        return self._get_object()._plt_get_text()
-
-    @text.setter
-    def text(self, text: str):
-        self._get_object()._plt_set_text(text)
 
     @property
     def color(self):
@@ -105,6 +89,81 @@ class _TextLabelNamespace(Namespace):
     @fontfamily.setter
     def fontfamily(self, font):
         self._get_object()._plt_set_fontfamily(font)
+
+    @property
+    def visible(self) -> bool:
+        return self._get_object()._plt_get_visible()
+
+    @visible.setter
+    def visible(self, visible: bool):
+        self._get_object()._plt_set_visible(visible)
+
+
+class _TextLabelNamespace(_TextBoundNamespace):
+    def __repr__(self) -> str:
+        text = self.text
+        color = self.color
+        size = self.size
+        fontfamily = self.fontfamily
+        name = type(self).__name__
+        return f"{name}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
+
+    @property
+    def text(self) -> str:
+        return self._get_object()._plt_get_text()
+
+    @text.setter
+    def text(self, text: str):
+        self._get_object()._plt_set_text(text)
+
+
+class _TicksNamespace(_TextBoundNamespace):
+    def __repr__(self) -> str:
+        pos, labels = self.labels
+        color = self.color
+        size = self.size
+        fontfamily = self.fontfamily
+        name = type(self).__name__
+        return f"{name}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {fontfamily=!r})"
+
+    @property
+    def labels(self) -> tuple[list[float], list[str]]:
+        pos, labels = self._get_object()._plt_get_text()
+        return list(pos), labels
+
+    def set_labels(self, pos: Iterable[float], labels: Iterable[str] | None = None):
+        """
+        Set tick labels.
+
+        Parameters
+        ----------
+        pos : iterable of float
+            The positions of the ticks.
+        labels : iterable of str, optional
+            The label strings of the ticks. If None, the labels are set to the
+            `pos` values.
+        """
+        _pos = list(pos)
+        if np.any(np.diff(_pos) <= 0):
+            raise ValueError("pos must be strictly increasing.")
+        if labels is not None:
+            _labels = list(labels)
+        else:
+            # TODO: convert to string
+            _labels = _pos
+        if len(_pos) != len(_labels):
+            raise ValueError("pos and labels must have the same length.")
+        self._get_object()._plt_set_text((_pos, _labels))
+
+
+class XTickNamespace(_TicksNamespace):
+    def _get_object(self):
+        return self._get_canvas()._plt_get_xticks()
+
+
+class YTickNamespace(_TicksNamespace):
+    def _get_object(self):
+        return self._get_canvas()._plt_get_yticks()
 
 
 class TitleNamespace(_TextLabelNamespace):
@@ -162,6 +221,7 @@ class _AxisNamespace(Namespace):
 
 class XAxisNamespace(_AxisNamespace):
     label = XLabelNamespace()
+    ticks = XTickNamespace()
 
     def _get_object(self):
         return self._get_canvas()._plt_get_xaxis()
@@ -169,6 +229,7 @@ class XAxisNamespace(_AxisNamespace):
 
 class YAxisNamespace(_AxisNamespace):
     label = YLabelNamespace()
+    ticks = YTickNamespace()
 
     def _get_object(self):
         return self._get_canvas()._plt_get_yaxis()

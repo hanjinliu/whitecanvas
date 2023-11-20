@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Sequence
+from typing import Iterable, Sequence
 
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
@@ -9,10 +9,10 @@ from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.backend import Backend
 from whitecanvas.utils.normalize import (
     normalize_xy,
-    norm_color,
     as_any_1d_array,
     as_color_array,
 )
+from whitecanvas.theme import get_theme
 
 _void = _Void()
 
@@ -37,17 +37,24 @@ class TextGroup(ListLayerGroup):
         strings: Sequence[str],
         *,
         name: str | None = None,
-        color: ColorType = "black",
-        size: float = 12,
+        color: ColorType | None = None,
+        size: float | None = None,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
+        fontfamily: str | None = None,
         backend: Backend | str | None = None,
     ) -> TextGroup:
         xs, ys = normalize_xy(xs, ys)
         ndata = xs.size
         if len(strings) != ndata:
             raise ValueError(f"Expected {ndata} texts, got {len(strings)}")
+        theme = get_theme()
+        if color is None:
+            color = theme.foreground_color
+        if fontfamily is None:
+            fontfamily = theme.fontfamily
+        if size is None:
+            size = theme.fontsize
         _zip = zip(
             xs,
             ys,
@@ -131,7 +138,9 @@ class TextGroup(ListLayerGroup):
         return np.stack([tl.color for tl in self._children], axis=0)
 
     @color.setter
-    def color(self, colors: ColorType):
+    def color(self, colors: ColorType | None):
+        if colors is None:
+            colors = get_theme().foreground_color
         values = as_color_array(colors, len(self._children))
         for tl, v in zip(self._children, values):
             tl.color = v
@@ -142,7 +151,9 @@ class TextGroup(ListLayerGroup):
         return np.array([tl.size for tl in self._children], dtype=np.float32)
 
     @size.setter
-    def size(self, values: float):
+    def size(self, values: float | Iterable[float] | None):
+        if values is None:
+            values = get_theme().fontsize
         sizes = as_any_1d_array(values, len(self._children), dtype=np.float32)
         for tl, v in zip(self._children, sizes):
             tl.size = v
@@ -175,7 +186,9 @@ class TextGroup(ListLayerGroup):
         return np.array([tl.fontfamily for tl in self._children], dtype=object)
 
     @fontfamily.setter
-    def fontfamily(self, values: str):
+    def fontfamily(self, values: str | Iterable[str] | None):
+        if values is None:
+            values = get_theme().fontfamily
         ffs = as_any_1d_array(values, len(self._children), dtype=object)
         for tl, v in zip(self._children, ffs):
             tl.fontfamily = v

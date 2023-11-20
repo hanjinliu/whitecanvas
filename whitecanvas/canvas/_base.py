@@ -23,6 +23,7 @@ from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
+from whitecanvas.theme import get_theme
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -40,7 +41,9 @@ class CanvasBase(ABC):
     layers = _ll.LayerList()
     mouse = _ns.MouseNamespace()
 
-    def __init__(self, palette: ColormapType = "tab10"):
+    def __init__(self, palette: ColormapType | None = None):
+        if palette is None:
+            palette = get_theme().palette
         self._color_palette = ColorPalette(palette)
         self._is_grouping = False
         if not self._get_backend().name.startswith("."):
@@ -48,9 +51,16 @@ class CanvasBase(ABC):
 
     def _init_canvas(self):
         # default colors
-        self.x.color = "black"
-        self.y.color = "black"
-        self.background_color = "white"
+        theme = get_theme()
+        self.x.color = theme.foreground_color
+        self.y.color = theme.foreground_color
+        self.x.ticks.fontfamily = theme.fontfamily
+        self.y.ticks.fontfamily = theme.fontfamily
+        self.x.ticks.color = theme.foreground_color
+        self.y.ticks.color = theme.foreground_color
+        self.x.ticks.size = theme.fontsize
+        self.y.ticks.size = theme.fontsize
+        self.background_color = theme.background_color
 
         # connect layer events
         self.layers.events.inserted.connect(self._cb_inserted, unique=True)
@@ -379,7 +389,7 @@ class CanvasBase(ABC):
         size: float = 12,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
+        fontfamily: str | None = None,
     ) -> _l.Text:
         """
         Add a text layer to the canvas.
@@ -401,7 +411,7 @@ class CanvasBase(ABC):
         anchor : str or Alignment, default is Alignment.BOTTOM_LEFT
             Anchor position of the text. The anchor position will be the coordinate
             given by (x, y).
-        fontfamily : str, default is "sans-serif"
+        fontfamily : str, optional
             Font family of the text.
 
         Returns
@@ -426,7 +436,7 @@ class CanvasBase(ABC):
         size: float = 12,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str = "sans-serif",
+        fontfamily: str | None = None,
     ) -> _lg.TextGroup:
         layer = _lg.TextGroup.from_strings(
             x, y, texts, name=name, color=color, size=size, rotation=rotation,
@@ -564,7 +574,7 @@ class Canvas(CanvasBase):
         self,
         backend: str | None = None,
         *,
-        palette: ColormapType = "tab10",
+        palette: ColormapType | None = None,
     ):
         self._backend_installer = Backend(backend)
         self._backend = self._create_backend_object()
@@ -575,7 +585,7 @@ class Canvas(CanvasBase):
         cls,
         obj: protocols.CanvasProtocol,
         *,
-        palette: ColormapType = "tab10",
+        palette: ColormapType | None = None,
         backend: str | None = None,
     ) -> Self:
         """Create a canvas object from a backend object."""

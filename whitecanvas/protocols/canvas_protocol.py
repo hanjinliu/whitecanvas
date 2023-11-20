@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Protocol, runtime_checkable
+from typing import Any, Callable, Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 from .layer_protocols import BaseProtocol
@@ -42,6 +42,12 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     def _plt_get_ylabel(self) -> TextLabelProtocol:
         """Get y label handler"""
 
+    def _plt_get_xticks(self) -> TextLabelProtocol:
+        """Get x ticks handler"""
+
+    def _plt_get_yticks(self) -> TextLabelProtocol:
+        """Get y ticks handler"""
+
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""
 
@@ -70,10 +76,10 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
 
 @runtime_checkable
 class TextLabelProtocol(HasVisibility, Protocol):
-    def _plt_get_text(self) -> str:
+    def _plt_get_text(self) -> Any:
         """Get text of label"""
 
-    def _plt_set_text(self, title: str):
+    def _plt_set_text(self, text):
         """Set text of label"""
 
     def _plt_get_size(self) -> float:

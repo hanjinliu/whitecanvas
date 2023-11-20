@@ -13,7 +13,7 @@ import numpy as np
 from whitecanvas import protocols
 from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent
 from .app import run_app, get_app
-from ._labels import Title, AxisLabel, Axis
+from ._labels import Title, AxisLabel, Axis, Ticks
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -28,6 +28,8 @@ class Canvas:
         self._plot_item = item
         self._xaxis = Axis(self, axis="bottom")
         self._yaxis = Axis(self, axis="left")
+        self._xticks = Ticks(self, axis="bottom")
+        self._yticks = Ticks(self, axis="left")
         self._title = Title(self)
         self._xlabel = AxisLabel(self, axis="bottom")
         self._ylabel = AxisLabel(self, axis="left")
@@ -44,6 +46,12 @@ class Canvas:
 
     def _plt_get_xlabel(self):
         return self._xlabel
+
+    def _plt_get_xticks(self):
+        return self._xticks
+
+    def _plt_get_yticks(self):
+        return self._yticks
 
     def _plt_get_ylabel(self):
         return self._ylabel

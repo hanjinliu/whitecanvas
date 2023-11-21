@@ -73,7 +73,7 @@ class Bars(FaceEdgeMixin[BarProtocol]):
         density: bool = False,
         range: tuple[float, float] | None = None,
         orient: Literal["vertical", "horizontal"] = "vertical",
-        bar_width: float = 0.8,
+        bar_width: float | None = None,
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
@@ -84,10 +84,11 @@ class Bars(FaceEdgeMixin[BarProtocol]):
         data = as_array_1d(data)
         counts, edges = np.histogram(data, bins, density=density, range=range)
         centers = (edges[:-1] + edges[1:]) / 2
-        width = edges[1] - edges[0]
+        if bar_width is None:
+            bar_width = edges[1] - edges[0]
         return Bars(
-            centers, counts, bar_width=width, name=name, color=color, alpha=alpha,
-            orient=orient, bar_width=bar_width, pattern=pattern, backend=backend,
+            centers, counts, bar_width=bar_width, name=name, color=color, alpha=alpha,
+            orient=orient, pattern=pattern, backend=backend,
         )  # fmt: skip
 
     @property

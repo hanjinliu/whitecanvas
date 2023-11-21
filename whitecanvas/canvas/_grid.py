@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterator
+from typing import Any, Iterator
 
 from typing_extensions import override
 import numpy as np
@@ -289,8 +289,13 @@ class SingleCanvas(CanvasBase):
     def _canvas(self):
         return self._main_canvas._backend
 
+    @property
+    def native(self) -> Any:
+        """The native backend object."""
+        return self._main_canvas.native
+
     def show(self) -> None:
-        """Show the grid."""
+        """Show the canvas using the method defined in the backend."""
         self._grid.show()
 
     def hide(self) -> None:

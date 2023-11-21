@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = 'A type safe and backend independent plotting library for Python.'
 readme = "README.md"
 requires-python = ">=3.9"
-license = "BSD 3-Clause"
+license = { file = "LICENSE" }
 keywords = []
 authors = [
   { name = "Hanjin Liu", email = "liuhanjin-sc@g.ecc.u-tokyo.ac.jp" },
@@ -38,6 +38,14 @@ matplotlib = [
 pyqtgraph = [
   "pyqtgraph>=0.13.3",
   "qtpy>=2.4.1",
+]
+
+vispy = [
+  "vispy>=0.14.1",
+]
+
+bokeh = [
+  "bokeh>=3.3.1",
 ]
 
 testing = [

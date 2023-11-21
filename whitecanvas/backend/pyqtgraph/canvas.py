@@ -32,6 +32,9 @@ class Canvas:
         self._xlabel = AxisLabel(self, axis="bottom")
         self._ylabel = AxisLabel(self, axis="left")
 
+    def _plt_get_native(self):
+        return self._plot_item
+
     def _plt_get_title(self):
         return self._title
 

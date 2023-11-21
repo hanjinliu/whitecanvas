@@ -75,6 +75,9 @@ class Canvas:
         self._mouse_move_callbacks: list[Callable[[MouseEvent], None]] = []
         self._mouse_double_click_callbacks: list[Callable[[MouseEvent], None]] = []
 
+    def _plt_get_native(self):
+        return self._viewbox.scene
+
     def _plt_get_title(self):
         return self._title
 

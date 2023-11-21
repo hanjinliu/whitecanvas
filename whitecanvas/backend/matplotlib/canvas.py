@@ -32,6 +32,9 @@ class Canvas:
         self._xticks = XTicks(self)
         self._yticks = YTicks(self)
 
+    def _plt_get_native(self):
+        return self._axes
+
     def _plt_get_title(self):
         return self._title
 

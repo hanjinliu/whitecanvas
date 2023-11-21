@@ -27,6 +27,9 @@ class HasLayers(Protocol):
 
 @runtime_checkable
 class CanvasProtocol(HasVisibility, HasLayers, Protocol):
+    def _plt_get_native(self) -> Any:
+        """Get the native backend object."""
+
     def _plt_get_title(self) -> TextLabelProtocol:
         """Get title handler"""
 

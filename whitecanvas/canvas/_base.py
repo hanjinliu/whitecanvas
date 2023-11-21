@@ -96,6 +96,11 @@ class CanvasBase(ABC):
         """Return the canvas object."""
 
     @property
+    def native(self) -> Any:
+        """Return the native canvas object."""
+        return self._canvas()._plt_get_native()
+
+    @property
     def aspect_ratio(self) -> float | None:
         """Aspect ratio of the canvas (None if not locked)."""
         return self._canvas()._plt_get_aspect_ratio()

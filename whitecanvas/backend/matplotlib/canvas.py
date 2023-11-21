@@ -8,13 +8,11 @@ from matplotlib.backend_bases import (
     MouseEvent as mplMouseEvent,
     MouseButton as mplMouseButton,
 )
-from .line import MonoLine
-from .markers import Markers
-from .bar import Bars
-from .band import Band
-from .errorbar import Errorbars
-from .text import Text
-from .image import Image
+from matplotlib.lines import Line2D
+from matplotlib.collections import Collection
+from matplotlib.container import Container
+from matplotlib.text import Text as mplText
+from matplotlib.image import AxesImage
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
@@ -68,16 +66,15 @@ class Canvas:
             self._axes.set_aspect(ratio)
 
     def _plt_add_layer(self, layer: protocols.BaseProtocol):
-        if isinstance(layer, MonoLine):
+        if isinstance(layer, Line2D):
             self._axes.add_line(layer)
-        elif isinstance(layer, (Markers, Band, Errorbars)):
+        elif isinstance(layer, Collection):
             self._axes.add_collection(layer)
-        elif isinstance(layer, Bars):
-            for patch in layer.patches:
-                self._axes.add_patch(patch)
-        elif isinstance(layer, Text):
+        elif isinstance(layer, Container):
+            self._axes.add_container(layer)
+        elif isinstance(layer, mplText):
             self._axes._add_text(layer)
-        elif isinstance(layer, Image):
+        elif isinstance(layer, AxesImage):
             self._axes.add_image(layer)
         else:
             raise NotImplementedError(f"{layer}")

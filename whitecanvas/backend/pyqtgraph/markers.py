@@ -39,9 +39,6 @@ class Markers(pg.ScatterPlotItem):
     def _plt_set_visible(self, visible: bool):
         self.setVisible(visible)
 
-    def _plt_get_zorder(self) -> int:
-        return self.zValue()
-
     def _plt_set_zorder(self, zorder: int):
         self.setZValue(zorder)
 

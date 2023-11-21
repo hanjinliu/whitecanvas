@@ -18,8 +18,6 @@ from ._labels import Title, AxisLabel, Axis, Ticks
 
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
-    """A 1-D data viewer that have similar API as napari Viewer."""
-
     def __init__(self, item: pg.PlotItem | None = None):
         # prepare widget
         if item is None:
@@ -33,7 +31,6 @@ class Canvas:
         self._title = Title(self)
         self._xlabel = AxisLabel(self, axis="bottom")
         self._ylabel = AxisLabel(self, axis="left")
-        self._title = Title(self)
 
     def _plt_get_title(self):
         return self._title
@@ -162,12 +159,6 @@ class Canvas:
             type=typ,
         )
 
-    # def to_clipboard(self):
-    #     """Copy the image to clipboard."""
-    #     app = get_app()
-    #     img = self.native.grab().toImage()
-    #     app.clipboard().setImage(img)
-
 
 _QT_MODIFIERS_MAP = {
     QtCore.Qt.KeyboardModifier.NoModifier: (),
@@ -201,8 +192,6 @@ _QT_BUTTON_MAP = {
 class CanvasGrid:
     def __init__(self, heights: list[int], widths: list[int]):
         app = get_app()
-        nr, nc = len(heights), len(widths)
-        self._shape = (nr, nc)
         self._layoutwidget = pg.GraphicsLayoutWidget()
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:

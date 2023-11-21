@@ -7,6 +7,6 @@ from ._enums import MouseButton, Modifier, MouseEventType
 @dataclass
 class MouseEvent:
     button: MouseButton
-    modifiers: Modifier
+    modifiers: tuple[Modifier, ...]
     pos: tuple[float, float]
     type: MouseEventType

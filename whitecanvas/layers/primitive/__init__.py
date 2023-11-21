@@ -1,8 +1,8 @@
-from .line import Line
+from .line import Line, MultiLines
 from .bars import Bars
 from .markers import Markers
 from .band import Band
-from .errorbar import Errorbars
+from .errorbars import Errorbars
 from .inf_curve import InfCurve
 from .text import Text
 from .image import Image

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from numpy.typing import ArrayLike
 
-from whitecanvas.protocols import LineProtocol
-from whitecanvas.layers._base import XYDataLayer, XYData, PrimitiveLayer
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
+
+from whitecanvas.protocols import LineProtocol, MultiLinesProtocol
+from whitecanvas.layers._base import XYData, PrimitiveLayer
 from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
@@ -15,7 +17,7 @@ from whitecanvas.types import (
     Alignment,
     FacePattern,
 )
-from whitecanvas.utils.normalize import as_array_1d, normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -23,7 +25,7 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-class MonoLine(LineMixin[LineProtocol], PrimitiveLayer[LineProtocol]):
+class MonoLine(LineMixin[LineProtocol]):
     @property
     def antialias(self) -> bool:
         """Whether to use antialiasing."""
@@ -41,7 +43,7 @@ class Line(MonoLine):
         ydata: ArrayLike,
         *,
         name: str | None = None,
-        color: ColorType = "vlue",
+        color: ColorType = "blue",
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = False,
@@ -241,3 +243,121 @@ class Line(MonoLine):
             texts=texts,
             name=self.name,
         )
+
+
+class MultiLines(PrimitiveLayer[MultiLinesProtocol]):
+    def __init__(
+        self,
+        data: list[ArrayLike],
+        *,
+        name: str | None = None,
+        color: ColorType = "blue",
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = False,
+        backend: Backend | str | None = None,
+    ):
+        data_normed = _norm_data(data)
+        self._backend = self._create_backend(Backend(backend), data_normed)
+        self.name = name if name is not None else type(self).__name__
+        self.setup(color=color, width=width, style=style, antialias=antialias)
+
+    @property
+    def data(self) -> XYData:
+        """Current data of the layer."""
+        return XYData(*self._backend._plt_get_data())
+
+    def set_data(self, data: list[ArrayLike]):
+        self._backend._plt_set_data(_norm_data(data))
+
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Color of the line."""
+        return self._backend._plt_get_edge_color()
+
+    @color.setter
+    def color(self, color: ColorType):
+        if isinstance(color, np.ndarray) and color.ndim == 2:
+            if color.shape[1] not in (3, 4):
+                raise ValueError(
+                    f"Expected color to be (N, 3) or (N, 4), got {color.shape}"
+                )
+            col = color
+        else:
+            try:
+                col = norm_color(color)
+            except Exception:
+                col = np.stack([norm_color(c) for c in color], axis=0)
+        self._backend._plt_set_edge_color(col)
+
+    @property
+    def width(self):
+        """Width of the line."""
+        return self._backend._plt_get_edge_width()
+
+    @width.setter
+    def width(self, width):
+        self._backend._plt_set_edge_width(width)
+
+    @property
+    def style(self) -> LineStyle:
+        """Style of the line."""
+        return LineStyle(self._backend._plt_get_edge_style())
+
+    @style.setter
+    def style(self, style: str | LineStyle):
+        self._backend._plt_set_edge_style(LineStyle(style))
+
+    @property
+    def alpha(self) -> float:
+        return float(self.color[3])
+
+    @alpha.setter
+    def alpha(self, value: float):
+        if not 0 <= value <= 1:
+            raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
+    def setup(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        alpha: float | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
+        antialias: bool | _Void = _void,
+    ):
+        if color is not _void:
+            self.color = color
+        if width is not _void:
+            self.width = width
+        if style is not _void:
+            self.style = style
+        if alpha is not _void:
+            self.alpha = alpha
+        if antialias is not _void:
+            self.antialias = antialias
+        return self
+
+    @property
+    def antialias(self) -> bool:
+        """Whether to use antialiasing."""
+        return self._backend._plt_get_antialias()
+
+    @antialias.setter
+    def antialias(self, antialias: bool):
+        self._backend._plt_set_antialias(antialias)
+
+
+def _norm_data(data: list[ArrayLike]) -> NDArray[np.number]:
+    data_normed: list[NDArray[np.number]] = []
+    for each in data:
+        arr = np.asarray(each)
+        if arr.dtype.kind not in "uif":
+            raise ValueError(f"Expected data to be numeric, got {arr.dtype}")
+        if arr.ndim != 2 or arr.shape[1] != 2:
+            raise ValueError(f"Expected data to be (N, 2), got {arr.shape}")
+        data_normed.append(arr)
+    return data_normed

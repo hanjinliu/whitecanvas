@@ -28,9 +28,6 @@ class Text(mplText):
     def _plt_set_visible(self, visible: bool):
         self.set_visible(visible)
 
-    def _plt_get_zorder(self) -> float:
-        return self.get_zorder()
-
     def _plt_set_zorder(self, zorder: float):
         self.set_zorder(zorder)
 

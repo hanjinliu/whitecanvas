@@ -182,16 +182,6 @@ class Ticks(_CanvasComponent):
         axis = self._plt_get_axis()
         axis.setTicks([[(pos, label) for pos, label in zip(*text)]])
 
-    def _plt_get_text_color(self):
-        return np.array(self._plt_get_axis().textPen().color().toRgbF())
-
-    def _plt_set_color(self, color):
-        axis = self._plt_get_axis()
-        pen = QPen(array_to_qcolor(color))
-        axis.setTickPen(pen)
-        axis.setTextPen(pen)
-        self._pen = pen
-
     def _plt_get_visible(self) -> bool:
         return self._visible
 

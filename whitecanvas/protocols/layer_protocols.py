@@ -15,9 +15,6 @@ class BaseProtocol(Protocol):
     def _plt_set_visible(self, visible: bool):
         """Set the visibility."""
 
-    def _plt_get_zorder(self) -> int:
-        """Return the zorder."""
-
     def _plt_set_zorder(self, zorder: int):
         """Set the zorder."""
 
@@ -51,7 +48,9 @@ class OrientedXYYDataProtocol(BaseProtocol, Protocol):
     def _plt_set_vertical_data(self, xdata: Array1D, ydata0: Array1D, ydata1: Array1D):
         """Set the vertical representative data."""
 
-    def _plt_set_horizontal_data(self, xdata: Array1D, ydata0: Array1D, ydata1: Array1D):
+    def _plt_set_horizontal_data(
+        self, xdata: Array1D, ydata0: Array1D, ydata1: Array1D
+    ):
         """Set the horizontal representative data."""
 
 
@@ -60,7 +59,9 @@ class XXYYDataProtocol(BaseProtocol, Protocol):
     def _plt_get_data(self) -> tuple[Array1D, Array1D, Array1D, Array1D]:
         """Return the x and y array."""
 
-    def _plt_set_data(self, xdata0: Array1D, xdata1: Array1D, ydata0: Array1D, ydata1: Array1D):
+    def _plt_set_data(
+        self, xdata0: Array1D, xdata1: Array1D, ydata0: Array1D, ydata1: Array1D
+    ):
         """Set the x and y array."""
 
 
@@ -147,6 +148,39 @@ class HasText(BaseProtocol, Protocol):
 
 @runtime_checkable
 class LineProtocol(XYDataProtocol, HasEdges, Protocol):
+    def _plt_get_antialias(self) -> bool:
+        """Return the anti alias."""
+
+    def _plt_set_antialias(self, antialias: bool):
+        """Set the anti alias."""
+
+
+@runtime_checkable
+class MultiLinesProtocol(XYDataProtocol, HasEdges, Protocol):
+    def _plt_get_data(self) -> list[NDArray[np.number]]:
+        """Return the x and y array."""
+
+    def _plt_set_data(self, data: list[NDArray[np.number]]):
+        """Set the x and y array."""
+
+    def _plt_get_edge_color(self) -> NDArray[np.float32]:
+        """Return the edge color."""
+
+    def _plt_set_edge_color(self, color: NDArray[np.float32]):
+        """Set the edge color."""
+
+    def _plt_get_edge_width(self) -> NDArray[np.floating]:
+        """Return the edge width."""
+
+    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
+        """Set the edge width."""
+
+    def _plt_get_edge_style(self) -> list[LineStyle]:
+        """Return the edge style."""
+
+    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
+        """Set the edge style."""
+
     def _plt_get_antialias(self) -> bool:
         """Return the anti alias."""
 

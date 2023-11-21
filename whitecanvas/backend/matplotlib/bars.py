@@ -29,9 +29,6 @@ class Bars(BarContainer):
         for patch in self.patches:
             patch.set_visible(visible)
 
-    def _plt_get_zorder(self) -> int:
-        return self.patches[0].get_zorder()
-
     def _plt_set_zorder(self, zorder: int):
         for patch in self.patches:
             patch.set_zorder(zorder)
@@ -54,7 +51,9 @@ class Bars(BarContainer):
         n = len(self.patches)
         ninput = len(x0)
         if n != ninput:
-            raise ValueError(f"Existing data has {n} bars but trying to set {ninput} bars.")
+            raise ValueError(
+                f"Existing data has {n} bars but trying to set {ninput} bars."
+            )
         for patch, x0i, x1i, y0i, y1i in zip(self.patches, x0, x1, y0, y1):
             patch.set_x(x0i)
             patch.set_width(x1i - x0i)

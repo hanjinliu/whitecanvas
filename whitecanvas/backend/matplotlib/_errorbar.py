@@ -43,9 +43,6 @@ class Errorbars(LineCollection):
     def _plt_set_visible(self, visible: bool):
         self.set_visible(visible)
 
-    def _plt_get_zorder(self) -> int:
-        return self.get_zorder()
-
     def _plt_set_zorder(self, zorder: int):
         self.set_zorder(zorder)
 
@@ -127,7 +124,9 @@ class Errorbars(LineCollection):
     def _plt_get_capsize(self) -> float:
         return self._capsize
 
-    def _plt_set_capsize(self, capsize: float, orient: Literal["vertical", "horizontal"]):
+    def _plt_set_capsize(
+        self, capsize: float, orient: Literal["vertical", "horizontal"]
+    ):
         self._capsize = capsize
         if orient == "vertical":
             self._plt_set_vertical_data(*self._plt_get_vertical_data())

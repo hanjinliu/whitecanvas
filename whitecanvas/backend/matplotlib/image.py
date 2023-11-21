@@ -21,9 +21,6 @@ class Image(AxesImage):
     def _plt_set_visible(self, visible: bool):
         self.set_visible(visible)
 
-    def _plt_get_zorder(self) -> int:
-        return self.get_zorder()
-
     def _plt_set_zorder(self, zorder: int):
         self.set_zorder(zorder)
 

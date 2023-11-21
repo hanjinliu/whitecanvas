@@ -1,22 +1,16 @@
 from __future__ import annotations
 from typing import Literal
-
 import numpy as np
+from numpy.typing import NDArray
 
-from matplotlib.collections import PolyCollection
+from vispy.scene import visuals
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import FacePattern, LineStyle
+from whitecanvas.types import LineStyle, FacePattern
 
 
 @check_protocol(BandProtocol)
-class Band(PolyCollection):
-    def __init__(
-        self,
-        t: np.ndarray,
-        ydata0: np.ndarray,
-        ydata1: np.ndarray,
-        orient: Literal["vertical", "horizontal"],
-    ):
+class Band(visuals.Polygon):
+    def __init__(self, t, ydata0, ydata1, orient: Literal["vertical", "horizontal"]):
         if orient == "vertical":
             fw = np.stack([t, ydata0], axis=1)
             bw = np.stack([t[::-1], ydata1[::-1]], axis=1)
@@ -27,21 +21,22 @@ class Band(PolyCollection):
             raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         verts = np.concatenate([fw, bw], axis=0)
         self._edge_style = LineStyle.SOLID
-        super().__init__([verts], closed=True)
+        super().__init__(verts)
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
 
-    def _plt_get_visible(self):
-        return self.get_visible()
+    ##### LayerProtocol #####
+    def _plt_get_visible(self) -> bool:
+        return self.visible
 
-    def _plt_set_visible(self, visible):
-        self.set_visible(visible)
+    def _plt_set_visible(self, visible: bool):
+        self.visible = visible
 
     def _plt_set_zorder(self, zorder: int):
-        self.set_zorder(zorder)
+        pass
 
-    ##### XYYDataProtocol #####
+    ##### XYDataProtocol #####
     def _plt_get_vertical_data(self):
         return self._t, self._y0, self._y1
 
@@ -56,7 +51,7 @@ class Band(PolyCollection):
             ],
             axis=0,
         )
-        self.set_verts([verts])
+        self.pos = verts
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
@@ -69,48 +64,39 @@ class Band(PolyCollection):
             ],
             axis=0,
         )
-        self.set_verts([verts])
+        self.pos = verts
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
 
-    def _plt_get_face_color(self):
-        return self.get_facecolor()[0]
+    ##### HasFace protocol #####
+    def _plt_get_face_color(self) -> NDArray[np.float32]:
+        return self.color
 
-    def _plt_set_face_color(self, color):
-        self.set_facecolor(color)
+    def _plt_set_face_color(self, color: NDArray[np.float32]):
+        self.color = color
 
     def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern(self.get_hatch())
+        return FacePattern.SOLID
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
-        if pattern is FacePattern.SOLID:
-            ptn = None
-        else:
-            ptn = pattern.value
-        self.set_hatch(ptn)
+        pass
 
-    def _plt_get_edge_color(self):
-        return self.get_edgecolor()[0]
+    ##### HasEdges protocol #####
+    def _plt_get_edge_color(self) -> NDArray[np.float32]:
+        return self.border_color
 
-    def _plt_set_edge_color(self, color):
-        self.set_edgecolor(color)
+    def _plt_set_edge_color(self, color: NDArray[np.float32]):
+        self.border_color = color
 
-    def _plt_get_edge_width(self):
-        return self.get_linewidth()[0]
+    def _plt_get_edge_width(self) -> float:
+        return self.border.width
 
     def _plt_set_edge_width(self, width: float):
-        self.set_linewidth(width)
+        self.border.width = width
 
-    def _plt_get_edge_style(self):
-        return self._edge_style
+    def _plt_get_edge_style(self) -> LineStyle:
+        return LineStyle.SOLID
 
     def _plt_set_edge_style(self, style: LineStyle):
-        self.set_linestyle(style.value)
-        self._edge_style = style
-
-    def _plt_get_antialias(self):
-        return self.get_antialiased()
-
-    def _plt_set_antialias(self, antialias: bool):
-        self.set_antialiased(antialias)
+        pass

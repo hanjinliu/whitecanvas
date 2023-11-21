@@ -41,7 +41,7 @@ class Text(PrimitiveLayer[TextProtocol]):
         self._backend = self._create_backend(Backend(backend), x, y, text)
         self._background_face = TextBackgroundFace(self)
         self._background_edge = TextBackgroundEdge(self)
-        self.setup(
+        self.update(
             color=color,
             size=size,
             rotation=rotation,
@@ -122,7 +122,7 @@ class Text(PrimitiveLayer[TextProtocol]):
             fontfamily = get_theme()
         self._backend._plt_set_text_fontfamily(fontfamily)
 
-    def setup(
+    def update(
         self,
         color: ColorType | _Void = _void,
         size: float | _Void = _void,
@@ -181,7 +181,7 @@ class TextBackgroundFace(TextNamespace):
             raise ValueError("Alpha must be between 0 and 1.")
         self.color = (*self.color[:3], alpha)
 
-    def setup(
+    def update(
         self,
         color: ColorType | _Void = _void,
         pattern: FacePattern | str | _Void = _void,
@@ -231,7 +231,7 @@ class TextBackgroundEdge(TextNamespace):
             raise ValueError("Alpha must be between 0 and 1.")
         self.color = (*self.color[:3], alpha)
 
-    def setup(
+    def update(
         self,
         color: ColorType | _Void = _void,
         style: LineStyle | str | _Void = _void,

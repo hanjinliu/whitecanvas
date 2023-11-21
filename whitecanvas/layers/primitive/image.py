@@ -38,7 +38,7 @@ class Image(PrimitiveLayer[ImageProtocol]):
     ) -> None:
         self._backend = self._create_backend(Backend(backend), _normalize_image(image))
         self.name = name if name is not None else "Image"
-        self.setup(cmap=cmap, clim=clim)
+        self.update(cmap=cmap, clim=clim)
 
     @property
     def data(self) -> NDArray[np.number]:
@@ -75,7 +75,7 @@ class Image(PrimitiveLayer[ImageProtocol]):
             high = self.data.max()
         self._backend._plt_set_clim((low, high))
 
-    def setup(
+    def update(
         self,
         *,
         cmap: ColormapType | _void = _void,
@@ -98,7 +98,10 @@ def _normalize_image(image):
     elif img.ndim == 3:
         nchannels = img.shape[2]
         if nchannels not in (3, 4):
-            raise ValueError("If 3D array is given, the last dimension must be 3 or 4, " f"got shape {img.shape}.")
+            raise ValueError(
+                "If 3D array is given, the last dimension must be 3 or 4, "
+                f"got shape {img.shape}."
+            )
     else:
         raise ValueError(f"Only 2D or 3D arrays are allowed, got {img.ndim}")
     return img

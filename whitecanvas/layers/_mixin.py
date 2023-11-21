@@ -109,13 +109,25 @@ class FaceNamespace(LayerNamespace[_L]):
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
 
-    def setup(
+    def update(
         self,
         *,
         color: ColorType | _Void = _void,
         pattern: FacePattern | str | _Void = _void,
         alpha: float | _Void = _void,
     ) -> _L:
+        """
+        Update the face properties.
+
+        Parameters
+        ----------
+        color : ColorType, optional
+            Color of the face.
+        pattern : FacePattern, optional
+            Fill pattern of the face.
+        alpha : float, optional
+            Alpha value of the face.
+        """
         if color is not _void:
             self.color = color
         if pattern is not _void:
@@ -162,7 +174,7 @@ class EdgeNamespace(LayerNamespace[_L]):
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
 
-    def setup(
+    def update(
         self,
         *,
         color: ColorType | _Void = _void,
@@ -219,7 +231,7 @@ class LineMixin(PrimitiveLayer[_HasEdges]):
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
 
-    def setup(
+    def update(
         self,
         *,
         color: ColorType | _Void = _void,

@@ -15,6 +15,8 @@ _void = _Void()
 
 
 class Errorbars(MultiLines):
+    """Errorbars layer (parallel lines with caps)."""
+
     def __init__(
         self,
         t: ArrayLike,
@@ -54,7 +56,7 @@ class Errorbars(MultiLines):
             data, name=name, color=color, width=width, style=style,
             antialias=antialias, backend=backend,
         )  # fmt: skip
-        self.setup(
+        self.update(
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
@@ -116,7 +118,7 @@ class Errorbars(MultiLines):
     # def antialias(self, antialias: bool):
     #     self._backend._plt_set_antialias(antialias)
 
-    def setup(
+    def update(
         self,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,

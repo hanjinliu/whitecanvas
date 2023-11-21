@@ -62,7 +62,33 @@ class Bars(FaceEdgeMixin[BarProtocol]):
         self._bar_width = bar_width
         self.name = name if name is not None else "Bars"
         self._orient = orient
-        self.face.setup(color=color, alpha=alpha, pattern=pattern)
+        self.face.update(color=color, alpha=alpha, pattern=pattern)
+
+    @classmethod
+    def from_histogram(
+        cls,
+        data: ArrayLike,
+        *,
+        bins: int | ArrayLike = 10,
+        density: bool = False,
+        range: tuple[float, float] | None = None,
+        orient: Literal["vertical", "horizontal"] = "vertical",
+        bar_width: float = 0.8,
+        name: str | None = None,
+        color: ColorType = "blue",
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+        backend: Backend | str | None = None,
+    ):
+        """Construct a bar plot from a histogram."""
+        data = as_array_1d(data)
+        counts, edges = np.histogram(data, bins, density=density, range=range)
+        centers = (edges[:-1] + edges[1:]) / 2
+        width = edges[1] - edges[0]
+        return Bars(
+            centers, counts, bar_width=width, name=name, color=color, alpha=alpha,
+            orient=orient, bar_width=bar_width, pattern=pattern, backend=backend,
+        )  # fmt: skip
 
     @property
     def data(self) -> XYYData:

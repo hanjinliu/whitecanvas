@@ -247,15 +247,31 @@ class CanvasBase(ABC):
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars:
-        data = as_array_1d(data)
         name = self._coerce_name("histogram", name)
-        counts, edges = np.histogram(data, bins, density=density, range=range)
-        centers = (edges[:-1] + edges[1:]) / 2
-        width = edges[1] - edges[0]
         color = self._generate_colors(color)
-        layer = _l.Bars(
-            centers, counts, bar_width=width, name=name, color=color, alpha=alpha,
-            pattern=pattern, backend=self._get_backend(),
+        layer = _l.Bars.from_histogram(
+            data, bins=bins, range=range, density=density, name=name, color=color,
+            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_infline(
+        self,
+        pos: tuple[float, float] = (0, 0),
+        angle: float = 0.0,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
+    ):
+        name = self._coerce_name(_l.InfLine, name)
+        color = self._generate_colors(color)
+        layer = _l.InfLine(
+            pos, angle, name=name, color=color,
+            width=width, style=style, antialias=antialias,
+            backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -263,6 +279,7 @@ class CanvasBase(ABC):
         self,
         model: Callable[..., NDArray[np.floating]],
         params: dict[str, Any] = {},
+        *,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
         color: ColorType | None = None,

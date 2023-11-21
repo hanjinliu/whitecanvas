@@ -40,7 +40,7 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
         xdata, ydata = normalize_xy(xdata, ydata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
-        self.setup(
+        self.update(
             symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha
         )  # fmt: skip
 
@@ -84,7 +84,7 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
     def size(self, size: float):
         self._backend._plt_set_symbol_size(size)
 
-    def setup(
+    def update(
         self,
         *,
         symbol: Symbol | str | _Void = _void,

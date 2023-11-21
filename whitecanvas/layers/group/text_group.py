@@ -193,7 +193,7 @@ class TextGroup(ListLayerGroup):
         for tl, v in zip(self._children, ffs):
             tl.fontfamily = v
 
-    def setup(
+    def update(
         self,
         *,
         color: ColorType | Sequence[ColorType] | _Void = _void,

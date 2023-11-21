@@ -55,7 +55,7 @@ class FaceNamespace(LayerNamespace[_L]):
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
 
-    def setup(
+    def update(
         self,
         color: ColorType | _Void = _void,
         pattern: FacePattern | str | _Void = _void,
@@ -107,7 +107,7 @@ class EdgeNamespace(LayerNamespace[_L]):
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
 
-    def setup(
+    def update(
         self,
         color: ColorType | _Void = _void,
         style: LineStyle | str | _Void = _void,

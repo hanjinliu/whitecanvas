@@ -52,7 +52,7 @@ class Line(MonoLine):
         xdata, ydata = normalize_xy(xdata, ydata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
-        self.setup(color=color, width=width, style=style, antialias=antialias)
+        self.update(color=color, width=width, style=style, antialias=antialias)
 
     @property
     def data(self) -> XYData:
@@ -260,7 +260,7 @@ class MultiLines(PrimitiveLayer[MultiLinesProtocol]):
         data_normed = _norm_data(data)
         self._backend = self._create_backend(Backend(backend), data_normed)
         self.name = name if name is not None else type(self).__name__
-        self.setup(color=color, width=width, style=style, antialias=antialias)
+        self.update(color=color, width=width, style=style, antialias=antialias)
 
     @property
     def data(self) -> XYData:
@@ -320,7 +320,7 @@ class MultiLines(PrimitiveLayer[MultiLinesProtocol]):
         color[:, 3] = value
         self.color = color
 
-    def setup(
+    def update(
         self,
         *,
         color: ColorType | _Void = _void,

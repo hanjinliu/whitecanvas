@@ -39,7 +39,7 @@ class InfCurve(MonoLine):
         ydata = model(xdata, **params)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "InfCurve"
-        self.setup(
+        self.update(
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias
         )  # fmt: skip
@@ -115,7 +115,7 @@ class InfLine(MonoLine):
         self._pos = pos
         self._backend = self._create_backend(Backend(backend), np.zeros(1), np.zeros(1))
         self.name = name if name is not None else "InfCurve"
-        self.setup(
+        self.update(
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias,
         )  # fmt: skip

@@ -1,14 +1,26 @@
 from __future__ import annotations
 
-from whitecanvas.types import _Void
-from whitecanvas.layers.primitive import Line, Band
+from whitecanvas.types import _Void, Symbol, ColorType, FacePattern
+from whitecanvas.layers.primitive import Line, Band, Markers
 from whitecanvas.layers._base import XYData
 from whitecanvas.layers.group._collections import ListLayerGroup
 
+_void = _Void()
+
 
 class LineBand(ListLayerGroup):
-    def __init__(self, line: Line, band: Band, name: str | None = None):
-        super().__init__([line, band], name=name)
+    """Group of Line, Band and Markers."""
+
+    def __init__(
+        self,
+        line: Line,
+        band: Band,
+        markers: Markers | None = None,
+        name: str | None = None,
+    ):
+        if markers is None:
+            markers = Markers([], [], name="Markers")
+        super().__init__([line, band, markers], name=name)
 
     @property
     def line(self) -> Line:
@@ -21,6 +33,27 @@ class LineBand(ListLayerGroup):
         return self._children[1]
 
     @property
+    def markers(self) -> Markers:
+        """The markers layer."""
+        return self._children[2]
+
+    @property
     def data(self) -> XYData:
         """Current data of the central line."""
         return self.line.data
+
+    def with_markers(
+        self,
+        symbol: Symbol | str = Symbol.CIRCLE,
+        size: float = 10,
+        color: ColorType | _Void = _void,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> LineBand:
+        """Add markers at the data points."""
+        if color is _void:
+            color = self.line.color
+        self.markers.update(
+            symbol=symbol, size=size, color=color, alpha=alpha, pattern=pattern
+        )
+        return self

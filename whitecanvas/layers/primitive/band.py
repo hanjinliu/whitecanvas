@@ -39,7 +39,7 @@ class Band(FaceEdgeMixin[BandProtocol]):
         self._backend = self._create_backend(Backend(backend), x, y0, y1, orient)
         self.name = name if name is not None else "Band"
         self._orient = orient
-        self.face.setup(color=color, alpha=alpha, pattern=pattern)
+        self.face.update(color=color, alpha=alpha, pattern=pattern)
 
     @property
     def data(self) -> XYYData:

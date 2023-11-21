@@ -176,13 +176,11 @@ class _AnnotatedLayerBase(ListLayerGroup):
             len_higher = len_lower
         x, y = self.data
         self.xerr.set_data(y, x - len_lower, x + len_higher)
-        return self.setup_xerr(
-            color=color,
-            width=width,
-            style=style,
-            antialias=antialias,
+        self.xerr.update(
+            color=color, width=width, style=style, antialias=antialias,
             capsize=capsize,
-        )
+        )  # fmt: skip
+        return self
 
     def with_yerr(
         self,
@@ -209,10 +207,11 @@ class _AnnotatedLayerBase(ListLayerGroup):
             len_higher = len_lower
         x, y = self.data
         self.yerr.set_data(x, y - len_lower, y + len_higher)
-        return self.setup_yerr(
-            color=color, width=width, style=style,
-            antialias=antialias, capsize=capsize
+        self.yerr.update(
+            color=color, width=width, style=style, antialias=antialias,
+            capsize=capsize
         )  # fmt: skip
+        return self
 
     def with_text(
         self,
@@ -260,18 +259,17 @@ class _AnnotatedLayerBase(ListLayerGroup):
 
         xdata, ydata = self.data
         dx, dy = _offset._asarray()
-        texts = TextGroup.from_strings(
-            xdata + dx, ydata + dy, strings, color=color, size=size, rotation=rotation,
-            anchor=anchor, fontfamily=fontfamily, backend=self._backend_name,
-        )  # fmt: skip
-        return self.__class__(
-            self._children[0],
-            self.xerr,
-            self.yerr,
-            texts=texts,
-            name=self.name,
-            offset=_offset,
+        self.texts.string = strings
+        self.texts.set_pos(xdata + dx, ydata + dy)
+        self.texts.update(
+            color=color,
+            size=size,
+            rotation=rotation,
+            anchor=anchor,
+            fontfamily=fontfamily,
+            backend=self._backend_name,
         )
+        return self
 
 
 class AnnotatedLine(_AnnotatedLayerBase):
@@ -279,20 +277,6 @@ class AnnotatedLine(_AnnotatedLayerBase):
     def line(self) -> Line:
         """The line layer."""
         return self._children[0]
-
-    def setup_line(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool | _Void = _void,
-    ):
-        self.line.setup(
-            color=color, width=width, style=style,
-            antialias=antialias
-        )  # fmt: skip
-        return self
 
 
 class AnnotatedMarkers(_AnnotatedLayerBase):

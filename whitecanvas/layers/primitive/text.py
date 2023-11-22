@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 import weakref
-from numpy.typing import ArrayLike
+
+import numpy as np
+from numpy.typing import NDArray
 
 from whitecanvas.protocols import TextProtocol
 from whitecanvas.layers._base import PrimitiveLayer
@@ -94,9 +96,9 @@ class Text(PrimitiveLayer[TextProtocol]):
         self._backend._plt_set_text_anchor(Alignment(anc))
 
     @property
-    def pos(self):
+    def pos(self) -> NDArray[np.floating]:
         """Position of the text."""
-        return self._backend._plt_get_text_position()
+        return np.asarray(self._backend._plt_get_text_position())
 
     @pos.setter
     def pos(self, position: tuple[float, float]):

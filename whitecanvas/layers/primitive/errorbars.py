@@ -6,6 +6,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.layers._base import XYYData
 from whitecanvas.layers.primitive.line import MultiLine
+from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, _Void
 from whitecanvas.utils.normalize import as_array_1d, norm_color
@@ -60,6 +61,7 @@ class Errorbars(MultiLine):
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
+        self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, orient, xpad=capsize / 2)
 
     @property
     def data(self) -> XYYData:
@@ -91,11 +93,17 @@ class Errorbars(MultiLine):
             raise ValueError(f"Unknown orientation {self._orient!r}")
         super().set_data(data)
         self._data = XYYData(x0, y0, y1)
+        self._x_hint, self._y_hint = xyy_size_hint(x0, y0, y1, self.orient)
 
     @property
     def ndata(self) -> int:
         """Number of data points."""
         return self.data[0].size
+
+    @property
+    def orient(self) -> Literal["vertical", "horizontal"]:
+        """Orientation of the error bars."""
+        return self._orient
 
     @property
     def capsize(self) -> float:

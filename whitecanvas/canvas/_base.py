@@ -111,15 +111,65 @@ class CanvasBase(ABC):
             ratio = float(ratio)
         self._canvas()._plt_set_aspect_ratio(ratio)
 
+    def bbox_hint(self) -> NDArray[np.float64]:
+        ar = np.stack([layer.bbox_hint() for layer in self.layers], axis=0)
+        xmin = np.min(ar[:, 0])
+        xmax = np.max(ar[:, 1])
+        ymin = np.min(ar[:, 2])
+        ymax = np.max(ar[:, 3])
+        return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
+
+    def autoscale(
+        self,
+        xpad: float | tuple[float, float] | None = None,
+        ypad: float | tuple[float, float] | None = None,
+    ):
+        xmin, xmax, ymin, ymax = self.bbox_hint()
+        x0, x1 = self.x.lim
+        y0, y1 = self.y.lim
+        if np.isnan(xmin):
+            xmin = x0
+        if np.isnan(xmax):
+            xmax = x1
+        if np.isnan(ymin):
+            ymin = y0
+        if np.isnan(ymax):
+            ymax = y1
+        if xpad is not None:
+            xrange = xmax - xmin
+            if isinstance(xpad, (int, float, np.number)):
+                dx0 = dx1 = xpad * xrange
+            else:
+                dx0, dx1 = xpad[0] * xrange, xpad[1] * xrange
+            xmin -= dx0
+            xmax += dx1
+        if ypad is not None:
+            yrange = ymax - ymin
+            if isinstance(ypad, (int, float, np.number)):
+                dy0 = dy1 = ypad * yrange
+            else:
+                dy0, dy1 = ypad[0] * yrange, ypad[1] * yrange
+            ymin -= dy0
+            ymax += dy1
+        if xmax - xmin < 1e-6:
+            xmin -= 0.05
+            xmax += 0.05
+        if ymax - ymin < 1e-6:
+            ymin -= 0.05
+            ymax += 0.05
+        self.x.lim = xmin, xmax
+        self.y.lim = ymin, ymax
+        return xmin, xmax, ymin, ymax
+
     @property
     def visible(self):
         """Show the canvas."""
-        self._canvas()._plt_set_visible(True)
+        return self._canvas()._plt_get_visible()
 
     @visible.setter
-    def visible(self):
+    def visible(self, visible):
         """Hide the canvas."""
-        self._canvas()._plt_set_visible(False)
+        self._canvas()._plt_set_visible(visible)
 
     @property
     def lims(self) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -129,8 +179,10 @@ class CanvasBase(ABC):
     @lims.setter
     def lims(self, lims: tuple[tuple[float, float], tuple[float, float]]):
         xlim, ylim = lims
-        self.x.lim = xlim
-        self.y.lim = ylim
+        with self.lims_changed.blocked():
+            self.x.lim = xlim
+            self.y.lim = ylim
+        self.lims_changed.emit((self.x.lim, self.y.lim))
 
     @overload
     def add_line(
@@ -567,6 +619,34 @@ class CanvasBase(ABC):
         for l in _iter_layers(layer):
             _canvas._plt_add_layer(l._backend)
             l._connect_canvas(self)
+        # autoscale
+        x0, x1, y0, y1 = layer.bbox_hint()
+        xmin, xmax = self.x.lim
+        ymin, ymax = self.y.lim
+        xmin = np.min([x0, xmin])
+        xmax = np.max([x1, xmax])
+        ymin = np.min([y0, ymin])
+        ymax = np.max([y1, ymax])
+        # this happens when there is <= 1 data
+        if np.isnan(xmax) or np.isnan(xmin):
+            xmin, xmax = self.x.lim
+        elif xmax - xmin < 1e-6:
+            xmin -= 0.05
+            xmax += 0.05
+        else:
+            dx = (xmax - xmin) * 0.05
+            xmin -= dx
+            xmax += dx
+        if np.isnan(ymax) or np.isnan(ymin):
+            ymin, ymax = self.y.lim
+        elif ymax - ymin < 1e-6:
+            ymin -= 0.05
+            ymax += 0.05
+        else:
+            dy = (ymax - ymin) * 0.05
+            ymin -= dy
+            ymax += dy
+        self.lims = (xmin, xmax), (ymin, ymax)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):
         if self._is_grouping:

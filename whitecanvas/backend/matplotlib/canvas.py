@@ -10,9 +10,9 @@ from matplotlib.backend_bases import (
 )
 from matplotlib.lines import Line2D
 from matplotlib.collections import Collection
-from matplotlib.container import Container
 from matplotlib.text import Text as mplText
 from matplotlib.image import AxesImage
+from .bars import Bars
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
@@ -72,8 +72,10 @@ class Canvas:
         if isinstance(layer, Line2D):
             self._axes.add_line(layer)
         elif isinstance(layer, Collection):
-            self._axes.add_collection(layer)
-        elif isinstance(layer, Container):
+            self._axes.add_collection(layer, autolim=False)
+        elif isinstance(layer, Bars):
+            for child in layer.patches:
+                self._axes.add_patch(child)
             self._axes.add_container(layer)
         elif isinstance(layer, mplText):
             self._axes._add_text(layer)
@@ -81,7 +83,6 @@ class Canvas:
             self._axes.add_image(layer)
         else:
             raise NotImplementedError(f"{layer}")
-        self._axes.autoscale_view()  # TODO: remove this line
 
     def _plt_remove_layer(self, layer):
         """Remove layer from the canvas"""

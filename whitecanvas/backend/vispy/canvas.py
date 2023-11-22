@@ -168,7 +168,7 @@ class CanvasGrid:
         self._scene.create_native()
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int):
-        viewbox = self._grid.add_view(row, col, rowspan, colspan)
+        viewbox: ViewBox = self._grid.add_view(row, col, rowspan, colspan)
         canvas = Canvas(viewbox)
         viewbox.unfreeze()
         viewbox._canvas_ref = weakref.ref(canvas)

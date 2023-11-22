@@ -1,14 +1,14 @@
 from __future__ import annotations
 from typing import Literal
 
-import numpy as np
 from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BandProtocol
 from whitecanvas.layers._base import XYYData
 from whitecanvas.layers._mixin import FaceEdgeMixin
+from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import FacePattern, ColorType, _Void
+from whitecanvas.types import FacePattern, ColorType
 from whitecanvas.utils.normalize import as_array_1d
 
 
@@ -38,6 +38,7 @@ class Band(FaceEdgeMixin[BandProtocol]):
         self.name = name if name is not None else "Band"
         self._orient = orient
         self.face.update(color=color, alpha=alpha, pattern=pattern)
+        self._x_hint, self._y_hint = xyy_size_hint(x, y0, y1, orient)
 
     @property
     def data(self) -> XYYData:
@@ -79,3 +80,4 @@ class Band(FaceEdgeMixin[BandProtocol]):
             self._backend._plt_set_horizontal_data(t0, y0, y1)
         else:
             raise ValueError(f"orient must be 'vertical' or 'horizontal'")
+        self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)

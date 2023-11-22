@@ -61,7 +61,7 @@ class Bars(BarContainer):
         return np.stack([patch.get_facecolor() for patch in self.patches], axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color)
+        color = as_color_array(color, size=len(self.patches))
         for patch, c in zip(self.patches, color):
             patch.set_facecolor(c)
 
@@ -80,7 +80,7 @@ class Bars(BarContainer):
         return np.stack([patch.get_edgecolor() for patch in self.patches], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color)
+        color = as_color_array(color, size=len(self.patches))
         for patch, c in zip(self.patches, color):
             patch.set_edgecolor(c)
 

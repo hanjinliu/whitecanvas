@@ -5,11 +5,12 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BarProtocol
-from whitecanvas.layers._base import PrimitiveLayer, XYYData
+from whitecanvas.layers._base import XYYData
 from whitecanvas.layers._mixin import AggFaceEdgeMixin
+from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import FacePattern, ColorType, _Void, Alignment
-from whitecanvas.utils.normalize import as_array_1d, norm_color
+from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -29,6 +30,8 @@ def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
             "Expected all arrays to have the same size, "
             f"got {t0.size}, {e0.size}, {e1.size}"
         )
+    x_hint, y_hint = xyy_size_hint(t0, e0, e1, orient, bar_width / 2)
+
     if orient == "vertical":
         dx = bar_width / 2
         x0, x1 = t0 - dx, t0 + dx
@@ -39,7 +42,7 @@ def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
         y0, y1 = t0 - dy, t0 + dy
     else:
         raise ValueError(f"orient must be 'vertical' or 'horizontal'")
-    return x0, x1, y0, y1
+    return (x0, x1, y0, y1), x_hint, y_hint
 
 
 class Bars(AggFaceEdgeMixin[BarProtocol]):
@@ -57,12 +60,13 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
-        xxyy = _norm_bar_inputs(x, bottom, top, orient, bar_width)
+        xxyy, xhint, yhint = _norm_bar_inputs(x, bottom, top, orient, bar_width)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._bar_width = bar_width
         self.name = name if name is not None else "Bars"
         self._orient = orient
         self.face.update(color=color, alpha=alpha, pattern=pattern)
+        self._x_hint, self._y_hint = xhint, yhint
 
     @classmethod
     def from_histogram(
@@ -115,8 +119,11 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
             top = data.y1
         if bottom is None:
             bottom = data.y0
-        xxyy = _norm_bar_inputs(x, top, bottom, self._orient, self._bar_width)
+        xxyy, xhint, yhint = _norm_bar_inputs(
+            x, top, bottom, self._orient, self._bar_width
+        )
         self._backend._plt_set_data(*xxyy)
+        self._x_hint, self._y_hint = xhint, yhint
 
     @property
     def bar_width(self) -> float:

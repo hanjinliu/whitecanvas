@@ -36,9 +36,12 @@ class Image(PrimitiveLayer[ImageProtocol]):
         clim: tuple[float | None, float | None] | None = None,
         backend: Backend | str | None = None,
     ) -> None:
-        self._backend = self._create_backend(Backend(backend), _normalize_image(image))
+        img = _normalize_image(image)
+        self._backend = self._create_backend(Backend(backend), img)
         self.name = name if name is not None else "Image"
         self.update(cmap=cmap, clim=clim)
+        self._x_hint = -1.0, float(img.shape[0])
+        self._y_hint = -1.0, float(img.shape[1])
 
     @property
     def data(self) -> NDArray[np.number]:

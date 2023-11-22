@@ -53,6 +53,8 @@ class Line(MonoLine):
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
         self.update(color=color, width=width, style=style, antialias=antialias)
+        self._x_hint = xdata.min(), xdata.max()
+        self._y_hint = ydata.min(), ydata.max()
 
     @property
     def data(self) -> XYData:
@@ -75,6 +77,8 @@ class Line(MonoLine):
                 f"got {x0.size} and {y0.size}"
             )
         self._backend._plt_set_data(x0, y0)
+        self._x_hint = x0.min(), x0.max()
+        self._y_hint = y0.min(), y0.max()
 
     def with_markers(
         self,
@@ -257,7 +261,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         antialias: bool = False,
         backend: Backend | str | None = None,
     ):
-        data_normed = _norm_data(data)
+        data_normed, self._x_hint, self._y_hint = _norm_data(data)
         self._backend = self._create_backend(Backend(backend), data_normed)
         self.name = name if name is not None else type(self).__name__
         self.update(color=color, width=width, style=style, antialias=antialias)
@@ -268,7 +272,9 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         return XYData(*self._backend._plt_get_data())
 
     def set_data(self, data: list[ArrayLike]):
-        self._backend._plt_set_data(_norm_data(data))
+        data, x_hint, y_hint = _norm_data(data)
+        self._backend._plt_set_data(data)
+        self._x_hint, self._y_hint = x_hint, y_hint
 
     @property
     def color(self) -> NDArray[np.floating]:
@@ -353,6 +359,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
 
 def _norm_data(data: list[ArrayLike]) -> NDArray[np.number]:
     data_normed: list[NDArray[np.number]] = []
+    xmins, xmaxs, ymins, ymaxs = [], [], [], []
     for each in data:
         arr = np.asarray(each)
         if arr.dtype.kind not in "uif":
@@ -360,4 +367,13 @@ def _norm_data(data: list[ArrayLike]) -> NDArray[np.number]:
         if arr.ndim != 2 or arr.shape[1] != 2:
             raise ValueError(f"Expected data to be (N, 2), got {arr.shape}")
         data_normed.append(arr)
-    return data_normed
+        xmins.append(arr[:, 0].min())
+        xmaxs.append(arr[:, 0].max())
+        ymins.append(arr[:, 1].min())
+        ymaxs.append(arr[:, 1].max())
+    if len(data) > 0:
+        xhint = min(xmins), max(xmaxs)
+        yhint = min(ymins), max(ymaxs)
+    else:
+        xhint = yhint = None
+    return data_normed, xhint, yhint

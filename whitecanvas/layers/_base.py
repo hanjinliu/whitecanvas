@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import Generic, Iterator, TypeVar, NamedTuple, TYPE_CHECKING
 from psygnal import Signal, SignalGroup
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 from whitecanvas.protocols import BaseProtocol
 from whitecanvas.backend import Backend
 
@@ -18,6 +18,7 @@ _L = TypeVar("_L", bound="Layer")
 class Layer(ABC):
     _layer_grouped = Signal(object)  # (group)
     _name: str
+    _x_hint = _y_hint = None
 
     @abstractproperty
     def visible(self) -> bool:
@@ -65,6 +66,10 @@ class Layer(ABC):
         """If needed, do something when layer is removed from a canvas."""
         self._layer_grouped.disconnect(canvas._group_layers)
 
+    @abstractmethod
+    def bbox_hint(self) -> NDArray[np.float64]:
+        """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
+
 
 class PrimitiveLayer(Layer, Generic[_P]):
     """Layers that are composed of a single component."""
@@ -96,6 +101,18 @@ class PrimitiveLayer(Layer, Generic[_P]):
         raise TypeError(
             f"Cannot create a {backend.name} backend for {type(self).__name__}"
         )
+
+    def bbox_hint(self) -> NDArray[np.float64]:
+        """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
+        if self._x_hint is None:
+            _x = (np.nan, np.nan)
+        else:
+            _x = self._x_hint
+        if self._y_hint is None:
+            _y = (np.nan, np.nan)
+        else:
+            _y = self._y_hint
+        return np.array(_x + _y, dtype=np.float64)
 
 
 class XYDataLayer(PrimitiveLayer[_P]):
@@ -156,10 +173,27 @@ class LayerGroup(Layer):
             return child._backend_name
         raise RuntimeError(f"No backend name found for {self!r}")
 
+    def bbox_hint(self) -> NDArray[np.float64]:
+        """
+        Return the bounding box hint (xmin, xmax, ymin, ymax) of this group.
+
+        Note that unless children notifies the change of their bounding box hint, bbox
+        hint needs recalculation.
+        """
+        ar = np.stack([child.bbox_hint() for child in self.iter_children()], axis=1)
+        xmin = np.nanmin(ar[0, :])
+        xmax = np.nanmax(ar[1, :])
+        ymin = np.nanmin(ar[2, :])
+        ymax = np.nanmax(ar[3, :])
+        return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
+
 
 class XYData(NamedTuple):
     x: np.ndarray
     y: np.ndarray
+
+    def concat(self) -> np.ndarray:
+        return np.stack([self.x, self.y], axis=1)
 
 
 class XYYData(NamedTuple):

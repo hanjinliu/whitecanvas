@@ -6,7 +6,7 @@ from vispy import scene
 import numpy as np
 
 if TYPE_CHECKING:
-    from vispy.scene.cameras import BaseCamera
+    from vispy.scene.cameras import PanZoomCamera
     from vispy.visuals import TextVisual
 
 
@@ -54,21 +54,25 @@ class Axis(scene.AxisWidget):
     def _plt_viewbox(self) -> scene.ViewBox:
         return self._linked_view
 
-    def _plt_camera(self) -> BaseCamera:
+    def _plt_camera(self) -> PanZoomCamera:
         return self._plt_viewbox().camera
 
     def _plt_get_limits(self) -> tuple[float, float]:
+        rect = self._plt_camera().rect
         if self._dim == 0:  # y
-            return self._plt_camera()._xlim
+            return rect.bottom, rect.top
         else:
-            return self._plt_camera()._ylim
+            return rect.left, rect.right
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         camera = self._plt_camera()
+        rect = camera.rect
         if self._dim == 0:  # y
-            camera.set_range(x=camera._xlim, y=limits, margin=0)
+            camera.set_range(x=(rect.left, rect.right), y=limits, margin=0)
         else:
-            camera.set_range(x=limits, y=camera._ylim, margin=0)
+            camera.set_range(x=limits, y=(rect.bottom, rect.top), margin=0)
+        camera.set_default_state()
+        camera.reset()
 
     def _plt_get_color(self):
         return self.axis.axis_color
@@ -92,17 +96,18 @@ class Ticks:
         return self._axis().axis._text
 
     def _plt_get_text(self) -> list[tuple[float, str]]:
-        axis = self._axis()
+        axis = self._axis().axis
         return list(axis._ticks.pos), self._text.text
 
     def _plt_set_text(self, ticks: list[tuple[float, str]]):
         raise NotImplementedError
 
     def _plt_get_color(self):
-        return self._text.color
+        return np.array(self._text.color)
 
     def _plt_set_color(self, color):
         self._text.color = color
+        self._axis().axis.tick_color = color
 
     def _plt_get_visible(self) -> bool:
         return self._axis().visible

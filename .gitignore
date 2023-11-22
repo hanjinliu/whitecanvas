@@ -1,5 +1,6 @@
 .vscode/
-bokeh/main.py
+main.py
+*.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

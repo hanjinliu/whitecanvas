@@ -1,7 +1,7 @@
 from ._base import PrimitiveLayer, Layer, LayerGroup
 from .primitive import (
     Line,
-    MultiLines,
+    MultiLine,
     InfCurve,
     InfLine,
     Markers,
@@ -17,7 +17,7 @@ __all__ = [
     "PrimitiveLayer",
     "LayerGroup",
     "Line",
-    "MultiLines",
+    "MultiLine",
     "Markers",
     "Bars",
     "Errorbars",

@@ -53,7 +53,6 @@ class Symbol(_strEnum):
     DOT = "."
     VBAR = "|"
     HBAR = "_"
-    NONE = " "
 
 
 class Modifier(_strEnum):

@@ -2,7 +2,7 @@ from typing import TypeVar, Callable
 from .layer_protocols import (
     BaseProtocol,
     LineProtocol,
-    MultiLinesProtocol,
+    MultiLineProtocol,
     MarkersProtocol,
     BarProtocol,
     RangeDataProtocol,
@@ -22,7 +22,7 @@ from .canvas_protocol import (
 __all__ = [
     "BaseProtocol",
     "LineProtocol",
-    "MultiLinesProtocol",
+    "MultiLineProtocol",
     "MarkersProtocol",
     "BarProtocol",
     "BandProtocol",

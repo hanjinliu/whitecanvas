@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from qtpy import QtGui
 import pyqtgraph as pg
-from whitecanvas.protocols import LineProtocol, MultiLinesProtocol, check_protocol
+from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 from ._qt_utils import array_to_qcolor, from_qt_line_style, to_qt_line_style
 
@@ -70,8 +70,8 @@ class MonoLine(pg.PlotCurveItem):
         self.update()
 
 
-@check_protocol(MultiLinesProtocol)
-class MultiLines(pg.ItemGroup):
+@check_protocol(MultiLineProtocol)
+class MultiLine(pg.ItemGroup):
     def __init__(self, data: list[NDArray[np.floating]]):
         super().__init__()
         pen = QtGui.QPen(QtGui.QColor(255, 255, 255))

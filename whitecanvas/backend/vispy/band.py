@@ -21,10 +21,12 @@ class Band(visuals.Polygon):
             raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         verts = np.concatenate([fw, bw], axis=0)
         self._edge_style = LineStyle.SOLID
-        super().__init__(verts)
+        super().__init__(verts, border_width=0)
+        self.unfreeze()
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
+        self.freeze()
 
     ##### LayerProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -71,7 +73,7 @@ class Band(visuals.Polygon):
 
     ##### HasFace protocol #####
     def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return self.color
+        return np.array(self.color, dtype=np.float32)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         self.color = color
@@ -84,7 +86,7 @@ class Band(visuals.Polygon):
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return self.border_color
+        return np.array(self.border_color, dtype=np.float32)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         self.border_color = color

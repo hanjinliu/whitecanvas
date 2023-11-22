@@ -163,7 +163,7 @@ _VISPY_BUTTON_MAP = {
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
     def __init__(self, heights: list[int], widths: list[int]):
-        self._scene = SceneCanvas(keys="interactive")
+        self._scene = SceneCanvasExt(keys="interactive")
         self._grid: Grid = self._scene.central_widget.add_grid()
         self._scene.create_native()
 

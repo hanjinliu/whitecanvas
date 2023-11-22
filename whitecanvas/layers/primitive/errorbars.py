@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.layers._base import XYYData
-from whitecanvas.layers.primitive.line import MultiLines
+from whitecanvas.layers.primitive.line import MultiLine
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, _Void
 from whitecanvas.utils.normalize import as_array_1d, norm_color
@@ -14,7 +14,7 @@ from whitecanvas.utils.normalize import as_array_1d, norm_color
 _void = _Void()
 
 
-class Errorbars(MultiLines):
+class Errorbars(MultiLine):
     """Errorbars layer (parallel lines with caps)."""
 
     def __init__(

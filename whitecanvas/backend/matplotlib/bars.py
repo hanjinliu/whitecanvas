@@ -7,6 +7,7 @@ from matplotlib.container import BarContainer
 from matplotlib.patches import Rectangle
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import FacePattern, LineStyle
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(BarProtocol)
@@ -48,12 +49,6 @@ class Bars(BarContainer):
         return x0, x1, y0, y1
 
     def _plt_set_data(self, x0, x1, y0, y1):
-        n = len(self.patches)
-        ninput = len(x0)
-        if n != ninput:
-            raise ValueError(
-                f"Existing data has {n} bars but trying to set {ninput} bars."
-            )
         for patch, x0i, x1i, y0i, y1i in zip(self.patches, x0, x1, y0, y1):
             patch.set_x(x0i)
             patch.set_width(x1i - x0i)
@@ -63,43 +58,46 @@ class Bars(BarContainer):
     ##### HasFace protocol #####
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return self.patches[0].get_facecolor()
+        return np.stack([patch.get_facecolor() for patch in self.patches], axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
-        for patch in self.patches:
-            patch.set_facecolor(color)
+        color = as_color_array(color)
+        for patch, c in zip(self.patches, color):
+            patch.set_facecolor(c)
 
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern(self.patches[0].get_hatch())
+    def _plt_get_face_pattern(self) -> list[FacePattern]:
+        return [FacePattern(patch.get_hatch()) for patch in self.patches]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        if pattern is FacePattern.SOLID:
-            ptn = None
-        else:
-            ptn = pattern.value
-        for patch in self.patches:
-            patch.set_hatch(ptn)
+    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+        if isinstance(pattern, FacePattern):
+            pattern = [pattern] * len(self.patches)
+        for pat, patch in zip(pattern, self.patches):
+            patch.set_hatch(None if pat is FacePattern.SOLID else pat.value)
 
     ##### HasEdges protocol #####
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return self.patches[0].get_edgecolor()
+        return np.stack([patch.get_edgecolor() for patch in self.patches], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        for patch in self.patches:
-            patch.set_edgecolor(color)
+        color = as_color_array(color)
+        for patch, c in zip(self.patches, color):
+            patch.set_edgecolor(c)
 
-    def _plt_get_edge_style(self) -> str:
-        return self.patches[0].get_linestyle()
+    def _plt_get_edge_style(self) -> list[LineStyle]:
+        return [LineStyle(patch.get_linestyle()) for patch in self.patches]
 
-    def _plt_set_edge_style(self, style: LineStyle):
-        s = style.value
-        for patch in self.patches:
+    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
+        if isinstance(style, LineStyle):
+            style = [style] * len(self.patches)
+        for patch, s in zip(self.patches, style):
             patch.set_linestyle(s)
 
-    def _plt_get_edge_width(self) -> float:
-        return self.patches[0].get_linewidth()
+    def _plt_get_edge_width(self) -> NDArray[np.floating]:
+        return np.array([patch.get_linewidth() for patch in self.patches])
 
-    def _plt_set_edge_width(self, width: float):
-        for patch in self.patches:
-            patch.set_linewidth(width)
+    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
+        if np.isscalar(width):
+            width = [width] * len(self.patches)
+        for patch, w in zip(self.patches, width):
+            patch.set_linewidth(w)

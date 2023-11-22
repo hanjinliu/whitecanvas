@@ -119,7 +119,7 @@ class Text(PrimitiveLayer[TextProtocol]):
     @fontfamily.setter
     def fontfamily(self, fontfamily: str):
         if fontfamily is None:
-            fontfamily = get_theme()
+            fontfamily = get_theme().fontfamily
         self._backend._plt_set_text_fontfamily(fontfamily)
 
     def update(

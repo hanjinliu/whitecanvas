@@ -1,4 +1,4 @@
-from .line import Line, MultiLines
+from .line import Line, MultiLine
 from .bars import Bars
 from .markers import Markers
 from .band import Band
@@ -9,7 +9,7 @@ from .image import Image
 
 __all__ = [
     "Line",
-    "MultiLines",
+    "MultiLine",
     "Bars",
     "Markers",
     "Band",

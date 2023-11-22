@@ -58,7 +58,7 @@ class MonoLine(visuals.Line):
 
 
 @check_protocol(LineProtocol)
-class MultiLines(visuals.Compound):
+class MultiLine(visuals.Compound):
     def __init__(self, data: list[NDArray[np.float32]]):
         items = []
         for seg in data:

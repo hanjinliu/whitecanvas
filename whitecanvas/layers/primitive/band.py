@@ -11,8 +11,6 @@ from whitecanvas.backend import Backend
 from whitecanvas.types import FacePattern, ColorType, _Void
 from whitecanvas.utils.normalize import as_array_1d
 
-_void = _Void()
-
 
 class Band(FaceEdgeMixin[BandProtocol]):
     def __init__(

@@ -13,12 +13,12 @@ from bokeh import (
     layouts as bk_layouts,
     plotting as bk_plotting,
 )
+from bokeh.io.state import curstate
 from ._base import BokehLayer
 
 
-def _prep_plot(width=250, height=250):
-    plot = bk_plotting.figure()
-    # plot = bk_plotting.figure(width=width, height=height)
+def _prep_plot(width=400, height=300):
+    plot = bk_plotting.figure(width=width, height=height)
     return plot
 
 
@@ -184,9 +184,16 @@ class CanvasGrid:
 
     def _plt_set_visible(self, visible: bool):
         if visible:
-            bk_plotting.show(self._grid_plot)
-            if self._grid_plot.document is None:
-                bk_plotting.curdoc().add_root(self._grid_plot)
+            if is_notebook():
+
+                def bkapp(doc):
+                    doc.add_root(self._grid_plot)
+
+                bk_plotting.show(bkapp)
+            else:
+                bk_plotting.show(self._grid_plot)
+                if self._grid_plot.document is None:
+                    bk_plotting.curdoc().add_root(self._grid_plot)
         else:
             self._grid_plot.visible = False
 
@@ -213,3 +220,14 @@ class CanvasGrid:
         w, h = self._grid_plot.plot_width, self._grid_plot.plot_height
         img = data.reshape((int(h), int(w), -1))
         return img
+
+
+def is_notebook() -> bool:
+    try:
+        shell = get_ipython().__class__.__name__  # type: ignore
+    except NameError:
+        return False
+    state = curstate()
+    if state.notebook_type is None:
+        return False
+    return shell == 'ZMQInteractiveShell'

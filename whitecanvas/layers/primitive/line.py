@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from whitecanvas.protocols import LineProtocol, MultiLinesProtocol
+from whitecanvas.protocols import LineProtocol, MultiLineProtocol
 from whitecanvas.layers._base import XYData, PrimitiveLayer
 from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
@@ -245,7 +245,7 @@ class Line(MonoLine):
         )
 
 
-class MultiLines(PrimitiveLayer[MultiLinesProtocol]):
+class MultiLine(PrimitiveLayer[MultiLineProtocol]):
     def __init__(
         self,
         data: list[ArrayLike],

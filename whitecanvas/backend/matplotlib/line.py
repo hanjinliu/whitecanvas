@@ -3,7 +3,7 @@ from matplotlib.collections import LineCollection
 import numpy as np
 from numpy.typing import NDArray
 from matplotlib.lines import Line2D
-from whitecanvas.protocols import LineProtocol, MultiLinesProtocol, check_protocol
+from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 
 
@@ -62,8 +62,8 @@ class MonoLine(Line2D):
         self.set_antialiased(antialias)
 
 
-@check_protocol(MultiLinesProtocol)
-class MultiLines(LineCollection):
+@check_protocol(MultiLineProtocol)
+class MultiLine(LineCollection):
     def __init__(self, data: list[NDArray[np.floating]]):
         # data: list of (N, 2)
         super().__init__(data, linewidths=1)

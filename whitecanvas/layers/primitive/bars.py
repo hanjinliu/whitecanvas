@@ -6,9 +6,9 @@ from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer, XYYData
-from whitecanvas.layers._mixin import FaceEdgeMixin
+from whitecanvas.layers._mixin import AggFaceEdgeMixin
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, Alignment
+from whitecanvas.types import FacePattern, ColorType, _Void, Alignment
 from whitecanvas.utils.normalize import as_array_1d, norm_color
 
 if TYPE_CHECKING:
@@ -42,7 +42,7 @@ def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
     return x0, x1, y0, y1
 
 
-class Bars(FaceEdgeMixin[BarProtocol]):
+class Bars(AggFaceEdgeMixin[BarProtocol]):
     def __init__(
         self,
         x: ArrayLike,
@@ -57,7 +57,7 @@ class Bars(FaceEdgeMixin[BarProtocol]):
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
-        xxyy = _norm_bar_inputs(x, top, bottom, orient, bar_width)
+        xxyy = _norm_bar_inputs(x, bottom, top, orient, bar_width)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._bar_width = bar_width
         self.name = name if name is not None else "Bars"

@@ -81,6 +81,21 @@ class HasFaces(Protocol):
 
 
 @runtime_checkable
+class HasMultiFaces(Protocol):
+    def _plt_get_face_color(self) -> NDArray[np.float32]:
+        """Return the face color."""
+
+    def _plt_set_face_color(self, color: NDArray[np.float32]):
+        """Set the face color."""
+
+    def _plt_get_face_pattern(self) -> list[FacePattern]:
+        """Return the face pattern."""
+
+    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+        """Set the face pattern."""
+
+
+@runtime_checkable
 class HasEdges(Protocol):
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         """Return the edge color."""
@@ -98,6 +113,27 @@ class HasEdges(Protocol):
         """Return the edge style."""
 
     def _plt_set_edge_style(self, style: LineStyle):
+        """Set the edge style."""
+
+
+@runtime_checkable
+class HasMultiEdges(Protocol):
+    def _plt_get_edge_color(self) -> NDArray[np.float32]:
+        """Return the edge color."""
+
+    def _plt_set_edge_color(self, color: NDArray[np.float32]):
+        """Set the edge color."""
+
+    def _plt_get_edge_width(self) -> NDArray[np.floating]:
+        """Return the edge width."""
+
+    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
+        """Set the edge width."""
+
+    def _plt_get_edge_style(self) -> list[LineStyle]:
+        """Return the edge style."""
+
+    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         """Set the edge style."""
 
 
@@ -156,7 +192,7 @@ class LineProtocol(XYDataProtocol, HasEdges, Protocol):
 
 
 @runtime_checkable
-class MultiLinesProtocol(XYDataProtocol, HasEdges, Protocol):
+class MultiLineProtocol(XYDataProtocol, HasEdges, Protocol):
     def _plt_get_data(self) -> list[NDArray[np.number]]:
         """Return the x and y array."""
 
@@ -189,7 +225,7 @@ class MultiLinesProtocol(XYDataProtocol, HasEdges, Protocol):
 
 
 @runtime_checkable
-class BarProtocol(XXYYDataProtocol, HasFaces, HasEdges, Protocol):
+class BarProtocol(XXYYDataProtocol, HasMultiFaces, HasMultiEdges, Protocol):
     """Protocols for plt.bar, plt.errorbar"""
 
 

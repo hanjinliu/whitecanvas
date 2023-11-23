@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Literal
 
 from numpy.typing import ArrayLike
 
@@ -8,7 +7,7 @@ from whitecanvas.layers._base import XYYData
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import FacePattern, ColorType
+from whitecanvas.types import FacePattern, ColorType, Orientation
 from whitecanvas.utils.normalize import as_array_1d
 
 
@@ -18,7 +17,7 @@ class Band(FaceEdgeMixin[BandProtocol]):
         t: ArrayLike,
         edge_low: ArrayLike,
         edge_high: ArrayLike,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         *,
         name: str | None = None,
         color: ColorType = "blue",
@@ -26,6 +25,7 @@ class Band(FaceEdgeMixin[BandProtocol]):
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
+        ori = Orientation.parse(orient)
         x = as_array_1d(t)
         y0 = as_array_1d(edge_low)
         y1 = as_array_1d(edge_high)
@@ -34,25 +34,23 @@ class Band(FaceEdgeMixin[BandProtocol]):
                 "Expected xdata, ydata0, ydata1 to have the same size, "
                 f"got {x.size}, {y0.size}, {y1.size}"
             )
-        self._backend = self._create_backend(Backend(backend), x, y0, y1, orient)
+        self._backend = self._create_backend(Backend(backend), x, y0, y1, ori)
         self.name = name if name is not None else "Band"
-        self._orient = orient
+        self._orient = ori
         self.face.update(color=color, alpha=alpha, pattern=pattern)
-        self._x_hint, self._y_hint = xyy_size_hint(x, y0, y1, orient)
+        self._x_hint, self._y_hint = xyy_size_hint(x, y0, y1, ori)
 
     @property
     def data(self) -> XYYData:
         """Current data of the layer."""
-        if self._orient == "vertical":
+        if self._orient.is_vertical:
             x, y0, y1 = self._backend._plt_get_vertical_data()
-        elif self._orient == "horizontal":
-            x, y0, y1 = self._backend._plt_get_horizontal_data()
         else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
+            x, y0, y1 = self._backend._plt_get_horizontal_data()
         return XYYData(x, y0, y1)
 
     @property
-    def orient(self) -> Literal["vertical", "horizontal"]:
+    def orient(self) -> Orientation:
         """Orientation of the band."""
         return self._orient
 
@@ -74,10 +72,8 @@ class Band(FaceEdgeMixin[BandProtocol]):
                 "Expected data to have the same size,"
                 f"got {t0.size}, {y0.size}, {y1.size}"
             )
-        if self._orient == "vertical":
+        if self._orient.is_vertical:
             self._backend._plt_set_vertical_data(t0, y0, y1)
-        elif self._orient == "horizontal":
-            self._backend._plt_set_horizontal_data(t0, y0, y1)
         else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
+            self._backend._plt_set_horizontal_data(t0, y0, y1)
         self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)

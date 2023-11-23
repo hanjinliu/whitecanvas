@@ -83,7 +83,7 @@ class Panel(ListLayerGroup):
 
     def __init__(
         self,
-        topleft: tuple[float, float],
+        origin: tuple[float, float],
         width: float,
         height: float,
         *,
@@ -92,12 +92,11 @@ class Panel(ListLayerGroup):
     ):
         if width <= 0 or height <= 0:
             raise ValueError("width and height must be positive")
-        tl = np.array(topleft)
-        size = np.array([width, -height])
+        bl = np.array(origin)
+        tl = bl + np.array([0, height])
+        br = bl + np.array([width, 0])
+        tr = bl + np.array([width, height])
         text_pos = tl + np.array([width / 2, 0])
-        tr = tl + np.array([width, 0])
-        bl = tl + np.array([0, -height])
-        br = tl + size
         text = Text(*text_pos, title, anchor=Alignment.BOTTOM)
         line_data = np.stack([tl, tr, br, bl, tl], axis=0)
         line = Line(
@@ -107,10 +106,12 @@ class Panel(ListLayerGroup):
 
     @property
     def text(self) -> Text:
+        """Text layer of this panel."""
         return self._children[0]
 
     @property
     def line(self) -> Line:
+        """Line layer of this panel."""
         return self._children[1]
 
     @property

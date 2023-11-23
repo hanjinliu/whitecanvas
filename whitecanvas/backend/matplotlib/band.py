@@ -1,11 +1,10 @@
 from __future__ import annotations
-from typing import Literal
 
 import numpy as np
 
 from matplotlib.collections import PolyCollection
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import FacePattern, LineStyle
+from whitecanvas.types import FacePattern, LineStyle, Orientation
 
 
 @check_protocol(BandProtocol)
@@ -15,16 +14,14 @@ class Band(PolyCollection):
         t: np.ndarray,
         ydata0: np.ndarray,
         ydata1: np.ndarray,
-        orient: Literal["vertical", "horizontal"],
+        orient: Orientation,
     ):
-        if orient == "vertical":
+        if orient.is_vertical:
             fw = np.stack([t, ydata0], axis=1)
             bw = np.stack([t[::-1], ydata1[::-1]], axis=1)
-        elif orient == "horizontal":
+        else:
             fw = np.stack([ydata0, t], axis=1)
             bw = np.stack([ydata1[::-1], t[::-1]], axis=1)
-        else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         verts = np.concatenate([fw, bw], axis=0)
         self._edge_style = LineStyle.SOLID
         super().__init__([verts], closed=True)

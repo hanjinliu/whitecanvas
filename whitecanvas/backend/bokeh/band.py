@@ -1,10 +1,9 @@
 from __future__ import annotations
-from typing import Literal
 
 import numpy as np
 from cmap import Color
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import FacePattern, LineStyle
+from whitecanvas.types import FacePattern, LineStyle, Orientation
 
 import bokeh.models as bk_models
 from ._base import (
@@ -23,10 +22,10 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         t: np.ndarray,
         ydata0: np.ndarray,
         ydata1: np.ndarray,
-        orient: Literal["vertical", "horizontal"],
+        orient: Orientation,
     ):
         self._data = bk_models.ColumnDataSource(data=dict(t=t, y0=ydata0, y1=ydata1))
-        if orient == "vertical":
+        if orient.is_vertical:
             self._model = bk_models.VArea(x="t", y1="y0", y2="y1")
         else:
             self._model = bk_models.HArea(y="t", x1="y0", y1="y1")

@@ -9,11 +9,11 @@ from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
     Symbol,
-    LineStyle,
     ColorType,
     FacePattern,
     _Void,
     Alignment,
+    Orientation,
 )
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
@@ -137,7 +137,7 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
             width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
+        yerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
         return AnnotatedMarkers(self, xerr, yerr, name=self.name)
 
     def with_yerr(
@@ -168,7 +168,7 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
             width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
+        xerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
         return AnnotatedMarkers(self, xerr, yerr, name=self.name)
 
     def with_text(
@@ -199,8 +199,8 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
         )  # fmt: skip
         return AnnotatedMarkers(
             self,
-            Errorbars([], [], [], orient="horizontal", backend=self._backend_name),
-            Errorbars([], [], [], orient="vertical", backend=self._backend_name),
+            Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
+            Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),
             texts=texts,
             name=self.name,
         )

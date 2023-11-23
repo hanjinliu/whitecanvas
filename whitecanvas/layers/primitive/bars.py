@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import ArrayLike
 
@@ -9,7 +9,7 @@ from whitecanvas.layers._base import XYYData
 from whitecanvas.layers._mixin import AggFaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import FacePattern, ColorType, _Void, Alignment
+from whitecanvas.types import FacePattern, ColorType, _Void, Alignment, Orientation
 from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
@@ -19,29 +19,27 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-def _norm_bar_inputs(t0, e0, e1, orient: str, bar_width: float):
+def _norm_bar_inputs(t0, top, bot, orient: Orientation, bar_width: float):
     t0 = as_array_1d(t0)
-    e0 = as_array_1d(e0)
-    if e1 is None:
-        e1 = np.zeros_like(t0)
-    e1 = as_array_1d(e1)
-    if not (t0.size == e0.size == e1.size):
+    top = as_array_1d(top)
+    if bot is None:
+        bot = np.zeros_like(t0)
+    bot = as_array_1d(bot)
+    if not (t0.size == top.size == bot.size):
         raise ValueError(
             "Expected all arrays to have the same size, "
-            f"got {t0.size}, {e0.size}, {e1.size}"
+            f"got {t0.size}, {top.size}, {bot.size}"
         )
-    x_hint, y_hint = xyy_size_hint(t0, e0, e1, orient, bar_width / 2)
+    x_hint, y_hint = xyy_size_hint(t0, top, bot, orient, bar_width / 2)
 
-    if orient == "vertical":
+    if orient is Orientation.VERTICAL:
         dx = bar_width / 2
         x0, x1 = t0 - dx, t0 + dx
-        y0, y1 = e0, e1
-    elif orient == "horizontal":
-        dy = bar_width / 2
-        x0, x1 = e0, e1
-        y0, y1 = t0 - dy, t0 + dy
+        y0, y1 = top, bot
     else:
-        raise ValueError(f"orient must be 'vertical' or 'horizontal'")
+        dy = bar_width / 2
+        x0, x1 = top, bot
+        y0, y1 = t0 - dy, t0 + dy
     return (x0, x1, y0, y1), x_hint, y_hint
 
 
@@ -52,7 +50,7 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         top: ArrayLike,
         bottom: ArrayLike | None = None,
         *,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8,
         name: str | None = None,
         color: ColorType = "blue",
@@ -60,11 +58,12 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
-        xxyy, xhint, yhint = _norm_bar_inputs(x, bottom, top, orient, bar_width)
+        ori = Orientation.parse(orient)
+        xxyy, xhint, yhint = _norm_bar_inputs(x, top, bottom, ori, bar_width)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._bar_width = bar_width
         self.name = name if name is not None else "Bars"
-        self._orient = orient
+        self._orient = ori
         self.face.update(color=color, alpha=alpha, pattern=pattern)
         self._x_hint, self._y_hint = xhint, yhint
 
@@ -76,7 +75,7 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         bins: int | ArrayLike = 10,
         density: bool = False,
         range: tuple[float, float] | None = None,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float | None = None,
         name: str | None = None,
         color: ColorType = "blue",
@@ -99,12 +98,10 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
     def data(self) -> XYYData:
         """Current data of the layer."""
         x0, x1, y0, y1 = self._backend._plt_get_data()
-        if self._orient == "vertical":
+        if self._orient.is_vertical:
             return XYYData((x0 + x1) / 2, y1, y0)
-        elif self._orient == "horizontal":
-            return XYYData((y0 + y1) / 2, x1, x0)
         else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
+            return XYYData((y0 + y1) / 2, x1, x0)
 
     def set_data(
         self,
@@ -135,7 +132,7 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         if w <= 0:
             raise ValueError(f"Expected width > 0, got {w}")
         x0, x1, y0, y1 = self._backend._plt_get_data()
-        if self._orient == "vertical":
+        if self._orient is Orientation.VERTICAL:
             dx = (w - self._bar_width) / 2
             x0 = x0 - dx
             x1 = x1 + dx
@@ -147,7 +144,7 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         self._bar_width = w
 
     @property
-    def orient(self) -> Literal["vertical", "horizontal"]:
+    def orient(self) -> Orientation:
         """Orientation of the bars."""
         return self._orient
 
@@ -162,18 +159,16 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.AnnotatedLine:
-        if self.orient == "vertical":
+        if self.orient is Orientation.VERTICAL:
             return self.with_yerr(
                 err, err_high, color=color, width=width,
                 style=style, antialias=antialias, capsize=capsize
             )  # fmt: skip
-        elif self.orient == "horizontal":
+        else:
             return self.with_xerr(
                 err, err_high, color=color, width=width,
                 style=style, antialias=antialias, capsize=capsize
             )  # fmt: skip
-        else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
 
     def with_xerr(
         self,
@@ -191,9 +186,11 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
 
         xerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
-            antialias=antialias, capsize=capsize, orient="horizontal",
+            antialias=antialias, capsize=capsize, orient=Orientation.HORIZONTAL,
         )  # fmt: skip
-        yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
+        yerr = Errorbars(
+            [], [], [], orient=Orientation.HORIZONTAL, backend=self._backend_name
+        )
         return AnnotatedBars(self, xerr, yerr, name=self.name)
 
     def with_yerr(
@@ -212,9 +209,9 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
 
         yerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
-            antialias=antialias, capsize=capsize, orient="vertical",
+            antialias=antialias, capsize=capsize, orient=Orientation.VERTICAL,
         )  # fmt: skip
-        xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
+        xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
         return AnnotatedBars(self, xerr, yerr, name=self.name)
 
     def with_text(
@@ -244,8 +241,8 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         )
         return AnnotatedBars(
             self,
-            Errorbars([], [], [], orient="horizontal", backend=self._backend_name),
-            Errorbars([], [], [], orient="vertical", backend=self._backend_name),
+            Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
+            Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),
             texts=texts,
             name=self.name,
         )
@@ -260,7 +257,7 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
         style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
     ):
         from whitecanvas.layers.primitive import Errorbars
 
@@ -274,14 +271,12 @@ class Bars(AggFaceEdgeMixin[BarProtocol]):
             style = self.edge.style
         # if antialias is _void:
         #     antialias = self.antialias
-        if self.orient == "vertical":
+        if self.orient is Orientation.VERTICAL:
             x = self.data.x
             y = self.data.y1
-        elif self.orient == "horizontal":
+        else:
             x = self.data.y1
             y = self.data.x
-        else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         return Errorbars(
             x, y - err, y + err_high, color=color, width=width,
             style=style, antialias=antialias, capsize=capsize,

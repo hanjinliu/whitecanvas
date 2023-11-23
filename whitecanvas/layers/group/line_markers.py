@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from numpy.typing import ArrayLike
-from whitecanvas.types import ColorType, _Void, Alignment, LineStyle
+from whitecanvas.types import ColorType, _Void, Alignment, LineStyle, Orientation
 from whitecanvas.layers.primitive import Line, Markers, Errorbars
 from whitecanvas.layers.group._collections import ListLayerGroup
 
@@ -66,8 +66,8 @@ class Plot(ListLayerGroup):
             fontfamily=fontfamily,
             backend=self._backend_name,
         )
-        xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
-        yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
+        xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
+        yerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
         return AnnotatedPlot(self, xerr, yerr, texts, name=self.name)
 
     def with_xerr(
@@ -98,7 +98,7 @@ class Plot(ListLayerGroup):
             width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
+        yerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
         return AnnotatedPlot(self, xerr, yerr, name=self.name)
 
     def with_yerr(
@@ -129,7 +129,7 @@ class Plot(ListLayerGroup):
             width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
+        xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
         return AnnotatedPlot(self, xerr, yerr, name=self.name)
 
     @property

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Literal
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
@@ -8,7 +7,7 @@ from whitecanvas.layers._base import XYYData
 from whitecanvas.layers.primitive.line import MultiLine
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, ColorType, _Void
+from whitecanvas.types import LineStyle, ColorType, _Void, Orientation
 from whitecanvas.utils.normalize import as_array_1d, norm_color
 
 
@@ -23,7 +22,7 @@ class Errorbars(MultiLine):
         t: ArrayLike,
         edge_low: ArrayLike,
         edge_high: ArrayLike,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         *,
         name: str | None = None,
         color: ColorType = "black",
@@ -44,13 +43,12 @@ class Errorbars(MultiLine):
             )
         if capsize < 0:
             raise ValueError(f"Capsize must be non-negative, got {capsize!r}")
-        if orient == "vertical":
+        ori = Orientation.parse(orient)
+        if ori is Orientation.VERTICAL:
             data = _xyy_to_segments(t0, y0, y1, capsize)
-        elif orient == "horizontal":
-            data = _yxx_to_segments(t0, y0, y1, capsize)
         else:
-            raise ValueError(f"Unknown orientation {orient!r}")
-        self._orient = orient
+            data = _yxx_to_segments(t0, y0, y1, capsize)
+        self._orient = ori
         self._capsize = capsize
         self._data = XYYData(t0, y0, y1)
         super().__init__(
@@ -62,6 +60,15 @@ class Errorbars(MultiLine):
             antialias=antialias, capsize=capsize
         )  # fmt: skip
         self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, orient, xpad=capsize / 2)
+
+    @classmethod
+    def empty(
+        cls,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: Backend | str | None = None,
+    ) -> Errorbars:
+        """Return an Errorbars instance with no component."""
+        return Errorbars([], [], [], orient=orient, backend=backend)
 
     @property
     def data(self) -> XYYData:
@@ -85,12 +92,10 @@ class Errorbars(MultiLine):
             raise ValueError(
                 "Expected data to have the same size, " f"got {x0.size}, {y0.size}"
             )
-        if self._orient == "vertical":
+        if self._orient.is_vertical:
             data = _xyy_to_segments(t, y0, y1, self.capsize)
-        elif self._orient == "horizontal":
-            data = _yxx_to_segments(t, y0, y1, self.capsize)
         else:
-            raise ValueError(f"Unknown orientation {self._orient!r}")
+            data = _yxx_to_segments(t, y0, y1, self.capsize)
         super().set_data(data)
         self._data = XYYData(x0, y0, y1)
         self._x_hint, self._y_hint = xyy_size_hint(x0, y0, y1, self.orient)
@@ -101,7 +106,7 @@ class Errorbars(MultiLine):
         return self.data[0].size
 
     @property
-    def orient(self) -> Literal["vertical", "horizontal"]:
+    def orient(self) -> Orientation:
         """Orientation of the error bars."""
         return self._orient
 

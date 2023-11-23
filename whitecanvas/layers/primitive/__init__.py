@@ -6,6 +6,7 @@ from .errorbars import Errorbars
 from .inf_curve import InfCurve, InfLine
 from .text import Text
 from .image import Image
+from .rug import Rug
 
 __all__ = [
     "Line",
@@ -14,6 +15,7 @@ __all__ = [
     "Markers",
     "Band",
     "Errorbars",
+    "Rug",
     "InfLine",
     "InfCurve",
     "Text",

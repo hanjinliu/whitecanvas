@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import Literal
+
 import numpy as np
 from numpy.typing import NDArray
 
 from qtpy import QtGui
 import pyqtgraph as pg
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import LineStyle, FacePattern
+from whitecanvas.types import LineStyle, FacePattern, Orientation
 from ._qt_utils import (
     array_to_qcolor,
     from_qt_line_style,
@@ -18,15 +18,13 @@ from ._qt_utils import (
 
 @check_protocol(BandProtocol)
 class Band(pg.FillBetweenItem):
-    def __init__(self, t, ydata0, ydata1, orient: Literal["vertical", "horizontal"]):
-        if orient == "vertical":
+    def __init__(self, t, ydata0, ydata1, orient: Orientation):
+        if orient.is_vertical:
             c0 = pg.PlotCurveItem(t, ydata0)
             c1 = pg.PlotCurveItem(t, ydata1)
-        elif orient == "horizontal":
+        else:
             c0 = pg.PlotCurveItem(ydata0, t)
             c1 = pg.PlotCurveItem(ydata1, t)
-        else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
         super().__init__(c0, c1, pen=pen, brush=QtGui.QBrush(QtGui.QColor(0, 0, 0)))

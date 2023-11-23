@@ -18,6 +18,7 @@ from whitecanvas.types import (
     Alignment,
     ColormapType,
     FacePattern,
+    Orientation,
 )
 from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
@@ -274,7 +275,7 @@ class CanvasBase(ABC):
     @overload
     def add_bars(
         self, center: ArrayLike, top: ArrayLike, bottom: ArrayLike | None = None,
-        *, name=None, orient: Literal["vertical", "horizontal"] = "vertical",
+        *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars:  # fmt: skip
@@ -283,7 +284,7 @@ class CanvasBase(ABC):
     @overload
     def add_bars(
         self, top: ArrayLike,
-        *, name=None, orient: Literal["vertical", "horizontal"] = "vertical",
+        *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars:  # fmt: skip
@@ -293,7 +294,7 @@ class CanvasBase(ABC):
         self,
         *args,
         name=None,
-        orient="vertical",
+        orient=Orientation.VERTICAL,
         bar_width=0.8,
         color=None,
         alpha=1.0,
@@ -391,7 +392,7 @@ class CanvasBase(ABC):
         ydata1: ArrayLike,
         *,
         name: str | None = None,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -411,7 +412,7 @@ class CanvasBase(ABC):
         yhigh: ArrayLike,
         *,
         name: str | None = None,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType = "blue",
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
@@ -427,13 +428,32 @@ class CanvasBase(ABC):
         )  # fmt: skip
         return self.add_layer(layer)
 
+    def add_rug(
+        self,
+        events: ArrayLike,
+        *,
+        low: float = 0.0,
+        high: float = 1.0,
+        name: str | None = None,
+        color: ColorType = "black",
+        alpha: float = 1.0,
+        orient: str | Orientation = Orientation.VERTICAL,
+    ) -> _l.Rug:
+        name = self._coerce_name(_l.Errorbars, name)
+        color = self._generate_colors(color)
+        layer = _l.Rug(
+            events, low=low, high=high, name=name, color=color,
+            alpha=alpha, orient=orient, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
     def add_kde(
         self,
         data: ArrayLike,
         band_width: float | str = "scott",
         *,
         name: str | None = None,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -461,7 +481,7 @@ class CanvasBase(ABC):
         data: dict[str, ArrayLike],
         *,
         name: str | None = None,
-        orient: Literal["vertical", "horizontal"] = "vertical",
+        orient: str | Orientation = Orientation.VERTICAL,
         shape: Literal["both", "left", "right"] = "both",
         violin_width: float = 0.5,
         band_width: float | str = "scott",
@@ -471,13 +491,13 @@ class CanvasBase(ABC):
     ):
         name = self._coerce_name(_lg.ViolinPlot, name)
         color = self._generate_colors(color)
-        group = _lg.ViolinPlot.from_dict(
+        group = _lg.ViolinPlot.from_arrays(
             data,
             name=name,
             shape=shape,
             violin_width=violin_width,
             orient=orient,
-            band_width=band_width,
+            kde_band_width=band_width,
             color=color,
             alpha=alpha,
             pattern=pattern,

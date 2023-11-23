@@ -134,3 +134,27 @@ class Alignment(_strEnum):
         else:
             horizontal = Alignment.CENTER
         return vertical, horizontal
+
+
+class Orientation(_strEnum):
+    VERTICAL = "vertical"
+    HORIZONTAL = "horizontal"
+
+    @classmethod
+    def parse(cls, value):
+        if isinstance(value, str):
+            if value == "v":
+                return cls.VERTICAL
+            elif value == "h":
+                return cls.HORIZONTAL
+        return cls(value)
+
+    def transpose(self):
+        if self is self.VERTICAL:
+            return self.HORIZONTAL
+        else:
+            return self.VERTICAL
+
+    @property
+    def is_vertical(self):
+        return self is Orientation.VERTICAL

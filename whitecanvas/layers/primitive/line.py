@@ -16,6 +16,7 @@ from whitecanvas.types import (
     _Void,
     Alignment,
     FacePattern,
+    Orientation,
 )
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 
@@ -159,7 +160,7 @@ class Line(MonoLine):
             width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars([], [], [], orient="vertical", backend=self._backend_name)
+        xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
         return AnnotatedLine(self, xerr, yerr, name=self.name)
 
     def with_xband(
@@ -203,7 +204,7 @@ class Line(MonoLine):
             color = self.color
         data = self.data
         band = Band(
-            data.x, data.y - err, data.y + err_high, orient="vertical",
+            data.x, data.y - err, data.y + err_high, orient=Orientation.VERTICAL,
             color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
@@ -242,8 +243,8 @@ class Line(MonoLine):
         )
         return AnnotatedLine(
             self,
-            Errorbars([], [], [], orient="horizontal", backend=self._backend_name),
-            Errorbars([], [], [], orient="vertical", backend=self._backend_name),
+            Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
+            Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),
             texts=texts,
             name=self.name,
         )
@@ -259,12 +260,15 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = False,
+        alpha: float = 1.0,
         backend: Backend | str | None = None,
     ):
         data_normed, self._x_hint, self._y_hint = _norm_data(data)
         self._backend = self._create_backend(Backend(backend), data_normed)
         self.name = name if name is not None else type(self).__name__
-        self.update(color=color, width=width, style=style, antialias=antialias)
+        self.update(
+            color=color, width=width, style=style, alpha=alpha, antialias=antialias
+        )
 
     @property
     def data(self) -> XYData:

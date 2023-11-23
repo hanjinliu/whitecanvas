@@ -1,24 +1,22 @@
 from __future__ import annotations
-from typing import Literal
+
 import numpy as np
 from numpy.typing import NDArray
 
 from vispy.scene import visuals
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import LineStyle, FacePattern
+from whitecanvas.types import LineStyle, FacePattern, Orientation
 
 
 @check_protocol(BandProtocol)
 class Band(visuals.Polygon):
-    def __init__(self, t, ydata0, ydata1, orient: Literal["vertical", "horizontal"]):
-        if orient == "vertical":
+    def __init__(self, t, ydata0, ydata1, orient: Orientation):
+        if orient.is_vertical:
             fw = np.stack([t, ydata0], axis=1)
             bw = np.stack([t[::-1], ydata1[::-1]], axis=1)
-        elif orient == "horizontal":
+        else:
             fw = np.stack([ydata0, t], axis=1)
             bw = np.stack([ydata1[::-1], t[::-1]], axis=1)
-        else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         verts = np.concatenate([fw, bw], axis=0)
         self._edge_style = LineStyle.SOLID
         super().__init__(verts, border_width=0)

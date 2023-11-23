@@ -1,8 +1,8 @@
-from typing import Literal, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 from cmap import Colormap
-from whitecanvas.types import LineStyle, Symbol, FacePattern
+from whitecanvas.types import LineStyle, Symbol, FacePattern, Orientation
 
 Array1D = NDArray[np.number]
 
@@ -254,7 +254,7 @@ class ErrorbarProtocol(OrientedXYYDataProtocol, HasEdges, Protocol):
     def _plt_get_capsize(self) -> float:
         """Return the capsize of the error bar edges."""
 
-    def _plt_set_capsize(self, capsize: float, orient: Literal["v", "h"] = "v"):
+    def _plt_set_capsize(self, capsize: float, orient: Orientation):
         """Set the capsize of the error bar edges."""
 
 

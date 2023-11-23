@@ -1,23 +1,21 @@
 from __future__ import annotations
-from typing import Literal
+
 import numpy as np
 from numpy.typing import NDArray
 from matplotlib.collections import LineCollection
 from whitecanvas.protocols import ErrorbarProtocol, check_protocol
-from whitecanvas.types import LineStyle
+from whitecanvas.types import LineStyle, Orientation
 
 
 @check_protocol(ErrorbarProtocol)
 class Errorbars(LineCollection):
-    def __init__(self, t, y0, y1, orient: Literal["vertical", "horizontal"]):
-        if orient == "vertical":
+    def __init__(self, t, y0, y1, orient: Orientation):
+        if orient.is_vertical:
             starts = np.stack([t, y0], axis=1)
             ends = np.stack([t, y1], axis=1)
-        elif orient == "horizontal":
+        else:
             starts = np.stack([y0, t], axis=1)
             ends = np.stack([y1, t], axis=1)
-        else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
         segments = [[start, end] for start, end in zip(starts, ends)]
         super().__init__(segments)
         self._capsize = 0
@@ -124,13 +122,9 @@ class Errorbars(LineCollection):
     def _plt_get_capsize(self) -> float:
         return self._capsize
 
-    def _plt_set_capsize(
-        self, capsize: float, orient: Literal["vertical", "horizontal"]
-    ):
+    def _plt_set_capsize(self, capsize: float, orient: Orientation):
         self._capsize = capsize
-        if orient == "vertical":
+        if orient.is_vertical:
             self._plt_set_vertical_data(*self._plt_get_vertical_data())
-        elif orient == "horizontal":
-            self._plt_set_horizontal_data(*self._plt_get_horizontal_data())
         else:
-            raise ValueError(f"orient must be 'vertical' or 'horizontal'")
+            self._plt_set_horizontal_data(*self._plt_get_horizontal_data())

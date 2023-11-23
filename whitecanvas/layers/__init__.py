@@ -10,6 +10,7 @@ from .primitive import (
     Errorbars,
     Text,
     Image,
+    Rug,
 )
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "Bars",
     "Errorbars",
     "Band",
+    "Rug",
     "InfLine",
     "InfCurve",
     "Text",

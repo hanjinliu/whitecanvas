@@ -14,6 +14,8 @@ class Bars(visuals.Compound):
         center = np.stack([(xlow + xhigh) / 2, (ylow + yhigh) / 2], axis=1)
         rectangles: list[visuals.Rectangle] = []
         for c, w, h in zip(center, xhigh - xlow, yhigh - ylow):
+            w = abs(w)
+            h = abs(h)
             if w == 0:
                 w = h * 1e-6
             elif h == 0:
@@ -44,7 +46,7 @@ class Bars(visuals.Compound):
             w = rect.width
             h = rect.height
             data.append([xc - w / 2, xc + w / 2, yc - h / 2, yc + h / 2])
-        return np.array(data)
+        return tuple(np.array(data).T)
 
     def _plt_set_data(self, xlow, xhigh, ylow, yhigh):
         center = np.stack([(xlow + xhigh) / 2, (ylow + yhigh) / 2], axis=1)
@@ -84,16 +86,17 @@ class Bars(visuals.Compound):
             rect.border_color = c
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
+        # NOTE: vispy forgot to add `border_width` to `Rectangle` class?
         widths = []
         for rect in self._rectangles:
-            widths.append(rect.border_width)
+            widths.append(rect._border_width)
         return np.array(widths)
 
     def _plt_set_edge_width(self, width: float):
         if np.isscalar(width):
             width = np.full(len(self._rectangles), width)
         for rect, w in zip(self._rectangles, width):
-            rect.border_width = w
+            rect._border_width = w
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
         return [LineStyle.SOLID] * len(self._rectangles)

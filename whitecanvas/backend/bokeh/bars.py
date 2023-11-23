@@ -71,50 +71,50 @@ class Bars(BokehLayer[bk_models.Quad]):
     ##### HasFace protocol #####
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return np.stack([Color(c).rgba for c in self._model.fill_color], axis=1)
+        return np.stack([Color(c).rgba for c in self._data.data["face_color"]], axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
-            color = [Color(color).hex] * len(self._data.data["x"])
+            color = [Color(color).hex] * len(self._data.data["x0"])
         else:
             color = [Color(c).hex for c in color]
-        self._model.fill_color = color
+        self._data.data["face_color"] = color
 
     def _plt_get_face_pattern(self) -> list[FacePattern]:
-        return [from_bokeh_hatch(p) for p in self._model.hatch_pattern]
+        return [from_bokeh_hatch(p) for p in self._data.data["pattern"]]
 
     def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
         if isinstance(pattern, FacePattern):
-            ptn = [pattern] * len(self._data.data["x"])
+            ptn = [to_bokeh_hatch(pattern)] * len(self._data.data["x0"])
         else:
             ptn = [to_bokeh_hatch(p) for p in pattern]
-        self._model.hatch_pattern = ptn
+        self._data.data["pattern"] = ptn
 
     ##### HasEdges protocol #####
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
-        return self._model.line_width
+        return self._data.data["width"]
 
     def _plt_set_edge_width(self, width: float):
         if np.isscalar(width):
-            width = np.full(len(self._data.data["x"]), width)
-        self._model.line_width = width
+            width = np.full(len(self._data.data["x0"]), width)
+        self._data.data["width"] = width
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
-        return [from_bokeh_line_style(d) for d in self._model.line_dash]
+        return [from_bokeh_line_style(d) for d in self._data.data["style"]]
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         if isinstance(style, LineStyle):
-            style = [style] * len(self._data.data["x"])
+            style = [style] * len(self._data.data["x0"])
         val = [to_bokeh_line_style(s) for s in style]
-        self._model.line_dash = val
+        self._data.data["style"] = val
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.stack([Color(c).rgba for c in self._model.line_color], axis=1)
+        return np.stack([Color(c).rgba for c in self._data.data["edge_color"]], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
-            color = [Color(color).hex] * len(self._data.data["x"])
+            color = [Color(color).hex] * len(self._data.data["x0"])
         else:
             color = [Color(c).hex for c in color]
-        self._model.line_color = color
+        self._data.data["edge_color"] = color

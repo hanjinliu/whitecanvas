@@ -76,7 +76,10 @@ class Axis(_CanvasComponent):
         self._plot.xaxis.visible = visible
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        return self._plt_get_axis().bounds
+        limits = self._plt_get_axis().bounds
+        if limits == "auto":
+            return 0, 1  # just a dummy value
+        return limits
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         if self._flipped:

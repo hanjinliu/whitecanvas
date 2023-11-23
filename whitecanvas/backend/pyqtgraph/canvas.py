@@ -23,7 +23,7 @@ class Canvas:
         if item is None:
             viewbox = pg.ViewBox()
             item = pg.PlotItem(viewBox=viewbox)
-        viewbox.disableAutoRange()  # auto range is done in the whitecanvas side
+        item.vb.disableAutoRange()  # auto range is done in the whitecanvas side
         self._plot_item = item
         self._xaxis = Axis(self, axis="bottom")
         self._yaxis = Axis(self, axis="left")

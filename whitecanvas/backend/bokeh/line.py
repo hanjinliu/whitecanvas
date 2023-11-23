@@ -67,14 +67,17 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
             ydata.append(seg[:, 1])
         self._data = bk_models.ColumnDataSource(
             dict(
-                x=xdata, y=ydata, color=["black"] * len(data), width=np.ones(len(data))
+                x=xdata,
+                y=ydata,
+                color=["black"] * len(data),
+                width=np.ones(len(data)),
+                style=["solid"] * len(data),
             ),
-            style=["solid"] * len(data),
         )
         self._model = bk_models.MultiLine(
             xs="x",
             ys="y",
-            color="color",
+            line_color="color",
             line_width="width",
             line_dash="style",
             line_join="round",
@@ -106,31 +109,31 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         self._data.data = dict(x=xdata, y=ydata)
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
-        return self._model.line_width
+        return self._data.data["width"]
 
     def _plt_set_edge_width(self, width: float):
         if np.isscalar(width):
             width = np.full(len(self._data.data["x"]), width)
-        self._model.line_width = width
+        self._data.data["width"] = width
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
-        return [from_bokeh_line_style(d) for d in self._model.line_dash]
+        return [from_bokeh_line_style(d) for d in self._data.data["style"]]
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         if isinstance(style, LineStyle):
             style = [style] * len(self._data.data["x"])
         val = [to_bokeh_line_style(s) for s in style]
-        self._model.line_dash = val
+        self._data.data["style"] = val
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.stack([Color(c).rgba for c in self._model.line_color], axis=1)
+        return np.stack([Color(c).rgba for c in self._data.data["color"]], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
             color = [Color(color).hex] * len(self._data.data["x"])
         else:
             color = [Color(c).hex for c in color]
-        self._model.line_color = color
+        self._data.data["color"] = color
 
     def _plt_get_antialias(self) -> bool:
         return self._model.line_join == "round"

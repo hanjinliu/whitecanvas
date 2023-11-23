@@ -209,6 +209,14 @@ def _xyy_to_segments(
     y1: ArrayLike,
     capsize: float,
 ):
+    """
+    ──┬──  <-- y1
+      │
+      │
+    ──┴──  <-- y0
+      ↑
+      x
+    """
     starts = np.stack([x, y0], axis=1)
     ends = np.stack([x, y1], axis=1)
     segments = [[start, end] for start, end in zip(starts, ends)]

@@ -4,6 +4,8 @@ from .annotated import AnnotatedLine, AnnotatedMarkers, AnnotatedBars, Annotated
 from .textinfo import BracketText, Panel
 from .text_group import TextGroup
 from .violinplot import ViolinPlot
+from .stripplot import StripPlot
+from .boxplot import BoxPlot
 
 __all__ = [
     "Plot",
@@ -16,4 +18,6 @@ __all__ = [
     "AnnotatedPlot",
     "TextGroup",
     "ViolinPlot",
+    "StripPlot",
+    "BoxPlot",
 ]

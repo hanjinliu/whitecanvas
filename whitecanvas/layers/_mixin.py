@@ -1,15 +1,23 @@
 from __future__ import annotations
 
-from typing import Generic, Iterator, TypeVar, overload, SupportsIndex, TYPE_CHECKING
+from typing import (
+    Generic,
+    Iterable,
+    Iterator,
+    TypeVar,
+    overload,
+    SupportsIndex,
+    TYPE_CHECKING,
+)
 from enum import Enum
 from weakref import WeakValueDictionary
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.protocols import layer_protocols as _lp
-from whitecanvas.layers._base import PrimitiveLayer, XYYData
-from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, Alignment, _Void
-from whitecanvas.utils.normalize import norm_color
+from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, _Void
+from whitecanvas.utils.normalize import norm_color, as_color_array
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -18,53 +26,6 @@ _HasEdges = TypeVar("_HasEdges", bound=_lp.HasEdges)
 _P = TypeVar("_P", bound=_lp.BaseProtocol)
 _L = TypeVar("_L", bound=PrimitiveLayer)
 _void = _Void()
-
-
-# class MultiFaceMixin(PrimitiveLayer[_HasFaces]):
-#     @property
-#     def face_color(self) -> NDArray[np.floating]:
-#         """Face color of the bar."""
-#         return self._backend._plt_get_face_color()
-
-#     @face_color.setter
-#     def face_color(self, color):
-#         self._backend._plt_set_face_color(norm_color(color))
-
-#     @property
-#     def face_pattern(self) -> EnumArray[FacePattern]:
-#         """Face fill pattern of the bars."""
-#         return self._backend._plt_get_face_pattern()
-
-#     @face_pattern.setter
-#     def face_pattern(self, style: str | FacePattern | Iterable[str | FacePattern]):
-#         self._backend._plt_set_face_pattern(FacePattern(style))
-
-
-# class MultiEdgeMixin(PrimitiveLayer[_HasEdges]):
-#     @property
-#     def edge_color(self) -> NDArray[np.floating]:
-#         """Edge color of the bar."""
-#         return self._backend._plt_get_edge_color()
-
-#     @edge_color.setter
-#     def edge_color(self, color):
-#         self._backend._plt_set_edge_color(norm_color(color))
-
-#     @property
-#     def edge_width(self) -> NDArray[np.floating]:
-#         return self._backend._plt_get_edge_width()
-
-#     @edge_width.setter
-#     def edge_width(self, width: float):
-#         self._backend._plt_set_edge_width(width)
-
-#     @property
-#     def edge_style(self) -> EnumArray[LineStyle]:
-#         return self._backend._plt_get_edge_style()
-
-#     @edge_style.setter
-#     def edge_style(self, style: str | LineStyle | Iterable[str | LineStyle]):
-#         self._backend._plt_set_edge_style(LineStyle(style))
 
 
 class LayerNamespace(Generic[_L]):
@@ -303,6 +264,130 @@ class AggEdgeNamespace(LayerNamespace[_L]):
         return self.layer
 
 
+class MultiFaceNamespace(LayerNamespace[_L]):
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Face color of the bar."""
+        return self.layer._backend._plt_get_face_color()
+
+    @color.setter
+    def color(self, color):
+        self.layer._backend._plt_set_face_color(
+            as_color_array(color, len(self.layer.data.x))
+        )
+
+    @property
+    def pattern(self) -> EnumArray[FacePattern]:
+        """Face fill pattern of the bars."""
+        return self.layer._backend._plt_get_face_pattern()
+
+    @pattern.setter
+    def pattern(self, pattern: str | FacePattern | Iterable[str | FacePattern]):
+        if isinstance(pattern, str):
+            pattern = FacePattern(pattern)
+        elif hasattr(pattern, "__iter__"):
+            pattern = [FacePattern(p) for p in pattern]
+        self.layer._backend._plt_set_face_pattern(FacePattern(pattern))
+
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        pattern: FacePattern | str | _Void = _void,
+        alpha: float | _Void = _void,
+    ) -> _L:
+        """
+        Update the face properties.
+
+        Parameters
+        ----------
+        color : ColorType, optional
+            Color of the face.
+        pattern : FacePattern, optional
+            Fill pattern of the face.
+        alpha : float, optional
+            Alpha value of the face.
+        """
+        if color is not _void:
+            self.color = color
+        if pattern is not _void:
+            self.pattern = pattern
+        if alpha is not _void:
+            self.alpha = alpha
+        return self.layer
+
+
+class MultiEdgeNamespace(LayerNamespace[_L]):
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Edge color of the bar."""
+        return self.layer._backend._plt_get_edge_color()
+
+    @color.setter
+    def color(self, color):
+        self.layer._backend._plt_set_edge_color(
+            as_color_array(color, len(self.layer.data.x))
+        )
+
+    @property
+    def width(self) -> NDArray[np.floating]:
+        return self.layer._backend._plt_get_edge_width()
+
+    @width.setter
+    def width(self, width: float):
+        self.layer._backend._plt_set_edge_width(width)
+
+    @property
+    def style(self) -> EnumArray[LineStyle]:
+        return self.layer._backend._plt_get_edge_style()
+
+    @style.setter
+    def style(self, style: str | LineStyle | Iterable[str | LineStyle]):
+        if isinstance(style, str):
+            style = LineStyle(style)
+        elif hasattr(style, "__iter__"):
+            style = [LineStyle(s) for s in style]
+        self.layer._backend._plt_set_edge_style(style)
+
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        style: LineStyle | str | _Void = _void,
+        width: float | _Void = _void,
+        alpha: float | _Void = _void,
+    ) -> _L:
+        if color is not _void:
+            self.color = color
+        if style is not _void:
+            self.style = style
+        if width is not _void:
+            self.width = width
+        if alpha is not _void:
+            self.alpha = alpha
+        return self.layer
+
+
 class LineMixin(PrimitiveLayer[_HasEdges]):
     @property
     def color(self) -> NDArray[np.floating]:
@@ -386,6 +471,26 @@ class FaceEdgeMixin(PrimitiveLayer[_P]):
 class AggFaceEdgeMixin(PrimitiveLayer[_P]):
     face = AggFaceNamespace()
     edge = AggEdgeNamespace()
+
+    def with_edge(
+        self,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        if color is None:
+            color = self.face.color
+        self.edge.color = color
+        self.edge.width = width
+        self.edge.style = style
+        self.edge.alpha = alpha
+        return self
+
+
+class HeteroFaceEdgeMixin(PrimitiveLayer[_P]):
+    face = MultiFaceNamespace()
+    edge = MultiEdgeNamespace()
 
     def with_edge(
         self,

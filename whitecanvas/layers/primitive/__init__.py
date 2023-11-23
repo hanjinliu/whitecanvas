@@ -1,5 +1,5 @@
 from .line import Line, MultiLine
-from .bars import Bars
+from .bars import Bars, HeteroBars
 from .markers import Markers
 from .band import Band
 from .errorbars import Errorbars
@@ -12,6 +12,7 @@ __all__ = [
     "Line",
     "MultiLine",
     "Bars",
+    "HeteroBars",
     "Markers",
     "Band",
     "Errorbars",

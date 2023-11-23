@@ -1,13 +1,15 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Iterator, Sequence
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.types import ColorType, FacePattern, Symbol, _Void, Orientation
 from whitecanvas.layers.primitive import Markers
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._cat_utils import check_array_input
+from whitecanvas.utils.normalize import as_color_array
 
 
 class StripPlot(ListLayerGroup):
@@ -21,9 +23,10 @@ class StripPlot(ListLayerGroup):
     ):
         super().__init__(markers, name=name)
         self._strip_width = strip_width
-        self._orient = Orientation(orient)
+        self._orient = Orientation.parse(orient)
 
     def nth(self, n: int) -> Markers:
+        """The n-th markers layer."""
         return self._children[n]
 
     @classmethod
@@ -31,7 +34,6 @@ class StripPlot(ListLayerGroup):
         cls,
         x: list[float],
         data: list[ArrayLike],
-        labels: list[str] | None = None,
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -39,25 +41,26 @@ class StripPlot(ListLayerGroup):
         seed: int | None = None,
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
-        color: ColorType = "blue",
+        color: ColorType | Sequence[ColorType] = "blue",
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: str | Backend | None = None,
     ):
-        x, data, labels = check_array_input(x, data, labels)
+        x, data = check_array_input(x, data)
         rng = np.random.default_rng(seed)
         ori = Orientation.parse(orient)
         layers: list[Markers] = []
-        for offset, values, label in zip(x, data, labels):
+        color = as_color_array(color, len(x))
+        for ith, (x0, values, color) in enumerate(zip(x, data, color)):
             offsets = rng.uniform(-strip_width, strip_width, size=len(values))
             if ori.is_vertical:
-                x = np.full_like(values, offset)
-                y = values + offsets
+                _x = np.full_like(values, x0) + offsets
+                _y = values
             else:
-                x = values + offsets
-                y = np.full_like(values, offset)
+                _x = values
+                _y = np.full_like(values, x0) + offsets
             markers = Markers(
-                x, y, name=label, symbol=symbol, size=size, color=color,
+                _x, _y, name=f"markers_{ith}", symbol=symbol, size=size, color=color,
                 alpha=alpha, pattern=pattern, backend=backend
             )  # fmt: skip
             layers.append(markers)
@@ -67,3 +70,8 @@ class StripPlot(ListLayerGroup):
     @property
     def orient(self) -> Orientation:
         return self._orient
+
+    if TYPE_CHECKING:  # fmt: skip
+
+        def iter_children(self) -> Iterator[Markers]:
+            ...

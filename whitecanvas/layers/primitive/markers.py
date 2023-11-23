@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import MarkersProtocol
-from whitecanvas.layers._base import PrimitiveLayer, XYData
+from whitecanvas.layers._base import XYData
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
@@ -45,6 +45,12 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
         )  # fmt: skip
         self._x_hint = xdata.min(), xdata.max()
         self._y_hint = ydata.min(), ydata.max()
+
+    @classmethod
+    def empty(cls, backend: Backend | str | None = None) -> Markers:
+        """Return an empty markers layer."""
+        # TODO: not works with size 0
+        return cls([], [], backend=backend)
 
     @property
     def data(self) -> XYData:

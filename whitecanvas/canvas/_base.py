@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Callable, Iterator, Literal, overload, TypeVar, TYPE_CHECKING
+from typing import Any, Callable, Iterator, overload, TypeVar, TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 from cmap import Color
@@ -20,8 +20,9 @@ from whitecanvas.types import (
     FacePattern,
     Orientation,
 )
-from whitecanvas.canvas import canvas_namespace as _ns, layerlist as _ll
+from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
+from whitecanvas.canvas._categorical import CategorizedDataPlotter
 from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
@@ -184,6 +185,17 @@ class CanvasBase(ABC):
             self.x.lim = xlim
             self.y.lim = ylim
         self.lims_changed.emit((self.x.lim, self.y.lim))
+
+    def cat(
+        self,
+        data: Any,
+        by: str | None = None,
+        offsets: float | ArrayLike | None = None,
+        palette: ColormapType | None = None,
+    ) -> CategorizedDataPlotter[Self]:
+        return CategorizedDataPlotter(
+            self, data, by=by, offsets=offsets, palette=palette
+        )
 
     @overload
     def add_line(
@@ -475,34 +487,6 @@ class CanvasBase(ABC):
             pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
-
-    def add_violinplot(
-        self,
-        data: dict[str, ArrayLike],
-        *,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        shape: Literal["both", "left", "right"] = "both",
-        violin_width: float = 0.5,
-        band_width: float | str = "scott",
-        color: ColorType | None = None,
-        alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
-    ):
-        name = self._coerce_name(_lg.ViolinPlot, name)
-        color = self._generate_colors(color)
-        group = _lg.ViolinPlot.from_arrays(
-            data,
-            name=name,
-            shape=shape,
-            violin_width=violin_width,
-            orient=orient,
-            kde_band_width=band_width,
-            color=color,
-            alpha=alpha,
-            pattern=pattern,
-        )
-        return self.add_layer(group)
 
     def add_text(
         self,

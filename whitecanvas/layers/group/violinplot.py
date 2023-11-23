@@ -9,7 +9,7 @@ from whitecanvas.types import ColorType, FacePattern, Orientation
 from whitecanvas.layers.primitive import Band
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._cat_utils import check_array_input
-from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.utils.normalize import as_array_1d, as_color_array
 
 
 class ViolinPlot(ListLayerGroup):
@@ -32,14 +32,13 @@ class ViolinPlot(ListLayerGroup):
         cls,
         x: list[float],
         data: list[ArrayLike],
-        labels: list[str] | None = None,
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         shape: Literal["both", "left", "right"] = "both",
         violin_width: float = 0.5,
         kde_band_width: float | str = "scott",
-        color: ColorType | None = None,
+        colors: ColorType | list[ColorType] = "blue",
         alpha: float = 1,
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: str | Backend | None = None,
@@ -51,9 +50,10 @@ class ViolinPlot(ListLayerGroup):
         _o = _violin_o.transpose()
         if violin_width <= 0:
             raise ValueError(f"violin_width must be positive, got {violin_width}")
-        x, data, labels = check_array_input(x, data, labels)
+        x, data = check_array_input(x, data)
+        colors = as_color_array(colors, len(x))
         layers: list[Band] = []
-        for offset, values, label in zip(x, data, labels):
+        for ith, (offset, values, color) in enumerate(zip(x, data, colors)):
             arr = as_array_1d(values)
             kde = gaussian_kde(arr, bw_method=kde_band_width)
 
@@ -71,8 +71,8 @@ class ViolinPlot(ListLayerGroup):
                 y1 = np.zeros_like(y) + offset
 
             layer = Band(
-                x, y0, y1, name=label, orient=_o, color=color, alpha=alpha,
-                pattern=pattern, backend=backend,
+                x, y0, y1, name=f"violin_{ith}", orient=_o, color=color,
+                alpha=alpha, pattern=pattern, backend=backend,
             )  # fmt: skip
             layers.append(layer)
 

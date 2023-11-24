@@ -5,22 +5,14 @@ import numpy as np
 from cmap import Colormap
 from ._qt_utils import array_to_qcolor
 from whitecanvas.protocols import ImageProtocol, check_protocol
+from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 
 
 @check_protocol(ImageProtocol)
-class Image(pg.ImageItem):
+class Image(pg.ImageItem, PyQtLayer):
     def __init__(self, data: np.ndarray):
         super().__init__(data)
         self._cmap = Colormap("gray")
-
-    def _plt_get_visible(self) -> bool:
-        return self.isVisible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.setVisible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.setZValue(zorder)
 
     def _plt_get_data(self) -> np.ndarray:
         return self.image

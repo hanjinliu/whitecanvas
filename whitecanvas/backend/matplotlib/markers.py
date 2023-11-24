@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import PathCollection
 import matplotlib.markers as mmarkers
 import matplotlib.transforms as mtransforms
+
+from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol, FacePattern, LineStyle
 
@@ -17,7 +19,7 @@ def _get_path(symbol: Symbol):
 
 
 @check_protocol(MarkersProtocol)
-class Markers(PathCollection):
+class Markers(PathCollection, MplLayer):
     def __init__(self, xdata, ydata):
         offsets = np.stack([xdata, ydata], axis=1)
         self._symbol = Symbol.CIRCLE
@@ -29,16 +31,6 @@ class Markers(PathCollection):
         )
         self.set_transform(mtransforms.IdentityTransform())
         self._edge_style = LineStyle.SOLID
-
-    ##### LayerProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.get_visible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.set_visible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.set_zorder(zorder)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):

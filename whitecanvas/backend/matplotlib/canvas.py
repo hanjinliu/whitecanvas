@@ -16,6 +16,7 @@ from .bars import Bars
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
+from whitecanvas.backend.matplotlib._base import MplLayer
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -55,6 +56,10 @@ class Canvas:
 
     def _plt_get_yticks(self):
         return self._yticks
+
+    def _plt_reorder_layers(self, layers: list[MplLayer]):
+        for i, layer in enumerate(layers):
+            layer._plt_set_zorder(i)
 
     def _plt_get_aspect_ratio(self) -> float | None:
         out = self._axes.get_aspect()

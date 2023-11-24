@@ -7,25 +7,16 @@ from qtpy import QtGui
 import pyqtgraph as pg
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
+from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from ._qt_utils import array_to_qcolor, from_qt_line_style, to_qt_line_style
 
 
 @check_protocol(LineProtocol)
-class MonoLine(pg.PlotCurveItem):
+class MonoLine(pg.PlotCurveItem, PyQtLayer):
     def __init__(self, xdata, ydata):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
         super().__init__(xdata, ydata, pen=pen, antialias=False)
-
-    ##### BaseProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.isVisible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.setVisible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.setZValue(zorder)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -71,7 +62,7 @@ class MonoLine(pg.PlotCurveItem):
 
 
 @check_protocol(MultiLineProtocol)
-class MultiLine(pg.ItemGroup):
+class MultiLine(pg.ItemGroup, PyQtLayer):
     def __init__(self, data: list[NDArray[np.floating]]):
         super().__init__()
         pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
@@ -92,16 +83,6 @@ class MultiLine(pg.ItemGroup):
         rect = reduce(lambda a, b: a | b, (item.boundingRect() for item in self._lines))
         self._bounding_rect_cache = rect
         return rect
-
-    ##### BaseProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.isVisible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.setVisible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.setZValue(zorder)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):

@@ -36,9 +36,6 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
     def _plt_set_visible(self, visible):
         self._model.visible = visible
 
-    def _plt_set_zorder(self, zorder: int):
-        pass
-
     ##### XYYDataProtocol #####
     def _plt_get_vertical_data(self):
         data = self._data.data

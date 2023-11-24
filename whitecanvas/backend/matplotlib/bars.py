@@ -5,13 +5,14 @@ from numpy.typing import NDArray
 
 from matplotlib.container import BarContainer
 from matplotlib.patches import Rectangle
+from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import FacePattern, LineStyle
 from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(BarProtocol)
-class Bars(BarContainer):
+class Bars(BarContainer, MplLayer):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         patches = []
         width = xhigh - xlow
@@ -21,14 +22,6 @@ class Bars(BarContainer):
             r.get_path()._interpolation_steps = 100
             patches.append(r)
         super().__init__(patches)
-
-    ##### LayerProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.patches[0].get_visible()
-
-    def _plt_set_visible(self, visible: bool):
-        for patch in self.patches:
-            patch.set_visible(visible)
 
     def _plt_set_zorder(self, zorder: int):
         for patch in self.patches:

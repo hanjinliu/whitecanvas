@@ -23,9 +23,6 @@ class Text(visuals.Text):
     def _plt_set_visible(self, visible: bool):
         self.visible = visible
 
-    def _plt_set_zorder(self, zorder: int):
-        pass
-
     ##### TextProtocol #####
 
     def _plt_get_text(self) -> str:
@@ -50,7 +47,7 @@ class Text(visuals.Text):
         return tuple(self.pos[0, 1:])
 
     def _plt_set_text_position(self, position: tuple[float, float]):
-        self.pos = np.array([[0, *position]])
+        self.pos = position
 
     def _plt_get_text_anchor(self) -> Alignment:
         return self._alignment

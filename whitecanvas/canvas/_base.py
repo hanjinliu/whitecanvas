@@ -642,13 +642,16 @@ class CanvasBase(ABC):
             _canvas._plt_add_layer(l._backend)
             l._connect_canvas(self)
         # autoscale
-        x0, x1, y0, y1 = layer.bbox_hint()
-        xmin, xmax = self.x.lim
-        ymin, ymax = self.y.lim
-        xmin = np.min([x0, xmin])
-        xmax = np.max([x1, xmax])
-        ymin = np.min([y0, ymin])
-        ymax = np.max([y1, ymax])
+        xmin, xmax, ymin, ymax = layer.bbox_hint()
+        if len(self.layers) > 1:
+            # NOTE: if there was no layer, so backend may not have xlim/ylim,
+            # or they may be set to a default value.
+            _xmin, _xmax = self.x.lim
+            _ymin, _ymax = self.y.lim
+            xmin = np.min([xmin, _xmin])
+            xmax = np.max([xmax, _xmax])
+            ymin = np.min([ymin, _ymin])
+            ymax = np.max([ymax, _ymax])
         # this happens when there is <= 1 data
         if np.isnan(xmax) or np.isnan(xmin):
             xmin, xmax = self.x.lim
@@ -679,17 +682,16 @@ class CanvasBase(ABC):
             l._disconnect_canvas(self)
 
     def _cb_reordered(self):
-        zorder = 0
+        layer_backends = []
         for layer in self.layers:
             if isinstance(layer, _l.PrimitiveLayer):
-                layer._backend._plt_set_zorder(zorder)
-                zorder += 1
+                layer_backends.append(layer._backend)
             elif isinstance(layer, _l.LayerGroup):
                 for child in layer.iter_children_recursive():
-                    child._backend._plt_set_zorder(zorder)
-                    zorder += 1
+                    layer_backends.append(child._backend)
             else:
                 raise RuntimeError(f"type {type(layer)} not expected")
+        self._canvas()._plt_reorder_layers(layer_backends)
 
     def _group_layers(self, group: _l.LayerGroup):
         indices: list[int] = []  # layers to remove

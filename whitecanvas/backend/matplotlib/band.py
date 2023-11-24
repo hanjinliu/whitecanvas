@@ -3,12 +3,13 @@ from __future__ import annotations
 import numpy as np
 
 from matplotlib.collections import PolyCollection
+from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import FacePattern, LineStyle, Orientation
 
 
 @check_protocol(BandProtocol)
-class Band(PolyCollection):
+class Band(PolyCollection, MplLayer):
     def __init__(
         self,
         t: np.ndarray,
@@ -28,15 +29,6 @@ class Band(PolyCollection):
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
-
-    def _plt_get_visible(self):
-        return self.get_visible()
-
-    def _plt_set_visible(self, visible):
-        self.set_visible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.set_zorder(zorder)
 
     ##### XYYDataProtocol #####
     def _plt_get_vertical_data(self):

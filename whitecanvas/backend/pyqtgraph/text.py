@@ -6,6 +6,7 @@ import pyqtgraph as pg
 
 from whitecanvas.types import Alignment, FacePattern, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from ._qt_utils import (
     from_qt_brush_style,
     from_qt_line_style,
@@ -16,21 +17,11 @@ from ._qt_utils import (
 
 
 @check_protocol(TextProtocol)
-class Text(pg.TextItem):
+class Text(pg.TextItem, PyQtLayer):
     def __init__(self, x: float, y: float, text: str):
         super().__init__(text=text, anchor=(0, 0))
         self._plt_set_text_position([x, y])
         self._alignment = Alignment.BOTTOM_LEFT
-
-    ##### BaseProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.isVisible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.setVisible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.setZValue(zorder)
 
     ##### TextProtocol #####
 

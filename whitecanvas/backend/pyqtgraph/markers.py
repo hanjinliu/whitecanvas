@@ -8,6 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol, LineStyle, FacePattern
+from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from ._qt_utils import (
     array_to_qcolor,
     from_qt_line_style,
@@ -20,7 +21,7 @@ from ._qt_utils import (
 
 
 @check_protocol(MarkersProtocol)
-class Markers(pg.ScatterPlotItem):
+class Markers(pg.ScatterPlotItem, PyQtLayer):
     def __init__(self, xdata, ydata):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
@@ -31,16 +32,6 @@ class Markers(pg.ScatterPlotItem):
             brush=QtGui.QBrush(QtGui.QColor(0, 0, 0)),
             antialias=False,
         )
-
-    ##### LayerProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.isVisible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.setVisible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.setZValue(zorder)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):

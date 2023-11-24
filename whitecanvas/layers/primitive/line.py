@@ -18,7 +18,7 @@ from whitecanvas.types import (
     FacePattern,
     Orientation,
 )
-from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, as_color_array, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -271,14 +271,19 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         )
 
     @property
-    def data(self) -> XYData:
+    def data(self) -> list[XYData]:
         """Current data of the layer."""
-        return XYData(*self._backend._plt_get_data())
+        return [XYData(d) for d in self._backend._plt_get_data()]
 
     def set_data(self, data: list[ArrayLike]):
         data, x_hint, y_hint = _norm_data(data)
         self._backend._plt_set_data(data)
         self._x_hint, self._y_hint = x_hint, y_hint
+
+    @property
+    def nlines(self) -> int:
+        """Number of lines."""
+        return len(self._backend._plt_get_data())
 
     @property
     def color(self) -> NDArray[np.floating]:
@@ -287,18 +292,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
 
     @color.setter
     def color(self, color: ColorType):
-        if isinstance(color, np.ndarray) and color.ndim == 2:
-            if color.shape[1] not in (3, 4):
-                raise ValueError(
-                    f"Expected color to be (N, 3) or (N, 4), got {color.shape}"
-                )
-            col = color
-        else:
-            try:
-                col = norm_color(color)
-            except Exception:
-                col = np.stack([norm_color(c) for c in color], axis=0)
-        self._backend._plt_set_edge_color(col)
+        self._backend._plt_set_edge_color(as_color_array(color, self.nlines))
 
     @property
     def width(self):
@@ -320,6 +314,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
 
     @property
     def alpha(self) -> float:
+        """Alpha value of the line."""
         return float(self.color[3])
 
     @alpha.setter

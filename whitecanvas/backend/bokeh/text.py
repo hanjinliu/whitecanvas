@@ -30,9 +30,6 @@ class Text(BokehLayer[bk_models.Text]):
     def _plt_set_visible(self, visible: bool):
         self._model.visible = visible
 
-    def _plt_set_zorder(self, zorder: float):
-        pass
-
     ##### TextProtocol #####
 
     def _plt_get_text(self) -> str:

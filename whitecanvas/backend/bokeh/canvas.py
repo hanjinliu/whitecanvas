@@ -70,6 +70,16 @@ class Canvas:
     def _plt_get_yticks(self):
         return self._yticks
 
+    def _bokeh_renderers(self) -> list[bk_models.GlyphRenderer]:
+        return self._plot.renderers
+
+    def _plt_reorder_layers(self, layers: list[BokehLayer]):
+        model_to_idx_map = {id(layer._model): i for i, layer in enumerate(layers)}
+        renderes = self._bokeh_renderers()
+        self._plot.renderers = [
+            renderes[model_to_idx_map[id(r.glyph)]] for r in renderes
+        ]
+
     def _plt_get_aspect_ratio(self) -> float | None:
         return self._plot.aspect_ratio
 
@@ -81,7 +91,12 @@ class Canvas:
 
     def _plt_remove_layer(self, layer: BokehLayer):
         """Remove layer from the canvas"""
-        self._plot.renderers.remove(layer._model)
+        idx = -1
+        for i, renderer in enumerate(self._bokeh_renderers()):
+            if renderer.glyph == layer._model:
+                idx = i
+                break
+        del self._plot.renderers[idx]
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""

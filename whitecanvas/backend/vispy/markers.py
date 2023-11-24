@@ -21,9 +21,6 @@ class Markers(visuals.Markers):
     def _plt_set_visible(self, visible: bool):
         self.visible = visible
 
-    def _plt_set_zorder(self, zorder: int):
-        pass
-
     ##### XYDataProtocol #####
     def _plt_get_data(self):
         return self._data["a_position"]

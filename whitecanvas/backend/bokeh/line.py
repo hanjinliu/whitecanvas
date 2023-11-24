@@ -22,9 +22,6 @@ class MonoLine(BokehLayer[bk_models.Line]):
     def _plt_set_visible(self, visible: bool):
         self._model.visible = visible
 
-    def _plt_set_zorder(self, zorder: int):
-        pass
-
     def _plt_get_data(self):
         return self._data.data["x"], self._data.data["y"]
 
@@ -89,9 +86,6 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
 
     def _plt_set_visible(self, visible: bool):
         self._model.visible = visible
-
-    def _plt_set_zorder(self, zorder: int):
-        pass
 
     def _plt_get_data(self):
         xs, ys = self._data.data["x"], self._data.data["y"]

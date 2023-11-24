@@ -1,14 +1,17 @@
 from __future__ import annotations
-from matplotlib.collections import LineCollection
 import numpy as np
 from numpy.typing import NDArray
 from matplotlib.lines import Line2D
+from matplotlib.patches import PathPatch
+from matplotlib.collections import LineCollection, Collection
+from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(LineProtocol)
-class MonoLine(Line2D):
+class MonoLine(Line2D, MplLayer):
     def __init__(self, xdata, ydata):
         super().__init__(
             xdata,
@@ -18,16 +21,6 @@ class MonoLine(Line2D):
             color="blue",
             markersize=0,
         )
-
-    ##### LayerProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.get_visible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.set_visible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.set_zorder(zorder)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -63,20 +56,11 @@ class MonoLine(Line2D):
 
 
 @check_protocol(MultiLineProtocol)
-class MultiLine(LineCollection):
+class MultiLine(LineCollection, MplLayer):
     def __init__(self, data: list[NDArray[np.floating]]):
         # data: list of (N, 2)
         super().__init__(data, linewidths=1)
-
-    ##### LayerProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.get_visible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.set_visible(visible)
-
-    def _plt_set_zorder(self, zorder: int):
-        self.set_zorder(zorder)
+        self._ndata = len(data)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -84,13 +68,20 @@ class MultiLine(LineCollection):
 
     def _plt_set_data(self, data: list[NDArray[np.floating]]):
         self.set_segments(data)
+        self._ndata = len(data)
 
     ##### HasEdges #####
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
         return self.get_linewidth()
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
+        if isinstance(width, (int, float, np.number)):
+            width = np.full(self._ndata, width)
         self.set_linewidth(width)
+
+    @staticmethod
+    def _bcast_lwls(linewidths, dashes):
+        return linewidths, dashes
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
         return [LineStyle(ls) for ls in self.get_linestyle()]
@@ -105,7 +96,7 @@ class MultiLine(LineCollection):
         return self.get_color()
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        self.set_color(color)
+        self.set_color(as_color_array(color, self._ndata))
 
     def _plt_get_antialias(self) -> bool:
         return self.get_antialiased()[0]

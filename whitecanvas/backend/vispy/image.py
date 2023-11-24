@@ -18,9 +18,6 @@ class Image(visuals.Image):
     def _plt_set_visible(self, visible: bool):
         self.visible = visible
 
-    def _plt_set_zorder(self, zorder: int):
-        pass
-
     def _plt_get_data(self) -> np.ndarray:
         return self._data
 

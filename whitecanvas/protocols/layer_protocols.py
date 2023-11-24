@@ -15,9 +15,6 @@ class BaseProtocol(Protocol):
     def _plt_set_visible(self, visible: bool):
         """Set the visibility."""
 
-    def _plt_set_zorder(self, zorder: int):
-        """Set the zorder."""
-
 
 @runtime_checkable
 class XYDataProtocol(BaseProtocol, Protocol):

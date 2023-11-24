@@ -91,6 +91,7 @@ class Spans(HeteroFaceEdgeMixin[BarProtocol]):
         return super()._disconnect_canvas(canvas)
 
     def _recalculate_spans(self, lim: tuple[float, float]):
+        # TODO: this is not efficient. Limits of min/max should be chunked.
         _min, _max = lim
         x0, x1, y0, y1 = self._backend._plt_get_data()
         _min_arr = np.full_like(x0, _min)
@@ -98,7 +99,7 @@ class Spans(HeteroFaceEdgeMixin[BarProtocol]):
         if self.orient.is_vertical:
             spans = x0, x1, _min_arr, _max_arr
         else:
-            spans = _min_arr, _max_arr, x0, x1
+            spans = _min_arr, _max_arr, y0, y1
         self._backend._plt_set_data(*spans)
 
 

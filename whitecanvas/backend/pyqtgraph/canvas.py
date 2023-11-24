@@ -12,6 +12,7 @@ import numpy as np
 
 from whitecanvas import protocols
 from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent
+from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from .app import run_app, get_app
 from ._labels import Title, AxisLabel, Axis, Ticks
 
@@ -56,6 +57,10 @@ class Canvas:
 
     def _plt_get_ylabel(self):
         return self._ylabel
+
+    def _plt_reorder_layers(self, layers: list[PyQtLayer]):
+        for i, layer in enumerate(layers):
+            layer._plt_set_zorder(i)
 
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""

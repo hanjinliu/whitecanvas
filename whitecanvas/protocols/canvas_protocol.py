@@ -24,6 +24,9 @@ class HasLayers(Protocol):
     def _plt_remove_layer(self, layer: BaseProtocol):
         """Remove layer from the canvas"""
 
+    def _plt_reorder_layers(self, layers: list[BaseProtocol]):
+        """Reorder layers in the canvas"""
+
 
 @runtime_checkable
 class CanvasProtocol(HasVisibility, HasLayers, Protocol):

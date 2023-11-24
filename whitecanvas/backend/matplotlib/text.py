@@ -3,12 +3,14 @@ from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.text import Text as mplText
+
+from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.types import Alignment, FacePattern, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
 
 
 @check_protocol(TextProtocol)
-class Text(mplText):
+class Text(mplText, MplLayer):
     def __init__(self, x: float, y: float, text: str):
         super().__init__(
             x,
@@ -20,16 +22,6 @@ class Text(mplText):
             clip_on=False,
         )
         self._bbox_props = {}
-
-    ##### BaseProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.get_visible()
-
-    def _plt_set_visible(self, visible: bool):
-        self.set_visible(visible)
-
-    def _plt_set_zorder(self, zorder: float):
-        self.set_zorder(zorder)
 
     ##### TextProtocol #####
 

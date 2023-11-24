@@ -1,9 +1,10 @@
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, cast
 import weakref
 
 from psygnal import Signal
 from vispy.scene import ViewBox, SceneCanvas, PanZoomCamera
+from vispy.util import keys
 import numpy as np
 from numpy.typing import NDArray
 
@@ -27,7 +28,8 @@ class Camera(PanZoomCamera):
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
     def __init__(self, viewbox: ViewBox):
-        grid: Grid = viewbox.add_grid()
+        self._outer_viewbox = viewbox
+        grid = cast("Grid", viewbox.add_grid())
         grid.spacing = 0
         _viewbox = grid.add_view(row=1, col=1, camera=Camera())
         self._viewbox: ViewBox = _viewbox
@@ -99,6 +101,16 @@ class Canvas:
     def _plt_get_ylabel(self):
         return self._ylabel
 
+    def _plt_reorder_layers(self, layers: list[protocols.BaseProtocol]):
+        """Reorder layers in the canvas"""
+        for idx, layer in enumerate(layers):
+            layer.order = idx
+        vb = self._outer_viewbox
+        if hasattr(vb, "_scene_ref"):
+            scene: SceneCanvas = vb._scene_ref()
+            scene._draw_order.clear()
+            scene.update()
+
     @property
     def _camera(self) -> Camera:
         return self._viewbox.camera
@@ -153,13 +165,6 @@ class Canvas:
         self._camera.resized.connect(lambda: callback(self._yaxis._plt_get_limits()))
 
 
-_VISPY_BUTTON_MAP = {
-    0: MouseButton.LEFT,
-    1: MouseButton.RIGHT,
-    2: MouseButton.MIDDLE,
-}
-
-
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
     def __init__(self, heights: list[int], widths: list[int]):
@@ -172,6 +177,7 @@ class CanvasGrid:
         canvas = Canvas(viewbox)
         viewbox.unfreeze()
         viewbox._canvas_ref = weakref.ref(canvas)
+        viewbox._scene_ref = weakref.ref(self._scene)
         viewbox.freeze()
         return canvas
 
@@ -205,7 +211,7 @@ class SceneCanvasExt(SceneCanvas):
             pos = tr.map(event.pos)[:2] - 0.5
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
-                modifiers=tuple(Modifier(mod) for mod in event.modifiers),
+                modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
                 pos=pos,
                 type=MouseEventType.CLICK,
             )
@@ -221,7 +227,7 @@ class SceneCanvasExt(SceneCanvas):
             pos = tr.map(event.pos)[:2] - 0.5
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
-                modifiers=tuple(Modifier(mod) for mod in event.modifiers),
+                modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
                 pos=pos,
                 type=MouseEventType.MOVE,
             )
@@ -237,10 +243,24 @@ class SceneCanvasExt(SceneCanvas):
             pos = tr.map(event.pos)[:2] - 0.5
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
-                modifiers=tuple(Modifier(mod) for mod in event.modifiers),
+                modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
                 pos=pos,
                 type=MouseEventType.DOUBLE_CLICK,
             )
 
             for callback in canvas._mouse_double_click_callbacks:
                 callback(ev)
+
+
+_VISPY_KEY_MAP = {
+    keys.SHIFT: Modifier.SHIFT,
+    keys.CONTROL: Modifier.CTRL,
+    keys.ALT: Modifier.ALT,
+    keys.META: Modifier.META,
+}
+
+_VISPY_BUTTON_MAP = {
+    0: MouseButton.LEFT,
+    1: MouseButton.RIGHT,
+    2: MouseButton.MIDDLE,
+}

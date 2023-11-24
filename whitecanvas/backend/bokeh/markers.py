@@ -30,9 +30,6 @@ class Markers(BokehLayer[bk_models.Scatter]):
     def _plt_set_visible(self, visible: bool):
         self._model.visible = visible
 
-    def _plt_set_zorder(self, zorder: int):
-        pass
-
     def _plt_get_data(self):
         return self._data.data["x"], self._data.data["y"]
 

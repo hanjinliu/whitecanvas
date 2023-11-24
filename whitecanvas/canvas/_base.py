@@ -19,10 +19,12 @@ from whitecanvas.types import (
     ColormapType,
     FacePattern,
     Orientation,
+    ArrayLike1D,
 )
 from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._categorical import CategorizedDataPlotter
+from whitecanvas.canvas._stack import StackedDataPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
@@ -190,12 +192,42 @@ class CanvasBase(ABC):
         self,
         data: Any,
         by: str | None = None,
-        offsets: float | ArrayLike | None = None,
+        offsets: float | ArrayLike1D | None = None,
         palette: ColormapType | None = None,
     ) -> CategorizedDataPlotter[Self]:
+        """
+        Categorize input data for plotting.
+
+        This method provides categorical plotting methods for the input data.
+        Methods are very similar to `seaborn` and `plotly.express`.
+
+        >>> df = sns.load_dataset("iris")
+        >>> canvas.cat(df, by="species").to_violinplot(y="sepal_width)
+        >>> canvas.cat(df, by="species").mean().to_line(y="sepal_width)
+
+        Parameters
+        ----------
+        data : tabular data
+            Any categorizable data. Currently, dict, pandas.DataFrame, and
+            polars.DataFrame are supported.
+        by : str, optional
+            Which column to use for grouping.
+        offsets : scalar or sequence, optional
+            Offset for each category. If scalar, the same offset is used for all.
+        palette : ColormapType, optional
+            Color palette used for plotting the categories.
+
+        Returns
+        -------
+        CategorizedDataPlotter
+            Plotter object.
+        """
         return CategorizedDataPlotter(
             self, data, by=by, offsets=offsets, palette=palette
         )
+
+    def stack(self, xdata) -> StackedDataPlotter[Self]:
+        return StackedDataPlotter(self, xdata)  # TODO
 
     @overload
     def add_line(

@@ -119,20 +119,6 @@ class PrimitiveLayer(Layer, Generic[_P]):
         return np.array(_x + _y, dtype=np.float64)
 
 
-class XYDataLayer(PrimitiveLayer[_P]):
-    @abstractproperty
-    def data(self) -> XYData:
-        """Current data of the layer."""
-
-    @abstractmethod
-    def set_data(
-        self,
-        xdata: ArrayLike | None = None,
-        ydata: ArrayLike | None = None,
-    ):
-        """Set the x and y data of the layer."""
-
-
 class LayerGroup(Layer):
     """
     A group of layers that will be treated as a single layer in the canvas.

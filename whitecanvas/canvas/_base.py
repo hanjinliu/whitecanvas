@@ -23,7 +23,7 @@ from whitecanvas.types import (
 from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._categorical import CategorizedDataPlotter
-from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
 
@@ -353,6 +353,24 @@ class CanvasBase(ABC):
         layer = _l.Bars.from_histogram(
             data, bins=bins, range=range, density=density, name=name, color=color,
             alpha=alpha, pattern=pattern, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_spans(
+        self,
+        spans: ArrayLike,
+        *,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        color: ColorType = "blue",
+        alpha: float = 0.2,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> _l.Spans:
+        name = self._coerce_name("histogram", name)
+        color = self._generate_colors(color)
+        layer = _l.Spans(
+            spans, name=name, orient=orient, color=color, alpha=alpha,
+            pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

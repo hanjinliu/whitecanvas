@@ -1,4 +1,4 @@
-from ._alias import ColorType, ColormapType, _Void
+from ._alias import ColorType, ColormapType, ArrayLike1D, _Void
 from ._enums import (
     LineStyle,
     Symbol,
@@ -14,6 +14,7 @@ from ._mouse import MouseEvent
 __all__ = [
     "ColorType",
     "ColormapType",
+    "ArrayLike1D",
     "LineStyle",
     "Symbol",
     "FacePattern",

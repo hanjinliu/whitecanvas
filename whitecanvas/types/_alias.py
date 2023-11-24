@@ -1,8 +1,11 @@
-from typing import Any, Union, Iterable
+from typing import Any, Union, Iterable, Sequence
 from cmap import Color, Colormap
+import numpy as np
 
 ColorType = Union[str, Iterable["int | float"], Color]
-ColormapType = Union[str, Any]
+ColormapType = Union[str, Colormap, Any]
+Number = Union[int, float, np.number]
+ArrayLike1D = Sequence[Number]
 
 
 class _Void:

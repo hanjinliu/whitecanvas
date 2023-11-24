@@ -34,7 +34,7 @@ def _norm_bar_inputs(t0, top, bot, orient: Orientation, bar_width: float):
         )
     x_hint, y_hint = xyy_size_hint(t0, top, bot, orient, bar_width / 2)
 
-    if orient is Orientation.VERTICAL:
+    if orient.is_vertical:
         dx = bar_width / 2
         x0, x1 = t0 - dx, t0 + dx
         y0, y1 = top, bot
@@ -322,6 +322,11 @@ class Bars(AggFaceEdgeMixin[BarProtocol], BarsBase):
             orient=orient, backend=self._backend_name
         )  # fmt: skip
 
+    @property
+    def ndata(self) -> int:
+        """The number of data points"""
+        return self._backend._plt_get_data()[0].size
+
 
 class HeteroBars(HeteroFaceEdgeMixin[BarProtocol], BarsBase):
     if TYPE_CHECKING:
@@ -379,3 +384,8 @@ class HeteroBars(HeteroFaceEdgeMixin[BarProtocol], BarsBase):
             style=style, antialias=antialias, capsize=capsize,
             orient=orient, backend=self._backend_name
         )  # fmt: skip
+
+    @property
+    def ndata(self) -> int:
+        """The number of data points"""
+        return self._backend._plt_get_data()[0].size

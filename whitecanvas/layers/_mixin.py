@@ -272,9 +272,7 @@ class MultiFaceNamespace(LayerNamespace[_L]):
 
     @color.setter
     def color(self, color):
-        self.layer._backend._plt_set_face_color(
-            as_color_array(color, len(self.layer.data.x))
-        )
+        self.layer._backend._plt_set_face_color(as_color_array(color, self.layer.ndata))
 
     @property
     def pattern(self) -> EnumArray[FacePattern]:
@@ -335,9 +333,7 @@ class MultiEdgeNamespace(LayerNamespace[_L]):
 
     @color.setter
     def color(self, color):
-        self.layer._backend._plt_set_edge_color(
-            as_color_array(color, len(self.layer.data.x))
-        )
+        self.layer._backend._plt_set_edge_color(as_color_array(color, self.layer.ndata))
 
     @property
     def width(self) -> NDArray[np.floating]:

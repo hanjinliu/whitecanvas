@@ -242,6 +242,21 @@ class MarkersProtocol(XYDataProtocol, HasFaces, HasEdges, Protocol):
 
 
 @runtime_checkable
+class HeteroMarkersProtocol(XYDataProtocol, HasMultiFaces, HasMultiEdges, Protocol):
+    def _plt_get_symbol(self) -> Symbol:
+        """Return the symbol."""
+
+    def _plt_set_symbol(self, symbol: Symbol):
+        """Set the symbol."""
+
+    def _plt_get_symbol_size(self) -> NDArray[np.floating]:
+        """Return the symbol size."""
+
+    def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
+        """Set the symbol size."""
+
+
+@runtime_checkable
 class BandProtocol(OrientedXYYDataProtocol, HasFaces, HasEdges, Protocol):
     pass
 

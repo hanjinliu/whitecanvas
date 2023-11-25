@@ -120,55 +120,49 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
                 raise ValueError("Shape of offset is wrong")
         super().__init__(canvas, obj, offsets, _color_palette)
 
-    def mean(self: CategorizedDataPlotter[_C]) -> CategorizedAggDataPlotter[_C]:
+    def mean(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.mean) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._color_palette
         )
 
-    def min(self: CategorizedDataPlotter[_C]) -> CategorizedAggDataPlotter[_C]:
+    def min(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.min) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._color_palette
         )
 
-    def max(self: CategorizedDataPlotter[_C]) -> CategorizedAggDataPlotter[_C]:
+    def max(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.max) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._color_palette
         )
 
-    def std(
-        self: CategorizedDataPlotter[_C], ddof: int = 1
-    ) -> CategorizedAggDataPlotter[_C]:
+    def std(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.std, ddof=ddof) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._color_palette
         )
 
-    def var(
-        self: CategorizedDataPlotter[_C], ddof: int = 1
-    ) -> CategorizedAggDataPlotter[_C]:
+    def var(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.var, ddof=ddof) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._color_palette
         )
 
-    def sum(self: CategorizedDataPlotter[_C]) -> CategorizedAggDataPlotter[_C]:
+    def sum(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.sum) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._color_palette
         )
 
-    def count(self: CategorizedDataPlotter[_C]) -> CategorizedAggDataPlotter[_C]:
+    def count(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, len) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._color_palette
         )
 
-    def sem(
-        self: CategorizedDataPlotter[_C], ddof: int = 1
-    ) -> CategorizedAggDataPlotter[_C]:
+    def sem(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
         agged = {
             k: _aggregate(v, lambda x: np.std(x, ddof=ddof) / np.sqrt(len(x)))
             for k, v in self.items()
@@ -320,13 +314,13 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         size=10,
         symbol=Symbol.CIRCLE,
         pattern=FacePattern.SOLID,
-    ):
+    ) -> _l.HeteroMarkers:
         canvas = self._canvas()
-        name = canvas._coerce_name(_l.Markers, name)
+        name = canvas._coerce_name("markers", name)
         if color is None:
             color = self._generate_colors()
         data = self._get_plot_data(y)
-        layer = _l.Markers(
+        layer = _l.HeteroMarkers(
             self._generate_x(), data, name=name, symbol=symbol,
             size=size, color=color, alpha=alpha, pattern=pattern,
             backend=self._get_backend(),
@@ -343,7 +337,7 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         color=None,
         alpha=1.0,
         pattern=FacePattern.SOLID,
-    ):
+    ) -> _l.HeteroBars:
         canvas = self._canvas()
         name = canvas._coerce_name(_l.Bars, name)
         if color is None:

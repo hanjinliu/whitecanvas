@@ -1,5 +1,6 @@
 from qtpy import QtGui
 from qtpy.QtCore import Qt
+from pyqtgraph.graphicsItems.ScatterPlotItem import Symbols
 import numpy as np
 
 from whitecanvas.types import LineStyle, Symbol, FacePattern
@@ -10,7 +11,7 @@ def array_to_qcolor(arr: np.ndarray) -> QtGui.QColor:
     if arr.dtype.kind not in "iuf":
         raise ValueError(f"Expected numeric array, got {arr.dtype}")
     rgba = [round(c) for c in (arr * 255)]
-    if len(rgba) != 4:
+    if len(rgba) not in (3, 4):
         raise ValueError(f"Expected array of length 4, got {rgba}")
     return QtGui.QColor(*rgba)
 
@@ -24,6 +25,22 @@ _LINE_STYLE = {
 
 _LINE_STYLE_INV = {v: k for k, v in _LINE_STYLE.items()}
 
+
+def _create_symbol(coords: list[tuple[float, float]]):
+    p = QtGui.QPainterPath()
+    p.moveTo(*coords[0])
+    for x, y in coords[1:]:
+        p.lineTo(x, y)
+    p.closeSubpath()
+    return p
+
+
+Symbols["whitecanvas.vbar"] = _create_symbol([(0, -0.5), (0, 0.5)])
+Symbols["whitecanvas.hbar"] = _create_symbol([(-0.5, 0), (0.5, 0)])
+Symbols["whitecanvas.square"] = _create_symbol(
+    [(-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5), (0.5, -0.5)]
+)
+
 _SYMBOL = {
     Symbol.STAR: "star",
     Symbol.DIAMOND: "d",
@@ -31,6 +48,9 @@ _SYMBOL = {
     Symbol.TRIANGLE_LEFT: "t3",
     Symbol.TRIANGLE_DOWN: "t",
     Symbol.TRIANGLE_RIGHT: "t2",
+    Symbol.VBAR: "whitecanvas.vbar",
+    Symbol.HBAR: "whitecanvas.hbar",
+    Symbol.SQUARE: "whitecanvas.square",
 }
 
 _SYMBOL_INV = {v: k for k, v in _SYMBOL.items()}

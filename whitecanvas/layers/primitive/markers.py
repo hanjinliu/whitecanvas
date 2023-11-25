@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-from numpy.typing import ArrayLike
+from typing import TYPE_CHECKING, Sequence
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
-from whitecanvas.protocols import MarkersProtocol
-from whitecanvas.layers._base import XYData
-from whitecanvas.layers._mixin import FaceEdgeMixin
+from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol, BaseProtocol
+from whitecanvas.layers._base import XYData, PrimitiveLayer
+from whitecanvas.layers._mixin import FaceEdgeMixin, HeteroFaceEdgeMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
     Symbol,
@@ -15,15 +16,16 @@ from whitecanvas.types import (
     Alignment,
     Orientation,
 )
-from whitecanvas.utils.normalize import as_array_1d, norm_color, normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
+    from typing_extensions import Self
 
 _void = _Void()
 
 
-class Markers(FaceEdgeMixin[MarkersProtocol]):
+class MarkersBase(PrimitiveLayer[BaseProtocol]):
     def __init__(
         self,
         xdata: ArrayLike,
@@ -43,14 +45,20 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
         self.update(
             symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha
         )  # fmt: skip
+        self.edge.color = color
         self._x_hint = xdata.min(), xdata.max()
         self._y_hint = ydata.min(), ydata.max()
 
     @classmethod
-    def empty(cls, backend: Backend | str | None = None) -> Markers:
+    def empty(cls, backend: Backend | str | None = None) -> Self:
         """Return an empty markers layer."""
         # TODO: not works with size 0
         return cls([], [], backend=backend)
+
+    @property
+    def ndata(self) -> int:
+        """Number of data points."""
+        return self.data.x.size
 
     @property
     def data(self) -> XYData:
@@ -85,15 +93,6 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
     def symbol(self, symbol: str | Symbol):
         self._backend._plt_set_symbol(Symbol(symbol))
 
-    @property
-    def size(self) -> float:
-        """Size of the symbol."""
-        return self._backend._plt_get_symbol_size()
-
-    @size.setter
-    def size(self, size: float):
-        self._backend._plt_set_symbol_size(size)
-
     def update(
         self,
         *,
@@ -102,7 +101,7 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
         color: ColorType | _Void = _void,
         alpha: float | _Void = _void,
         pattern: str | FacePattern | _Void = _void,
-    ):
+    ) -> Self:
         if symbol is not _void:
             self.symbol = symbol
         if size is not _void:
@@ -210,3 +209,65 @@ class Markers(FaceEdgeMixin[MarkersProtocol]):
             texts=texts,
             name=self.name,
         )
+
+
+class Markers(MarkersBase, FaceEdgeMixin[MarkersProtocol]):
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            xdata: ArrayLike,
+            ydata: ArrayLike,
+            *,
+            name: str | None = None,
+            symbol: Symbol | str = Symbol.CIRCLE,
+            size: float = 10,
+            color: ColorType = "blue",
+            alpha: float = 1.0,
+            pattern: str | FacePattern = FacePattern.SOLID,
+            backend: Backend | str | None = None,
+        ):
+            ...
+
+    @property
+    def size(self) -> float:
+        """Size of the symbol."""
+        return self._backend._plt_get_symbol_size()
+
+    @size.setter
+    def size(self, size: float):
+        """Set marker size"""
+        self._backend._plt_set_symbol_size(size)
+
+
+class HeteroMarkers(MarkersBase, HeteroFaceEdgeMixin[HeteroMarkersProtocol]):
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            xdata: ArrayLike,
+            ydata: ArrayLike,
+            *,
+            name: str | None = None,
+            symbol: Symbol | str = Symbol.CIRCLE,
+            size: float | Sequence[float] = 10,
+            color: ColorType | Sequence[ColorType] = "blue",
+            alpha: float = 1.0,
+            pattern: str
+            | FacePattern
+            | Sequence[str | FacePattern] = FacePattern.SOLID,
+            backend: Backend | str | None = None,
+        ):
+            ...
+
+    @property
+    def size(self) -> float:
+        """Size of the symbol."""
+        return self._backend._plt_get_symbol_size()
+
+    @size.setter
+    def size(self, size: float | NDArray[np.floating]):
+        """Set marker size"""
+        if not isinstance(size, (float, int, np.number)):
+            size = np.asarray(size)
+        self._backend._plt_set_symbol_size(size)

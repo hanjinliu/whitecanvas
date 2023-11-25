@@ -25,8 +25,8 @@ class Bars(pg.BarGraphItem, PyQtLayer):
         ndata = len(xlow)
         super().__init__(
             x0=xlow, x1=xhigh, y0=ylow, y1=yhigh,
-            pens=[pen] * ndata,
-            brushes=[QtGui.QBrush(QtGui.QColor(0, 0, 0))] * ndata,
+            pens=[QtGui.QPen(pen) for _ in range(ndata)],
+            brushes=[QtGui.QBrush(QtGui.QColor(0, 0, 0)) for _ in range(ndata)],
         )  # fmt: skip
 
     ##### XYDataProtocol #####

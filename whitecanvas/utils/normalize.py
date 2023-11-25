@@ -23,7 +23,10 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
         xdata = as_array_1d(args[0])
         ydata = as_array_1d(args[1])
         if xdata.size != ydata.size:
-            raise ValueError("Expected xdata and ydata to have the same size, " f"got {xdata.size} and {ydata.size}")
+            raise ValueError(
+                "Expected xdata and ydata to have the same size, "
+                f"got {xdata.size} and {ydata.size}"
+            )
     else:
         raise TypeError(f"Expected 1 or 2 positional arguments, got {len(args)}")
     return xdata, ydata
@@ -49,16 +52,21 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
         col = norm_color(color)
         return np.repeat(col[np.newaxis, :], size, axis=0)
     if isinstance(color, np.ndarray):
-        if color.shape in [(3,), (4,)]:
+        if color.dtype.kind in "OU":
+            if color.shape != (size,):
+                raise ValueError(
+                    f"Expected color array of shape ({size},), got {color.shape}"
+                )
+            return np.stack([norm_color(each) for each in color], axis=0)
+        elif color.shape in [(3,), (4,)]:
             col = norm_color(color)
             return np.repeat(col[np.newaxis, :], size, axis=0)
         elif color.shape in [(size, 3), (size, 4)]:
             return color
         else:
-            raise ValueError("Color array must have shape (3,), (4,), (N, 3), or (N, 4) " f"but got {color.shape}")
+            raise ValueError(
+                "Color array must have shape (3,), (4,), (N, 3), or (N, 4) "
+                f"but got {color.shape}"
+            )
     arr = np.array(color)
-    if arr.dtype == object:
-        if arr.shape != (size,):
-            raise ValueError(f"Expected color array of shape ({size},), got {arr.shape}")
-        return np.stack([norm_color(each) for each in arr], axis=0)
     return as_color_array(arr, size)

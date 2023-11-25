@@ -1,5 +1,5 @@
 from .line import MonoLine, MultiLine
-from .markers import Markers
+from .markers import Markers, HeteroMarkers
 from .bars import Bars
 from .band import Band
 from .text import Text

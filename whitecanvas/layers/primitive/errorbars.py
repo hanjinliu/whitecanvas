@@ -8,7 +8,7 @@ from whitecanvas.layers.primitive.line import MultiLine
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, _Void, Orientation
-from whitecanvas.utils.normalize import as_array_1d, norm_color
+from whitecanvas.utils.normalize import as_array_1d, arr_color
 
 
 _void = _Void()
@@ -179,7 +179,7 @@ class Errorbars(MultiLine):
 
     @color.setter
     def color(self, color: ColorType):
-        self._backend._plt_set_edge_color(norm_color(color))
+        self._backend._plt_set_edge_color(arr_color(color))
 
     @property
     def style(self) -> LineStyle:

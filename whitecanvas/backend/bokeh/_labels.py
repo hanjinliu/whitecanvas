@@ -89,9 +89,6 @@ class Axis(_CanvasComponent):
     def _plt_get_ticks(self) -> list[tuple[float, str]]:
         return self._plt_get_axis().ticker.ticks
 
-    def _plt_set_ticks(self, ticks: list[tuple[float, str]]):
-        self._plt_get_axis().ticker.ticks = ticks
-
     def _plt_get_color(self):
         return np.array(Color(self._plt_get_axis().axis_label_text_color).rgba)
 

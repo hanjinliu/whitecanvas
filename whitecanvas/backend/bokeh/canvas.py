@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
+
+from whitecanvas.utils.normalize import arr_color, hex_color
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
-from cmap import Color
 from bokeh import (
     events as bk_events,
     models as bk_models,
@@ -213,10 +214,10 @@ class CanvasGrid:
             self._grid_plot.visible = False
 
     def _plt_get_background_color(self):
-        return self._grid_plot.background_fill_color
+        return arr_color(self._grid_plot.background_fill_color)
 
     def _plt_set_background_color(self, color):
-        color = Color(color).hex
+        color = hex_color(color)
         for r in range(self._shape[0]):
             for c in range(self._shape[1]):
                 child = self._grid_plot.children[r][c]

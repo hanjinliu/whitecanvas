@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-from cmap import Color
 from whitecanvas.types import LineStyle
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 
 import bokeh.models as bk_models
+
+from whitecanvas.utils.normalize import arr_color, hex_color
 from ._base import BokehLayer, to_bokeh_line_style, from_bokeh_line_style
 
 
@@ -41,10 +42,10 @@ class MonoLine(BokehLayer[bk_models.Line]):
         self._model.line_dash = to_bokeh_line_style(style)
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.array(Color(self._model.line_color).rgba)
+        return np.array(arr_color(self._model.line_color))
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        self._model.line_color = Color(color).hex
+        self._model.line_color = hex_color(color)
 
     def _plt_get_antialias(self) -> bool:
         return self._model.line_join == "round"
@@ -120,13 +121,13 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         self._data.data["style"] = val
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.stack([Color(c).rgba for c in self._data.data["color"]], axis=0)
+        return np.stack([arr_color(c) for c in self._data.data["color"]], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
-            color = [Color(color).hex] * len(self._data.data["x"])
+            color = [hex_color(color)] * len(self._data.data["x"])
         else:
-            color = [Color(c).hex for c in color]
+            color = [hex_color(c) for c in color]
         self._data.data["color"] = color
 
     def _plt_get_antialias(self) -> bool:

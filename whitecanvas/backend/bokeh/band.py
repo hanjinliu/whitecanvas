@@ -6,6 +6,8 @@ from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import FacePattern, LineStyle, Orientation
 
 import bokeh.models as bk_models
+
+from whitecanvas.utils.normalize import arr_color, hex_color
 from ._base import (
     BokehLayer,
     to_bokeh_line_style,
@@ -49,10 +51,10 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
     _plt_set_horizontal_data = _plt_set_vertical_data
 
     def _plt_get_face_color(self):
-        return np.array(Color(self._model.fill_color).rgba)
+        return arr_color(self._model.fill_color)
 
     def _plt_set_face_color(self, color):
-        self._model.fill_color = Color(color).hex
+        self._model.fill_color = hex_color(color)
 
     def _plt_get_face_pattern(self) -> FacePattern:
         return from_bokeh_hatch(self._model.hatch_pattern)
@@ -61,10 +63,10 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         self._model.hatch_pattern = to_bokeh_hatch(pattern)
 
     def _plt_get_edge_color(self):
-        return np.array(Color(self._model.line_color).rgba)
+        return arr_color(self._model.line_color)
 
     def _plt_set_edge_color(self, color):
-        self._model.line_color = Color(color).hex
+        self._model.line_color = hex_color(color)
 
     def _plt_get_edge_width(self):
         return self._model.line_width

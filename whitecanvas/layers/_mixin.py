@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import (
+    Any,
     Generic,
     Iterable,
     Iterator,
@@ -17,7 +18,7 @@ from numpy.typing import ArrayLike, NDArray
 from whitecanvas.protocols import layer_protocols as _lp
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, _Void
-from whitecanvas.utils.normalize import norm_color, as_color_array
+from whitecanvas.utils.normalize import arr_color, as_color_array
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -32,6 +33,7 @@ class LayerNamespace(Generic[_L]):
     def __init__(self, layer: _L | None = None) -> None:
         self.layer = layer
         self._instances: WeakValueDictionary[int, _L] = WeakValueDictionary()
+        self.__setattr__ = self._setattr
 
     def __get__(self, obj, owner) -> Self:
         if obj is None:
@@ -41,6 +43,9 @@ class LayerNamespace(Generic[_L]):
             ns = self._instances[_id] = self.__class__(obj)
         return ns
 
+    def _setattr(self, name: str, value: Any) -> None:
+        raise AttributeError(f"Cannot set attribute {name!r} on {self!r}")
+
 
 class FaceNamespace(LayerNamespace[_L]):
     @property
@@ -49,7 +54,7 @@ class FaceNamespace(LayerNamespace[_L]):
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_face_color(norm_color(value))
+        return self.layer._backend._plt_set_face_color(arr_color(value))
 
     @property
     def pattern(self) -> FacePattern:
@@ -104,7 +109,7 @@ class AggFaceNamespace(LayerNamespace[_L]):
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_face_color(norm_color(value))
+        return self.layer._backend._plt_set_face_color(arr_color(value))
 
     @property
     def pattern(self) -> FacePattern:
@@ -159,7 +164,7 @@ class EdgeNamespace(LayerNamespace[_L]):
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_edge_color(norm_color(value))
+        return self.layer._backend._plt_set_edge_color(arr_color(value))
 
     @property
     def style(self) -> LineStyle:
@@ -215,7 +220,7 @@ class AggEdgeNamespace(LayerNamespace[_L]):
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_edge_color(norm_color(value))
+        return self.layer._backend._plt_set_edge_color(arr_color(value))
 
     @property
     def style(self) -> LineStyle:
@@ -392,7 +397,7 @@ class LineMixin(PrimitiveLayer[_HasEdges]):
 
     @color.setter
     def color(self, color: ColorType):
-        self._backend._plt_set_edge_color(norm_color(color))
+        self._backend._plt_set_edge_color(arr_color(color))
 
     @property
     def width(self):

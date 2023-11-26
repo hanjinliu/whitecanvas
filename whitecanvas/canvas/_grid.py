@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from whitecanvas import protocols
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
-from whitecanvas.utils.normalize import norm_color
+from whitecanvas.utils.normalize import arr_color
 from whitecanvas.theme import get_theme
 
 
@@ -180,11 +180,11 @@ class CanvasGrid:
     @property
     def background_color(self) -> NDArray[np.floating]:
         """Background color of the canvas."""
-        return norm_color(self._backend_object._plt_get_background_color())
+        return arr_color(self._backend_object._plt_get_background_color())
 
     @background_color.setter
     def background_color(self, color):
-        self._backend_object._plt_set_background_color(norm_color(color))
+        self._backend_object._plt_set_background_color(arr_color(color))
 
     def screenshot(self) -> NDArray[np.uint8]:
         """Return a screenshot of the grid."""

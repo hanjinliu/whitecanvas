@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy.typing import NDArray
-from cmap import Color
 
 from whitecanvas.types import Alignment, FacePattern, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
 
 import bokeh.models as bk_models
+
+from whitecanvas.utils.normalize import arr_color, hex_color
 from ._base import (
     BokehLayer,
     to_bokeh_line_style,
@@ -39,10 +39,10 @@ class Text(BokehLayer[bk_models.Text]):
         self._model.text = [text]
 
     def _plt_get_text_color(self):
-        return np.array(self._model.text_color)
+        return arr_color(self._model.text_color)
 
     def _plt_set_text_color(self, color):
-        self._model.text_color = Color(color).hex
+        self._model.text_color = hex_color(color)
 
     def _plt_get_text_size(self) -> float:
         return int(self._model.text_font_size.rstrip("pt"))
@@ -80,10 +80,10 @@ class Text(BokehLayer[bk_models.Text]):
     ##### HasFaces #####
 
     def _plt_get_face_color(self):
-        return np.array(self._model.background_fill_color)
+        return arr_color(self._model.background_fill_color)
 
     def _plt_set_face_color(self, color):
-        self._model.background_fill_color = Color(color).hex
+        self._model.background_fill_color = hex_color(color)
 
     def _plt_get_face_pattern(self) -> FacePattern:
         return from_bokeh_hatch(self._model.background_hatch_pattern)
@@ -92,10 +92,10 @@ class Text(BokehLayer[bk_models.Text]):
         self._model.background_hatch_pattern = to_bokeh_hatch(pattern)
 
     def _plt_get_edge_color(self):
-        return np.array(self._model.border_line_color)
+        return arr_color(self._model.border_line_color)
 
     def _plt_set_edge_color(self, color):
-        self._model.border_line_color = Color(color).hex
+        self._model.border_line_color = hex_color(color)
 
     def _plt_get_edge_width(self) -> float:
         return self._model.border_line_width

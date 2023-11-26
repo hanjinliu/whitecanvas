@@ -32,9 +32,19 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
     return xdata, ydata
 
 
-def norm_color(color) -> np.ndarray:
+def arr_color(color) -> np.ndarray:
     """Normalize a color input to a 4-element float array."""
     return np.array(Color(color).rgba, dtype=np.float32)
+
+
+def hex_color(color) -> str:
+    """Normalize a color input to a #RRGGBBAA string."""
+    return Color(color).hex
+
+
+def rgba_str_color(color) -> str:
+    """Normalize a color input to a rgba(r, g, b, a) string."""
+    return Color(color).rgba_string
 
 
 def as_any_1d_array(x: float, size: int, dtype=None) -> np.ndarray:
@@ -49,7 +59,7 @@ def as_any_1d_array(x: float, size: int, dtype=None) -> np.ndarray:
 
 def as_color_array(color, size: int) -> NDArray[np.float32]:
     if isinstance(color, str):  # e.g. color = "black"
-        col = norm_color(color)
+        col = arr_color(color)
         return np.repeat(col[np.newaxis, :], size, axis=0)
     if isinstance(color, np.ndarray):
         if color.dtype.kind in "OU":
@@ -57,9 +67,9 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
                 raise ValueError(
                     f"Expected color array of shape ({size},), got {color.shape}"
                 )
-            return np.stack([norm_color(each) for each in color], axis=0)
+            return np.stack([arr_color(each) for each in color], axis=0)
         elif color.shape in [(3,), (4,)]:
-            col = norm_color(color)
+            col = arr_color(color)
             return np.repeat(col[np.newaxis, :], size, axis=0)
         elif color.shape in [(size, 3), (size, 4)]:
             return color

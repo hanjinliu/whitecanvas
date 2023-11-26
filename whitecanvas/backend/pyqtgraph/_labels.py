@@ -124,9 +124,6 @@ class Axis(_CanvasComponent):
         else:
             self._canvas()._viewbox().setYRange(*limits, padding=0)
 
-    def _plt_set_ticks(self, ticks: list[tuple[float, str]]):
-        self._plt_get_axis().setTicks(ticks)
-
     def _plt_get_color(self):
         return np.array(self._plt_get_axis().textPen().color().toRgbF())
 

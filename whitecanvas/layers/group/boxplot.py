@@ -8,7 +8,7 @@ from whitecanvas.types import ColorType, FacePattern, LineStyle, Orientation
 from whitecanvas.layers.primitive import HeteroBars, MultiLine
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._cat_utils import check_array_input
-from whitecanvas.utils.normalize import as_color_array, norm_color
+from whitecanvas.utils.normalize import as_color_array, arr_color
 
 
 class BoxPlot(ListLayerGroup):
@@ -75,7 +75,7 @@ class BoxPlot(ListLayerGroup):
         x, data = check_array_input(x, data)
         ori = Orientation.parse(orient)
         face_color = as_color_array(face_color, len(x))
-        edge_color = norm_color(edge_color)
+        edge_color = arr_color(edge_color)
         agg_values: list[NDArray[np.number]] = []
         for d in data:
             agg_values.append(np.quantile(d, [0, 0.25, 0.5, 0.75, 1]))

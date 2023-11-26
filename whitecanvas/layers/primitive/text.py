@@ -16,7 +16,7 @@ from whitecanvas.types import (
     _Void,
     Alignment,
 )
-from whitecanvas.utils.normalize import norm_color
+from whitecanvas.utils.normalize import arr_color
 from whitecanvas.theme import get_theme
 from whitecanvas._exceptions import ReferenceDeletedError
 
@@ -64,7 +64,7 @@ class Text(PrimitiveLayer[TextProtocol]):
     def color(self, color: ColorType | None):
         if color is None:
             color = get_theme().foreground_color
-        self._backend._plt_set_text_color(norm_color(color))
+        self._backend._plt_set_text_color(arr_color(color))
 
     @property
     def size(self):
@@ -163,7 +163,7 @@ class TextBackgroundFace(TextNamespace):
 
     @color.setter
     def color(self, color: ColorType):
-        self._layer()._backend._plt_set_face_color(norm_color(color))
+        self._layer()._backend._plt_set_face_color(arr_color(color))
 
     @property
     def face_pattern(self):
@@ -205,7 +205,7 @@ class TextBackgroundEdge(TextNamespace):
 
     @color.setter
     def color(self, color: ColorType):
-        self._layer()._backend._plt_set_edge_color(norm_color(color))
+        self._layer()._backend._plt_set_edge_color(arr_color(color))
 
     @property
     def width(self):

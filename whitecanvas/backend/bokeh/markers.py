@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-from cmap import Color
 from whitecanvas.types import LineStyle, Symbol, FacePattern
 from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol, check_protocol
 
 import bokeh.models as bk_models
+
+from whitecanvas.utils.normalize import arr_color, hex_color
 from ._base import (
     BokehLayer,
     HeteroLayer,
@@ -38,10 +39,10 @@ class Markers(BokehLayer[bk_models.Scatter]):
         self._data.data = dict(x=xdata, y=ydata)
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return np.array(Color(self._model.fill_color).rgba)
+        return arr_color(self._model.fill_color)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
-        self._model.fill_color = Color(color).hex
+        self._model.fill_color = hex_color(color)
 
     def _plt_get_face_pattern(self) -> FacePattern:
         return from_bokeh_hatch(self._model.hatch_pattern)
@@ -50,10 +51,10 @@ class Markers(BokehLayer[bk_models.Scatter]):
         self._model.hatch_pattern = to_bokeh_hatch(pattern)
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.array(Color(self._model.line_color).rgba)
+        return arr_color(self._model.line_color)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        self._model.line_color = Color(color).hex
+        self._model.line_color = hex_color(color)
 
     def _plt_get_edge_width(self) -> float:
         return self._model.line_width

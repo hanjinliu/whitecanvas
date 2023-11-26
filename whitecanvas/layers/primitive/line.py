@@ -7,6 +7,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol
 from whitecanvas.layers._base import XYData, PrimitiveLayer
+from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
@@ -18,7 +19,12 @@ from whitecanvas.types import (
     FacePattern,
     Orientation,
 )
-from whitecanvas.utils.normalize import as_array_1d, as_color_array, normalize_xy
+from whitecanvas.utils.normalize import (
+    arr_color,
+    as_array_1d,
+    as_color_array,
+    normalize_xy,
+)
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -54,8 +60,7 @@ class Line(MonoLine):
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.name = name if name is not None else "Line"
         self.update(color=color, width=width, style=style, antialias=antialias)
-        self._x_hint = xdata.min(), xdata.max()
-        self._y_hint = ydata.min(), ydata.max()
+        self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
 
     @property
     def data(self) -> XYData:
@@ -78,8 +83,7 @@ class Line(MonoLine):
                 f"got {x0.size} and {y0.size}"
             )
         self._backend._plt_set_data(x0, y0)
-        self._x_hint = x0.min(), x0.max()
-        self._y_hint = y0.min(), y0.max()
+        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
 
     def with_markers(
         self,
@@ -292,15 +296,19 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
 
     @color.setter
     def color(self, color: ColorType):
-        self._backend._plt_set_edge_color(as_color_array(color, self.nlines))
+        self._backend._plt_set_edge_color(arr_color(color))
 
     @property
-    def width(self):
+    def width(self) -> float:
         """Width of the line."""
         return self._backend._plt_get_edge_width()
 
     @width.setter
-    def width(self, width):
+    def width(self, width: float):
+        if not isinstance(width, (int, float, np.number)):
+            raise TypeError(f"Expected width to be numeric, got {type(width)}")
+        elif width < 0:
+            raise ValueError(f"Expected width to be non-negative, got {width!r}")
         self._backend._plt_set_edge_width(width)
 
     @property
@@ -322,7 +330,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         if not 0 <= value <= 1:
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         color = self.color.copy()
-        color[:, 3] = value
+        color[3] = value
         self.color = color
 
     def update(

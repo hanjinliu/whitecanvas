@@ -725,7 +725,7 @@ class CanvasBase(ABC):
                 raise RuntimeError(f"type {type(layer)} not expected")
         self._canvas()._plt_reorder_layers(layer_backends)
 
-    def _group_layers(self, group: _l.LayerGroup):
+    def _cb_layer_grouped(self, group: _l.LayerGroup):
         indices: list[int] = []  # layers to remove
         not_found: list[_l.PrimitiveLayer] = []  # primitive layers to add
         id_exists = set(map(id, self.layers.iter_primitives()))
@@ -735,6 +735,8 @@ class CanvasBase(ABC):
                 indices.append(idx)
             except ValueError:
                 not_found.extend(_iter_layers(layer))
+        if not indices:
+            return
         self._is_grouping = True
         try:
             for idx in reversed(indices):

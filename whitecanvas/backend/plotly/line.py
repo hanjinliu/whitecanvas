@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from plotly import graph_objects as go
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
-from whitecanvas.utils.normalize import arr_color, rgba_str_color
+from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
 from ._base import PlotlyLayer, to_plotly_linestyle, from_plotly_linestyle
 
 
@@ -54,25 +54,31 @@ class MonoLine(PlotlyLayer):
         self._props["line"]["simplify"] = not antialias
 
 
+@check_protocol(MultiLineProtocol)
 class MultiLine(PlotlyLayer):
     def __init__(self, data: list[NDArray[np.floating]]):
         # In plotly, we can break a line into multiple segments by inserting None
         xdata = []
         ydata = []
         for each in data:
-            each = each.tolist()
-            xdata = xdata + each + [None]
-            ydata = ydata + each + [None]
+            xdata = xdata + each[:, 0].tolist() + [None]
+            ydata = ydata + each[:, 1].tolist() + [None]
         # remove last None
-        xdata.pop()
-        ydata.pop()
+        if len(xdata) > 0:
+            xdata.pop()
+            ydata.pop()
         self._data = data
 
         self._props = {
             "x": xdata,
             "y": ydata,
             "mode": "lines",
-            "line": {"color": "blue", "width": 1, "dash": "solid", "simplify": False},
+            "line": {
+                "color": "blue",
+                "width": 1,
+                "dash": "solid",
+                "simplify": False,
+            },
             "type": "scatter",
             "visible": True,
         }
@@ -84,12 +90,12 @@ class MultiLine(PlotlyLayer):
         xdata = []
         ydata = []
         for each in data:
-            each = each.tolist()
-            xdata = xdata + each + [None]
-            ydata = ydata + each + [None]
+            xdata = xdata + each[:, 0].tolist() + [None]
+            ydata = ydata + each[:, 1].tolist() + [None]
         # remove last None
-        xdata.pop()
-        ydata.pop()
+        if len(xdata) > 0:
+            xdata.pop()
+            ydata.pop()
         self._data = data
         self._props["x"] = xdata
         self._props["y"] = ydata

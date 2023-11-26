@@ -6,6 +6,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol, BaseProtocol
 from whitecanvas.layers._base import XYData, PrimitiveLayer
+from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import FaceEdgeMixin, HeteroFaceEdgeMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-class MarkersBase(PrimitiveLayer[BaseProtocol]):
+class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
     def __init__(
         self,
         xdata: ArrayLike,
@@ -46,8 +47,7 @@ class MarkersBase(PrimitiveLayer[BaseProtocol]):
             symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha
         )  # fmt: skip
         self.edge.color = color
-        self._x_hint = xdata.min(), xdata.max()
-        self._y_hint = ydata.min(), ydata.max()
+        self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
 
     @classmethod
     def empty(cls, backend: Backend | str | None = None) -> Self:
@@ -81,8 +81,7 @@ class MarkersBase(PrimitiveLayer[BaseProtocol]):
                 f"got {x0.size} and {y0.size}"
             )
         self._backend._plt_set_data(x0, y0)
-        self._x_hint = x0.min(), x0.max()
-        self._y_hint = y0.min(), y0.max()
+        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
 
     @property
     def symbol(self) -> Symbol:

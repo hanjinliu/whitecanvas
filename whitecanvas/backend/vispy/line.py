@@ -3,7 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from vispy.scene import visuals
-from whitecanvas.protocols import LineProtocol, check_protocol
+from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 
 
@@ -54,7 +54,7 @@ class MonoLine(visuals.Line):
         self.antialias = antialias
 
 
-@check_protocol(LineProtocol)
+@check_protocol(MultiLineProtocol)
 class MultiLine(visuals.Compound):
     def __init__(self, data: list[NDArray[np.float32]]):
         items = []
@@ -63,8 +63,6 @@ class MultiLine(visuals.Compound):
             items.append(item)
         self._data = data
         self._antialias = True
-        self._width = np.ones(len(data))
-        self._color = np.ones((len(data), 4), dtype=np.float32)
         super().__init__(items)
 
     @property
@@ -96,29 +94,29 @@ class MultiLine(visuals.Compound):
             item.set_data(seg)
 
     ##### HasEdges #####
-    def _plt_get_edge_width(self) -> NDArray[np.floating]:
-        return np.array([item.width for item in self._lines], dtype=np.float32)
+    def _plt_get_edge_width(self) -> float:
+        if len(self._lines) == 0:
+            return 0.0
+        return self._lines[0].width
 
-    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if np.isscalar(width):
-            width = np.full(len(self._data), width)
-        for w, item in zip(width, self._lines):
-            item.set_data(width=w)
+    def _plt_set_edge_width(self, width: float):
+        for item in self._lines:
+            item.set_data(width=width)
 
     def _plt_get_edge_style(self) -> LineStyle:
-        return np.array([LineStyle.SOLID] * len(self._data), dtype=object)
+        return LineStyle.SOLID
 
     def _plt_set_edge_style(self, style):
         pass
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.stack([item.color for item in self._lines], axis=0)
+        if len(self._lines) == 0:
+            return np.zeros((0, 4), dtype=np.float32)
+        return self._lines[0].color
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        if color.ndim == 1:
-            color = np.tile(color, (len(self._data), 1))
-        for col, item in zip(color, self._lines):
-            item.set_data(color=col)
+        for item in self._lines:
+            item.set_data(color=color)
 
     def _plt_get_antialias(self) -> bool:
         return self._antialias

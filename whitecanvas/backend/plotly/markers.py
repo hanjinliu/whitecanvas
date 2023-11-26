@@ -112,7 +112,10 @@ class HeteroMarkers(PlotlyLayer):
         self._props["y"] = ydata
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return np.stack(arr_color(c) for c in self._props["marker"]["color"])
+        color = self._props["marker"]["color"]
+        if len(color) == 0:
+            return np.empty((0, 4), dtype=np.float32)
+        return np.stack([arr_color(c) for c in color], axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         color = as_color_array(color)
@@ -153,7 +156,10 @@ class HeteroMarkers(PlotlyLayer):
         pass
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.stack(arr_color(c) for c in self._props["marker"]["line"]["color"])
+        color = self._props["marker"]["line"]["color"]
+        if len(color) == 0:
+            return np.empty((0, 4), dtype=np.float32)
+        return np.stack([arr_color(c) for c in color], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         color = as_color_array(color)

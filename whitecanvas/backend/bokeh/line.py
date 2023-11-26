@@ -67,9 +67,9 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
             dict(
                 x=xdata,
                 y=ydata,
-                color=["black"] * len(data),
-                width=np.ones(len(data)),
-                style=["solid"] * len(data),
+                color="black",
+                width=1,
+                style="solid",
             ),
         )
         self._model = bk_models.MultiLine(
@@ -103,32 +103,23 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
             ydata.append(seg[:, 1])
         self._data.data = dict(x=xdata, y=ydata)
 
-    def _plt_get_edge_width(self) -> NDArray[np.floating]:
+    def _plt_get_edge_width(self) -> float:
         return self._data.data["width"]
 
     def _plt_set_edge_width(self, width: float):
-        if np.isscalar(width):
-            width = np.full(len(self._data.data["x"]), width)
         self._data.data["width"] = width
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
-        return [from_bokeh_line_style(d) for d in self._data.data["style"]]
+        return from_bokeh_line_style(self._data.data["style"])
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
-        if isinstance(style, LineStyle):
-            style = [style] * len(self._data.data["x"])
-        val = [to_bokeh_line_style(s) for s in style]
-        self._data.data["style"] = val
+        self._data.data["style"] = to_bokeh_line_style(style)
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.stack([arr_color(c) for c in self._data.data["color"]], axis=0)
+        return arr_color(self._data.data["color"])
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        if color.ndim == 1:
-            color = [hex_color(color)] * len(self._data.data["x"])
-        else:
-            color = [hex_color(c) for c in color]
-        self._data.data["color"] = color
+        self._data.data["color"] = hex_color(color)
 
     def _plt_get_antialias(self) -> bool:
         return self._model.line_join == "round"

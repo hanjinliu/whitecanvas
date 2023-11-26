@@ -59,7 +59,7 @@ class Errorbars(MultiLine):
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
-        self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, orient, xpad=capsize / 2)
+        self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)
 
     @classmethod
     def empty(
@@ -112,7 +112,7 @@ class Errorbars(MultiLine):
 
     @property
     def capsize(self) -> float:
-        """Size of the cap."""
+        """Size of the cap of the line edges."""
         return self._capsize
 
     @capsize.setter
@@ -122,14 +122,14 @@ class Errorbars(MultiLine):
         self._capsize = capsize
         self.set_data(*self._data)
 
-    # @property
-    # def antialias(self) -> bool:
-    #     """Whether to use antialiasing."""
-    #     return self._backend._plt_get_antialias()
+    @property
+    def antialias(self) -> bool:
+        """Whether to use antialiasing."""
+        return self._backend._plt_get_antialias()
 
-    # @antialias.setter
-    # def antialias(self, antialias: bool):
-    #     self._backend._plt_set_antialias(antialias)
+    @antialias.setter
+    def antialias(self, antialias: bool):
+        self._backend._plt_set_antialias(antialias)
 
     def update(
         self,
@@ -146,61 +146,13 @@ class Errorbars(MultiLine):
             self.width = width
         if style is not _void:
             self.style = style
-        # if antialias is not _void:
-        #     self.antialias = antialias
+        if antialias is not _void:
+            self.antialias = antialias
         if alpha is not _void:
             self.alpha = alpha
         if capsize is not _void:
             self.capsize = capsize
         return self
-
-    @property
-    def width(self) -> float:
-        """Width of error bars."""
-        widths = self._backend._plt_get_edge_width()
-        if widths.size == 0:
-            return 0
-        return float(widths[0])
-
-    @width.setter
-    def width(self, width: float):
-        width = float(width)
-        if width < 0:
-            raise ValueError(f"Width must be non-negative, got {width!r}")
-        self._backend._plt_set_edge_width(width)
-
-    @property
-    def color(self) -> NDArray[np.floating]:
-        """Color of error bars."""
-        colors = self._backend._plt_get_edge_color()
-        if colors.size == 0:
-            return np.zeros(4)
-        return colors[0]
-
-    @color.setter
-    def color(self, color: ColorType):
-        self._backend._plt_set_edge_color(arr_color(color))
-
-    @property
-    def style(self) -> LineStyle:
-        """Style of error bars."""
-        styles = self._backend._plt_get_edge_style()
-        if len(styles) == 0:
-            return LineStyle.SOLID
-        return styles[0]
-
-    @style.setter
-    def style(self, style: LineStyle | str):
-        self._backend._plt_set_edge_style(LineStyle(style))
-
-    @property
-    def alpha(self) -> float:
-        """Alpha of error bars."""
-        return float(self.color[3])
-
-    @alpha.setter
-    def alpha(self, alpha: float):
-        self.color = np.array([*self.color[:3], alpha])
 
 
 def _xyy_to_segments(

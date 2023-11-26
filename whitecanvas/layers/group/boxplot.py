@@ -64,26 +64,24 @@ class BoxPlot(ListLayerGroup):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        box_width: float = 0.5,
-        capsize: float = 0.3,
-        face_color: ColorType | list[ColorType] = "blue",
-        edge_color: ColorType = "black",
+        box_width: float = 0.3,
+        capsize: float = 0.15,
+        color: ColorType | list[ColorType] = "blue",
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: str | Backend | None = None,
     ):
         x, data = check_array_input(x, data)
         ori = Orientation.parse(orient)
-        face_color = as_color_array(face_color, len(x))
-        edge_color = arr_color(edge_color)
+        color = as_color_array(color, len(x))
         agg_values: list[NDArray[np.number]] = []
         for d in data:
             agg_values.append(np.quantile(d, [0, 0.25, 0.5, 0.75, 1]))
         agg_arr = np.stack(agg_values, axis=1)
         box = HeteroBars(
             x, agg_arr[3], agg_arr[1], name=name, orient=ori, bar_width=box_width,
-            pattern=pattern, color=face_color, alpha=alpha, backend=backend,
-        ).with_edge(color=edge_color)  # fmt: skip
+            pattern=pattern, color=color, alpha=alpha, backend=backend,
+        ).with_edge(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], capsize
@@ -102,10 +100,10 @@ class BoxPlot(ListLayerGroup):
             ]
         whiskers = MultiLine(
             segs, name=name, style=LineStyle.SOLID, alpha=alpha, backend=backend,
-            color=edge_color,
+            color="black",
         )  # fmt: skip
         medians = MultiLine(
-            medsegs, name="medians", color=edge_color, alpha=alpha, backend=backend,
+            medsegs, name="medians", color="black", alpha=alpha, backend=backend,
         )  # fmt: skip
 
         return cls(box, whiskers, medians, name=name, orient=ori)
@@ -113,6 +111,20 @@ class BoxPlot(ListLayerGroup):
     @property
     def orient(self) -> Orientation:
         return self._orient
+
+    def with_edge(
+        self,
+        *,
+        color: ColorType = "black",
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+        alpha: float = 1.0,
+    ) -> BoxPlot:
+        """Add edges to the strip plot."""
+        self.boxes.with_edge(color=color, alpha=alpha, width=width, style=style)
+        self.whiskers.update(color=color, alpha=alpha, width=width, style=style)
+        self.medians.update(color=color, alpha=alpha, width=width, style=style)
+        return self
 
 
 def _xyy_to_segments(

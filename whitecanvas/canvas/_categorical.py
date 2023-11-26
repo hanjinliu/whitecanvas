@@ -47,11 +47,12 @@ class CategorizedStruct(Generic[_C, _T]):
         self,
         canvas: _C,
         obj: dict[str, dict[str, _T]],
-        offsets=None,
+        offsets: NDArray[np.floating],
         palette: ColormapType | None = None,
     ):
         self._canvas_ref = weakref.ref(canvas)
         self._offsets = offsets
+        self._offsets_initial = offsets.copy()
         self._color_palette = palette
         self._obj = obj
 
@@ -100,16 +101,22 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         canvas: _C,
         data: Any,
         by: str | None = None,
+        *,
         offsets=None,
         palette: ColormapType | None = None,
+        unsafe: bool = False,
     ):
-        if palette is None:
-            _color_palette = canvas._color_palette.copy()
+        if unsafe:
+            _color_palette = palette
+            obj = data
+            ncats = len(obj)
         else:
-            _color_palette = ColorPalette(palette)
-        _nested = by is not None
-        obj = _norm_input(data, by, _nested)
-        ncats = len(obj)
+            if palette is None:
+                _color_palette = canvas._color_palette.copy()
+            else:
+                _color_palette = ColorPalette(palette)
+            obj = _norm_input(data, by, by is not None)
+            ncats = len(obj)
         if offsets is None:
             offsets = np.zeros(ncats)
         elif isinstance(offsets, (int, float, np.number)):
@@ -119,6 +126,15 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             if offsets.shape != (ncats,):
                 raise ValueError("Shape of offset is wrong")
         super().__init__(canvas, obj, offsets, _color_palette)
+
+    def with_offset(self, offset: float) -> CategorizedDataPlotter[_C]:
+        return CategorizedDataPlotter(
+            self._canvas(),
+            self._obj,
+            offsets=offset,
+            palette=self._color_palette,
+            unsafe=True,
+        )
 
     def mean(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.mean) for k, v in self.items()}
@@ -177,7 +193,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        strip_width: float = 0.1,
+        strip_width: float = 0.3,
         color: ColorType | None = None,
         alpha: float = 1.0,
         symbol: str | Symbol = Symbol.CIRCLE,
@@ -204,24 +220,23 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        box_width: float = 0.5,
-        capsize: float = 0.3,
-        face_color: ColorType | list[ColorType] | None = None,
-        edge_color: ColorType = "black",
+        box_width: float = 0.3,
+        capsize: float = 0.15,
+        color: ColorType | list[ColorType] | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.BoxPlot:
         canvas = self._canvas()
         name = canvas._coerce_name(_lg.BoxPlot, name)
-        if face_color is None:
-            face_color = self._generate_colors()
+        if color is None:
+            color = self._generate_colors()
         if y is None:
             y = self.categories[0]
         data = [v[y] for v in self._obj.values()]
         group = _lg.BoxPlot.from_arrays(
             self._generate_x(), data, name=name, orient=orient, box_width=box_width,
-            capsize=capsize, face_color=face_color, edge_color=edge_color,
-            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            capsize=capsize, color=color, alpha=alpha, pattern=pattern,
+            backend=self._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(group)
 
@@ -249,6 +264,12 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(group)
+
+    def __enter__(self) -> CategorizedDataPlotter[_C]:
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
     def _generate_colors(self) -> list[Color]:
         return self._canvas()._color_palette.nextn(self.n_categories, update=False)

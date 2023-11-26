@@ -28,7 +28,7 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         if orient.is_vertical:
             self._model = bk_models.VArea(x="t", y1="y0", y2="y1")
         else:
-            self._model = bk_models.HArea(y="t", x1="y0", y1="y1")
+            self._model = bk_models.HArea(y="t", x1="y0", x2="y1")
         self._edge_color = np.zeros(4)
         self._edge_width = 0
         self._edge_style = LineStyle.SOLID

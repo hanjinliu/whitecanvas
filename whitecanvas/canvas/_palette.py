@@ -7,24 +7,27 @@ class ColorPalette:
     def __init__(
         self,
         cmap: str | Colormap | ColorPalette,
-        num: int | None = None,
     ):
         if isinstance(cmap, ColorPalette):
             _cmap = cmap._cmap
+            pos = cmap._pos
         else:
             _cmap = Colormap(cmap)
-        self._cmap: Colormap = _cmap
-        self._is_categorical = self._cmap.category in ("qualitative", "categorical")
-        if num is None:
-            if self._is_categorical:
-                self._num = len(self._cmap.color_stops)
+            if isinstance(cmap, list):
+                num = len(cmap)
+                pos = [i / (num - 1) for i in range(num)] + [1.0]
+            elif _cmap.category in ("qualitative", "categorical"):
+                num = len(_cmap.color_stops)
+                pos = [(i + 0.5) / num for i in range(num)]
             else:
-                self._num = 10
+                pos = [0, 0.3, 0.6, 0.9, 0.2, 0.5, 0.8, 0.1, 0.4, 0.7, 1.0]
+        self._cmap: Colormap = _cmap
+        self._pos: list[float] = pos
         self._n_generated = 0
 
     def next(self, update: bool = True) -> Color:
         """Generate the next color."""
-        pos = (self._n_generated / self._num + 1e-6) % 1.0
+        pos = self._pos[self._n_generated % len(self._pos)]
         if update:
             self._n_generated += 1
         return self._cmap(pos)
@@ -43,4 +46,4 @@ class ColorPalette:
 
     def copy(self) -> ColorPalette:
         """Make a copy of the palette."""
-        return ColorPalette(self._cmap, self._num)
+        return ColorPalette(self._cmap)

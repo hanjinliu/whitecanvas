@@ -146,3 +146,6 @@ class HeteroMarkers(HeteroLayer[bk_models.Scatter]):
 
     def _plt_set_symbol_size(self, size: float):
         self._model.size = size
+
+    def _plt_get_ndata(self) -> int:
+        return len(self._data.data["x"])

@@ -61,3 +61,6 @@ class Bars(HeteroLayer[bk_models.Quad]):
 
     def _plt_set_data(self, x0, x1, y0, y1):
         self._data.data = dict(x0=x0, x1=x1, y0=y0, y1=y1)
+
+    def _plt_get_ndata(self) -> int:
+        return len(self._data.data["x0"])

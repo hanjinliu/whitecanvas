@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import ColorType, FacePattern, Symbol, _Void, Orientation
+from whitecanvas.types import ColorType, FacePattern, Symbol, LineStyle, Orientation
 from whitecanvas.layers.primitive import Markers
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -52,7 +52,7 @@ class StripPlot(ListLayerGroup):
         layers: list[Markers] = []
         color = as_color_array(color, len(x))
         for ith, (x0, values, color) in enumerate(zip(x, data, color)):
-            offsets = rng.uniform(-strip_width, strip_width, size=len(values))
+            offsets = rng.uniform(-strip_width / 2, strip_width / 2, size=len(values))
             if ori.is_vertical:
                 _x = np.full_like(values, x0) + offsets
                 _y = values
@@ -69,7 +69,21 @@ class StripPlot(ListLayerGroup):
 
     @property
     def orient(self) -> Orientation:
+        """Orientation of the strip plot."""
         return self._orient
+
+    def with_edge(
+        self,
+        *,
+        color: ColorType = "black",
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+        alpha: float = 1.0,
+    ) -> StripPlot:
+        """Add edges to the strip plot."""
+        for markers in self.iter_children():
+            markers.with_edge(color=color, alpha=alpha, width=width, style=style)
+        return self
 
     if TYPE_CHECKING:  # fmt: skip
 

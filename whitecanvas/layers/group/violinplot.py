@@ -1,11 +1,13 @@
 from __future__ import annotations
-from typing import Iterator, Literal, Hashable
+from typing import TYPE_CHECKING, Iterator, Literal, Hashable
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import ColorType, FacePattern, Orientation
+from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.protocols import BaseProtocol
+from whitecanvas.types import ColorType, FacePattern, Orientation, LineStyle
 from whitecanvas.layers.primitive import Band
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -58,9 +60,9 @@ class ViolinPlot(ListLayerGroup):
             kde = gaussian_kde(arr, bw_method=kde_band_width)
 
             sigma = np.sqrt(kde.covariance[0, 0])
-            pad = sigma * 4
-            x = np.linspace(arr.min() - pad, arr.max() + pad, 100)
-            y = kde(x)
+            pad = sigma * 2.5
+            x_ = np.linspace(arr.min() - pad, arr.max() + pad, 100)
+            y = kde(x_)
             if shape in ("both", "left"):
                 y0 = -y + offset
             else:
@@ -71,7 +73,7 @@ class ViolinPlot(ListLayerGroup):
                 y1 = np.zeros_like(y) + offset
 
             layer = Band(
-                x, y0, y1, name=f"violin_{ith}", orient=_o, color=color,
+                x_, y0, y1, name=f"violin_{ith}", orient=_o, color=color,
                 alpha=alpha, pattern=pattern, backend=backend,
             )  # fmt: skip
             layers.append(layer)
@@ -83,11 +85,10 @@ class ViolinPlot(ListLayerGroup):
                 half_width /= 2
             half_widths.append(half_width)
         factor = violin_width / np.max(half_widths) / 2
-        for band in layers:
+        for band, xoffset in zip(layers, x):
             bd = band.data
-            ycenter = bd.ycenter
-            y0 = (bd.y0 - ycenter) * factor + ycenter
-            y1 = (bd.y1 - ycenter) * factor + ycenter
+            y0 = (bd.y0 - xoffset) * factor + xoffset
+            y1 = (bd.y1 - xoffset) * factor + xoffset
             band.set_data(bd.x, y0, y1)
         return cls(
             layers, name=name, shape=shape, violin_width=violin_width, orient=_violin_o
@@ -128,3 +129,21 @@ class ViolinPlot(ListLayerGroup):
             y1 = (bd.y1 - ycenter) * factor + ycenter
             band.set_data(bd.x, y0, y1)
         self._violin_width = width
+
+    def with_edge(
+        self,
+        *,
+        color: ColorType = "black",
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+        alpha: float = 1.0,
+    ) -> ViolinPlot:
+        """Add edges to the strip plot."""
+        for layer in self.iter_children():
+            layer.with_edge(color=color, alpha=alpha, width=width, style=style)
+        return self
+
+    if TYPE_CHECKING:
+
+        def iter_children(self) -> Iterator[Band]:
+            ...

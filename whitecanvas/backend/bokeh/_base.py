@@ -24,7 +24,7 @@ class HeteroLayer(BokehLayer[_M]):
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
-            color = [hex_color(color)] * len(self._data.data["x0"])
+            color = [hex_color(color)] * self._plt_get_ndata()
         else:
             color = [hex_color(c) for c in color]
         self._data.data["face_color"] = color
@@ -34,7 +34,7 @@ class HeteroLayer(BokehLayer[_M]):
 
     def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
         if isinstance(pattern, FacePattern):
-            ptn = [to_bokeh_hatch(pattern)] * len(self._data.data["x0"])
+            ptn = [to_bokeh_hatch(pattern)] * self._plt_get_ndata()
         else:
             ptn = [to_bokeh_hatch(p) for p in pattern]
         self._data.data["pattern"] = ptn
@@ -46,7 +46,7 @@ class HeteroLayer(BokehLayer[_M]):
 
     def _plt_set_edge_width(self, width: float):
         if np.isscalar(width):
-            width = np.full(len(self._data.data["x0"]), width)
+            width = np.full(self._plt_get_ndata(), width)
         self._data.data["width"] = width
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
@@ -54,7 +54,7 @@ class HeteroLayer(BokehLayer[_M]):
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         if isinstance(style, LineStyle):
-            style = [style] * len(self._data.data["x0"])
+            style = [style] * self._plt_get_ndata()
         val = [to_bokeh_line_style(s) for s in style]
         self._data.data["style"] = val
 
@@ -63,7 +63,7 @@ class HeteroLayer(BokehLayer[_M]):
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
-            color = [hex_color(color)] * len(self._data.data["x0"])
+            color = [hex_color(color)] * self._plt_get_ndata()
         else:
             color = [hex_color(c) for c in color]
         self._data.data["edge_color"] = color

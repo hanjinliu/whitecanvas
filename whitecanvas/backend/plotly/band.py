@@ -42,14 +42,14 @@ class Band(PlotlyLayer):
         y = self._props["y"]
         nx = len(x) // 2
         ny = len(y) // 2
-        return x[:nx], y[:ny], y[ny::-1]
+        return x[:nx], y[:ny], y[ny:][::-1]
 
     def _plt_get_horizontal_data(self):
         x = self._props["x"]
         y = self._props["y"]
         nx = len(x) // 2
         ny = len(y) // 2
-        return y[:ny], x[:nx], x[nx::-1]
+        return y[:ny], x[:nx], x[nx:][::-1]
 
     def _plt_set_vertical_data(self, t, ydata0, ydata1):
         x = np.concatenate([t, t[::-1]])

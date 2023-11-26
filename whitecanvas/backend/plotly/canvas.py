@@ -145,9 +145,7 @@ class CanvasGrid:
         )
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
-        # item = go.Figure()
-        # return Canvas(item)
-        return Canvas(self._figs)
+        return Canvas(self._figs, row=row, col=col)
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""

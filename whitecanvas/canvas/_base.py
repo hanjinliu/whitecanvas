@@ -688,6 +688,8 @@ class CanvasBase(ABC):
             l._connect_canvas(self)
         # autoscale
         xmin, xmax, ymin, ymax = layer.bbox_hint()
+        xmin_changed = xmax_changed = False
+        ymin_changed = ymax_changed = False
         if len(self.layers) > 1:
             # NOTE: if there was no layer, so backend may not have xlim/ylim,
             # or they may be set to a default value.
@@ -697,6 +699,11 @@ class CanvasBase(ABC):
             xmax = np.max([xmax, _xmax])
             ymin = np.min([ymin, _ymin])
             ymax = np.max([ymax, _ymax])
+            xmin_changed = _xmin != xmin
+            xmax_changed = _xmax != xmax
+            ymin_changed = _ymin != ymin
+            ymax_changed = _ymax != ymax
+
         # this happens when there is <= 1 data
         if np.isnan(xmax) or np.isnan(xmin):
             xmin, xmax = self.x.lim
@@ -705,8 +712,10 @@ class CanvasBase(ABC):
             xmax += 0.05
         else:
             dx = (xmax - xmin) * 0.05
-            xmin -= dx
-            xmax += dx
+            if xmin_changed:
+                xmin -= dx
+            if xmax_changed:
+                xmax += dx
         if np.isnan(ymax) or np.isnan(ymin):
             ymin, ymax = self.y.lim
         elif ymax - ymin < 1e-6:
@@ -714,8 +723,10 @@ class CanvasBase(ABC):
             ymax += 0.05
         else:
             dy = (ymax - ymin) * 0.05
-            ymin -= dy  # TODO: this causes bars/histogram to float
-            ymax += dy  #       over the x-axis.
+            if ymin_changed:
+                ymin -= dy  # TODO: this causes bars/histogram to float
+            if ymax_changed:  #       over the x-axis.
+                ymax += dy
         self.lims = (xmin, xmax), (ymin, ymax)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):

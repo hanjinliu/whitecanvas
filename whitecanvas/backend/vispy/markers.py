@@ -131,7 +131,8 @@ class HeteroMarkers(visuals.Markers):
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
-        return self._data["a_position"]
+        data = self._data["a_position"]
+        return data[:, 0], data[:, 1]
 
     def _plt_set_data(self, xdata, ydata):
         self.set_data(
@@ -170,7 +171,7 @@ class HeteroMarkers(visuals.Markers):
         return self._data["a_bg_color"]
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color)
+        color = as_color_array(color, self._plt_get_ndata())
         self.set_data(
             pos=self._data["a_position"],
             size=self._plt_get_symbol_size(),
@@ -187,7 +188,7 @@ class HeteroMarkers(visuals.Markers):
         return self._data["a_fg_color"]
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color)
+        color = as_color_array(color, self._plt_get_ndata())
         self.set_data(
             pos=self._data["a_position"],
             size=self._plt_get_symbol_size(),

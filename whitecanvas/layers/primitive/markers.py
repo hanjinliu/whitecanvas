@@ -122,8 +122,8 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.AnnotatedMarkers:
-        from whitecanvas.layers.group import AnnotatedMarkers
+    ) -> _lg.LabeledMarkers:
+        from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -142,7 +142,7 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
-        return AnnotatedMarkers(self, xerr, yerr, name=self.name)
+        return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -153,8 +153,8 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-    ) -> _lg.AnnotatedMarkers:
-        from whitecanvas.layers.group import AnnotatedMarkers
+    ) -> _lg.LabeledMarkers:
+        from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -165,15 +165,15 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             width = self.edge.width
         if style is _void:
             style = self.edge.style
-        # if antialias is _void:
-        #     antialias = self.antialias
+        if antialias is _void:
+            antialias = self.antialias
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
-        return AnnotatedMarkers(self, xerr, yerr, name=self.name)
+        return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_text(
         self,
@@ -184,9 +184,9 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str | None = None,
-    ) -> _lg.AnnotatedMarkers:
+    ) -> _lg.LabeledMarkers:
         from whitecanvas.layers import Errorbars
-        from whitecanvas.layers.group import TextGroup, AnnotatedMarkers
+        from whitecanvas.layers.group import TextGroup, LabeledMarkers
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
@@ -201,13 +201,53 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             *self.data, strings, color=color, size=size, rotation=rotation,
             anchor=anchor, fontfamily=fontfamily, backend=self._backend_name,
         )  # fmt: skip
-        return AnnotatedMarkers(
+        return LabeledMarkers(
             self,
             Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
             Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),
             texts=texts,
             name=self.name,
         )
+
+    def with_network(
+        self,
+        connections: NDArray[np.intp],
+        color: ColorType | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
+        antialias: bool = True,
+    ) -> _lg.Graph:
+        from whitecanvas.layers.primitive import MultiLine
+        from whitecanvas.layers.group import Graph, TextGroup
+
+        edges = np.asarray(connections, dtype=np.intp)
+        if edges.ndim != 2 or edges.shape[1] != 2:
+            raise ValueError("edges must be a (N, 2) array")
+
+        if color is _void:
+            color = self.edge.color
+        if width is _void:
+            width = self.edge.width
+        if style is _void:
+            style = self.edge.style
+        if antialias is _void:
+            antialias = self.antialias
+        segs = []
+        nodes = self.data.stack()
+        for i0, i1 in edges:
+            segs.append(np.stack([nodes[i0], nodes[i1]], axis=0))
+        edges_layer = MultiLine(
+            segs, name="edges", color=color, width=width, style=style,
+            antialias=antialias, backend=self._backend_name
+        )  # fmt: skip
+        texts = TextGroup.from_strings(
+            nodes[:, 0],
+            nodes[:, 1],
+            [""] * nodes.shape[0],
+            name="texts",
+            backend=self._backend_name,
+        )
+        return Graph(self, edges_layer, texts, edges, name=self.name)
 
 
 class Markers(MarkersBase, FaceEdgeMixin[MarkersProtocol]):

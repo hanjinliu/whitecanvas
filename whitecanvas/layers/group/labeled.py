@@ -2,77 +2,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
-from whitecanvas.types import ColorType, _Void, Symbol, LineStyle, Alignment
+from whitecanvas.types import ColorType, LineStyle, Alignment
 from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
 from whitecanvas.layers._base import XYData, PrimitiveLayer
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group.text_group import TextGroup
-from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.layers.group._offsets import TextOffset, NoOffset
 
-_void = _Void()
 
 if TYPE_CHECKING:
     from typing_extensions import Self
     from whitecanvas.layers.group.line_markers import Plot
 
 
-class _TextOffset:
-    def _asarray(self) -> tuple[Any, Any]:
-        raise NotImplementedError
-
-    def _add(self, dx, dy) -> _TextOffset:
-        raise NotImplementedError
-
-
-class NoOffset(_TextOffset):
-    def _asarray(self):
-        return (0, 0)
-
-    def _add(self, dx, dy) -> _TextOffset:
-        if dx == 0 and dy == 0:
-            return self
-        if np.isscalar(dx) and np.isscalar(dy):
-            return ConstantOffset(dx, dy)
-        else:
-            return CustomOffset(as_array_1d(dx), as_array_1d(dy))
-
-    def __repr__(self) -> str:
-        return "<NoOffset>"
-
-
-class ConstantOffset(_TextOffset):
-    def __init__(self, x: float, y: float):
-        self._x, self._y = x, y
-
-    def _asarray(self) -> tuple[float, float]:
-        return (self._x, self._y)
-
-    def _add(self, dx, dy) -> _TextOffset:
-        if np.isscalar(dx) and np.isscalar(dy):
-            return ConstantOffset(self._x + dx, self._y + dy)
-        else:
-            return CustomOffset(as_array_1d(dx) + self._x, as_array_1d(dy) + self._y)
-
-    def __repr__(self) -> str:
-        return f"<ConstantOffset({self._x}, {self._y})>"
-
-
-class CustomOffset(_TextOffset):
-    def __init__(self, x: Any, y: Any):
-        self._x, self._y = x, y
-
-    def _asarray(self) -> tuple[Any, Any]:
-        return (self._x, self._y)
-
-    def _add(self, dx, dy) -> _TextOffset:
-        return CustomOffset(as_array_1d(dx + self._x), as_array_1d(dy + self._y))
-
-    def __repr__(self) -> str:
-        return f"<CustomOffset({self._x}, {self._y})>"
-
-
-class _AnnotatedLayerBase(ListLayerGroup):
+class _LabeledLayerBase(ListLayerGroup):
     def __init__(
         self,
         layer: PrimitiveLayer,
@@ -80,11 +23,16 @@ class _AnnotatedLayerBase(ListLayerGroup):
         yerr: Errorbars,
         texts: TextGroup | None = None,
         name: str | None = None,
-        offset: _TextOffset = NoOffset(),
+        offset: TextOffset = NoOffset(),
     ):
         if texts is None:
-            texts = TextGroup([])
-
+            data = layer.data
+            texts = TextGroup.from_strings(
+                data.x,
+                data.y,
+                [""] * layer.data.x.size,
+                backend=layer._backend_name,
+            )
         super().__init__([layer, xerr, yerr, texts], name=name)
         self._text_offset = offset
 
@@ -138,7 +86,7 @@ class _AnnotatedLayerBase(ListLayerGroup):
             self.texts.set_pos(data.x + dx, data.y + dy)
 
     @property
-    def text_offset(self) -> _TextOffset:
+    def text_offset(self) -> TextOffset:
         """Return the text offset."""
         return self._text_offset
 
@@ -267,25 +215,24 @@ class _AnnotatedLayerBase(ListLayerGroup):
             rotation=rotation,
             anchor=anchor,
             fontfamily=fontfamily,
-            backend=self._backend_name,
         )
         return self
 
 
-class AnnotatedLine(_AnnotatedLayerBase):
+class LabeledLine(_LabeledLayerBase):
     @property
     def line(self) -> Line:
         """The line layer."""
         return self._children[0]
 
 
-class AnnotatedMarkers(_AnnotatedLayerBase):
+class LabeledMarkers(_LabeledLayerBase):
     @property
     def markers(self) -> Markers:
         return self._children[0]
 
 
-class AnnotatedBars(_AnnotatedLayerBase):
+class LabeledBars(_LabeledLayerBase):
     @property
     def bars(self) -> Bars:
         """The bars layer."""
@@ -301,7 +248,7 @@ class AnnotatedBars(_AnnotatedLayerBase):
         self.bars.set_data(xdata, ydata, bottom)
 
 
-class AnnotatedPlot(_AnnotatedLayerBase):
+class LabeledPlot(_LabeledLayerBase):
     @property
     def plot(self) -> Plot:
         """The plot (line + markers) layer."""

@@ -170,7 +170,10 @@ class LayerGroup(Layer):
         Note that unless children notifies the change of their bounding box hint, bbox
         hint needs recalculation.
         """
-        ar = np.stack([child.bbox_hint() for child in self.iter_children()], axis=1)
+        hints = [child.bbox_hint() for child in self.iter_children()]
+        if len(hints) == 0:
+            return np.array([np.nan, np.nan, np.nan, np.nan], dtype=np.float64)
+        ar = np.stack(hints, axis=1)
         xmin = np.nanmin(ar[0, :])
         xmax = np.nanmax(ar[1, :])
         ymin = np.nanmin(ar[2, :])
@@ -182,7 +185,7 @@ class XYData(NamedTuple):
     x: np.ndarray
     y: np.ndarray
 
-    def concat(self) -> np.ndarray:
+    def stack(self) -> np.ndarray:
         return np.stack([self.x, self.y], axis=1)
 
 

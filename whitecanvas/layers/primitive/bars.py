@@ -162,7 +162,7 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.AnnotatedLine:
+    ) -> _lg.LabeledLine:
         if self.orient is Orientation.VERTICAL:
             return self.with_yerr(
                 err, err_high, color=color, width=width,
@@ -184,8 +184,8 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.AnnotatedBars:
-        from whitecanvas.layers.group import AnnotatedBars
+    ) -> _lg.LabeledBars:
+        from whitecanvas.layers.group import LabeledBars
         from whitecanvas.layers.primitive import Errorbars
 
         xerr = self._create_errorbars(
@@ -195,7 +195,7 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         yerr = Errorbars(
             [], [], [], orient=Orientation.HORIZONTAL, backend=self._backend_name
         )
-        return AnnotatedBars(self, xerr, yerr, name=self.name)
+        return LabeledBars(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -207,8 +207,8 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-    ) -> _lg.AnnotatedBars:
-        from whitecanvas.layers.group import AnnotatedBars
+    ) -> _lg.LabeledBars:
+        from whitecanvas.layers.group import LabeledBars
         from whitecanvas.layers.primitive import Errorbars
 
         yerr = self._create_errorbars(
@@ -216,7 +216,7 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
             antialias=antialias, capsize=capsize, orient=Orientation.VERTICAL,
         )  # fmt: skip
         xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
-        return AnnotatedBars(self, xerr, yerr, name=self.name)
+        return LabeledBars(self, xerr, yerr, name=self.name)
 
     def with_text(
         self,
@@ -227,9 +227,9 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str | None = None,
-    ) -> _lg.AnnotatedBars:
+    ) -> _lg.LabeledBars:
         from whitecanvas.layers import Errorbars
-        from whitecanvas.layers.group import TextGroup, AnnotatedBars
+        from whitecanvas.layers.group import TextGroup, LabeledBars
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
@@ -243,7 +243,7 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
             fontfamily=fontfamily,
             backend=self._backend_name,
         )
-        return AnnotatedBars(
+        return LabeledBars(
             self,
             Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
             Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),

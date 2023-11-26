@@ -8,7 +8,7 @@ from whitecanvas.layers.primitive import Line, Markers, Errorbars
 from whitecanvas.layers.group._collections import ListLayerGroup
 
 if TYPE_CHECKING:
-    from .annotated import AnnotatedPlot
+    from .labeled import LabeledPlot
 
 _void = _Void()
 
@@ -52,8 +52,8 @@ class Plot(ListLayerGroup):
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str | None = None,
-    ) -> Plot:
-        from whitecanvas.layers.group.annotated import AnnotatedPlot
+    ) -> LabeledPlot:
+        from whitecanvas.layers.group.labeled import LabeledPlot
         from .text_group import TextGroup
 
         texts = TextGroup.from_strings(
@@ -68,7 +68,7 @@ class Plot(ListLayerGroup):
         )
         xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
         yerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
-        return AnnotatedPlot(self, xerr, yerr, texts, name=self.name)
+        return LabeledPlot(self, xerr, yerr, texts, name=self.name)
 
     def with_xerr(
         self,
@@ -79,8 +79,8 @@ class Plot(ListLayerGroup):
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> AnnotatedPlot:
-        from whitecanvas.layers.group.annotated import AnnotatedPlot
+    ) -> LabeledPlot:
+        from whitecanvas.layers.group.labeled import LabeledPlot
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -99,7 +99,7 @@ class Plot(ListLayerGroup):
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
-        return AnnotatedPlot(self, xerr, yerr, name=self.name)
+        return LabeledPlot(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -110,8 +110,8 @@ class Plot(ListLayerGroup):
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> AnnotatedPlot:
-        from whitecanvas.layers.group.annotated import AnnotatedPlot
+    ) -> LabeledPlot:
+        from whitecanvas.layers.group.labeled import LabeledPlot
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -130,10 +130,11 @@ class Plot(ListLayerGroup):
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
-        return AnnotatedPlot(self, xerr, yerr, name=self.name)
+        return LabeledPlot(self, xerr, yerr, name=self.name)
 
     @property
     def data(self):
+        """The internal data of the line and markers."""
         return self.line.data
 
     def set_data(self, xdata=None, ydata=None):

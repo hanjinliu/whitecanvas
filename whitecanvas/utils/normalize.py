@@ -17,8 +17,19 @@ def as_array_1d(x: ArrayLike) -> NDArray[np.number]:
 
 def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
     if len(args) == 1:
-        ydata = as_array_1d(args[0])
-        xdata = np.arange(ydata.size)
+        arr = np.asarray(args[0])
+        if arr.dtype.kind not in "iuf":
+            raise ValueError(f"Input {args[0]!r} did not return a numeric array")
+        if arr.ndim == 1:
+            ydata = arr
+            xdata = np.arange(ydata.size)
+        elif arr.ndim == 2 and arr.shape[1] == 2:
+            xdata = arr[:, 0]
+            ydata = arr[:, 1]
+        else:
+            raise ValueError(
+                "Expected 1D array or 2D array with shape (N, 2), " f"got {arr.shape}"
+            )
     elif len(args) == 2:
         xdata = as_array_1d(args[0])
         ydata = as_array_1d(args[1])

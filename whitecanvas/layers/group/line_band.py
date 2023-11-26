@@ -9,7 +9,14 @@ _void = _Void()
 
 
 class LineBand(ListLayerGroup):
-    """Group of Line, Band and Markers."""
+    """
+    Group of Line, Band and Markers.
+
+    Properties:
+        line: The central line layer
+        band: The band region around the central line
+        markers: The markers at the data points
+    """
 
     def __init__(
         self,

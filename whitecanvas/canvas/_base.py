@@ -24,7 +24,7 @@ from whitecanvas.types import (
 from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._categorical import CategorizedDataPlotter
-from whitecanvas.canvas._stack import StackedDataPlotter
+from whitecanvas.canvas._stacked import StackPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 _L = TypeVar("_L", bound=_l.Layer)
+_L0 = TypeVar("_L0", _l.Bars, _l.Band)
 
 
 class CanvasBase(ABC):
@@ -226,8 +227,30 @@ class CanvasBase(ABC):
             self, data, by=by, offsets=offsets, palette=palette
         )
 
-    def stack(self, xdata) -> StackedDataPlotter[Self]:
-        return StackedDataPlotter(self, xdata)  # TODO
+    def stack_over(self, layer: _L0) -> StackPlotter[Self, _L0]:
+        """
+        Stack new data over the existing layer.
+
+        For example following code
+
+        >>> bars_0 = canvas.add_bars(x, y0)
+        >>> bars_1 = canvas.stack_over(bars_0).add(y1)
+        >>> bars_2 = canvas.stack_over(bars_1).add(y2)
+
+        will result in a bar plot like this
+
+         ┌───┐
+         ├───│┌───┐
+         │   │├───│
+         ├───│├───│
+        ─┴───┴┴───┴─
+        """
+        if not isinstance(layer, (_l.Bars, _l.Band, _lg.LabeledBars)):
+            raise TypeError(
+                f"Only Bars and Band are supported as an input, "
+                f"got {type(layer)!r}."
+            )
+        return StackPlotter(self, layer)
 
     @overload
     def add_line(
@@ -691,8 +714,8 @@ class CanvasBase(ABC):
             ymax += 0.05
         else:
             dy = (ymax - ymin) * 0.05
-            ymin -= dy
-            ymax += dy
+            ymin -= dy  # TODO: this causes bars/histogram to float
+            ymax += dy  #       over the x-axis.
         self.lims = (xmin, xmax), (ymin, ymax)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):

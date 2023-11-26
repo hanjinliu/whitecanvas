@@ -109,8 +109,8 @@ class Line(MonoLine):
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> _lg.AnnotatedLine:
-        from whitecanvas.layers.group import AnnotatedLine
+    ) -> _lg.LabeledLine:
+        from whitecanvas.layers.group import LabeledLine
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -129,7 +129,7 @@ class Line(MonoLine):
             backend=self._backend_name
         )  # fmt: skip
         yerr = Errorbars([], [], [], orient="horizontal", backend=self._backend_name)
-        return AnnotatedLine(self, xerr, yerr, name=self.name)
+        return LabeledLine(self, xerr, yerr, name=self.name)
 
     def with_yerr(
         self,
@@ -140,8 +140,8 @@ class Line(MonoLine):
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> _lg.AnnotatedLine:
-        from whitecanvas.layers.group import AnnotatedLine
+    ) -> _lg.LabeledLine:
+        from whitecanvas.layers.group import LabeledLine
         from whitecanvas.layers.primitive import Errorbars
 
         if err_high is None:
@@ -160,7 +160,7 @@ class Line(MonoLine):
             backend=self._backend_name
         )  # fmt: skip
         xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
-        return AnnotatedLine(self, xerr, yerr, name=self.name)
+        return LabeledLine(self, xerr, yerr, name=self.name)
 
     def with_xband(
         self,
@@ -217,9 +217,9 @@ class Line(MonoLine):
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str | None = None,
-    ) -> _lg.AnnotatedLine:
+    ) -> _lg.LabeledLine:
         from whitecanvas.layers import Errorbars
-        from whitecanvas.layers.group import TextGroup, AnnotatedLine
+        from whitecanvas.layers.group import TextGroup, LabeledLine
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
@@ -240,7 +240,7 @@ class Line(MonoLine):
             fontfamily=fontfamily,
             backend=self._backend_name,
         )
-        return AnnotatedLine(
+        return LabeledLine(
             self,
             Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
             Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),

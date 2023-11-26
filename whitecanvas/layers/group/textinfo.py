@@ -117,22 +117,22 @@ class Panel(ListLayerGroup):
     @property
     def top_left(self) -> NDArray[np.floating]:
         """(x, y) of the top left corner of the panel."""
-        return self.line.data.concat()[0]
+        return self.line.data.stack()[0]
 
     @property
     def top_right(self) -> NDArray[np.floating]:
         """(x, y) of the top right corner of the panel."""
-        return self.line.data.concat()[1]
+        return self.line.data.stack()[1]
 
     @property
     def bottom_right(self) -> NDArray[np.floating]:
         """(x, y) of the bottom right corner of the panel."""
-        return self.line.data.concat()[2]
+        return self.line.data.stack()[2]
 
     @property
     def bottom_left(self) -> NDArray[np.floating]:
         """(x, y) of the bottom left corner of the panel."""
-        return self.line.data.concat()[3]
+        return self.line.data.stack()[3]
 
     @property
     def center(self) -> tuple[float, float]:

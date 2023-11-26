@@ -17,6 +17,7 @@ class Image(PlotlyLayer):
             "colorscale": "gray",
             "zmin": np.min(data),
             "zmax": np.max(data),
+            "showlegend": False,
         }
         self._cmap = Colormap("gray")
 
@@ -30,7 +31,8 @@ class Image(PlotlyLayer):
         return self._cmap
 
     def _plt_set_colormap(self, cmap: Colormap):
-        self._props["colorscale"] = self._cmap.to_plotly()
+        self._props["colorscale"] = cmap.to_plotly()
+        self._cmap = cmap
 
     def _plt_get_clim(self) -> tuple[float, float]:
         return self._props["zmin"], self._props["zmax"]

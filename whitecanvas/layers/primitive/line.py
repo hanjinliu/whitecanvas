@@ -19,12 +19,7 @@ from whitecanvas.types import (
     FacePattern,
     Orientation,
 )
-from whitecanvas.utils.normalize import (
-    arr_color,
-    as_array_1d,
-    as_color_array,
-    normalize_xy,
-)
+from whitecanvas.utils.normalize import arr_color, as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -261,9 +256,9 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         *,
         name: str | None = None,
         color: ColorType = "blue",
-        width: float = 1,
+        width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = False,
+        antialias: bool = True,
         alpha: float = 1.0,
         backend: Backend | str | None = None,
     ):
@@ -309,7 +304,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
             raise TypeError(f"Expected width to be numeric, got {type(width)}")
         elif width < 0:
             raise ValueError(f"Expected width to be non-negative, got {width!r}")
-        self._backend._plt_set_edge_width(width)
+        self._backend._plt_set_edge_width(float(width))
 
     @property
     def style(self) -> LineStyle:

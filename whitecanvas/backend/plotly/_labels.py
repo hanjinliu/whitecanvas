@@ -83,7 +83,10 @@ class Axis(_CanvasComponent):
         return self._canvas()._fig.layout[self._axis + "axis"]
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        return self._plt_get_axis().range  # TODO: returns None
+        lim = self._plt_get_axis().range
+        if lim is None:
+            lim = (0, 1)  # TODO: how to get the limits?
+        return lim
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         self._plt_get_axis().range = limits

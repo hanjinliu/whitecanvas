@@ -1,10 +1,10 @@
 import pytest
-import whitecanvas
+from whitecanvas import new_canvas
 from whitecanvas.layers import Line, Markers, Layer
 import numpy as np
 from cmap import Color
 
-BACKENDS = ["matplotlib", "pyqtgraph"]
+BACKENDS = ["matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
 
 def assert_color_equal(a, b):
     assert Color(a) == Color(b)
@@ -34,7 +34,7 @@ def test_color(backend: str):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_line(backend: str):
-    canvas = whitecanvas.Canvas(backend=backend)
+    canvas = new_canvas(backend=backend)
     canvas.add_line(np.arange(10), np.zeros(10))
     layer = canvas.add_line(np.zeros(10))
 
@@ -48,7 +48,7 @@ def test_line(backend: str):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_markers(backend: str):
-    canvas = whitecanvas.Canvas(backend=backend)
+    canvas = new_canvas(backend=backend)
     canvas.add_markers(np.arange(10), np.zeros(10))
     layer = canvas.add_markers(np.zeros(10))
 
@@ -74,7 +74,7 @@ def test_markers(backend: str):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_bars(backend: str):
-    canvas = whitecanvas.Canvas(backend=backend)
+    canvas = new_canvas(backend=backend)
     canvas.add_bars(np.arange(10), np.zeros(10), bottom=np.ones(10))
     layer = canvas.add_bars(np.arange(10), np.zeros(10))
 
@@ -96,7 +96,7 @@ def test_bars(backend: str):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_infcurve(backend: str):
-    canvas = whitecanvas.Canvas(backend=backend)
+    canvas = new_canvas(backend=backend)
 
     layer = canvas.add_infcurve(lambda arr: np.sin(arr / 5))
 
@@ -110,7 +110,7 @@ def test_infcurve(backend: str):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_band(backend: str):
-    canvas = whitecanvas.Canvas(backend=backend)
+    canvas = new_canvas(backend=backend)
 
     x = np.arange(5)
     layer = canvas.add_band(x, x - 1, x ** 2 / 2)
@@ -130,7 +130,7 @@ def test_band(backend: str):
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_image(backend: str):
-    canvas = whitecanvas.Canvas(backend=backend)
+    canvas = new_canvas(backend=backend)
 
     layer = canvas.add_image(np.random.random((10, 10)) * 2)
 
@@ -138,4 +138,18 @@ def test_image(backend: str):
     assert layer.cmap == "viridis"
     layer.clim = (0.5, 1.5)
     assert layer.clim == (0.5, 1.5)
+    _test_visibility(layer)
+
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_errorbars(backend: str):
+    canvas = new_canvas(backend=backend)
+
+    layer = canvas.add_errorbars(np.arange(10), np.zeros(10), np.ones(10))
+
+    layer.color = [1.0, 0.0, 0.0, 1.0]
+    assert_color_equal(layer.color, "red")
+    layer.style = ":"
+    assert layer.style == ":"
+    layer.width = 2
+    assert layer.width == 2
     _test_visibility(layer)

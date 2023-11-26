@@ -10,8 +10,6 @@ import bokeh.models as bk_models
 from whitecanvas.utils.normalize import arr_color, hex_color
 from ._base import (
     BokehLayer,
-    to_bokeh_line_style,
-    from_bokeh_line_style,
     to_bokeh_hatch,
     from_bokeh_hatch,
 )
@@ -31,12 +29,21 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
             self._model = bk_models.VArea(x="t", y1="y0", y2="y1")
         else:
             self._model = bk_models.HArea(y="t", x1="y0", y1="y1")
+        self._edge_color = np.zeros(4)
+        self._edge_width = 0
+        self._edge_style = LineStyle.SOLID
+        self._visible = True
+        self._face_color = self._model.fill_color
 
     def _plt_get_visible(self):
-        return self._model.visible
+        return self._visible
 
     def _plt_set_visible(self, visible):
-        self._model.visible = visible
+        if visible:
+            self._model.fill_color = "#00000000"
+        else:
+            self._model.fill_color = self._face_color
+        self._visible = visible
 
     ##### XYYDataProtocol #####
     def _plt_get_vertical_data(self):
@@ -51,10 +58,12 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
     _plt_set_horizontal_data = _plt_set_vertical_data
 
     def _plt_get_face_color(self):
-        return arr_color(self._model.fill_color)
+        return arr_color(self._face_color)
 
     def _plt_set_face_color(self, color):
-        self._model.fill_color = hex_color(color)
+        self._face_color = hex_color(color)
+        if self._visible:
+            self._model.fill_color = self._face_color
 
     def _plt_get_face_pattern(self) -> FacePattern:
         return from_bokeh_hatch(self._model.hatch_pattern)
@@ -63,26 +72,19 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         self._model.hatch_pattern = to_bokeh_hatch(pattern)
 
     def _plt_get_edge_color(self):
-        return arr_color(self._model.line_color)
+        return self._edge_color
 
     def _plt_set_edge_color(self, color):
-        self._model.line_color = hex_color(color)
+        self._edge_color = arr_color(color)
 
     def _plt_get_edge_width(self):
-        return self._model.line_width
+        return self._edge_width
 
     def _plt_set_edge_width(self, width: float):
-        self._model.line_width = width
+        self._edge_width = width
 
     def _plt_get_edge_style(self):
-        return from_bokeh_line_style(self._model.line_dash)
+        return self._edge_style
 
     def _plt_set_edge_style(self, style: LineStyle):
-        self._model.line_dash = to_bokeh_line_style(style)
-
-    def _plt_get_antialias(self) -> bool:
-        return self._model.line_join == "round"
-
-    def _plt_set_antialias(self, antialias: bool):
-        self._model.line_join = "round" if antialias else "miter"
-        self._model.line_cap = "round" if antialias else "butt"
+        self._edge_style = style

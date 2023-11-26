@@ -337,6 +337,7 @@ class CanvasBase(ABC):
     def add_bars(
         self,
         *args,
+        bottom=None,
         name=None,
         orient=Orientation.VERTICAL,
         bar_width=0.8,
@@ -344,22 +345,11 @@ class CanvasBase(ABC):
         alpha=1.0,
         pattern=FacePattern.SOLID,
     ) -> _l.Bars:
-        if len(args) == 1:
-            top = as_array_1d(args[0])
-            center = np.arange(top.size, dtype=np.float32)
-            bottom = np.zeros(top.size, dtype=np.float32)
-        elif len(args) == 2:
-            center, top = normalize_xy(*args)
-            bottom = np.zeros_like(top)
-        elif len(args) == 3:
-            center, top = normalize_xy(*args[:2])
-            bottom = as_array_1d(args[2])
+        center, top = normalize_xy(*args)
+        if bottom is not None:
+            bottom = as_array_1d(bottom)
             if bottom.shape != top.shape:
                 raise ValueError("Expected bottom to have the same shape as top")
-        else:
-            raise TypeError(
-                f"Expected 1, 2, or 3 positional arguments, got {len(args)}"
-            )
         name = self._coerce_name(_l.Bars, name)
         color = self._generate_colors(color)
         layer = _l.Bars(

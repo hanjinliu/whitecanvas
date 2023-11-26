@@ -25,12 +25,18 @@ class Markers(BokehLayer[bk_models.Scatter]):
     def __init__(self, xdata, ydata):
         self._data = bk_models.ColumnDataSource(data=dict(x=xdata, y=ydata))
         self._model = bk_models.Scatter(x="x", y="y")
+        self._size = 10.0
+        self._visible = True
 
     def _plt_get_visible(self) -> bool:
-        return self._model.visible
+        return self._visible
 
     def _plt_set_visible(self, visible: bool):
-        self._model.visible = visible
+        if visible:
+            self._model.size = self._size
+        else:
+            self._model.size = 0
+        self._visible = visible
 
     def _plt_get_data(self):
         return self._data.data["x"], self._data.data["y"]
@@ -71,7 +77,7 @@ class Markers(BokehLayer[bk_models.Scatter]):
     def _plt_get_symbol(self) -> Symbol:
         sym = self._model.marker
         rot = int(round(self._model.angle / np.pi * 2))
-        return from_bokeh_symbol((sym, rot))
+        return from_bokeh_symbol(sym, rot)
 
     def _plt_set_symbol(self, symbol: Symbol):
         sym, rot = to_bokeh_symbol(symbol)
@@ -79,13 +85,12 @@ class Markers(BokehLayer[bk_models.Scatter]):
         self._model.angle = rot * np.pi / 2
 
     def _plt_get_symbol_size(self) -> float:
-        return self._model.size
+        return self._size
 
     def _plt_set_symbol_size(self, size: float):
-        self._model.size = size
-
-    def _plt_get_antialias(self) -> bool:
-        return True
+        self._size = size
+        if self._visible:
+            self._model.size = size
 
 
 @check_protocol(HeteroMarkersProtocol)
@@ -129,7 +134,7 @@ class HeteroMarkers(HeteroLayer[bk_models.Scatter]):
     def _plt_get_symbol(self) -> Symbol:
         sym = self._model.marker
         rot = int(round(self._model.angle / np.pi * 2))
-        return from_bokeh_symbol((sym, rot))
+        return from_bokeh_symbol(sym, rot)
 
     def _plt_set_symbol(self, symbol: Symbol):
         sym, rot = to_bokeh_symbol(symbol)
@@ -141,6 +146,3 @@ class HeteroMarkers(HeteroLayer[bk_models.Scatter]):
 
     def _plt_set_symbol_size(self, size: float):
         self._model.size = size
-
-    def _plt_get_antialias(self) -> bool:
-        return True

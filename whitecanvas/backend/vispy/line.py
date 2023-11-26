@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 
 from vispy.scene import visuals
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
-from whitecanvas.types import LineStyle
+from whitecanvas.backend import _not_implemented
 
 
 @check_protocol(LineProtocol)
@@ -12,6 +12,7 @@ class MonoLine(visuals.Line):
     def __init__(self, xdata, ydata):
         data = np.stack([xdata, ydata], axis=1)
         super().__init__(data, antialias=True)
+        self.unfreeze()
 
     ##### BaseProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -35,11 +36,7 @@ class MonoLine(visuals.Line):
     def _plt_set_edge_width(self, width: float):
         self.set_data(width=width)
 
-    def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle.SOLID
-
-    def _plt_set_edge_style(self, style: LineStyle):
-        pass  # TODO
+    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return self.color
@@ -64,6 +61,7 @@ class MultiLine(visuals.Compound):
         self._data = data
         self._antialias = True
         super().__init__(items)
+        self.unfreeze()
 
     @property
     def _lines(self) -> list[visuals.Line]:
@@ -103,11 +101,7 @@ class MultiLine(visuals.Compound):
         for item in self._lines:
             item.set_data(width=width)
 
-    def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle.SOLID
-
-    def _plt_set_edge_style(self, style):
-        pass
+    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         if len(self._lines) == 0:

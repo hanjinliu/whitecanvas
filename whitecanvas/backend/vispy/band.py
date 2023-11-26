@@ -5,7 +5,8 @@ from numpy.typing import NDArray
 
 from vispy.scene import visuals
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import LineStyle, FacePattern, Orientation
+from whitecanvas.types import LineStyle, Orientation
+from whitecanvas.backend import _not_implemented
 
 
 @check_protocol(BandProtocol)
@@ -24,7 +25,6 @@ class Band(visuals.Polygon):
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
-        self.freeze()
 
     ##### LayerProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -73,11 +73,7 @@ class Band(visuals.Polygon):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         self.color = color
 
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern.SOLID
-
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        pass
+    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_pattern()
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
@@ -90,10 +86,6 @@ class Band(visuals.Polygon):
         return self.border.width
 
     def _plt_set_edge_width(self, width: float):
-        self.border.width = width
+        self.border.set_data(width=width)
 
-    def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle.SOLID
-
-    def _plt_set_edge_style(self, style: LineStyle):
-        pass
+    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()

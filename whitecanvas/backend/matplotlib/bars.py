@@ -22,6 +22,15 @@ class Bars(BarContainer, MplLayer):
             r.get_path()._interpolation_steps = 100
             patches.append(r)
         super().__init__(patches)
+        self._visible = True
+
+    def _plt_get_visible(self):
+        return self._visible
+
+    def _plt_set_visible(self, visible):
+        for patch in self.patches:
+            patch.set_visible(visible)
+        self._visible = visible
 
     def _plt_set_zorder(self, zorder: int):
         for patch in self.patches:
@@ -84,7 +93,7 @@ class Bars(BarContainer, MplLayer):
         if isinstance(style, LineStyle):
             style = [style] * len(self.patches)
         for patch, s in zip(self.patches, style):
-            patch.set_linestyle(s)
+            patch.set_linestyle(s.value)
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
         return np.array([patch.get_linewidth() for patch in self.patches])

@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from plotly import graph_objects as go
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
-from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
+from whitecanvas.utils.normalize import arr_color, rgba_str_color
 from ._base import PlotlyLayer, to_plotly_linestyle, from_plotly_linestyle
 
 
@@ -19,6 +19,7 @@ class MonoLine(PlotlyLayer):
             "mode": "lines",
             "line": {"color": "blue", "width": 1, "dash": "solid", "simplify": False},
             "type": "scatter",
+            "showlegend": False,
             "visible": True,
         }
 
@@ -80,6 +81,7 @@ class MultiLine(PlotlyLayer):
                 "simplify": False,
             },
             "type": "scatter",
+            "showlegend": False,
             "visible": True,
         }
 

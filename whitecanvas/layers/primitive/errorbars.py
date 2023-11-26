@@ -29,7 +29,7 @@ class Errorbars(MultiLine):
         alpha: float = 1,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = False,
+        antialias: bool = True,
         capsize: float = 0.0,
         backend: Backend | str | None = None,
     ):

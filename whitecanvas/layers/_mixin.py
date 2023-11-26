@@ -30,10 +30,20 @@ _void = _Void()
 
 
 class LayerNamespace(Generic[_L]):
+    _properties = ()
+
     def __init__(self, layer: _L | None = None) -> None:
-        self.layer = layer
+        self._layer = layer
         self._instances: WeakValueDictionary[int, _L] = WeakValueDictionary()
         self.__setattr__ = self._setattr
+
+    def __repr__(self) -> str:
+        attrs = ", ".join(f"{p}={getattr(self, p)!r}" for p in self._properties)
+        return f"{type(self).__name__}(layer={self._layer!r}, {attrs})"
+
+    def __repr_pretty__(self, p, cycle):
+        attrs = ",\n    ".join(f"{p}={getattr(self, p)!r}" for p in self._properties)
+        p.text(f"{type(self).__name__}(\n    layer={self._layer!r}, {attrs}\n)")
 
     def __get__(self, obj, owner) -> Self:
         if obj is None:
@@ -48,21 +58,23 @@ class LayerNamespace(Generic[_L]):
 
 
 class FaceNamespace(LayerNamespace[_L]):
+    _properties = ("color", "pattern")
+
     @property
     def color(self) -> NDArray[np.floating]:
-        return self.layer._backend._plt_get_face_color()
+        return self._layer._backend._plt_get_face_color()
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_face_color(arr_color(value))
+        return self._layer._backend._plt_set_face_color(arr_color(value))
 
     @property
     def pattern(self) -> FacePattern:
-        return self.layer._backend._plt_get_face_pattern()
+        return self._layer._backend._plt_get_face_pattern()
 
     @pattern.setter
     def pattern(self, value: str | FacePattern):
-        return self.layer._backend._plt_set_face_pattern(FacePattern(value))
+        return self._layer._backend._plt_set_face_pattern(FacePattern(value))
 
     @property
     def alpha(self) -> float:
@@ -99,25 +111,27 @@ class FaceNamespace(LayerNamespace[_L]):
             self.pattern = pattern
         if alpha is not _void:
             self.alpha = alpha
-        return self.layer
+        return self._layer
 
 
 class AggFaceNamespace(LayerNamespace[_L]):
+    _properties = ("color", "pattern")
+
     @property
     def color(self) -> NDArray[np.floating]:
-        return self.layer._backend._plt_get_face_color()[0]
+        return self._layer._backend._plt_get_face_color()[0]
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_face_color(arr_color(value))
+        return self._layer._backend._plt_set_face_color(arr_color(value))
 
     @property
     def pattern(self) -> FacePattern:
-        return self.layer._backend._plt_get_face_pattern()[0]
+        return self._layer._backend._plt_get_face_pattern()[0]
 
     @pattern.setter
     def pattern(self, value: str | FacePattern):
-        return self.layer._backend._plt_set_face_pattern(FacePattern(value))
+        return self._layer._backend._plt_set_face_pattern(FacePattern(value))
 
     @property
     def alpha(self) -> float:
@@ -154,35 +168,37 @@ class AggFaceNamespace(LayerNamespace[_L]):
             self.pattern = pattern
         if alpha is not _void:
             self.alpha = alpha
-        return self.layer
+        return self._layer
 
 
 class EdgeNamespace(LayerNamespace[_L]):
+    _properties = ("color", "style", "width")
+
     @property
     def color(self) -> NDArray[np.floating]:
-        return self.layer._backend._plt_get_edge_color()
+        return self._layer._backend._plt_get_edge_color()
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_edge_color(arr_color(value))
+        return self._layer._backend._plt_set_edge_color(arr_color(value))
 
     @property
     def style(self) -> LineStyle:
-        return self.layer._backend._plt_get_edge_style()
+        return self._layer._backend._plt_get_edge_style()
 
     @style.setter
     def style(self, value: str | LineStyle):
-        return self.layer._backend._plt_set_edge_style(LineStyle(value))
+        return self._layer._backend._plt_set_edge_style(LineStyle(value))
 
     @property
     def width(self) -> float:
-        return self.layer._backend._plt_get_edge_width()
+        return self._layer._backend._plt_get_edge_width()
 
     @width.setter
     def width(self, value: float):
         if value < 0:
             raise ValueError(f"Edge width must be non-negative, got {value!r}")
-        return self.layer._backend._plt_set_edge_width(value)
+        return self._layer._backend._plt_set_edge_width(value)
 
     @property
     def alpha(self) -> float:
@@ -210,35 +226,37 @@ class EdgeNamespace(LayerNamespace[_L]):
             self.width = width
         if alpha is not _void:
             self.alpha = alpha
-        return self.layer
+        return self._layer
 
 
 class AggEdgeNamespace(LayerNamespace[_L]):
+    _properties = ("color", "style", "width")
+
     @property
     def color(self) -> NDArray[np.floating]:
-        return self.layer._backend._plt_get_edge_color()[0]
+        return self._layer._backend._plt_get_edge_color()[0]
 
     @color.setter
     def color(self, value: ColorType):
-        return self.layer._backend._plt_set_edge_color(arr_color(value))
+        return self._layer._backend._plt_set_edge_color(arr_color(value))
 
     @property
     def style(self) -> LineStyle:
-        return self.layer._backend._plt_get_edge_style()[0]
+        return self._layer._backend._plt_get_edge_style()[0]
 
     @style.setter
     def style(self, value: str | LineStyle):
-        return self.layer._backend._plt_set_edge_style(LineStyle(value))
+        return self._layer._backend._plt_set_edge_style(LineStyle(value))
 
     @property
     def width(self) -> float:
-        return self.layer._backend._plt_get_edge_width()[0]
+        return self._layer._backend._plt_get_edge_width()[0]
 
     @width.setter
     def width(self, value: float):
         if value < 0:
             raise ValueError(f"Edge width must be non-negative, got {value!r}")
-        return self.layer._backend._plt_set_edge_width(value)
+        return self._layer._backend._plt_set_edge_width(value)
 
     @property
     def alpha(self) -> float:
@@ -266,23 +284,27 @@ class AggEdgeNamespace(LayerNamespace[_L]):
             self.width = width
         if alpha is not _void:
             self.alpha = alpha
-        return self.layer
+        return self._layer
 
 
 class MultiFaceNamespace(LayerNamespace[_L]):
+    _properties = ("color", "pattern")
+
     @property
     def color(self) -> NDArray[np.floating]:
         """Face color of the bar."""
-        return self.layer._backend._plt_get_face_color()
+        return self._layer._backend._plt_get_face_color()
 
     @color.setter
     def color(self, color):
-        self.layer._backend._plt_set_face_color(as_color_array(color, self.layer.ndata))
+        self._layer._backend._plt_set_face_color(
+            as_color_array(color, self._layer.ndata)
+        )
 
     @property
     def pattern(self) -> EnumArray[FacePattern]:
         """Face fill pattern of the bars."""
-        return self.layer._backend._plt_get_face_pattern()
+        return self._layer._backend._plt_get_face_pattern()
 
     @pattern.setter
     def pattern(self, pattern: str | FacePattern | Iterable[str | FacePattern]):
@@ -290,7 +312,7 @@ class MultiFaceNamespace(LayerNamespace[_L]):
             pattern = FacePattern(pattern)
         elif hasattr(pattern, "__iter__"):
             pattern = [FacePattern(p) for p in pattern]
-        self.layer._backend._plt_set_face_pattern(FacePattern(pattern))
+        self._layer._backend._plt_set_face_pattern(FacePattern(pattern))
 
     @property
     def alpha(self) -> float:
@@ -327,30 +349,34 @@ class MultiFaceNamespace(LayerNamespace[_L]):
             self.pattern = pattern
         if alpha is not _void:
             self.alpha = alpha
-        return self.layer
+        return self._layer
 
 
 class MultiEdgeNamespace(LayerNamespace[_L]):
+    _properties = ("color", "style", "width")
+
     @property
     def color(self) -> NDArray[np.floating]:
         """Edge color of the bar."""
-        return self.layer._backend._plt_get_edge_color()
+        return self._layer._backend._plt_get_edge_color()
 
     @color.setter
     def color(self, color):
-        self.layer._backend._plt_set_edge_color(as_color_array(color, self.layer.ndata))
+        self._layer._backend._plt_set_edge_color(
+            as_color_array(color, self._layer.ndata)
+        )
 
     @property
     def width(self) -> NDArray[np.floating]:
-        return self.layer._backend._plt_get_edge_width()
+        return self._layer._backend._plt_get_edge_width()
 
     @width.setter
     def width(self, width: float):
-        self.layer._backend._plt_set_edge_width(width)
+        self._layer._backend._plt_set_edge_width(width)
 
     @property
     def style(self) -> EnumArray[LineStyle]:
-        return self.layer._backend._plt_get_edge_style()
+        return self._layer._backend._plt_get_edge_style()
 
     @style.setter
     def style(self, style: str | LineStyle | Iterable[str | LineStyle]):
@@ -358,7 +384,7 @@ class MultiEdgeNamespace(LayerNamespace[_L]):
             style = LineStyle(style)
         elif hasattr(style, "__iter__"):
             style = [LineStyle(s) for s in style]
-        self.layer._backend._plt_set_edge_style(style)
+        self._layer._backend._plt_set_edge_style(style)
 
     @property
     def alpha(self) -> float:
@@ -386,7 +412,7 @@ class MultiEdgeNamespace(LayerNamespace[_L]):
             self.width = width
         if alpha is not _void:
             self.alpha = alpha
-        return self.layer
+        return self._layer
 
 
 class LineMixin(PrimitiveLayer[_HasEdges]):
@@ -400,13 +426,17 @@ class LineMixin(PrimitiveLayer[_HasEdges]):
         self._backend._plt_set_edge_color(arr_color(color))
 
     @property
-    def width(self):
+    def width(self) -> float:
         """Width of the line."""
         return self._backend._plt_get_edge_width()
 
     @width.setter
-    def width(self, width):
-        self._backend._plt_set_edge_width(width)
+    def width(self, width: float):
+        if not isinstance(width, (int, float, np.number)):
+            raise TypeError(f"Width must be a number, got {type(width)}")
+        if width < 0:
+            raise ValueError(f"Width must be non-negative, got {width!r}")
+        self._backend._plt_set_edge_width(float(width))
 
     @property
     def style(self) -> LineStyle:

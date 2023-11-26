@@ -2,12 +2,10 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 from matplotlib.lines import Line2D
-from matplotlib.patches import PathPatch
-from matplotlib.collections import LineCollection, Collection
+from matplotlib.collections import LineCollection
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
-from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(LineProtocol)
@@ -61,6 +59,7 @@ class MultiLine(LineCollection, MplLayer):
         # data: list of (N, 2)
         super().__init__(data, linewidths=1)
         self._ndata = len(data)
+        self._linestyle = LineStyle.SOLID
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -78,10 +77,11 @@ class MultiLine(LineCollection, MplLayer):
         self.set_linewidth(width)
 
     def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle(self.get_linestyle()[0])
+        return self._linestyle
 
-    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
+    def _plt_set_edge_style(self, style: LineStyle):
         self.set_linestyle(style.value)
+        self._linestyle = style
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return self.get_color()[0]

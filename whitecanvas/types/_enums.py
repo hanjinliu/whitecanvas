@@ -29,7 +29,7 @@ class LineStyle(_strEnum):
 
 
 class FacePattern(_strEnum):
-    SOLID = " "
+    SOLID = ""
     HORIZONTAL = "-"
     VERTICAL = "|"
     CROSS = "+"

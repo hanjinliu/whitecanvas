@@ -9,15 +9,8 @@ from ._base import PlotlyLayer
 from ._labels import Title, AxisLabel, Axis, Ticks
 
 
-class FigureRef:
-    def __init__(self, fig: go.Figure, row: int, col: int):
-        self._fig = fig
-        self._row = row
-        self._col = col
-
-
 class Canvas:
-    def __init__(self, fig: go.FigureWidget | None = None):
+    def __init__(self, fig: go.FigureWidget | None = None, row: int = 0, col: int = 0):
         # prepare widget
         if fig is None:
             fig = go.FigureWidget()
@@ -34,6 +27,8 @@ class Canvas:
             x=[], y=[], mode="markers", marker_opacity=0, showlegend=False
         )
         self._fig.add_trace(self._scatter)
+        self._row = row + 1
+        self._col = col + 1
 
     def _plt_get_native(self):
         return self._fig
@@ -86,7 +81,7 @@ class Canvas:
             )
 
     def _plt_add_layer(self, layer: PlotlyLayer):
-        self._fig.add_trace(layer._props)
+        self._fig.add_trace(layer._props, row=self._row, col=self._col)
         layer._props = self._fig._data[-1]
 
     def _plt_remove_layer(self, layer: PlotlyLayer):
@@ -172,11 +167,10 @@ class CanvasGrid:
         self._figs.layout.paper_bgcolor = rgba_str_color(color)
 
     def _plt_screenshot(self):
-        from io import BytesIO
+        from PIL import Image
+        import io
 
         width, height = self._figs.layout.width, self._figs.layout.height
         img_bytes = self._figs.to_image(format="png", width=width, height=height)
-
-        return np.frombuffer(BytesIO(img_bytes), dtype=np.uint8).reshape(
-            height, width, 4
-        )
+        image = Image.open(io.BytesIO(img_bytes))
+        return np.asarray(image, dtype=np.uint8)

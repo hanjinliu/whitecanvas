@@ -14,7 +14,6 @@ class Text(visuals.Text):
         self._plt_set_text_position([x, y])
         self.unfreeze()
         self._alignment = Alignment.BOTTOM_LEFT
-        self.freeze()
 
     ##### BaseProtocol #####
     def _plt_get_visible(self) -> bool:

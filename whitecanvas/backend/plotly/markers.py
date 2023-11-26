@@ -3,14 +3,12 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from plotly import graph_objects as go
 from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol, check_protocol
-from whitecanvas.types import LineStyle, Symbol, FacePattern
+from whitecanvas.types import Symbol, FacePattern
 from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
+from whitecanvas.backend import _not_implemented
 from ._base import (
     PlotlyLayer,
-    to_plotly_linestyle,
-    from_plotly_linestyle,
     to_plotly_marker_symbol,
     from_plotly_marker_symbol,
 )
@@ -30,6 +28,7 @@ class Markers(PlotlyLayer):
                 "line": {"width": 1, "color": "blue"},
             },
             "type": "scatter",
+            "showlegend": False,
             "visible": True,
         }
 
@@ -46,11 +45,7 @@ class Markers(PlotlyLayer):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         self._props["marker"]["color"] = rgba_str_color(color)
 
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern.SOLID
-
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        pass
+    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_pattern()
 
     def _plt_get_symbol(self) -> Symbol:
         return from_plotly_marker_symbol(self._props["marker"]["symbol"])
@@ -70,11 +65,7 @@ class Markers(PlotlyLayer):
     def _plt_set_edge_width(self, width: float):
         self._props["marker"]["line"]["width"] = width
 
-    def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle.SOLID
-
-    def _plt_set_edge_style(self, style: LineStyle):
-        pass
+    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return arr_color(self._props["marker"]["line"]["color"])
@@ -98,10 +89,11 @@ class HeteroMarkers(PlotlyLayer):
                 "line": {"width": np.ones(ndata), "color": ["blue"] * ndata},
             },
             "type": "scatter",
+            "showlegend": False,
             "visible": True,
         }
 
-    def _ndata(self) -> int:
+    def _plt_get_ndata(self) -> int:
         return len(self._props["x"])
 
     def _plt_get_data(self):
@@ -118,14 +110,10 @@ class HeteroMarkers(PlotlyLayer):
         return np.stack([arr_color(c) for c in color], axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color)
+        color = as_color_array(color, self._plt_get_ndata())
         self._props["marker"]["color"] = [rgba_str_color(c) for c in color]
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
-        return [FacePattern.SOLID] * len(self._props["marker"]["color"])
-
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        pass
+    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_patterns()
 
     def _plt_get_symbol(self) -> Symbol:
         return from_plotly_marker_symbol(self._props["marker"]["symbol"])
@@ -138,7 +126,7 @@ class HeteroMarkers(PlotlyLayer):
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
         if isinstance(size, float):
-            size = np.full(self._ndata(), size)
+            size = np.full(self._plt_get_ndata(), size)
         self._props["marker"]["size"] = size
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
@@ -146,14 +134,10 @@ class HeteroMarkers(PlotlyLayer):
 
     def _plt_set_edge_width(self, width: float):
         if isinstance(width, (int, float, np.number)):
-            width = np.full(self._ndata(), width)
+            width = np.full(self._plt_get_ndata(), width)
         self._props["marker"]["line"]["width"] = width
 
-    def _plt_get_edge_style(self) -> list[LineStyle]:
-        return [LineStyle.SOLID] * self._ndata()
-
-    def _plt_set_edge_style(self, style: LineStyle):
-        pass
+    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_styles()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         color = self._props["marker"]["line"]["color"]
@@ -162,5 +146,5 @@ class HeteroMarkers(PlotlyLayer):
         return np.stack([arr_color(c) for c in color], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color)
+        color = as_color_array(color, self._plt_get_ndata())
         self._props["marker"]["line"]["color"] = [rgba_str_color(c) for c in color]

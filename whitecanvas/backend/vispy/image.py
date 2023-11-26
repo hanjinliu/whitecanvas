@@ -9,8 +9,8 @@ from whitecanvas.protocols import ImageProtocol, check_protocol
 @check_protocol(ImageProtocol)
 class Image(visuals.Image):
     def __init__(self, data: np.ndarray):
+        self._cmap_obj = Colormap("gray")
         super().__init__(data, cmap="gray")
-        self._cmap = Colormap("gray")
 
     def _plt_get_visible(self) -> bool:
         return self.visible
@@ -25,10 +25,11 @@ class Image(visuals.Image):
         self.set_data(data)
 
     def _plt_get_colormap(self) -> Colormap:
-        return self._cmap
+        return self._cmap_obj
 
     def _plt_set_colormap(self, cmap: Colormap):
         self.cmap = cmap.to_vispy()
+        self._cmap_obj = cmap
 
     def _plt_get_clim(self) -> tuple[float, float]:
         return self.clim

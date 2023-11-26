@@ -6,6 +6,7 @@ from vispy.scene import visuals
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import LineStyle, FacePattern
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.backend import _not_implemented
 
 
 @check_protocol(BarProtocol)
@@ -26,7 +27,6 @@ class Bars(visuals.Compound):
         super().__init__(rectangles)
         self.unfreeze()
         self._rectangles = rectangles
-        self.freeze()
 
     ##### LayerProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -52,6 +52,9 @@ class Bars(visuals.Compound):
             rect.width = w
             rect.height = h
 
+    def _plt_get_ndata(self):
+        return len(self._rectangles)
+
     ##### HasFace protocol #####
     def _plt_get_face_color(self) -> NDArray[np.float32]:
         colors = []
@@ -60,15 +63,11 @@ class Bars(visuals.Compound):
         return np.stack(colors, axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color, size=len(self._rectangles))
+        color = as_color_array(color, size=self._plt_get_ndata())
         for rect, c in zip(self._rectangles, color):
             rect.color = c
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
-        return [FacePattern.SOLID] * len(self._rectangles)
-
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
-        pass
+    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_patterns()
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
@@ -78,7 +77,7 @@ class Bars(visuals.Compound):
         return np.stack(colors, axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        color = as_color_array(color, size=len(self._rectangles))
+        color = as_color_array(color, size=self._plt_get_ndata())
         for rect, c in zip(self._rectangles, color):
             rect.border_color = c
 
@@ -91,12 +90,8 @@ class Bars(visuals.Compound):
 
     def _plt_set_edge_width(self, width: float):
         if np.isscalar(width):
-            width = np.full(len(self._rectangles), width)
+            width = np.full(self._plt_get_ndata(), width)
         for rect, w in zip(self._rectangles, width):
             rect._border_width = w
 
-    def _plt_get_edge_style(self) -> list[LineStyle]:
-        return [LineStyle.SOLID] * len(self._rectangles)
-
-    def _plt_set_edge_style(self, style: LineStyle):
-        pass
+    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_styles()

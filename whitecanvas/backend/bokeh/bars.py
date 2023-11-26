@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 from whitecanvas.protocols import BarProtocol, check_protocol
-
 import bokeh.models as bk_models
 from ._base import HeteroLayer
 
@@ -11,6 +10,7 @@ from ._base import HeteroLayer
 class Bars(HeteroLayer[bk_models.Quad]):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         ndata = len(xlow)
+        self._visible = True
         self._data = bk_models.ColumnDataSource(
             data=dict(
                 x0=xlow,
@@ -39,10 +39,16 @@ class Bars(HeteroLayer[bk_models.Quad]):
 
     ##### LayerProtocol #####
     def _plt_get_visible(self) -> bool:
-        return self._model.visible
+        return self._visible
 
     def _plt_set_visible(self, visible: bool):
-        self._model.visible = visible
+        if visible:
+            self._model.line_color = "edge_color"
+            self._model.fill_color = "face_color"
+        else:
+            self._model.line_color = "#00000000"
+            self._model.fill_color = "#00000000"
+        self._visible = visible
 
     ##### XXYYDataProtocol #####
     def _plt_get_data(self):

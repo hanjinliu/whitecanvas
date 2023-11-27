@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.protocols import BarProtocol, check_protocol
-from whitecanvas.types import FacePattern, LineStyle
+from whitecanvas.types import FacePattern
 from whitecanvas.utils.normalize import rgba_str_color, arr_color
 from ._base import PlotlyLayer
 from whitecanvas.backend import _not_implemented

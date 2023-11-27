@@ -818,6 +818,8 @@ class CanvasBase(ABC):
 
 
 class Canvas(CanvasBase):
+    _CURRENT_INSTANCE: Canvas | None = None
+
     def __init__(
         self,
         backend: str | None = None,
@@ -827,6 +829,7 @@ class Canvas(CanvasBase):
         self._backend_installer = Backend(backend)
         self._backend = self._create_backend_object()
         super().__init__(palette=palette)
+        self.__class__._CURRENT_INSTANCE = self
 
     @classmethod
     def from_backend(

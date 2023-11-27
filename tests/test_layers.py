@@ -2,12 +2,9 @@ import pytest
 from whitecanvas import new_canvas
 from whitecanvas.layers import Line, Markers, Layer
 import numpy as np
-from cmap import Color
+from ._utils import assert_color_equal
 
 BACKENDS = ["matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
-
-def assert_color_equal(a, b):
-    assert Color(a) == Color(b)
 
 def _test_visibility(layer: Layer):
     layer.visible

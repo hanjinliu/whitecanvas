@@ -59,14 +59,14 @@ class AxisLabel(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
         super().__init__(canvas)
         self._css = {
-            "color": "#FFFFFF",
+            "color": "#000000",
             "font-size": "11pt",
             "font-family": "Arial",
         }
         self._axis = axis
 
     def _get_axis(self) -> pg.AxisItem:
-        self._canvas()._plot_item.getAxis(self._axis)
+        return self._canvas()._plot_item.getAxis(self._axis)
 
     def _get_label(self) -> QtW.QGraphicsTextItem:
         return self._get_axis().label
@@ -90,6 +90,7 @@ class AxisLabel(_CanvasComponent):
         css = self._css.copy()
         css["color"] = Color(color).hex
         self._get_axis().setLabel(self._plt_get_text(), **css)
+        self._css = css
 
     def _plt_get_size(self) -> int:
         return int(self._css["font-size"][:-2])
@@ -98,6 +99,7 @@ class AxisLabel(_CanvasComponent):
         css = self._css.copy()
         css["font-size"] = f"{size}pt"
         self._get_axis().setLabel(self._plt_get_text(), **css)
+        self._css = css
 
     def _plt_get_fontfamily(self) -> str:
         return self._css["font-family"]
@@ -106,12 +108,16 @@ class AxisLabel(_CanvasComponent):
         css = self._css.copy()
         css["font-family"] = family
         self._get_axis().setLabel(self._plt_get_text(), **css)
+        self._css = css
 
 
 class Axis(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
         super().__init__(canvas)
         self._axis = axis
+        self._plt_get_axis().setZValue(-10)
+        self._pen = QPen(array_to_qcolor(np.array([0.0, 0.0, 0.0, 1.0])))
+        self._pen.setCosmetic(True)
 
     def _plt_get_axis(self) -> pg.AxisItem:
         return self._canvas()._plot_item.getAxis(self._axis)
@@ -126,13 +132,12 @@ class Axis(_CanvasComponent):
             self._canvas()._viewbox().setYRange(*limits, padding=0)
 
     def _plt_get_color(self):
-        return np.array(self._plt_get_axis().textPen().color().toRgbF())
+        return np.array(self._pen.color().toRgbF())
 
     def _plt_set_color(self, color):
-        pen = QPen(array_to_qcolor(color))
-        pen.setCosmetic(True)
-        self._plt_get_axis().setTextPen(pen)
-        self._plt_get_axis().setPen(pen)
+        self._pen.setColor(array_to_qcolor(color))
+        self._plt_get_axis().setTextPen(self._pen)
+        self._plt_get_axis().setPen(self._pen)
 
     def _plt_flip(self) -> None:
         viewbox: pg.ViewBox = self._plt_get_axis().linkedView()
@@ -157,7 +162,7 @@ class Ticks(_CanvasComponent):
         self._axis = axis
         self._pen = QPen(array_to_qcolor(np.array([0.0, 0.0, 0.0, 1.0])))
         self._visible = True
-        self._plt_get_axis().setTickFont(QFont("sans-serif"))  # avoid None
+        self._plt_get_axis().setTickFont(QFont("Arial"))  # avoid None
 
     def _plt_get_axis(self) -> pg.AxisItem:
         return self._canvas()._plot_item.getAxis(self._axis)
@@ -183,7 +188,7 @@ class Ticks(_CanvasComponent):
                 values += list(tickval[1])
             values.sort()
             strings = values
-        return (values, strings)
+        return values, strings
 
     def _plt_set_text(self, text: tuple[list[float], list[str]]):
         axis = self._plt_get_axis()

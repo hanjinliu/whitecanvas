@@ -29,7 +29,7 @@ class TextLabel(scene.Label):
         self.text = text
 
     def _plt_get_color(self):
-        return self._text_visual.color
+        return np.array(self._text_visual.color).ravel()
 
     def _plt_set_color(self, color):
         self._text_visual.color = color
@@ -79,7 +79,7 @@ class Axis(scene.AxisWidget):
         camera.reset()
 
     def _plt_get_color(self):
-        return self.axis.axis_color
+        return np.array(self.axis.axis_color).ravel()
 
     def _plt_set_color(self, color):
         self.axis.axis_color = color

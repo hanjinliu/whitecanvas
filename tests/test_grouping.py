@@ -12,7 +12,7 @@ def test_line_marker_text(backend: str):
     layer = canvas.add_line(
         np.arange(10), np.arange(10) * 2
     ).with_markers(
-        symbol="square", size=10, color="red"
+        symbol="s", size=10, color="red"
     ).with_text(
         [f"Data-{i}" for i in range(10)], color="blue"
     )

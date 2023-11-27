@@ -53,10 +53,10 @@ class Markers(PathCollection, MplLayer):
         self._symbol = symbol
 
     def _plt_get_symbol_size(self) -> float:
-        return float(np.sqrt(self.get_sizes()[0]))
+        return float(np.sqrt(self.get_sizes()[0] * 2))
 
     def _plt_set_symbol_size(self, size: float):
-        self.set_sizes([size**2] * len(self.get_offsets()))
+        self.set_sizes([size**2 / 2] * len(self.get_offsets()))
 
     ##### HasFaces protocol #####
     def _plt_get_face_color(self) -> NDArray[np.float32]:

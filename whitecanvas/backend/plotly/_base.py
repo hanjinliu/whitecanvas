@@ -1,5 +1,5 @@
 from typing import Any
-from whitecanvas.types import LineStyle, FacePattern, Symbol
+from whitecanvas.types import LineStyle, Symbol
 
 
 class PlotlyLayer:

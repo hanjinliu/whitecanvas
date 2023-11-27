@@ -105,7 +105,7 @@ class MultiLine(visuals.Compound):
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         if len(self._lines) == 0:
-            return np.zeros((0, 4), dtype=np.float32)
+            return np.zeros((4,), dtype=np.float32)
         return self._lines[0].color
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):

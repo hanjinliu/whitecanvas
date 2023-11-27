@@ -3,7 +3,7 @@ from functools import reduce
 import numpy as np
 from numpy.typing import NDArray
 
-from qtpy import QtGui
+from qtpy import QtGui, QtCore
 import pyqtgraph as pg
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
@@ -80,6 +80,8 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
     def boundingRect(self):
         if self._bounding_rect_cache is not None:
             return self._bounding_rect_cache
+        if len(self._lines) == 0:
+            return QtCore.QRectF()
         rect = reduce(lambda a, b: a | b, (item.boundingRect() for item in self._lines))
         self._bounding_rect_cache = rect
         return rect

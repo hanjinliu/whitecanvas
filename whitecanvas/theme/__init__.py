@@ -9,6 +9,7 @@ class Theme:
     fontsize: int = 11
     foreground_color: str = "#000000"
     background_color: str = "#FFFFFF"
+    grid_color: str = "#CCCCCC"
     palette: str = "tab10"
 
 

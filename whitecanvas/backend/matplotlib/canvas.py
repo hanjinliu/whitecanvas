@@ -32,6 +32,7 @@ class Canvas:
         self._ylabel = YLabel(self)
         self._xticks = XTicks(self)
         self._yticks = YTicks(self)
+        ax.set_axisbelow(True)  # grid lines below other layers
 
     def _plt_get_native(self):
         return self._axes

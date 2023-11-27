@@ -40,7 +40,7 @@ class ViolinPlot(ListLayerGroup):
         shape: Literal["both", "left", "right"] = "both",
         violin_width: float = 0.5,
         kde_band_width: float | str = "scott",
-        colors: ColorType | list[ColorType] = "blue",
+        color: ColorType | list[ColorType] = "blue",
         alpha: float = 1,
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: str | Backend | None = None,
@@ -53,9 +53,9 @@ class ViolinPlot(ListLayerGroup):
         if violin_width <= 0:
             raise ValueError(f"violin_width must be positive, got {violin_width}")
         x, data = check_array_input(x, data)
-        colors = as_color_array(colors, len(x))
+        color = as_color_array(color, len(x))
         layers: list[Band] = []
-        for ith, (offset, values, color) in enumerate(zip(x, data, colors)):
+        for ith, (offset, values, col) in enumerate(zip(x, data, color)):
             arr = as_array_1d(values)
             kde = gaussian_kde(arr, bw_method=kde_band_width)
 
@@ -73,7 +73,7 @@ class ViolinPlot(ListLayerGroup):
                 y1 = np.zeros_like(y) + offset
 
             layer = Band(
-                x_, y0, y1, name=f"violin_{ith}", orient=_o, color=color,
+                x_, y0, y1, name=f"violin_{ith}", orient=_o, color=col,
                 alpha=alpha, pattern=pattern, backend=backend,
             )  # fmt: skip
             layers.append(layer)

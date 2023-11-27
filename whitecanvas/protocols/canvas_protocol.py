@@ -4,7 +4,7 @@ from typing import Any, Callable, Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 from .layer_protocols import BaseProtocol
-from whitecanvas.types import MouseEvent
+from whitecanvas.types import MouseEvent, LineStyle
 
 
 @runtime_checkable
@@ -123,6 +123,9 @@ class AxisProtocol(Protocol):
 
     def _plt_flip(self) -> None:
         """Flip axis"""
+
+    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
+        """Set the grid line."""
 
 
 @runtime_checkable

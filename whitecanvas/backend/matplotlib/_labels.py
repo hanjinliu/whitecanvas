@@ -3,6 +3,7 @@ from __future__ import annotations
 import weakref
 from typing import TYPE_CHECKING
 from matplotlib import pyplot as plt
+from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
     from .canvas import Canvas
@@ -145,6 +146,9 @@ class XTicks(SupportsText):
         pos, texts = text
         self._canvas()._axes.set_xticks(pos, texts)
 
+    def _plt_reset_text(self):
+        self._canvas()._axes.set_xticks([])
+
     def _plt_set_color(self, color):
         d = self._fontdict.copy()
         d["color"] = color
@@ -182,6 +186,9 @@ class YTicks(SupportsText):
     def _plt_set_text(self, text: tuple[list[float], list[str]]):
         pos, texts = text
         self._canvas()._axes.set_yticks(pos, texts)
+
+    def _plt_reset_text(self):
+        self._canvas()._axes.set_yticks([])
 
     def _plt_set_color(self, color):
         d = self._fontdict.copy()
@@ -239,6 +246,15 @@ class XAxis(AxisBase):
     def _plt_flip(self):
         self._canvas()._axes.invert_xaxis()
 
+    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
+        self._canvas()._axes.xaxis.grid(
+            visible,
+            which="major",
+            color=color,
+            linestyle=style,
+            linewidth=width,
+        )
+
 
 class YAxis(AxisBase):
     def __init__(self, canvas: Canvas):
@@ -261,3 +277,12 @@ class YAxis(AxisBase):
 
     def _plt_flip(self):
         self._canvas()._axes.invert_yaxis()
+
+    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
+        self._canvas()._axes.yaxis.grid(
+            visible,
+            which="major",
+            color=color,
+            linestyle=style,
+            linewidth=width,
+        )

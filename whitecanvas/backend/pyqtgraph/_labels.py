@@ -6,6 +6,7 @@ import numpy as np
 from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
 from cmap import Color
+from whitecanvas.types import LineStyle
 from ._qt_utils import array_to_qcolor
 
 if TYPE_CHECKING:
@@ -140,6 +141,15 @@ class Axis(_CanvasComponent):
         elif self._axis == "left":
             viewbox.invertY()
 
+    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
+        if visible:
+            grid = color[3] * 255
+        else:
+            grid = False
+        axis = self._plt_get_axis()
+        axis.setGrid(grid)
+        # tick disappears by unknown reason.
+
 
 class Ticks(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
@@ -178,6 +188,9 @@ class Ticks(_CanvasComponent):
     def _plt_set_text(self, text: tuple[list[float], list[str]]):
         axis = self._plt_get_axis()
         axis.setTicks([[(pos, label) for pos, label in zip(*text)]])
+
+    def _plt_reset_text(self):
+        self._plt_get_axis().setTicks(None)
 
     def _plt_get_visible(self) -> bool:
         return self._visible

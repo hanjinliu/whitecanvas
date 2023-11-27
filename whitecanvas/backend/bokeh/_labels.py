@@ -4,10 +4,12 @@ import weakref
 from typing import TYPE_CHECKING
 import numpy as np
 from cmap import Color
+from whitecanvas.types import LineStyle
+from ._base import to_bokeh_line_style
 
 if TYPE_CHECKING:
     from .canvas import Canvas
-    from bokeh.models import Axis as BokehAxis, Label as BokehLabel
+    from bokeh.models import Axis as BokehAxis, Grid as BokehGrid
 
 
 class _CanvasComponent:
@@ -86,9 +88,6 @@ class Axis(_CanvasComponent):
             limits = limits[::-1]
         self._plt_get_axis().bounds = limits
 
-    def _plt_get_ticks(self) -> list[tuple[float, str]]:
-        return self._plt_get_axis().ticker.ticks
-
     def _plt_get_color(self):
         return np.array(Color(self._plt_get_axis().axis_label_text_color).rgba)
 
@@ -151,10 +150,16 @@ class Ticks(_CanvasComponent):
         raise NotImplementedError
 
     def _plt_get_text(self) -> tuple[list[float], list[str]]:
-        return tuple(zip(*self._plt_get_axis().ticker.ticks))
+        return tuple(zip(*self._plt_get_axis().ticker))
 
     def _plt_set_text(self, text: tuple[list[float], list[str]]):
-        self._plt_get_axis().ticker.ticks = text
+        pos, labels = text
+        self._plt_get_axis().ticker = pos
+        self._plt_get_axis().major_label_overrides = dict(zip(pos, labels))
+
+    def _plt_reset_text(self):
+        self._plt_get_axis().ticker = None
+        self._plt_get_axis().major_label_overrides = None
 
     def _plt_get_visible(self) -> bool:
         return self._visible
@@ -183,11 +188,21 @@ class Ticks(_CanvasComponent):
 
 
 class XAxis(X, Axis):
-    pass
+    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
+        grid: BokehGrid = self._canvas()._plot.xgrid
+        grid.visible = visible
+        grid.grid_line_color = Color(color).hex
+        grid.grid_line_width = width
+        grid.grid_line_dash = to_bokeh_line_style(style)
 
 
 class YAxis(Y, Axis):
-    pass
+    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
+        grid: BokehGrid = self._canvas()._plot.ygrid
+        grid.visible = visible
+        grid.grid_line_color = Color(color).hex
+        grid.grid_line_width = width
+        grid.grid_line_dash = to_bokeh_line_style(style)
 
 
 class XLabel(X, Label):

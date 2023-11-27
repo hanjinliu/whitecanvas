@@ -4,6 +4,8 @@ import weakref
 from typing import TYPE_CHECKING
 import numpy as np
 from whitecanvas.utils.normalize import rgba_str_color
+from whitecanvas.types import LineStyle
+from ._base import to_plotly_linestyle
 
 if TYPE_CHECKING:
     from .canvas import Canvas
@@ -104,6 +106,12 @@ class Axis(_CanvasComponent):
         else:
             self._plt_get_axis().autorange = None
 
+    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
+        axis = self._plt_get_axis()
+        axis.showgrid = visible
+        axis.gridcolor = rgba_str_color(color)
+        axis.gridwidth = width
+
 
 class Ticks(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
@@ -123,6 +131,10 @@ class Ticks(_CanvasComponent):
     def _plt_set_text(self, text: tuple[list[float], list[str]]):
         self._plt_get_axis().tickvals = text[0]
         self._plt_get_axis().ticktext = text[1]
+
+    def _plt_reset_text(self):
+        self._plt_get_axis().tickvals = None
+        self._plt_get_axis().ticktext = None
 
     def _plt_get_visible(self) -> bool:
         return self._visible

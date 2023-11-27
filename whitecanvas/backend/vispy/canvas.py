@@ -3,7 +3,7 @@ from typing import Callable, TYPE_CHECKING, cast
 import weakref
 
 from psygnal import Signal
-from vispy.scene import ViewBox, SceneCanvas, PanZoomCamera
+from vispy.scene import ViewBox, SceneCanvas, PanZoomCamera, visuals
 from vispy.util import keys
 import numpy as np
 from numpy.typing import NDArray
@@ -39,6 +39,7 @@ class Canvas:
         grid.add_widget(title, row=0, col=0, col_span=2)
         self._title = title
         x_axis = Axis(
+            self,
             dim=1,
             orientation="bottom",
             anchors=("center", "bottom"),
@@ -53,6 +54,7 @@ class Canvas:
         grid.add_widget(x_axis, row=2, col=1)
         x_axis.link_view(self._viewbox)
         y_axis = Axis(
+            self,
             dim=0,
             orientation="left",
             anchors=("right", "middle"),
@@ -61,6 +63,7 @@ class Canvas:
             tick_label_margin=5,
             axis_label="",
         )
+
         y_axis.width_max = 80
         y_axis.stretch = (0.1, 1)
         grid.add_widget(y_axis, row=1, col=0)
@@ -110,6 +113,7 @@ class Canvas:
             scene: SceneCanvas = vb._scene_ref()
             scene._draw_order.clear()
             scene.update()
+            print(scene._draw_order)
 
     @property
     def _camera(self) -> Camera:
@@ -123,8 +127,9 @@ class Canvas:
         """Set aspect ratio of canvas"""
         self._camera.aspect = ratio
 
-    def _plt_add_layer(self, layer: protocols.BaseProtocol):
+    def _plt_add_layer(self, layer: visuals.visuals.Visual):
         layer.parent = self._viewbox.scene
+        layer.set_gl_state("opaque")
 
     def _plt_remove_layer(self, layer):
         """Remove layer from the canvas"""

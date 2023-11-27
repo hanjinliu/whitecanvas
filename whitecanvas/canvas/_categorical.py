@@ -48,6 +48,7 @@ class CategorizedStruct(Generic[_C, _T]):
         canvas: _C,
         obj: dict[str, dict[str, _T]],
         offsets: NDArray[np.floating],
+        orient: Orientation = Orientation.VERTICAL,
         palette: ColormapType | None = None,
     ):
         self._canvas_ref = weakref.ref(canvas)
@@ -55,6 +56,7 @@ class CategorizedStruct(Generic[_C, _T]):
         self._offsets_initial = offsets.copy()
         self._color_palette = palette
         self._obj = obj
+        self._orient = orient
 
     def _canvas(self) -> _C:
         canvas = self._canvas_ref()
@@ -72,7 +74,9 @@ class CategorizedStruct(Generic[_C, _T]):
         """List of categories."""
         return list(self._obj.keys())
 
-    def _generate_colors(self) -> list[Color]:
+    def _generate_colors(self, color) -> list[Color]:
+        if color is not None:
+            return color
         return self._canvas()._color_palette.nextn(self.n_categories, update=False)
 
     def _generate_x(self) -> NDArray[np.floating]:
@@ -102,8 +106,10 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         data: Any,
         by: str | None = None,
         *,
+        orient: Orientation = Orientation.VERTICAL,
         offsets=None,
         palette: ColormapType | None = None,
+        update_label: bool = False,
         unsafe: bool = False,
     ):
         if unsafe:
@@ -115,7 +121,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
                 _color_palette = canvas._color_palette.copy()
             else:
                 _color_palette = ColorPalette(palette)
-            obj = _norm_input(data, by, by is not None)
+            obj = _norm_input(data, by)
             ncats = len(obj)
         if offsets is None:
             offsets = np.zeros(ncats)
@@ -125,57 +131,61 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             offsets = np.asarray(offsets)
             if offsets.shape != (ncats,):
                 raise ValueError("Shape of offset is wrong")
-        super().__init__(canvas, obj, offsets, _color_palette)
+        self._update_label = update_label
+        super().__init__(canvas, obj, offsets, orient, _color_palette)
 
     def with_offset(self, offset: float) -> CategorizedDataPlotter[_C]:
+        """Update offset of the plotter."""
         return CategorizedDataPlotter(
             self._canvas(),
             self._obj,
             offsets=offset,
+            orient=self._orient,
             palette=self._color_palette,
+            update_label=self._update_label,
             unsafe=True,
         )
 
     def mean(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.mean) for k, v in self.items()}
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def min(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.min) for k, v in self.items()}
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def max(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.max) for k, v in self.items()}
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def std(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.std, ddof=ddof) for k, v in self.items()}
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def var(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.var, ddof=ddof) for k, v in self.items()}
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def sum(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.sum) for k, v in self.items()}
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def count(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, len) for k, v in self.items()}
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def sem(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
@@ -184,7 +194,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             for k, v in self.items()
         }
         return CategorizedAggDataPlotter(
-            self._canvas(), agged, self._offsets, self._color_palette
+            self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def to_stripplot(
@@ -192,9 +202,8 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         y: str | None = None,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
         strip_width: float = 0.3,
-        color: ColorType | None = None,
+        color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
         symbol: str | Symbol = Symbol.CIRCLE,
         size: float = 10,
@@ -202,16 +211,14 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
     ):
         canvas = self._canvas()
         name = canvas._coerce_name(_lg.StripPlot, name)
-        if color is None:
-            color = self._generate_colors()
-        if y is None:
-            y = self.categories[0]
-        data = [v[y] for v in self._obj.values()]
+        color = self._generate_colors(color)
+        data = self._generate_y(y)
         group = _lg.StripPlot.from_arrays(
-            self._generate_x(), data, name=name, orient=orient,
+            self._generate_x(), data, name=name, orient=self._orient,
             strip_width=strip_width, seed=None, symbol=symbol, size=size,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
         )  # fmt: skip
+        self._relabel_axis(y)
         return canvas.add_layer(group)
 
     def to_boxplot(
@@ -219,25 +226,22 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         y: str | None = None,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
         box_width: float = 0.3,
         capsize: float = 0.15,
-        color: ColorType | list[ColorType] | None = None,
+        color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.BoxPlot:
         canvas = self._canvas()
         name = canvas._coerce_name(_lg.BoxPlot, name)
-        if color is None:
-            color = self._generate_colors()
-        if y is None:
-            y = self.categories[0]
-        data = [v[y] for v in self._obj.values()]
+        color = self._generate_colors(color)
+        data = self._generate_y(y)
         group = _lg.BoxPlot.from_arrays(
-            self._generate_x(), data, name=name, orient=orient, box_width=box_width,
-            capsize=capsize, color=color, alpha=alpha, pattern=pattern,
-            backend=self._get_backend(),
+            self._generate_x(), data, name=name, orient=self._orient,
+            box_width=box_width, capsize=capsize, color=color, alpha=alpha,
+            pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
+        self._relabel_axis(y)
         return canvas.add_layer(group)
 
     def to_violinplot(
@@ -245,24 +249,23 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         y: str | None = None,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
         shape: Literal["both", "left", "right"] = "both",
         violin_width: float = 0.3,
         band_width: float | str = "scott",
-        colors: ColorType | Sequence[ColorType] | None = None,
+        color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.ViolinPlot:
         canvas = self._canvas()
         name = canvas._coerce_name(_lg.ViolinPlot, name)
-        if colors is None:
-            colors = self._generate_colors()
+        color = self._generate_colors(color)
         data = [v[y] for v in self._obj.values()]
         group = _lg.ViolinPlot.from_arrays(
             self._generate_x(), data, name=name, shape=shape, violin_width=violin_width,
-            orient=orient, kde_band_width=band_width, colors=colors, alpha=alpha,
+            orient=self._orient, kde_band_width=band_width, color=color, alpha=alpha,
             pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
+        self._relabel_axis(y)
         return canvas.add_layer(group)
 
     def __enter__(self) -> CategorizedDataPlotter[_C]:
@@ -271,15 +274,33 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
     def __exit__(self, exc_type, exc_value, traceback):
         pass
 
-    def _generate_colors(self) -> list[Color]:
+    def _generate_colors(self, color) -> list[Color]:
+        if color is not None:
+            return color
         return self._canvas()._color_palette.nextn(self.n_categories, update=False)
 
     def _generate_x(self) -> NDArray[np.floating]:
         x = np.arange(self.n_categories, dtype=np.float64)
         return x + self._offsets
 
+    def _generate_y(self, y):
+        if y is None:
+            y = self.categories[0]
+        return [v[y] for v in self._obj.values()]
+
     def _get_backend(self):
         return self._canvas()._get_backend()
+
+    def _relabel_axis(self, y):
+        if not self._update_label:
+            return
+        canvas = self._canvas()
+        if y is None:
+            y = self.categories[0]
+        if self._orient.is_vertical:
+            canvas.y.label.text = str(y)
+        else:
+            canvas.x.label.text = str(y)
 
 
 class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
@@ -288,11 +309,12 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         canvas: _C,
         data: dict[str, dict[str, Aggregator[Any]]],
         offsets: NDArray[np.number],
+        orient: Orientation,
         palette: ColorPalette,
     ):
-        super().__init__(canvas, data, offsets, palette)
+        super().__init__(canvas, data, offsets, orient, palette)
 
-    def _get_plot_data(self, y: str | None = None) -> dict[str, NDArray[np.number]]:
+    def _generate_y(self, y: str | None = None) -> dict[str, NDArray[np.number]]:
         if y is None:
             y = self.categories[0]
         return [v[y].compute() for v in self.values()]
@@ -311,18 +333,15 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         canvas = self._canvas()
         name = canvas._coerce_name(_l.Line, name)
         color = canvas._generate_colors(color)
-        data = self._get_plot_data(y)
+        data = self._generate_y(y)
+        if self._orient.is_vertical:
+            x_, y_ = self._generate_x(), data
+        else:
+            x_, y_ = data, self._generate_x()
         layer = _l.Line(
-            self._generate_x(),
-            data,
-            name=name,
-            width=width,
-            style=style,
-            color=color,
-            alpha=alpha,
-            antialias=antialias,
-            backend=self._get_backend(),
-        )
+            x_, y_, name=name, width=width, style=style, color=color,
+            alpha=alpha, antialias=antialias, backend=self._get_backend(),
+        )  # fmt: skip
         return canvas.add_layer(layer)
 
     def to_markers(
@@ -338,13 +357,15 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
     ) -> _l.HeteroMarkers:
         canvas = self._canvas()
         name = canvas._coerce_name("markers", name)
-        if color is None:
-            color = self._generate_colors()
-        data = self._get_plot_data(y)
+        color = self._generate_colors(color)
+        data = self._generate_y(y)
+        if self._orient.is_vertical:
+            x_, y_ = self._generate_x(), data
+        else:
+            x_, y_ = data, self._generate_x()
         layer = _l.HeteroMarkers(
-            self._generate_x(), data, name=name, symbol=symbol,
-            size=size, color=color, alpha=alpha, pattern=pattern,
-            backend=self._get_backend(),
+            x_, y_, name=name, symbol=symbol, size=size, color=color,
+            alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(layer)
 
@@ -353,7 +374,6 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         y: str | None = None,
         *,
         name=None,
-        orient=Orientation.VERTICAL,
         bar_width=0.8,
         color=None,
         alpha=1.0,
@@ -363,9 +383,9 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         name = canvas._coerce_name(_l.Bars, name)
         if color is None:
             color = self._generate_colors()
-        data = self._get_plot_data(y)
+        data = self._generate_y(y)
         layer = _l.HeteroBars(
-            self._generate_x(), data, name=name, orient=orient,
+            self._generate_x(), data, name=name, orient=self._orient,
             bar_width=bar_width, color=color, alpha=alpha, pattern=pattern,
             backend=self._get_backend()
         )  # fmt: skip
@@ -398,7 +418,8 @@ def _is_polars_dataframe(df) -> TypeGuard[pl.DataFrame]:
     return isinstance(df, pl.DataFrame)
 
 
-def _norm_input(data: Any, by: Any, nested: bool):
+def _norm_input(data: Any, by: Any | None):
+    nested = by is not None
     if isinstance(data, dict):
         if nested:
             array_dict: dict[str, NDArray[np.number]] = {}

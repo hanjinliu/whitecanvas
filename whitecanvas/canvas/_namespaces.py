@@ -3,10 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Iterable
 import weakref
 import numpy as np
+from numpy.typing import NDArray
 
 from psygnal import Signal
 from cmap import Color
 from whitecanvas import protocols
+from whitecanvas.types import ColorType, LineStyle
+from whitecanvas.utils.normalize import arr_color
 from whitecanvas._exceptions import ReferenceDeletedError
 from ._signal import GeneratorSignal
 
@@ -116,10 +119,20 @@ class _TextLabelNamespace(_TextBoundNamespace):
     def text(self, text: str):
         self._get_object()._plt_set_text(text)
 
+    def __set__(self, instance, value):
+        # allow canvas.x.label = "X" as a shortcut for canvas.x.label.text = "X"
+        if isinstance(value, str):
+            self.text = value
+        elif isinstance(value, dict):
+            self.update(value)
+        else:
+            raise TypeError(f"Cannot set {type(self)} to {value!r}.")
+
 
 class _TicksNamespace(_TextBoundNamespace):
     def __repr__(self) -> str:
-        pos, labels = self.labels
+        pos, labels = self._get_object()._plt_get_text()
+        pos = list(pos)
         color = self.color
         size = self.size
         fontfamily = self.fontfamily
@@ -127,9 +140,14 @@ class _TicksNamespace(_TextBoundNamespace):
         return f"{name}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {fontfamily=!r})"
 
     @property
+    def pos(self) -> NDArray[np.floating]:
+        pos, _ = self._get_object()._plt_get_text()
+        return np.asarray(pos)
+
+    @property
     def labels(self) -> tuple[list[float], list[str]]:
-        pos, labels = self._get_object()._plt_get_text()
-        return list(pos), labels
+        _, labels = self._get_object()._plt_get_text()
+        return labels
 
     def set_labels(self, pos: Iterable[float], labels: Iterable[str] | None = None):
         """
@@ -144,16 +162,21 @@ class _TicksNamespace(_TextBoundNamespace):
             `pos` values.
         """
         _pos = list(pos)
-        if np.any(np.diff(_pos) <= 0):
+        # test sorted
+        if len(_pos) > 0 and np.any(np.diff(_pos) <= 0):
             raise ValueError("pos must be strictly increasing.")
         if labels is not None:
-            _labels = list(labels)
+            _labels = [str(l) for l in labels]
         else:
-            # TODO: convert to string
-            _labels = _pos
+            ndigits = int(np.log10(_pos[-1] - _pos[0])) + 1
+            _labels = [str(round(p, ndigits)) for p in _pos]
         if len(_pos) != len(_labels):
             raise ValueError("pos and labels must have the same length.")
         self._get_object()._plt_set_text((_pos, _labels))
+
+    def reset_labels(self) -> None:
+        """Reset the tick labels to the default."""
+        self._get_object()._plt_reset_text()
 
 
 class XTickNamespace(_TicksNamespace):
@@ -193,6 +216,7 @@ class _AxisNamespace(Namespace):
 
     @property
     def lim(self) -> tuple[float, float]:
+        """Limits of the axis."""
         return self._get_object()._plt_get_limits()
 
     @lim.setter
@@ -201,6 +225,7 @@ class _AxisNamespace(Namespace):
 
     @property
     def color(self):
+        """Color of the axis."""
         return self._get_object()._plt_get_color()
 
     @color.setter
@@ -217,6 +242,19 @@ class _AxisNamespace(Namespace):
         """Set the axis to be flipped."""
         if flipped != self._flipped:
             self._get_object()._plt_flip()
+
+    def set_gridlines(
+        self,
+        visible: bool = True,
+        color: ColorType = "gray",
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ):
+        color = arr_color(color)
+        style = LineStyle(style)
+        if width < 0:
+            raise ValueError("width must be non-negative.")
+        self._get_object()._plt_set_grid_state(visible, color, width, style)
 
 
 class XAxisNamespace(_AxisNamespace):

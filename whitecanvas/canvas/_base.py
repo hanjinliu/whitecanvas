@@ -57,6 +57,8 @@ class CanvasBase(ABC):
     def _init_canvas(self):
         # default colors
         theme = get_theme()
+        self.x.set_gridlines(True, theme.grid_color, width=1.0)
+        self.y.set_gridlines(True, theme.grid_color, width=1.0)
         self.x.color = theme.foreground_color
         self.y.color = theme.foreground_color
         self.x.ticks.fontfamily = theme.fontfamily
@@ -193,8 +195,12 @@ class CanvasBase(ABC):
         self,
         data: Any,
         by: str | None = None,
+        *,
+        orient: str | Orientation = Orientation.VERTICAL,
         offsets: float | ArrayLike1D | None = None,
         palette: ColormapType | None = None,
+        update_axis: bool = True,
+        update_labels: bool = True,
     ) -> CategorizedDataPlotter[Self]:
         """
         Categorize input data for plotting.
@@ -213,19 +219,41 @@ class CanvasBase(ABC):
             polars.DataFrame are supported.
         by : str, optional
             Which column to use for grouping.
+        orient : str or Orientation, default is Orientation.VERTICAL
+            Orientation of the plot.
         offsets : scalar or sequence, optional
             Offset for each category. If scalar, the same offset is used for all.
         palette : ColormapType, optional
             Color palette used for plotting the categories.
+        update_axis : bool, default is True
+            If True, update the axis labels and ticks to the categories.
+        update_labels : bool, default is True
+            If True, update the x/y labels to the corresponding names.
 
         Returns
         -------
         CategorizedDataPlotter
             Plotter object.
         """
-        return CategorizedDataPlotter(
-            self, data, by=by, offsets=offsets, palette=palette
-        )
+        orient = Orientation.parse(orient)
+        plotter = CategorizedDataPlotter(
+            self, data, by=by, orient=orient, offsets=offsets,
+            update_label=update_labels, palette=palette
+        )  # fmt: skip
+        if update_axis:
+            tick_pos = np.arange(len(plotter.categories))
+            tick_labels = plotter.categories
+            if orient.is_vertical:
+                self.x.ticks.set_labels(tick_pos, tick_labels)
+            else:
+                self.y.ticks.set_labels(tick_pos, tick_labels)
+
+        if update_labels:
+            if orient.is_vertical:
+                self.x.label.text = by
+            else:
+                self.y.label.text = by
+        return plotter
 
     def stack_over(self, layer: _L0) -> StackPlotter[Self, _L0]:
         """
@@ -245,12 +273,17 @@ class CanvasBase(ABC):
          ├───│├───│
         ─┴───┴┴───┴─
         """
+        # TODO: support stem plot
         if not isinstance(layer, (_l.Bars, _l.Band, _lg.LabeledBars)):
             raise TypeError(
                 f"Only Bars and Band are supported as an input, "
                 f"got {type(layer)!r}."
             )
         return StackPlotter(self, layer)
+
+    def annotate(self, layer, at: int):
+        # TODO
+        ...
 
     @overload
     def add_line(

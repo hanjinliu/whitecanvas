@@ -144,6 +144,7 @@ class CanvasGrid:
                 column_widths=widths,
             )
         )
+        self._figs.update_layout(margin=dict(l=6, r=6, t=6, b=6))
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         return Canvas(self._figs, row=row, col=col)
@@ -172,3 +173,7 @@ class CanvasGrid:
         img_bytes = self._figs.to_image(format="png", width=width, height=height)
         image = Image.open(io.BytesIO(img_bytes))
         return np.asarray(image, dtype=np.uint8)
+
+    def _plt_set_figsize(self, width: float, height: float):
+        self._figs.layout.width = width
+        self._figs.layout.height = height

@@ -230,3 +230,8 @@ class CanvasGrid:
         w, h = fig.canvas.get_width_height()
         img = data.reshape((int(h), int(w), -1))
         return img
+
+    def _plt_set_figsize(self, width: float, height: float):
+        dpi = self._fig.get_dpi()
+        self._fig.set_size_inches(width / dpi, height / dpi)
+        self._fig.tight_layout()

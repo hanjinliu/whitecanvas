@@ -17,8 +17,12 @@ class StemPlot(ListLayerGroup):
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
     ):
-        super().__init__([markers, lines], name=name)
         self._orient = Orientation.parse(orient)
+        super().__init__([markers, lines], name=name)
+
+    def _default_ordering(self, n: int) -> list[int]:
+        assert n == 2
+        return [1, 0]
 
     @property
     def markers(self) -> Markers:

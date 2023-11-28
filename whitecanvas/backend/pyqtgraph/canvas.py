@@ -245,3 +245,6 @@ class CanvasGrid:
             arr = np.frombuffer(bits, np.uint8).reshape(h, w, c)
 
         return arr[:, :, [2, 1, 0, 3]]
+
+    def _plt_set_figsize(self, width: float, height: float):
+        self._layoutwidget.resize(int(width), int(height))

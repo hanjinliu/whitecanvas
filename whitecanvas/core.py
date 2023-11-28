@@ -1,9 +1,15 @@
 import sys
 from typing import Any
-from whitecanvas import backend as _backend
-from whitecanvas.canvas import CanvasGrid, CanvasVGrid, CanvasHGrid, SingleCanvas
+
+from whitecanvas.canvas import (
+    CanvasGrid,
+    CanvasVGrid,
+    CanvasHGrid,
+    SingleCanvas,
+    Canvas,
+)
 from whitecanvas.backend import Backend
-from whitecanvas.canvas import Canvas
+from whitecanvas.types import ColormapType
 
 
 def grid(
@@ -93,12 +99,17 @@ def hgrid_nonuniform(
 
 def new_canvas(
     backend: Backend | str | None = None,
-    **kwargs,
+    *,
+    size: tuple[int, int] | None = None,
+    palette: str | ColormapType | None = None,
 ) -> SingleCanvas:
     """Create a new canvas with a single cell."""
     _grid = grid(backend=backend)
-    _grid.add_canvas(0, 0, **kwargs)
-    return SingleCanvas(_grid)
+    _grid.add_canvas(0, 0, palette=palette)
+    cvs = SingleCanvas(_grid)
+    if size is not None:
+        cvs.size = size
+    return cvs
 
 
 def wrap_canvas(obj: Any, palette=None) -> Canvas:

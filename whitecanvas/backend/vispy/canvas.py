@@ -107,14 +107,13 @@ class Canvas:
 
     def _plt_reorder_layers(self, layers: list[protocols.BaseProtocol]):
         """Reorder layers in the canvas"""
+        vb = self._outer_viewbox
         for idx, layer in enumerate(layers):
             layer.order = idx
-        vb = self._outer_viewbox
         if hasattr(vb, "_scene_ref"):
             scene: SceneCanvas = vb._scene_ref()
             scene._draw_order.clear()
-            scene.update()
-            print(scene._draw_order)
+        scene.update()
 
     @property
     def _camera(self) -> Camera:
@@ -129,8 +128,8 @@ class Canvas:
         self._camera.aspect = ratio
 
     def _plt_add_layer(self, layer: visuals.visuals.Visual):
+        layer.set_gl_state("opaque", depth_test=False)
         layer.parent = self._viewbox.scene
-        layer.set_gl_state("opaque")
 
     def _plt_remove_layer(self, layer):
         """Remove layer from the canvas"""
@@ -201,6 +200,9 @@ class CanvasGrid:
     def _plt_show(self):
         """Set visibility of canvas"""
         self._scene.show()
+
+    def _plt_set_figsize(self, width: float, height: float):
+        self._scene.size = (width, height)
 
 
 _APP_NAMES = {

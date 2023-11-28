@@ -9,7 +9,7 @@ class Theme:
     fontsize: int = 11
     foreground_color: str = "#000000"
     background_color: str = "#FFFFFF"
-    grid_color: str = "#CCCCCC"
+    canvas_size: tuple[float, float] = (800, 600)
     palette: str = "tab10"
 
 

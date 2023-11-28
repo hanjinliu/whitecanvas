@@ -231,6 +231,10 @@ class CanvasGrid:
         img = data.reshape((int(h), int(w), -1))
         return img
 
+    def _plt_set_figsize(self, width: int, height: int):
+        self._grid_plot.width = width
+        self._grid_plot.height = height
+
 
 def is_notebook() -> bool:
     try:

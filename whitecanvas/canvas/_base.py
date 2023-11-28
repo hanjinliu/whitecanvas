@@ -57,8 +57,6 @@ class CanvasBase(ABC):
     def _init_canvas(self):
         # default colors
         theme = get_theme()
-        self.x.set_gridlines(True, theme.grid_color, width=1.0)
-        self.y.set_gridlines(True, theme.grid_color, width=1.0)
         self.x.color = theme.foreground_color
         self.y.color = theme.foreground_color
         self.x.ticks.fontfamily = theme.fontfamily

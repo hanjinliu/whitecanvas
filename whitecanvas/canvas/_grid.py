@@ -35,6 +35,7 @@ class CanvasGrid:
         # update settings
         theme = get_theme()
         self.background_color = theme.background_color
+        self.size = theme.canvas_size
 
     @classmethod
     def uniform(
@@ -133,7 +134,7 @@ class CanvasGrid:
         self,
         row: int,
         col: int,
-        **kwargs,
+        palette: str | None = None,
     ) -> Canvas:
         """Add a canvas to the grid at the given position"""
         rowspan = self._heights[row]
@@ -145,7 +146,9 @@ class CanvasGrid:
             row, col, rowspan, colspan
         )
         canvas = self._canvas_array[row, col] = Canvas.from_backend(
-            backend_canvas, backend=self._backend_installer, **kwargs
+            backend_canvas,
+            backend=self._backend_installer,
+            palette=palette,
         )
         # Now backend axes/viewbox are created, we can install mouse events
         canvas._install_mouse_events()
@@ -188,6 +191,18 @@ class CanvasGrid:
         """Return a screenshot of the grid."""
         return self._backend_object._plt_screenshot()
 
+    @property
+    def size(self) -> tuple[float, float]:
+        return self._size
+
+    @size.setter
+    def size(self, size: tuple[float, float]):
+        w, h = size
+        if w <= 0 or h <= 0:
+            raise ValueError("Size must be positive")
+        self._size = size
+        self._backend_object._plt_set_figsize(*size)
+
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         from io import BytesIO
@@ -205,22 +220,10 @@ class CanvasGrid:
                 return file_obj.read()
         return None
 
-    def _repr_html_(self) -> str:
-        """Return HTML representation of the widget for Jupyter."""
-        from io import BytesIO
+    def view(self, app: str = "qt"):
+        from whitecanvas.backend._window import view
 
-        try:
-            from imageio import imwrite
-        except ImportError:
-            return None
-
-        rendered = self.screenshot()
-        if rendered is not None:
-            with BytesIO() as file_obj:
-                imwrite(file_obj, rendered, format="png")
-                file_obj.seek(0)
-                return f"<img src='data:image/png;base64,{file_obj.read().encode('base64').decode('ascii')}'/>"
-        return None
+        return view(self, app=app)
 
 
 class CanvasVGrid(CanvasGrid):
@@ -322,14 +325,21 @@ class SingleCanvas(CanvasBase):
     def background_color(self, color):
         self._grid.background_color = color
 
+    @property
+    def size(self) -> tuple[float, float]:
+        return self._grid.size
+
+    @size.setter
+    def size(self, size: tuple[float, float]):
+        self._grid.size = size
+
     def screenshot(self) -> NDArray[np.uint8]:
         """Return a screenshot of the grid."""
         return self._grid.screenshot()
 
+    def view(self, app: str = "qt"):
+        return self._grid.view(app)
+
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         return self._grid._repr_png_()
-
-    def _repr_html_(self):
-        """Return HTML representation of the widget for Jupyter."""
-        return self._grid._repr_html_()

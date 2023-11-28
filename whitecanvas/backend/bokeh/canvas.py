@@ -179,7 +179,7 @@ def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int]):
+    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
         nr, nc = len(heights), len(widths)
         children = []
         for r in range(nr):
@@ -195,23 +195,17 @@ class CanvasGrid:
         c1 = col + colspan
         return Canvas(self._grid_plot.children[row][col])
 
-    def _plt_get_visible(self) -> bool:
-        return self._grid_plot.visible
+    def _plt_show(self):
+        if is_notebook():
 
-    def _plt_set_visible(self, visible: bool):
-        if visible:
-            if is_notebook():
+            def bkapp(doc):
+                doc.add_root(self._grid_plot)
 
-                def bkapp(doc):
-                    doc.add_root(self._grid_plot)
-
-                bk_plotting.show(bkapp)
-            else:
-                bk_plotting.show(self._grid_plot)
-                if self._grid_plot.document is None:
-                    bk_plotting.curdoc().add_root(self._grid_plot)
+            bk_plotting.show(bkapp)
         else:
-            self._grid_plot.visible = False
+            bk_plotting.show(self._grid_plot)
+            if self._grid_plot.document is None:
+                bk_plotting.curdoc().add_root(self._grid_plot)
 
     def _plt_get_background_color(self):
         return arr_color(self._grid_plot.background_fill_color)

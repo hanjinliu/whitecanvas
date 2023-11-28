@@ -708,18 +708,7 @@ class CanvasBase(ABC):
             i += 1
         return name
 
-    def _cb_inserted(self, idx: int, layer: _l.Layer):
-        if self._is_grouping:
-            # this happens when the grouped layer is inserted
-            layer._connect_canvas(self)
-            return
-        if idx < 0:
-            idx = len(self.layers) + idx
-        _canvas = self._canvas()
-        for l in _iter_layers(layer):
-            _canvas._plt_add_layer(l._backend)
-            l._connect_canvas(self)
-        # autoscale
+    def _autoscale_for_layer(self, layer: _l.Layer):
         xmin, xmax, ymin, ymax = layer.bbox_hint()
         xmin_changed = xmax_changed = False
         ymin_changed = ymax_changed = False
@@ -761,6 +750,20 @@ class CanvasBase(ABC):
             if ymax_changed:  #       over the x-axis.
                 ymax += dy
         self.lims = (xmin, xmax), (ymin, ymax)
+
+    def _cb_inserted(self, idx: int, layer: _l.Layer):
+        if self._is_grouping:
+            # this happens when the grouped layer is inserted
+            layer._connect_canvas(self)
+            return
+        if idx < 0:
+            idx = len(self.layers) + idx
+        _canvas = self._canvas()
+        for l in _iter_layers(layer):
+            _canvas._plt_add_layer(l._backend)
+            l._connect_canvas(self)
+        # autoscale
+        self._autoscale_for_layer(layer)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):
         if self._is_grouping:
@@ -810,6 +813,7 @@ class CanvasBase(ABC):
         finally:
             self._is_grouping = False
         self._cb_reordered()
+        self._autoscale_for_layer(group)
 
     def _generate_colors(self, color: ColorType | None) -> Color:
         if color is None:

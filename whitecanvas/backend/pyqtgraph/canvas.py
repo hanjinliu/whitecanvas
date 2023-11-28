@@ -199,9 +199,14 @@ _QT_BUTTON_MAP = {
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int]):
-        app = get_app()
-        self._layoutwidget = pg.GraphicsLayoutWidget()
+    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
+        if app == "notebook":
+            from pyqtgraph.jupyter import GraphicsLayoutWidget
+        elif app in ("default", "qt"):
+            from pyqtgraph import GraphicsLayoutWidget
+        else:
+            raise ValueError(f"pyqtgraph does not support {app!r}. Must be ")
+        self._layoutwidget = GraphicsLayoutWidget()
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         vb = pg.ViewBox()
@@ -213,14 +218,9 @@ class CanvasGrid:
             self._layoutwidget.ci.layout.setColumnStretchFactor(col, colspan)
         return Canvas(item)
 
-    def _plt_get_visible(self) -> bool:
-        """Get visibility of canvas"""
-        self._layoutwidget.isVisible()
+    def _plt_show(self) -> bool:
+        self._layoutwidget.setVisible(True)
         run_app()
-
-    def _plt_set_visible(self, visible: bool):
-        """Set visibility of canvas"""
-        self._layoutwidget.setVisible(visible)
 
     def _get_background_brush(self) -> QtGui.QBrush:
         return self._layoutwidget.backgroundBrush()

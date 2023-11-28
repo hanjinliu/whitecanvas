@@ -7,6 +7,7 @@ from .violinplot import ViolinPlot
 from .stripplot import StripPlot
 from .boxplot import BoxPlot
 from .graph import Graph
+from .stemplot import StemPlot
 
 __all__ = [
     "Plot",
@@ -22,4 +23,5 @@ __all__ = [
     "StripPlot",
     "BoxPlot",
     "Graph",
+    "StemPlot",
 ]

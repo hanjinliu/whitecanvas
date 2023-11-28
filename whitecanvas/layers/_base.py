@@ -174,10 +174,10 @@ class LayerGroup(Layer):
         if len(hints) == 0:
             return np.array([np.nan, np.nan, np.nan, np.nan], dtype=np.float64)
         ar = np.stack(hints, axis=1)
-        xmin = np.nanmin(ar[0, :])
-        xmax = np.nanmax(ar[1, :])
-        ymin = np.nanmin(ar[2, :])
-        ymax = np.nanmax(ar[3, :])
+        xmin = np.min(ar[0, :])
+        xmax = np.max(ar[1, :])
+        ymin = np.min(ar[2, :])
+        ymax = np.max(ar[3, :])
         return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
 
 

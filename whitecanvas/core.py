@@ -1,5 +1,9 @@
+import sys
+from typing import Any
+from whitecanvas import backend as _backend
 from whitecanvas.canvas import CanvasGrid, CanvasVGrid, CanvasHGrid, SingleCanvas
 from whitecanvas.backend import Backend
+from whitecanvas.canvas import Canvas
 
 
 def grid(
@@ -10,6 +14,27 @@ def grid(
     link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
+    """
+    Create a canvas grid with uniform cell sizes.
+
+    Parameters
+    ----------
+    nrows : int, optional
+        Number of rows, by default 1
+    ncols : int, optional
+        Number of columns, by default 1
+    link_x : bool, optional
+        Whether to link x axes, by default False
+    link_y : bool, optional
+        Whether to link y axes, by default False
+    backend : Backend or str, optional
+        Backend name.
+
+    Returns
+    -------
+    CanvasGrid
+        Grid of empty canvases.
+    """
     return CanvasGrid.uniform(
         nrows, ncols, link_x=link_x, link_y=link_y, backend=backend
     )
@@ -74,3 +99,58 @@ def new_canvas(
     _grid = grid(backend=backend)
     _grid.add_canvas(0, 0, **kwargs)
     return SingleCanvas(_grid)
+
+
+def wrap_canvas(obj: Any, palette=None) -> Canvas:
+    """
+    Wrap a backend object into a whitecanvas Canvas.
+
+    >>> import matplotlib.pyplot as plt
+    >>> canvas = wrap_canvas(plt.gca())
+    """
+    mod = type(obj).__module__.split(".")[0]
+    typ = type(obj).__name__
+
+    if _is_in_module(typ, "matplotlib", "Axes"):
+        from matplotlib.axes import Axes
+        from whitecanvas.backend.matplotlib import Canvas as BackendCanvas
+
+        if not isinstance(obj, Axes):
+            raise TypeError(f"Expected matplotlib Axes, got {typ}")
+        backend = "matplotlib"
+
+    elif _is_in_module(typ, "plotly", "FigureWidget"):
+        from plotly.graph_objs import FigureWidget
+        from whitecanvas.backend.plotly import Canvas as BackendCanvas
+
+        if not isinstance(obj, FigureWidget):
+            raise TypeError(f"Expected plotly FigureWidget, got {typ}")
+        backend = "plotly"
+    elif _is_in_module(typ, "bokeh", "Plot"):
+        from bokeh.models import Plot
+        from whitecanvas.backend.bokeh import Canvas as BackendCanvas
+
+        if not isinstance(obj, Plot):
+            raise TypeError(f"Expected bokeh Plot, got {typ}")
+        backend = "bokeh"
+    elif _is_in_module(typ, "vispy", "ViewBox"):
+        from vispy.scene import ViewBox
+        from whitecanvas.backend.vispy import Canvas as BackendCanvas
+
+        if not isinstance(obj, ViewBox):
+            raise TypeError(f"Expected vispy ViewBox, got {typ}")
+        backend = "vispy"
+    elif _is_in_module(typ, "pyqtgraph", "ViewBox"):
+        from pyqtgraph import ViewBox
+        from whitecanvas.backend.pyqtgraph import Canvas as BackendCanvas
+
+        if not isinstance(obj, ViewBox):
+            raise TypeError(f"Expected pyqtgraph ViewBox, got {typ}")
+        backend = "pyqtgraph"
+    else:
+        raise TypeError(f"Cannot convert {typ} to Canvas")
+    return Canvas.from_backend(BackendCanvas(obj), palette=palette, backend=backend)
+
+
+def _is_in_module(typ_str: str, mod_name: str, cls_name: str) -> bool:
+    return mod_name in sys.modules and typ_str.split(".")[-1] == cls_name

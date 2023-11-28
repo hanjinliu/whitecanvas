@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.backend_bases import (
     MouseEvent as mplMouseEvent,
@@ -181,11 +182,23 @@ _MOUSE_MOD_MAP = {
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int]):
+    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
         nr, nc = len(heights), len(widths)
         self._gridspec = plt.GridSpec(
             nr, nc, height_ratios=heights, width_ratios=widths
         )
+        if app == "qt":
+            app = "Qt5Agg"
+        elif app == "wx":
+            app = "WXAgg"
+        elif app == "gtk":
+            app = "GTK3Agg"
+        elif app == "tk":
+            app = "TkAgg"
+        elif app == "notebook":
+            app = "nbAgg"
+        if app != "default":
+            mpl.use(app)
         self._fig = plt.figure()
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
@@ -197,8 +210,8 @@ class CanvasGrid:
     def _plt_get_visible(self) -> bool:
         return self._fig.get_visible()
 
-    def _plt_set_visible(self, visible: bool):
-        self._fig.set_visible(visible)
+    def _plt_show(self):
+        self._fig.show()
 
     def _plt_get_background_color(self):
         self._fig.get_facecolor()

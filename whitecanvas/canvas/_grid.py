@@ -115,7 +115,9 @@ class CanvasGrid:
         return canvas
 
     def _create_backend(self) -> protocols.CanvasGridProtocol:
-        return self._backend_installer.get("CanvasGrid")(self._heights, self._widths)
+        return self._backend_installer.get("CanvasGrid")(
+            self._heights, self._widths, self._backend_installer._app
+        )
 
     def _align_xlims(self, lim: tuple[float, float]):
         for _, canvas in self.iter_canvas():
@@ -171,11 +173,7 @@ class CanvasGrid:
 
     def show(self) -> None:
         """Show the grid."""
-        self._backend_object._plt_set_visible(True)
-
-    def hide(self) -> None:
-        """Hide the grid."""
-        self._backend_object._plt_set_visible(False)
+        self._backend_object._plt_show()
 
     @property
     def background_color(self) -> NDArray[np.floating]:
@@ -205,6 +203,23 @@ class CanvasGrid:
                 imwrite(file_obj, rendered, format="png")
                 file_obj.seek(0)
                 return file_obj.read()
+        return None
+
+    def _repr_html_(self) -> str:
+        """Return HTML representation of the widget for Jupyter."""
+        from io import BytesIO
+
+        try:
+            from imageio import imwrite
+        except ImportError:
+            return None
+
+        rendered = self.screenshot()
+        if rendered is not None:
+            with BytesIO() as file_obj:
+                imwrite(file_obj, rendered, format="png")
+                file_obj.seek(0)
+                return f"<img src='data:image/png;base64,{file_obj.read().encode('base64').decode('ascii')}'/>"
         return None
 
 
@@ -298,10 +313,6 @@ class SingleCanvas(CanvasBase):
         """Show the canvas using the method defined in the backend."""
         self._grid.show()
 
-    def hide(self) -> None:
-        """Hide the grid."""
-        self._grid.hide()
-
     @property
     def background_color(self) -> NDArray[np.floating]:
         """Background color of the canvas."""
@@ -318,3 +329,7 @@ class SingleCanvas(CanvasBase):
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         return self._grid._repr_png_()
+
+    def _repr_html_(self):
+        """Return HTML representation of the widget for Jupyter."""
+        return self._grid._repr_html_()

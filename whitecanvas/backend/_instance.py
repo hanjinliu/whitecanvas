@@ -14,6 +14,13 @@ class Backend:
             name = self._default
         elif isinstance(name, Backend):
             name = name._name
+        if ":" in name:
+            name, app = name.split(":", maxsplit=1)
+            # normalize app name
+            if app == "nb":
+                app = "notebook"
+        else:
+            app = "default"
         if name in _INSTALLED_MODULES:
             self._mod = _INSTALLED_MODULES[name]
         else:
@@ -22,7 +29,8 @@ class Backend:
             _INSTALLED_MODULES[name] = self._mod = import_module(
                 f"whitecanvas.backend.{name}"
             )
-        self._name = name
+        self._name: str = name
+        self._app: str = app
         self.__class__._default = name
 
     def __repr__(self) -> str:

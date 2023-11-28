@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Sequence
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol, BaseProtocol
+from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol
 from whitecanvas.layers._base import XYData, PrimitiveLayer
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import FaceEdgeMixin, HeteroFaceEdgeMixin
@@ -47,7 +47,8 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha
         )  # fmt: skip
         self.edge.color = color
-        self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
+        pad_r = size / 400
+        self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
 
     @classmethod
     def empty(cls, backend: Backend | str | None = None) -> Self:
@@ -81,7 +82,8 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
                 f"got {x0.size} and {y0.size}"
             )
         self._backend._plt_set_data(x0, y0)
-        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
+        pad_r = self.size / 400
+        self._x_hint, self._y_hint = xy_size_hint(x0, y0, pad_r, pad_r)
 
     @property
     def symbol(self) -> Symbol:
@@ -101,6 +103,7 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         alpha: float | _Void = _void,
         pattern: str | FacePattern | _Void = _void,
     ) -> Self:
+        """Update the properties of the markers."""
         if symbol is not _void:
             self.symbol = symbol
         if size is not _void:
@@ -217,6 +220,27 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         style: str | _Void = _void,
         antialias: bool = True,
     ) -> _lg.Graph:
+        """
+        Add network edges to the markers to create a graph.
+
+        Parameters
+        ----------
+        connections : (N, 2) array of int
+            Integer array that defines the connections between nodes.
+        color : color-like, optional
+            Color of the lines.
+        width : float, optional
+            Width of the line.
+        style : str, optional
+            Line style of the line.
+        antialias : bool, optional
+            Antialiasing of the line.
+
+        Returns
+        -------
+        Graph
+            A Graph layer that contains the markers and the edges as children.
+        """
         from whitecanvas.layers.primitive import MultiLine
         from whitecanvas.layers.group import Graph, TextGroup
 
@@ -248,6 +272,67 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             backend=self._backend_name,
         )
         return Graph(self, edges_layer, texts, edges, name=self.name)
+
+    def with_stem(
+        self,
+        orient: str | Orientation = Orientation.VERTICAL,
+        *,
+        color: ColorType | _Void = _void,
+        alpha: float = 1.0,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
+        antialias: bool = True,
+    ) -> _lg.StemPlot:
+        """
+        Grow stems from the markers.
+
+
+
+        Parameters
+        ----------
+        orient : str or Orientation, default is vertical
+            Orientation to grow stems.
+        color : color-like, optional
+            Color of the lines.
+        alpha : float, optional
+            Alpha channel of the lines.
+        width : float, optional
+            Width of the lines.
+        style : str or LineStyle
+            Line style used to draw the stems.
+        antialias : bool, optional
+            Line antialiasing.
+
+        Returns
+        -------
+        StemPlot
+            StemPlot layer containing the markers and the stems as children.
+        """
+        from whitecanvas.layers.group import StemPlot
+        from whitecanvas.layers.primitive import MultiLine
+
+        ori = Orientation.parse(orient)
+        xdata, ydata = self.data
+        if ori.is_vertical:
+            root = np.stack([xdata, np.zeros_like(ydata)], axis=1)
+            leaf = np.stack([xdata, ydata], axis=1)
+        else:
+            root = np.stack([np.zeros_like(xdata), ydata], axis=1)
+            leaf = np.stack([xdata, ydata], axis=1)
+        segs = np.stack([root, leaf], axis=1)
+        if color is _void:
+            color = self.edge.color
+        if width is _void:
+            width = self.edge.width
+        if style is _void:
+            style = self.edge.style
+        if antialias is _void:
+            antialias = self.antialias
+        mline = MultiLine(
+            segs, name="stems", color=color, width=width, style=style,
+            antialias=antialias, alpha = alpha, backend=self._backend_name,
+        )  # fmt: skip
+        return StemPlot(self, mline, orient=orient, name=self.name)
 
 
 class Markers(MarkersBase, FaceEdgeMixin[MarkersProtocol]):

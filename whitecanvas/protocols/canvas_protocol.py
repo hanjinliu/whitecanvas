@@ -150,7 +150,7 @@ class AxisGridProtocol(Protocol):
 
 
 @runtime_checkable
-class CanvasGridProtocol(HasVisibility, Protocol):
+class CanvasGridProtocol(Protocol):
     def _plt_add_canvas(
         self, row: int, col: int, rowspan: int, colspan: int
     ) -> CanvasProtocol:
@@ -164,3 +164,6 @@ class CanvasGridProtocol(HasVisibility, Protocol):
 
     def _plt_screenshot(self) -> NDArray[np.uint8]:
         """Get screenshot of canvas"""
+
+    def _plt_show(self):
+        """Show canvas"""

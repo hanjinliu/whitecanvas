@@ -1,3 +1,4 @@
+import sys
 from typing import Callable
 import numpy as np
 from plotly import graph_objects as go
@@ -132,7 +133,7 @@ class Canvas:
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int]):
+    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
         from plotly.subplots import make_subplots
 
         self._figs = go.FigureWidget(
@@ -147,16 +148,15 @@ class CanvasGrid:
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         return Canvas(self._figs, row=row, col=col)
 
-    def _plt_get_visible(self) -> bool:
-        """Get visibility of canvas"""
-        return True
+    def _plt_show(self):
+        if "IPython" in sys.modules:
+            from IPython.display import display
+            from IPython import get_ipython
 
-    def _plt_set_visible(self, visible: bool):
-        """Set visibility of canvas"""
-        if visible:
-            self._figs.show()
-        else:
-            pass
+            if get_ipython().__class__.__name__ == "ZMQInteractiveShell":
+                display(self._figs)
+                return
+        self._figs.show()
 
     def _plt_get_background_color(self):
         return self._figs.layout.paper_bgcolor

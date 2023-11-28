@@ -10,7 +10,12 @@ from whitecanvas.utils.normalize import as_array_1d
 
 
 class Rug(MultiLine):
-    """Rug plot layer."""
+    """
+    Rug plot (event plot) layer.
+
+      │ ││  │   │
+    ──┴─┴┴──┴───┴──>
+    """
 
     def __init__(
         self,

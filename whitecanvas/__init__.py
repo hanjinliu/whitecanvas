@@ -9,6 +9,7 @@ from whitecanvas.core import (
     vgrid,
     vgrid_nonuniform,
     new_canvas,
+    wrap_canvas,
 )
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "vgrid",
     "vgrid_nonuniform",
     "new_canvas",
+    "wrap_canvas",
 ]

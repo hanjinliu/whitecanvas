@@ -5,6 +5,7 @@ import weakref
 from psygnal import Signal
 from vispy.scene import ViewBox, SceneCanvas, PanZoomCamera, visuals
 from vispy.util import keys
+from vispy import use as vispy_use
 import numpy as np
 from numpy.typing import NDArray
 
@@ -172,7 +173,9 @@ class Canvas:
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int]):
+    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
+        if app != "default":
+            vispy_use(_APP_NAMES.get(app, app))
         self._scene = SceneCanvasExt(keys="interactive")
         self._grid: Grid = self._scene.central_widget.add_grid()
         self._scene.create_native()
@@ -195,16 +198,19 @@ class CanvasGrid:
     def _plt_screenshot(self) -> NDArray[np.uint8]:
         return self._scene.render()
 
-    def _plt_get_visible(self) -> bool:
-        """Get visibility of canvas"""
-        return True
-
-    def _plt_set_visible(self, visible: bool):
+    def _plt_show(self):
         """Set visibility of canvas"""
-        if visible:
-            self._scene.show()
-        else:
-            self._scene.close()
+        self._scene.show()
+
+
+_APP_NAMES = {
+    "qt4": "pyqt4",
+    "qt5": "pyqt5",
+    "qt6": "pyqt6",
+    "qt": "pyqt5",
+    "tk": "tkinter",
+    "notebook": "jupyter_rfb",
+}
 
 
 class SceneCanvasExt(SceneCanvas):

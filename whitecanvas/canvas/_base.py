@@ -681,11 +681,12 @@ class CanvasBase(ABC):
             The image layer.
         """
         layer = _l.Image(image, cmap=cmap, clim=clim, backend=self._get_backend())
+        self.add_layer(layer)
         if flip_canvas and not self.y.flipped:
             self.y.flipped = True
         if lock_aspect:
             self.aspect_ratio = 1.0
-        return self.add_layer(layer)
+        return layer
 
     def add_layer(self, layer: _L) -> _L:
         """Add a layer to the canvas."""

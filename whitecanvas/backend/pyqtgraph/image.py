@@ -4,6 +4,7 @@ import pyqtgraph as pg
 import numpy as np
 from cmap import Colormap
 from ._qt_utils import array_to_qcolor
+from qtpy.QtGui import QTransform
 from whitecanvas.protocols import ImageProtocol, check_protocol
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 
@@ -13,6 +14,7 @@ class Image(pg.ImageItem, PyQtLayer):
     def __init__(self, data: np.ndarray):
         super().__init__(data)
         self._cmap = Colormap("gray")
+        self.setTransform(QTransform())
 
     def _plt_get_data(self) -> np.ndarray:
         return self.image
@@ -36,3 +38,44 @@ class Image(pg.ImageItem, PyQtLayer):
 
     def _plt_set_clim(self, clim: tuple[float, float]):
         self.setLevels(clim)
+
+    def _get_qtransform(self) -> QTransform:
+        return self.transform()
+
+    def _plt_get_translation(self) -> tuple[float, float]:
+        tr = self._get_qtransform()
+        return tr.dx(), tr.dy()
+
+    def _plt_set_translation(self, translation: tuple[float, float]):
+        tr = self._get_qtransform()
+        tr.setMatrix(
+            tr.m11(),
+            tr.m12(),
+            tr.m13(),
+            tr.m21(),
+            tr.m22(),
+            tr.m23(),
+            translation[0],
+            translation[1],
+            tr.m33(),
+        )
+        self.setTransform(tr)
+
+    def _plt_get_scale(self) -> tuple[float, float]:
+        tr = self._get_qtransform()
+        return tr.m11(), tr.m22()
+
+    def _plt_set_scale(self, scale: tuple[float, float]):
+        tr = self._get_qtransform()
+        tr.setMatrix(
+            scale[0],
+            tr.m12(),
+            tr.m13(),
+            tr.m21(),
+            scale[1],
+            tr.m23(),
+            tr.m31(),
+            tr.m32(),
+            tr.m33(),
+        )
+        self.setTransform(tr)

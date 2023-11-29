@@ -18,7 +18,6 @@ class Text(mplText, MplLayer):
             text=text,
             verticalalignment='baseline',
             horizontalalignment='left',
-            transform=plt.gca().transData,
             clip_on=False,
         )
         self._bbox_props = {}

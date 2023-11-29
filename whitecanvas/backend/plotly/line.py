@@ -3,7 +3,6 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from plotly import graph_objects as go
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 from whitecanvas.utils.normalize import arr_color, rgba_str_color

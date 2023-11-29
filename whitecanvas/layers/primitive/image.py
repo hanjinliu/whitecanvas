@@ -78,6 +78,29 @@ class Image(PrimitiveLayer[ImageProtocol]):
             high = self.data.max()
         self._backend._plt_set_clim((low, high))
 
+    @property
+    def shift(self) -> tuple[float, float]:
+        """Current shift from the origin."""
+        return self._backend._plt_get_translation()
+
+    @shift.setter
+    def shift(self, shift: tuple[float, float]):
+        self._backend._plt_set_translation(shift)
+
+    @property
+    def scale(self) -> tuple[float, float]:
+        """Current scale."""
+        return self._backend._plt_get_scale()
+
+    @scale.setter
+    def scale(self, scale: float | tuple[float, float]):
+        if isinstance(scale, (int, float, np.number)):
+            scale = float(scale), float(scale)
+        dx, dy = scale
+        if dx <= 0 or dy <= 0:
+            raise ValueError("Scale must be positive.")
+        self._backend._plt_set_scale(scale)
+
     def update(
         self,
         *,

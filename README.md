@@ -5,41 +5,38 @@
 
 A type safe and backend independent plotting library for Python.
 
+|matplotlib|pyqtgraph|vispy|plotly|bokeh|
+|:--------:|:-------:|:---:|:----:|:---:|
+|<img src="images/raincloud_matplotlib.png" alt="drawing" width="200"/>|<img src="images/raincloud_pyqtgraph.png" alt="drawing" width="200"/>|<img src="images/raincloud_vispy.png" alt="drawing" width="200"/>|<img src="images/raincloud_plotly.png" alt="drawing" width="200"/>|<img src="images/raincloud_bokeh.png" alt="drawing" width="200"/>|
+
 -----
+
+## Installation
+
+```console
+pip install whitecanvas -U
+```
 
 ```python
 import numpy as np
-import whitecanvas as cnv
+from whitecanvas as new_canvas
 
-canvas = cnv.new_canvas()  # make a new canvas
+canvas = new_canvas()  # make a new canvas
 
 # sample data
 N = 10
 xdata = np.linspace(0, np.pi * 2, N)
 ydata = np.sin(xdata)
 
-layer = canvas.add_line(  # add a line
-    xdata,
-    ydata,
-    color="blue",
-).with_markers(     # group with markers
-    color="violet",
-    symbol="s",
-).with_edge(        # setup edges
-    color="blue",
-).with_yerr(        # group with errorbars
-    np.ones(N) / 3,
-    capsize=0.2,
-    color="black",
+layer = (
+    canvas
+    .add_line(xdata, ydata, color="blue")
+    .with_markers(color="violet", symbol="s")
+    .with_edge(color="blue")
+    .with_yerr(np.ones(N) / 3, capsize=0.2, color="black")
 )
 
 canvas.show()  # show canvas
-```
-
-## Installation
-
-```console
-pip install whitecanvas -U
 ```
 
 ### Backend independency
@@ -48,3 +45,6 @@ Currently supported backends are:
 
 - `matplotlib`
 - `pyqtgraph`
+- `vispy`
+- `plotly`
+- `bokeh`

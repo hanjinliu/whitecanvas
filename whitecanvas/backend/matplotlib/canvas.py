@@ -12,8 +12,8 @@ from matplotlib.backend_bases import (
 from matplotlib.lines import Line2D
 from matplotlib.collections import Collection
 from matplotlib.text import Text as mplText
-from matplotlib.image import AxesImage
 from .bars import Bars
+from .image import Image as whitecanvasImage
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
@@ -85,9 +85,11 @@ class Canvas:
                 self._axes.add_patch(child)
             self._axes.add_container(layer)
         elif isinstance(layer, mplText):
+            layer.set_transform(self._axes.transData)
             self._axes._add_text(layer)
-        elif isinstance(layer, AxesImage):
-            self._axes.add_image(layer)
+        elif isinstance(layer, whitecanvasImage):
+            layer._transform_bbox(self._axes)
+            self._axes.add_artist(layer)
         else:
             raise NotImplementedError(f"{layer}")
 

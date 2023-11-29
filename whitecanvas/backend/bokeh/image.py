@@ -37,3 +37,15 @@ class Image(BokehLayer[bk_models.Image]):
 
     def _plt_set_clim(self, clim: tuple[float, float]):
         self._model.color_mapper.low, self._model.color_mapper.high = clim
+
+    def _plt_get_translation(self) -> tuple[float, float]:
+        return self._model.x, self._model.y
+
+    def _plt_set_translation(self, translation: tuple[float, float]):
+        self._model.x, self._model.y = translation
+
+    def _plt_get_scale(self) -> tuple[float, float]:
+        return self._model.dw, self._model.dh
+
+    def _plt_set_scale(self, scale: tuple[float, float]):
+        self._model.dw, self._model.dh = scale

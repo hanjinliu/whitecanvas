@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pyqtgraph as pg
 import numpy as np
 from cmap import Colormap
 from whitecanvas.protocols import ImageProtocol, check_protocol
@@ -42,3 +41,15 @@ class Image(PlotlyLayer):
 
     def _plt_get_visible(self) -> bool:
         return self._props["visible"]
+
+    def _plt_get_translation(self) -> tuple[float, float]:
+        return self._props["x0"], self._props["y0"]
+
+    def _plt_set_translation(self, translation: tuple[float, float]):
+        self._props["x0"], self._props["y0"] = translation
+
+    def _plt_get_scale(self) -> tuple[float, float]:
+        return self._props["dx"], self._props["dy"]
+
+    def _plt_set_scale(self, scale: tuple[float, float]):
+        self._props["dx"], self._props["dy"] = scale

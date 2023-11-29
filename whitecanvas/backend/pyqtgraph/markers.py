@@ -127,7 +127,7 @@ class HeteroMarkers(pg.ScatterPlotItem, PyQtLayer):
 
     ##### HasSymbol protocol #####
     def _plt_get_symbol(self) -> Symbol:
-        return from_qt_symbol(self.data["symbol"])[0]
+        return from_qt_symbol(self.opts["symbol"])
 
     def _plt_set_symbol(self, symbol: Symbol):
         self.setSymbol([to_qt_symbol(symbol)] * len(self.data["x"]))

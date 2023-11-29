@@ -295,6 +295,18 @@ class ImageProtocol(BaseProtocol, Protocol):
     def _plt_set_clim(self, clim: tuple[float, float]):
         """Set the clim."""
 
+    def _plt_get_translation(self) -> tuple[float, float]:
+        """Return the translation."""
+
+    def _plt_set_translation(self, translation: tuple[float, float]):
+        """Set the translation."""
+
+    def _plt_get_scale(self) -> tuple[float, float]:
+        """Return the scale."""
+
+    def _plt_set_scale(self, scale: tuple[float, float]):
+        """Set the scale."""
+
 
 @runtime_checkable
 class RangeDataProtocol(HasFaces, HasEdges, Protocol):

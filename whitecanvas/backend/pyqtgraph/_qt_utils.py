@@ -35,11 +35,9 @@ def _create_symbol(coords: list[tuple[float, float]]):
     return p
 
 
-Symbols["whitecanvas.vbar"] = _create_symbol([(0, -0.5), (0, 0.5)])
-Symbols["whitecanvas.hbar"] = _create_symbol([(-0.5, 0), (0.5, 0)])
-Symbols["whitecanvas.square"] = _create_symbol(
-    [(-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5), (0.5, -0.5)]
-)
+Symbols["-"] = _create_symbol([(0, -0.5), (0, 0.5)])
+Symbols["|"] = _create_symbol([(-0.5, 0), (0.5, 0)])
+Symbols["s"] = _create_symbol([(-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5), (0.5, -0.5)])
 
 _SYMBOL = {
     Symbol.STAR: "star",
@@ -48,9 +46,9 @@ _SYMBOL = {
     Symbol.TRIANGLE_LEFT: "t3",
     Symbol.TRIANGLE_DOWN: "t",
     Symbol.TRIANGLE_RIGHT: "t2",
-    Symbol.VBAR: "whitecanvas.vbar",
-    Symbol.HBAR: "whitecanvas.hbar",
-    Symbol.SQUARE: "whitecanvas.square",
+    Symbol.VBAR: "-",
+    Symbol.HBAR: "|",
+    Symbol.SQUARE: "s",
 }
 
 _SYMBOL_INV = {v: k for k, v in _SYMBOL.items()}

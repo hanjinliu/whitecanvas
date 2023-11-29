@@ -22,11 +22,20 @@ from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
     from typing_extensions import Self
+    from whitecanvas.layers._mixin import (
+        FaceNamespace,
+        EdgeNamespace,
+        MultiFaceNamespace,
+        MultiEdgeNamespace,
+    )
 
 _void = _Void()
 
 
 class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
+    face: FaceNamespace | MultiFaceNamespace
+    edge: EdgeNamespace | MultiEdgeNamespace
+
     def __init__(
         self,
         xdata: ArrayLike,
@@ -47,6 +56,8 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha
         )  # fmt: skip
         self.edge.color = color
+        if not self.symbol.has_face():
+            self.edge.width = 1.0
         pad_r = size / 400
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
 
@@ -137,8 +148,6 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             width = self.edge.width
         if style is _void:
             style = self.edge.style
-        # if antialias is _void:
-        #     antialias = self.antialias
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
@@ -168,8 +177,6 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             width = self.edge.width
         if style is _void:
             style = self.edge.style
-        if antialias is _void:
-            antialias = self.antialias
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
@@ -254,8 +261,6 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             width = self.edge.width
         if style is _void:
             style = self.edge.style
-        if antialias is _void:
-            antialias = self.antialias
         segs = []
         nodes = self.data.stack()
         for i0, i1 in edges:
@@ -285,8 +290,6 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
     ) -> _lg.StemPlot:
         """
         Grow stems from the markers.
-
-
 
         Parameters
         ----------
@@ -326,8 +329,6 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             width = self.edge.width
         if style is _void:
             style = self.edge.style
-        if antialias is _void:
-            antialias = self.antialias
         mline = MultiLine(
             segs, name="stems", color=color, width=width, style=style,
             antialias=antialias, alpha = alpha, backend=self._backend_name,

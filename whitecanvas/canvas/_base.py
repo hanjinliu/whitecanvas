@@ -706,23 +706,19 @@ class CanvasBase(ABC):
             i += 1
         return name
 
-    def _autoscale_for_layer(self, layer: _l.Layer):
+    def _autoscale_for_layer(self, layer: _l.Layer, pad_rel: float = 0.025):
         xmin, xmax, ymin, ymax = layer.bbox_hint()
-        xmin_changed = xmax_changed = False
-        ymin_changed = ymax_changed = False
         if len(self.layers) > 1:
             # NOTE: if there was no layer, so backend may not have xlim/ylim,
             # or they may be set to a default value.
             _xmin, _xmax = self.x.lim
             _ymin, _ymax = self.y.lim
-            xmin = np.min([xmin, _xmin])
-            xmax = np.max([xmax, _xmax])
-            ymin = np.min([ymin, _ymin])
-            ymax = np.max([ymax, _ymax])
-            xmin_changed = _xmin != xmin
-            xmax_changed = _xmax != xmax
-            ymin_changed = _ymin != ymin
-            ymax_changed = _ymax != ymax
+            _dx = (_xmax - _xmin) * pad_rel
+            _dy = (_ymax - _ymin) * pad_rel
+            xmin = np.min([xmin, _xmin + _dx])
+            xmax = np.max([xmax, _xmax - _dx])
+            ymin = np.min([ymin, _ymin + _dy])
+            ymax = np.max([ymax, _ymax - _dy])
 
         # this happens when there is <= 1 data
         if np.isnan(xmax) or np.isnan(xmin):
@@ -731,22 +727,18 @@ class CanvasBase(ABC):
             xmin -= 0.05
             xmax += 0.05
         else:
-            dx = (xmax - xmin) * 0.05
-            if xmin_changed:
-                xmin -= dx
-            if xmax_changed:
-                xmax += dx
+            dx = (xmax - xmin) * pad_rel
+            xmin -= dx
+            xmax += dx
         if np.isnan(ymax) or np.isnan(ymin):
             ymin, ymax = self.y.lim
         elif ymax - ymin < 1e-6:
             ymin -= 0.05
             ymax += 0.05
         else:
-            dy = (ymax - ymin) * 0.05
-            if ymin_changed:
-                ymin -= dy  # TODO: this causes bars/histogram to float
-            if ymax_changed:  #       over the x-axis.
-                ymax += dy
+            dy = (ymax - ymin) * pad_rel
+            ymin -= dy  # TODO: this causes bars/histogram to float
+            ymax += dy  #       over the x-axis.
         self.lims = (xmin, xmax), (ymin, ymax)
 
     def _cb_inserted(self, idx: int, layer: _l.Layer):

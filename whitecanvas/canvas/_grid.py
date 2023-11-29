@@ -176,6 +176,12 @@ class CanvasGrid:
 
     def show(self) -> None:
         """Show the grid."""
+        app = self._backend_installer._app
+        # TODO: implement other event loops
+        if app == "qt":
+            from whitecanvas.backend._app import QtApplication
+
+            qapp = QtApplication().get_app()
         self._backend_object._plt_show()
 
     @property

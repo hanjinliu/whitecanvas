@@ -30,7 +30,7 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
             ydata,
             pen=pen,
             brush=QtGui.QBrush(QtGui.QColor(255, 0, 0)),
-            antialias=False,
+            antialias=True,
             useCache=False,  # NOTE: should be True eventually, but pyqtgraph has
             # a bug in caching
         )

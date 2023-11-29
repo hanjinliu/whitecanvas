@@ -54,6 +54,15 @@ class Symbol(_strEnum):
     VBAR = "|"
     HBAR = "_"
 
+    def has_face(self) -> bool:
+        return self not in (
+            Symbol.CROSS,
+            Symbol.PLUS,
+            Symbol.DOT,
+            Symbol.VBAR,
+            Symbol.HBAR,
+        )
+
 
 class Modifier(_strEnum):
     SHIFT = "shift"

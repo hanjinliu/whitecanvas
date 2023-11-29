@@ -48,15 +48,17 @@ class TextLabel(scene.Label):
 
 
 class Axis(scene.AxisWidget):
+    axis: AxisVisual
+
     def __init__(self, canvas: Canvas, dim: int, **kwargs):
         super().__init__(**kwargs)
         self.unfreeze()
         self._dim = dim
+        self._canvas_ref = weakref.ref(canvas)
         self.freeze()
-        self._canvas = weakref.ref(canvas)
 
     def _plt_viewbox(self) -> scene.ViewBox:
-        return self._linked_view
+        return self._canvas_ref()._viewbox
 
     def _plt_camera(self) -> PanZoomCamera:
         return self._plt_viewbox().camera
@@ -70,11 +72,15 @@ class Axis(scene.AxisWidget):
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         camera = self._plt_camera()
-        rect = camera.rect
+        # NOTE: margin = 0 is ignored in the current implementation of vispy.
+        # use a very small margin instead.
+        margin = (limits[1] - limits[0]) * 1e-8
         if self._dim == 0:  # y
-            camera.set_range(x=(rect.left, rect.right), y=limits, margin=0)
+            xlim = self._canvas_ref()._xaxis._plt_get_limits()
+            camera.set_range(x=xlim, y=limits, margin=margin)
         else:
-            camera.set_range(x=limits, y=(rect.bottom, rect.top), margin=0)
+            ylim = self._canvas_ref()._yaxis._plt_get_limits()
+            camera.set_range(x=limits, y=ylim, margin=margin)
         camera.set_default_state()
         camera.reset()
 

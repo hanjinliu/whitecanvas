@@ -41,7 +41,7 @@ class Markers(visuals.Markers):
 
     ##### HasSymbol protocol #####
     def _plt_get_symbol(self) -> Symbol:
-        return self.symbol[0]
+        return Symbol(self.symbol[0])
 
     def _plt_set_symbol(self, symbol: Symbol):
         self.set_data(

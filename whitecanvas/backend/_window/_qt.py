@@ -20,7 +20,7 @@ class QtCanvas(QtW.QWidget):
 
     def sizeHint(self) -> QtCore.QSize:
         w, h = self._canvas.size
-        return int(w), int(h)
+        return QtCore.QSize(int(w), int(h))
 
     def _update_qimage(self):
         buf = self._canvas.screenshot()

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from matplotlib.backend_bases import RendererBase
 
 import numpy as np
 from matplotlib.image import BboxImage
@@ -21,18 +22,15 @@ class Image(BboxImage, MplLayer):
         self._image_shape_2d = shape
         super().__init__(self._make_bbox(), origin="lower")
         self.set_data(data)
-        # self.set_extent(self.get_extent())  # this is needed!
         self._cmap = Colormap("gray")
         self._image_transform = Affine2D()
-        self._ax_transform = Affine2D()
 
     def _make_bbox(self):
         h, w = self._image_shape_2d
         return Bbox.from_bounds(-0.5, -0.5, w, h)
 
     def _transform_bbox(self, ax):
-        self._ax_transform = ax.transData
-        self.bbox = TransformedBbox(self.bbox, self._ax_transform)
+        self.bbox = ax.transData
 
     def _plt_get_data(self) -> np.ndarray:
         return self.get_array()
@@ -65,10 +63,7 @@ class Image(BboxImage, MplLayer):
     def _plt_set_scale(self, scale: tuple[float, float]):
         mtx = self._image_transform.get_matrix()
         mtx[0, 0], mtx[1, 1] = scale
-        self.set_transform(Affine2D(mtx))
         self._image_transform = Affine2D(mtx)
-        bbox = self._make_bbox().transformed(self._image_transform)
-        self.bbox = TransformedBbox(bbox, self._ax_transform)
 
     def _plt_get_translation(self) -> tuple[float, float]:
         mtx = self._image_transform.get_matrix()
@@ -77,7 +72,23 @@ class Image(BboxImage, MplLayer):
     def _plt_set_translation(self, translation: tuple[float, float]):
         mtx = self._image_transform.get_matrix()
         mtx[0, 2], mtx[1, 2] = translation
-        self.set_transform(Affine2D(mtx))
         self._image_transform = Affine2D(mtx)
-        bbox = self._make_bbox().transformed(self._image_transform)
-        self.bbox = TransformedBbox(bbox, self._ax_transform)
+
+    def get_window_extent(self, renderer: RendererBase | None = ...) -> Bbox:
+        return (
+            self._make_bbox().transformed(self._image_transform).transformed(self.bbox)
+        )
+
+    def make_image(
+        self,
+        renderer: RendererBase,
+        magnification: float = 1,
+        unsampled: bool = False,
+    ) -> tuple[np.ndarray, float, float, Affine2D]:
+        img, x, y, trans = super().make_image(renderer, magnification, unsampled)
+        mtx = self.get_transform().get_matrix()
+        if mtx[0, 0] < 0:
+            img = img[:, ::-1]
+        if mtx[1, 1] < 0:
+            img = img[::-1, :]
+        return img, x, y, trans

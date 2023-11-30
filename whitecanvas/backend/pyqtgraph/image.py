@@ -12,15 +12,15 @@ from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 @check_protocol(ImageProtocol)
 class Image(pg.ImageItem, PyQtLayer):
     def __init__(self, data: np.ndarray):
-        super().__init__(data)
+        super().__init__(np.swapaxes(data, 0, 1))
         self._cmap = Colormap("gray")
         self.setTransform(QTransform())
 
     def _plt_get_data(self) -> np.ndarray:
-        return self.image
+        return np.swapaxes(self.image, 0, 1)
 
     def _plt_set_data(self, data: np.ndarray):
-        self.setImage(data)
+        self.setImage(np.swapaxes(data, 0, 1))
 
     def _plt_get_colormap(self) -> Colormap:
         return self._cmap

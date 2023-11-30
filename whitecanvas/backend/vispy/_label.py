@@ -93,7 +93,8 @@ class Axis(scene.AxisWidget):
     def _plt_flip(self) -> None:
         camera = self._plt_camera()
         flipped = list(camera.flip)
-        flipped[self._dim] = not flipped[self._dim]
+        axis = 1 - self._dim
+        flipped[axis] = not flipped[axis]
         camera.flip = tuple(flipped)
 
     def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):

@@ -221,6 +221,13 @@ class _AxisNamespace(Namespace):
 
     @lim.setter
     def lim(self, lim: tuple[float, float]):
+        low, high = lim
+        if low >= high:
+            a = type(self).__name__[0].lower()
+            raise ValueError(
+                f"low must be less than high, but got {lim!r}. If you "
+                f"want to flip the axis, use `canvas.{a}.flipped = True`."
+            )
         return self._get_object()._plt_set_limits(lim)
 
     @property
@@ -242,6 +249,7 @@ class _AxisNamespace(Namespace):
         """Set the axis to be flipped."""
         if flipped != self._flipped:
             self._get_object()._plt_flip()
+            self._flipped = flipped
 
     def set_gridlines(
         self,

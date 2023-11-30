@@ -12,7 +12,8 @@ from whitecanvas.protocols import ImageProtocol, check_protocol
 class Image(BokehLayer[bk_models.Image]):
     def __init__(self, data: np.ndarray):
         self._data = bk_models.ColumnDataSource(dict(image=[data]))
-        self._model = bk_models.Image(image="image", x=0, y=0, dw=1, dh=1)
+        h, w = data.shape[:2]
+        self._model = bk_models.Image(image="image", x=0, y=0, dw=w, dh=h)
         self._cmap = Colormap("gray")
 
     def _plt_get_data(self) -> np.ndarray:
@@ -45,7 +46,10 @@ class Image(BokehLayer[bk_models.Image]):
         self._model.x, self._model.y = translation
 
     def _plt_get_scale(self) -> tuple[float, float]:
-        return self._model.dw, self._model.dh
+        h, w = self._data.data["image"][0].shape[:2]
+        return self._model.dw / w, self._model.dh / h
 
     def _plt_set_scale(self, scale: tuple[float, float]):
-        self._model.dw, self._model.dh = scale
+        h, w = self._data.data["image"][0].shape[:2]
+        xscale, yscale = scale
+        self._model.dw, self._model.dh = xscale * w, yscale * h

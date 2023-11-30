@@ -66,7 +66,6 @@ class Y:
 class Axis(_CanvasComponent):
     def __init__(self, canvas: Canvas):
         super().__init__(canvas)
-        self._flipped = False
 
     def _plt_get_axis(self) -> BokehAxis:
         raise NotImplementedError
@@ -84,8 +83,6 @@ class Axis(_CanvasComponent):
         return limits
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        if self._flipped:
-            limits = limits[::-1]
         self._plt_get_axis().bounds = limits
 
     def _plt_get_color(self):
@@ -93,10 +90,6 @@ class Axis(_CanvasComponent):
 
     def _plt_set_color(self, color):
         self._plt_get_axis().axis_label_text_color = Color(color).hex
-
-    def _plt_flip(self) -> None:
-        self._plt_set_limits(self._plt_get_limits()[::-1])
-        self._flipped = not self._flipped
 
 
 class Label(_CanvasComponent):
@@ -195,6 +188,10 @@ class XAxis(X, Axis):
         grid.grid_line_width = width
         grid.grid_line_dash = to_bokeh_line_style(style)
 
+    def _plt_flip(self) -> None:
+        fig = self._canvas()._plot
+        fig.x_range.flipped = not fig.x_range.flipped
+
 
 class YAxis(Y, Axis):
     def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
@@ -203,6 +200,10 @@ class YAxis(Y, Axis):
         grid.grid_line_color = Color(color).hex
         grid.grid_line_width = width
         grid.grid_line_dash = to_bokeh_line_style(style)
+
+    def _plt_flip(self) -> None:
+        fig = self._canvas()._plot
+        fig.y_range.flipped = not fig.y_range.flipped
 
 
 class XLabel(X, Label):

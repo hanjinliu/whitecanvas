@@ -244,10 +244,18 @@ class XAxis(AxisBase):
         self._canvas = weakref.ref(canvas)
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        return self._canvas()._axes.get_xlim()
+        axes = self._canvas()._axes
+        x0, x1 = axes.get_xlim()
+        if axes.xaxis_inverted():
+            return x1, x0
+        else:
+            return x0, x1
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        self._canvas()._axes.set_xlim(*limits)
+        axes = self._canvas()._axes
+        if axes.xaxis_inverted():
+            limits = limits[::-1]
+        axes.set_xlim(*limits)
 
     def _plt_get_color(self):
         return self._canvas()._axes.xaxis.get_tick_params()["color"]
@@ -276,10 +284,18 @@ class YAxis(AxisBase):
         self._canvas = weakref.ref(canvas)
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        return self._canvas()._axes.get_ylim()
+        axes = self._canvas()._axes
+        y0, y1 = axes.get_ylim()
+        if axes.yaxis_inverted():
+            return y1, y0
+        else:
+            return y0, y1
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        self._canvas()._axes.set_ylim(*limits)
+        axes = self._canvas()._axes
+        if axes.yaxis_inverted():
+            limits = limits[::-1]
+        axes.set_ylim(*limits)
 
     def _plt_get_color(self):
         return self._canvas()._axes.yaxis.get_tick_params()["color"]

@@ -3,6 +3,11 @@ from contextlib import contextmanager
 
 _INSTALLED_MODULES = {}
 
+_DEFAULT_APP = {
+    "pyqtgraph": "qt",
+    "vispy": "qt",
+}
+
 
 class Backend:
     """The backend of plots."""
@@ -20,7 +25,7 @@ class Backend:
             if app == "nb":
                 app = "notebook"
         else:
-            app = "default"
+            app = _DEFAULT_APP.get(name, "default")
         if name in _INSTALLED_MODULES:
             self._mod = _INSTALLED_MODULES[name]
         else:
@@ -40,6 +45,11 @@ class Backend:
     def name(self) -> str:
         """Name of the backend."""
         return self._name
+
+    @property
+    def app(self) -> str:
+        """Name of the application."""
+        return self._app
 
     def has(self, attr: str) -> bool:
         """Check if the current backend has an object."""

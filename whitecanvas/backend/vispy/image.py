@@ -13,7 +13,7 @@ class Image(visuals.Image):
     def __init__(self, data: np.ndarray):
         self._cmap_obj = Colormap("gray")
         # GPU does not support f64
-        if data.dtype in (np.float64, np.float128):
+        if data.dtype == np.float64:
             data = data.astype(np.float32)
         super().__init__(data, cmap="gray")
 

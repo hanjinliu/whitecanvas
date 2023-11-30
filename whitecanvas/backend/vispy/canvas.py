@@ -49,8 +49,6 @@ class Canvas:
             tick_label_margin=5,
             axis_label="",
         )
-        x_axis.height_min = 65
-        x_axis.height_max = 80
         x_axis.stretch = (1, 0.1)
         grid.add_widget(x_axis, row=2, col=1)
         x_axis.link_view(self._viewbox)
@@ -65,7 +63,6 @@ class Canvas:
             axis_label="",
         )
 
-        y_axis.width_max = 80
         y_axis.stretch = (0.1, 1)
         grid.add_widget(y_axis, row=1, col=0)
         y_axis.link_view(self._viewbox)

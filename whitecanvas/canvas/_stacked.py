@@ -6,7 +6,7 @@ import numpy as np
 
 from whitecanvas.types import ArrayLike1D, ColorType, FacePattern
 from whitecanvas.layers import Layer, Bars, Band
-from whitecanvas.layers.group import LabeledBars
+from whitecanvas.layers.group import LabeledBars, StemPlot
 from whitecanvas._exceptions import ReferenceDeletedError
 
 if TYPE_CHECKING:
@@ -47,6 +47,11 @@ class StackPlotter(Generic[_C, _L]):
         xdata = layer.data.x
         y0 = np.maximum(layer.data.y0, layer.data.y1)
         color = canvas._generate_colors(color)
+
+        # unwrap nested layers in a group
+        if isinstance(layer, LabeledBars):
+            layer = layer.bars
+
         if isinstance(layer, Bars):
             new_layer = Bars(
                 xdata,
@@ -72,18 +77,13 @@ class StackPlotter(Generic[_C, _L]):
                 pattern=pattern,
                 backend=layer._backend_name,
             )
-        elif isinstance(layer, LabeledBars):
-            bars = layer.bars
-            new_layer = Bars(
+        elif isinstance(layer, StemPlot):
+            new_layer = StemPlot.from_arrays(
                 xdata,
                 ydata + y0,
-                y0,
-                orient=bars.orient,
-                color=color,
-                alpha=alpha,
+                bottom=y0,
                 name=name,
-                pattern=pattern,
-                bar_width=bars.bar_width,
+                orient=layer.orient,
                 backend=layer._backend_name,
             )
         else:

@@ -19,7 +19,7 @@ pip install whitecanvas -U
 
 ```python
 import numpy as np
-from whitecanvas as new_canvas
+from whitecanvas import new_canvas
 
 canvas = new_canvas()  # make a new canvas
 

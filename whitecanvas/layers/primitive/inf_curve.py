@@ -138,7 +138,7 @@ class InfLine(MonoLine):
 
     def _connect_canvas(self, canvas: Canvas):
         canvas.lims_changed.connect(self._recalculate_line)
-        self._recalculate_line(canvas.lims)
+        self._recalculate_line(canvas.view_rect)
         super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):

@@ -23,6 +23,7 @@ from whitecanvas.types import (
 )
 from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
+from whitecanvas.canvas._image_info import ImageRef
 from whitecanvas.canvas._categorical import CategorizedDataPlotter
 from whitecanvas.canvas._stacked import StackPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
@@ -51,6 +52,7 @@ class CanvasBase(ABC):
             palette = get_theme().palette
         self._color_palette = ColorPalette(palette)
         self._is_grouping = False
+        self._autoscale_enabled = True
         if not self._get_backend().name.startswith("."):
             self._init_canvas()
 
@@ -177,12 +179,12 @@ class CanvasBase(ABC):
         self._canvas()._plt_set_visible(visible)
 
     @property
-    def lims(self) -> tuple[tuple[float, float], tuple[float, float]]:
+    def view_rect(self) -> tuple[tuple[float, float], tuple[float, float]]:
         """Return the x/y limits of the canvas."""
         return self.x.lim, self.y.lim
 
-    @lims.setter
-    def lims(self, lims: tuple[tuple[float, float], tuple[float, float]]):
+    @view_rect.setter
+    def view_rect(self, lims: tuple[tuple[float, float], tuple[float, float]]):
         xlim, ylim = lims
         with self.lims_changed.blocked():
             self.x.lim = xlim
@@ -271,17 +273,19 @@ class CanvasBase(ABC):
          ├───│├───│
         ─┴───┴┴───┴─
         """
-        # TODO: support stem plot
-        if not isinstance(layer, (_l.Bars, _l.Band, _lg.LabeledBars)):
+        if not isinstance(layer, (_l.Bars, _l.Band, _lg.StemPlot, _lg.LabeledBars)):
             raise TypeError(
                 f"Only Bars and Band are supported as an input, "
                 f"got {type(layer)!r}."
             )
         return StackPlotter(self, layer)
 
-    def annotate(self, layer, at: int):
-        # TODO
-        ...
+    # TODO
+    # def annotate(self, layer, at: int):
+    #     ...
+
+    def refer_image(self, layer: _l.Image) -> ImageRef[Self]:
+        return ImageRef(self, layer)
 
     @overload
     def add_line(
@@ -295,6 +299,14 @@ class CanvasBase(ABC):
     def add_line(
         self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
         color: ColorType | None = None, width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
+    ) -> _l.Line:  # fmt: skip
+        ...
+
+    @overload
+    def add_line(
+        self, xdata: ArrayLike, ydata: Callable[[ArrayLike], ArrayLike], *,
+        name: str | None = None, color: ColorType | None = None, width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
@@ -556,10 +568,11 @@ class CanvasBase(ABC):
     def add_kde(
         self,
         data: ArrayLike,
-        band_width: float | str = "scott",
         *,
+        bottom: float = 0.0,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
+        band_width: float | str = "scott",
         color: ColorType | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -575,7 +588,7 @@ class CanvasBase(ABC):
         pad = sigma * 4
         x = np.linspace(data.min() - pad, data.max() + pad, 100)
         y1 = kde(x)
-        y0 = np.zeros_like(y1)
+        y0 = np.full_like(y1, bottom)
         layer = _l.Band(
             x, y0, y1, name=name, orient=orient, color=color, alpha=alpha,
             pattern=pattern, backend=self._get_backend(),
@@ -708,6 +721,8 @@ class CanvasBase(ABC):
         return name
 
     def _autoscale_for_layer(self, layer: _l.Layer, pad_rel: float = 0.025):
+        if not self._autoscale_enabled:
+            return
         xmin, xmax, ymin, ymax = layer.bbox_hint()
         if len(self.layers) > 1:
             # NOTE: if there was no layer, so backend may not have xlim/ylim,
@@ -740,7 +755,7 @@ class CanvasBase(ABC):
             dy = (ymax - ymin) * pad_rel
             ymin -= dy  # TODO: this causes bars/histogram to float
             ymax += dy  #       over the x-axis.
-        self.lims = (xmin, xmax), (ymin, ymax)
+        self.view_rect = (xmin, xmax), (ymin, ymax)
 
     def _cb_inserted(self, idx: int, layer: _l.Layer):
         if self._is_grouping:
@@ -754,7 +769,11 @@ class CanvasBase(ABC):
             _canvas._plt_add_layer(l._backend)
             l._connect_canvas(self)
         # autoscale
-        self._autoscale_for_layer(layer)
+        if isinstance(layer, _l.Image):
+            pad_rel = 0
+        else:
+            pad_rel = 0.025
+        self._autoscale_for_layer(layer, pad_rel=pad_rel)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):
         if self._is_grouping:
@@ -821,8 +840,8 @@ class Canvas(CanvasBase):
         *,
         palette: ColormapType | None = None,
     ):
-        self._backend_installer = Backend(backend)
-        self._backend = self._create_backend_object()
+        self._backend = Backend(backend)
+        self._backend_object = self._create_backend_object()
         super().__init__(palette=palette)
         self.__class__._CURRENT_INSTANCE = self
 
@@ -837,19 +856,19 @@ class Canvas(CanvasBase):
         """Create a canvas object from a backend object."""
         with patch_dummy_backend() as name:
             self = cls(backend=name, palette=palette)
-        self._backend_installer = Backend(backend)
-        self._backend = obj
+        self._backend = Backend(backend)
+        self._backend_object = obj
         self._init_canvas()
         return self
 
     def _create_backend_object(self) -> protocols.CanvasProtocol:
-        return self._backend_installer.get("Canvas")()
+        return self._backend.get("Canvas")()
 
     def _get_backend(self):
-        return self._backend_installer
+        return self._backend
 
     def _canvas(self) -> protocols.CanvasProtocol:
-        return self._backend
+        return self._backend_object
 
 
 def _iter_layers(

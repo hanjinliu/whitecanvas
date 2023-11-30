@@ -4,7 +4,7 @@ from .labeled import LabeledLine, LabeledMarkers, LabeledBars, LabeledPlot
 from .textinfo import BracketText, Panel
 from .text_group import TextGroup
 from .violinplot import ViolinPlot
-from .stripplot import StripPlot
+from .marker_collection import MarkerCollection
 from .boxplot import BoxPlot
 from .graph import Graph
 from .stemplot import StemPlot
@@ -20,7 +20,7 @@ __all__ = [
     "LabeledPlot",
     "TextGroup",
     "ViolinPlot",
-    "StripPlot",
+    "MarkerCollection",
     "BoxPlot",
     "Graph",
     "StemPlot",

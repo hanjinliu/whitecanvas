@@ -174,10 +174,13 @@ class LayerGroup(Layer):
         if len(hints) == 0:
             return np.array([np.nan, np.nan, np.nan, np.nan], dtype=np.float64)
         ar = np.stack(hints, axis=1)
-        xmin = np.min(ar[0, :])
-        xmax = np.max(ar[1, :])
-        ymin = np.min(ar[2, :])
-        ymax = np.max(ar[3, :])
+        # Any of the four corners could be all-nan. In that case, we should return nan.
+        # Otherwise, we should return the known min/max.
+        allnan = np.isnan(ar).all(axis=1)
+        xmin = np.nan if allnan[0] else np.nanmin(ar[0, :])
+        xmax = np.nan if allnan[1] else np.nanmax(ar[1, :])
+        ymin = np.nan if allnan[2] else np.nanmin(ar[2, :])
+        ymax = np.nan if allnan[3] else np.nanmax(ar[3, :])
         return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
 
 

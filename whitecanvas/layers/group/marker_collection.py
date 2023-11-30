@@ -12,7 +12,7 @@ from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.utils.normalize import as_color_array
 
 
-class StripPlot(ListLayerGroup):
+class MarkerCollection(ListLayerGroup):
     def __init__(
         self,
         markers: list[Markers],
@@ -29,8 +29,21 @@ class StripPlot(ListLayerGroup):
         """The n-th markers layer."""
         return self._children[n]
 
+    def with_edge(
+        self,
+        *,
+        color: ColorType = "black",
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+        alpha: float = 1.0,
+    ) -> MarkerCollection:
+        """Add edges to the strip plot."""
+        for markers in self.iter_children():
+            markers.with_edge(color=color, alpha=alpha, width=width, style=style)
+        return self
+
     @classmethod
-    def from_arrays(
+    def build_strip(
         cls,
         x: list[float],
         data: list[ArrayLike],
@@ -38,7 +51,7 @@ class StripPlot(ListLayerGroup):
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         strip_width: float = 0.3,
-        seed: int | None = None,
+        seed: int | None = 0,
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
         color: ColorType | Sequence[ColorType] = "blue",
@@ -67,6 +80,72 @@ class StripPlot(ListLayerGroup):
 
         return cls(layers, name=name, strip_width=strip_width, orient=ori)
 
+    @classmethod
+    def build_swarm(
+        cls,
+        x: list[float],
+        data: list[ArrayLike],
+        *,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        strip_width: float = 0.3,
+        symbol: Symbol | str = Symbol.CIRCLE,
+        size: float = 10,
+        sort: bool = False,
+        color: ColorType | Sequence[ColorType] = "blue",
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+        backend: str | Backend | None = None,
+    ):
+        x, data = check_array_input(x, data)
+        ori = Orientation.parse(orient)
+        layers: list[Markers] = []
+        color = as_color_array(color, len(x))
+        nbin = 25
+        data_concat = np.concatenate(data)
+        vmin, vmax = data_concat.min(), data_concat.max()
+        dv = (vmax - vmin) / nbin
+        for ith, (x0, values, color) in enumerate(zip(x, data, color)):
+            if sort:
+                values = np.sort(values)
+            else:
+                values = np.asarray(values)
+            v_indices = np.floor((values - vmin) / dv).astype(np.int32)
+            v_indices[v_indices == nbin] = nbin - 1
+            offset_count = np.zeros(nbin, dtype=np.int32)
+            offset_pre = np.zeros_like(values, dtype=np.int32)
+            for i, idx in enumerate(v_indices):
+                c = offset_count[idx]
+                if c % 2 == 0:
+                    offset_pre[i] = c / 2
+                else:
+                    offset_pre[i] = -(c + 1) / 2
+                offset_count[idx] += 1
+            offset_max = np.abs(offset_pre).max()
+            width_default = dv / (len(data) + 1) * 2
+            offsets = offset_pre / offset_max * min(strip_width, width_default)
+            if ori.is_vertical:
+                _x = np.full_like(values, x0) + offsets
+                _y = values
+            else:
+                _x = values
+                _y = np.full_like(values, x0) + offsets
+            if not sort:
+                ...
+            markers = Markers(
+                _x,
+                _y,
+                name=f"markers_{ith}",
+                symbol=symbol,
+                size=size,
+                color=color,
+                alpha=alpha,
+                pattern=pattern,
+                backend=backend,
+            )
+            layers.append(markers)
+        return cls(layers, name=name, strip_width=strip_width, orient=ori)
+
     @property
     def orient(self) -> Orientation:
         """Orientation of the strip plot."""
@@ -79,7 +158,7 @@ class StripPlot(ListLayerGroup):
         width: float = 1.0,
         style: str | LineStyle = LineStyle.SOLID,
         alpha: float = 1.0,
-    ) -> StripPlot:
+    ) -> MarkerCollection:
         """Add edges to the strip plot."""
         for markers in self.iter_children():
             markers.with_edge(color=color, alpha=alpha, width=width, style=style)

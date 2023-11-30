@@ -35,13 +35,13 @@ class Image(PrimitiveLayer[ImageProtocol]):
         cmap: ColormapType = "gray",
         clim: tuple[float | None, float | None] | None = None,
         backend: Backend | str | None = None,
-    ) -> None:
+    ):
         img = _normalize_image(image)
         self._backend = self._create_backend(Backend(backend), img)
         self.name = name if name is not None else "Image"
-        self.update(cmap=cmap, clim=clim)
-        self._x_hint = -1.0, float(img.shape[0])
-        self._y_hint = -1.0, float(img.shape[1])
+        if img.ndim == 2:
+            self.update(cmap=cmap, clim=clim)
+        self._x_hint, self._y_hint = _hint_for((img.shape[1], img.shape[0]))
 
     @property
     def data(self) -> NDArray[np.number]:
@@ -86,6 +86,10 @@ class Image(PrimitiveLayer[ImageProtocol]):
     @shift.setter
     def shift(self, shift: tuple[float, float]):
         self._backend._plt_set_translation(shift)
+        img = self.data
+        self._x_hint, self._y_hint = _hint_for(
+            (img.shape[1], img.shape[0]), shift=shift, scale=self.scale
+        )
 
     @property
     def scale(self) -> tuple[float, float]:
@@ -100,6 +104,10 @@ class Image(PrimitiveLayer[ImageProtocol]):
         if dx <= 0 or dy <= 0:
             raise ValueError("Scale must be positive.")
         self._backend._plt_set_scale(scale)
+        img = self.data
+        self._x_hint, self._y_hint = _hint_for(
+            (img.shape[1], img.shape[0]), shift=self.shift, scale=scale
+        )
 
     def update(
         self,
@@ -111,6 +119,14 @@ class Image(PrimitiveLayer[ImageProtocol]):
             self.cmap = cmap
         if clim is not _void:
             self.clim = clim
+        return self
+
+    def fit_to(self, bbox: tuple[float, float, float, float]) -> Image:
+        """Fit the image to the given bounding box."""
+        x0, y0, x1, y1 = bbox
+        dx, dy = x1 - x0, y1 - y0
+        self.shift = (x0 + 0.5, y0 + 0.5)
+        self.scale = (dx / self.data.shape[0], dy / self.data.shape[1])
         return self
 
 
@@ -131,3 +147,13 @@ def _normalize_image(image):
     else:
         raise ValueError(f"Only 2D or 3D arrays are allowed, got {img.ndim}")
     return img
+
+
+def _hint_for(
+    shape: tuple[int, int],
+    shift: tuple[float, float] = (0, 0),
+    scale: tuple[float, float] = (1, 1),
+) -> tuple[float, float]:
+    xhint = np.array([0.0, shape[0] - 1]) * scale[0] + shift[0]
+    yhint = np.array([0.0, shape[1] - 1]) * scale[1] + shift[1]
+    return tuple(xhint - 0.5), tuple(yhint - 0.5)

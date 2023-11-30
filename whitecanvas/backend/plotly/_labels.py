@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 from whitecanvas.utils.normalize import rgba_str_color
 from whitecanvas.types import LineStyle
-from ._base import to_plotly_linestyle
 
 if TYPE_CHECKING:
     from .canvas import Canvas
@@ -63,6 +62,10 @@ class _SupportsTitle:
 
 
 class Title(_SupportsTitle):
+    def __init__(self, canvas: Canvas):
+        super().__init__(canvas)
+        canvas._fig.layout.title = dict(text="", x=0.5, xanchor="center")
+
     def _get_title(self):
         return self._canvas()._fig.layout.title
 

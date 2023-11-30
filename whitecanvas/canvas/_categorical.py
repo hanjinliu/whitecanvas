@@ -207,15 +207,41 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         alpha: float = 1.0,
         symbol: str | Symbol = Symbol.CIRCLE,
         size: float = 10,
+        seed: int | None = 0,
         pattern: str | FacePattern = FacePattern.SOLID,
-    ):
+    ) -> _lg.MarkerCollection:
         canvas = self._canvas()
-        name = canvas._coerce_name(_lg.StripPlot, name)
+        name = canvas._coerce_name("stripplot", name)
         color = self._generate_colors(color)
         data = self._generate_y(y)
-        group = _lg.StripPlot.from_arrays(
+        group = _lg.MarkerCollection.build_strip(
             self._generate_x(), data, name=name, orient=self._orient,
-            strip_width=strip_width, seed=None, symbol=symbol, size=size,
+            strip_width=strip_width, seed=seed, symbol=symbol, size=size,
+            color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
+        )  # fmt: skip
+        self._relabel_axis(y)
+        return canvas.add_layer(group)
+
+    def to_swarmplot(
+        self,
+        y: str | None = None,
+        *,
+        name: str | None = None,
+        strip_width: float = 0.3,
+        color: ColorType | Sequence[ColorType] | None = None,
+        alpha: float = 1.0,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: float = 10,
+        sort: bool = False,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> _lg.MarkerCollection:
+        canvas = self._canvas()
+        name = canvas._coerce_name("swarmplot", name)
+        color = self._generate_colors(color)
+        data = self._generate_y(y)
+        group = _lg.MarkerCollection.build_swarm(
+            self._generate_x(), data, name=name, orient=self._orient,
+            strip_width=strip_width, symbol=symbol, size=size, sort=sort,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
         )  # fmt: skip
         self._relabel_axis(y)

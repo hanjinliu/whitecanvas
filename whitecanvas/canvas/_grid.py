@@ -23,7 +23,7 @@ class CanvasGrid:
     ) -> None:
         self._heights = heights
         self._widths = widths
-        self._backend_installer = Backend(backend)
+        self._backend = Backend(backend)
         self._backend_object = self._create_backend()
         self._canvas_array = np.empty((len(heights), len(widths)), dtype=object)
         self._canvas_array.fill(None)
@@ -60,7 +60,7 @@ class CanvasGrid:
             The backend to use for the grid.
         """
         return CanvasGrid(
-            [1] * nrows, [1] * ncols, link_x=link_x, link_y=link_y,
+            [10] * nrows, [10] * ncols, link_x=link_x, link_y=link_y,
             backend=backend,
         )  # fmt: skip
 
@@ -116,8 +116,8 @@ class CanvasGrid:
         return canvas
 
     def _create_backend(self) -> protocols.CanvasGridProtocol:
-        return self._backend_installer.get("CanvasGrid")(
-            self._heights, self._widths, self._backend_installer._app
+        return self._backend.get("CanvasGrid")(
+            self._heights, self._widths, self._backend._app
         )
 
     def _align_xlims(self, lim: tuple[float, float]):
@@ -147,7 +147,7 @@ class CanvasGrid:
         )
         canvas = self._canvas_array[row, col] = Canvas.from_backend(
             backend_canvas,
-            backend=self._backend_installer,
+            backend=self._backend,
             palette=palette,
         )
         # Now backend axes/viewbox are created, we can install mouse events
@@ -176,13 +176,18 @@ class CanvasGrid:
 
     def show(self) -> None:
         """Show the grid."""
-        app = self._backend_installer._app
+        app = self._backend._app
         # TODO: implement other event loops
         if app == "qt":
             from whitecanvas.backend._app import QtApplication
 
             qapp = QtApplication().get_app()
-        self._backend_object._plt_show()
+        out = self._backend_object._plt_show()
+
+        if out is NotImplemented:
+            from whitecanvas.backend._window import view
+
+            view(self, self._backend.app)
 
     @property
     def background_color(self) -> NDArray[np.floating]:
@@ -225,11 +230,6 @@ class CanvasGrid:
                 file_obj.seek(0)
                 return file_obj.read()
         return None
-
-    def view(self, app: str = "qt"):
-        from whitecanvas.backend._window import view
-
-        return view(self, app=app)
 
 
 class CanvasVGrid(CanvasGrid):
@@ -308,10 +308,10 @@ class SingleCanvas(CanvasBase):
 
     def _get_backend(self) -> Backend:
         """Return the backend."""
-        return self._main_canvas._backend_installer
+        return self._main_canvas._backend
 
     def _canvas(self):
-        return self._main_canvas._backend
+        return self._main_canvas._backend_object
 
     @property
     def native(self) -> Any:
@@ -333,6 +333,7 @@ class SingleCanvas(CanvasBase):
 
     @property
     def size(self) -> tuple[float, float]:
+        """Size of the canvas"""
         return self._grid.size
 
     @size.setter
@@ -343,9 +344,15 @@ class SingleCanvas(CanvasBase):
         """Return a screenshot of the grid."""
         return self._grid.screenshot()
 
-    def view(self, app: str = "qt"):
-        return self._grid.view(app)
-
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         return self._grid._repr_png_()
+
+    def add_side_area(self):
+        side = self._grid._backend_object._plt_add_canvas(0, 1, 1, 1)
+
+        canvas = Canvas.from_backend(side, backend=self._grid._backend)
+        # Now backend axes/viewbox are created, we can install mouse events
+        canvas._install_mouse_events()
+
+        return canvas

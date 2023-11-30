@@ -282,6 +282,7 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         self,
         orient: str | Orientation = Orientation.VERTICAL,
         *,
+        bottom: NDArray[np.floating] | float | None = None,
         color: ColorType | _Void = _void,
         alpha: float = 1.0,
         width: float | _Void = _void,
@@ -295,6 +296,8 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         ----------
         orient : str or Orientation, default is vertical
             Orientation to grow stems.
+        bottom : float or array-like, optional
+            Bottom of the stems. If not specified, the bottom is set to 0.
         color : color-like, optional
             Color of the lines.
         alpha : float, optional
@@ -316,11 +319,22 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
 
         ori = Orientation.parse(orient)
         xdata, ydata = self.data
+        if bottom is None:
+            bottom = np.zeros_like(ydata)
+        elif isinstance(bottom, (float, int, np.number)):
+            bottom = np.full_like(ydata, bottom)
+        else:
+            bottom = as_array_1d(bottom)
+            if bottom.shape != ydata.shape:
+                raise ValueError(
+                    "Expected bottom to have the same size as ydata, "
+                    f"got {bottom.shape} and {ydata.shape}"
+                )
         if ori.is_vertical:
-            root = np.stack([xdata, np.zeros_like(ydata)], axis=1)
+            root = np.stack([xdata, bottom], axis=1)
             leaf = np.stack([xdata, ydata], axis=1)
         else:
-            root = np.stack([np.zeros_like(xdata), ydata], axis=1)
+            root = np.stack([bottom, ydata], axis=1)
             leaf = np.stack([xdata, ydata], axis=1)
         segs = np.stack([root, leaf], axis=1)
         if color is _void:

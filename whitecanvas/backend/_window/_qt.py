@@ -18,6 +18,10 @@ class QtCanvas(QtW.QWidget):
         origin = QtCore.QPoint(rect.left(), rect.top())
         painter.drawImage(origin, self._canvas_qimage)
 
+    def sizeHint(self) -> QtCore.QSize:
+        w, h = self._canvas.size
+        return int(w), int(h)
+
     def _update_qimage(self):
         buf = self._canvas.screenshot()
         qimage = QtGui.QImage(

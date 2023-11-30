@@ -24,9 +24,11 @@ class Image(BboxImage, MplLayer):
         # self.set_extent(self.get_extent())  # this is needed!
         self._cmap = Colormap("gray")
         self._image_transform = Affine2D()
+        self._ax_transform = Affine2D()
 
     def _make_bbox(self):
-        return Bbox.from_bounds(-0.5, -0.5, *self._image_shape_2d)
+        h, w = self._image_shape_2d
+        return Bbox.from_bounds(-0.5, -0.5, w, h)
 
     def _transform_bbox(self, ax):
         self._ax_transform = ax.transData

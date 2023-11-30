@@ -189,6 +189,7 @@ class CanvasGrid:
             children.append(row)
         self._grid_plot: bk_layouts.GridPlot = bk_layouts.gridplot(children)
         self._shape = (nr, nc)
+        self._app = app
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         r1 = row + rowspan
@@ -196,12 +197,8 @@ class CanvasGrid:
         return Canvas(self._grid_plot.children[row][col])
 
     def _plt_show(self):
-        if is_notebook():
-
-            def bkapp(doc):
-                doc.add_root(self._grid_plot)
-
-            bk_plotting.show(bkapp)
+        if is_notebook() or self._app == "notebook":
+            bk_plotting.show(lambda doc: doc.add_root(self._grid_plot))
         else:
             bk_plotting.show(self._grid_plot)
             if self._grid_plot.document is None:

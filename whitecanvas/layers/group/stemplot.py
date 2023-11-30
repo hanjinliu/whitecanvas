@@ -4,15 +4,17 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.types import Orientation
-from whitecanvas.layers.primitive import Markers, Line
+from whitecanvas.layers.primitive import Markers, MultiLine
 from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.utils.normalize import normalize_xy
+from whitecanvas.backend import Backend
 
 
 class StemPlot(ListLayerGroup):
     def __init__(
         self,
         markers: Markers,
-        lines: Line,
+        lines: MultiLine,
         *,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
@@ -29,7 +31,7 @@ class StemPlot(ListLayerGroup):
         return self._children[0]
 
     @property
-    def lines(self) -> Line:
+    def lines(self) -> MultiLine:
         return self._children[1]
 
     @property
@@ -47,3 +49,18 @@ class StemPlot(ListLayerGroup):
             xmin = min(xmin, 0)
             xmax = max(xmax, 0)
         return xmin, xmax, ymin, ymax
+
+    @classmethod
+    def from_arrays(
+        cls,
+        xdata,
+        top,
+        bottom=None,
+        name: str | None = None,
+        orient: Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> StemPlot:
+        xdata, top = normalize_xy(xdata, top)
+        return Markers(xdata, top, name=name, backend=backend).with_stem(
+            orient, bottom=bottom
+        )

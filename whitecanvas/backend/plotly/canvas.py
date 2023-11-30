@@ -145,12 +145,15 @@ class CanvasGrid:
             )
         )
         self._figs.update_layout(margin=dict(l=6, r=6, t=6, b=6))
+        self._app = app
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         return Canvas(self._figs, row=row, col=col)
 
     def _plt_show(self):
-        if "IPython" in sys.modules:
+        if self._app in ("qt", "wx", "tk"):
+            return NotImplemented
+        if self._app == "notebook" or "IPython" in sys.modules:
             from IPython.display import display
             from IPython import get_ipython
 

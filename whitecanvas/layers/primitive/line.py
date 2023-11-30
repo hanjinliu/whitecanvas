@@ -272,7 +272,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
     @property
     def data(self) -> list[XYData]:
         """Current data of the layer."""
-        return [XYData(d) for d in self._backend._plt_get_data()]
+        return [XYData(d[:, 0], d[:, 1]) for d in self._backend._plt_get_data()]
 
     def set_data(self, data: list[ArrayLike]):
         data, x_hint, y_hint = _norm_data(data)

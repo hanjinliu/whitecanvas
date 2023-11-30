@@ -32,7 +32,10 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
             )
     elif len(args) == 2:
         xdata = as_array_1d(args[0])
-        ydata = as_array_1d(args[1])
+        if not hasattr(args[1], "__array__") and callable(args[1]):
+            ydata = args[1](xdata)
+        else:
+            ydata = as_array_1d(args[1])
         if xdata.size != ydata.size:
             raise ValueError(
                 "Expected xdata and ydata to have the same size, "

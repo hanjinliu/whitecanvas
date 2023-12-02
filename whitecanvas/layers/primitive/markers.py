@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol
-from whitecanvas.layers._base import XYData, PrimitiveLayer
+from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import FaceEdgeMixin, HeteroFaceEdgeMixin
 from whitecanvas.backend import Backend
@@ -16,6 +16,7 @@ from whitecanvas.types import (
     _Void,
     Alignment,
     Orientation,
+    XYData,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 

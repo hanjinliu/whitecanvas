@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Generic, Iterator, TypeVar, NamedTuple, TYPE_CHECKING
+from typing import Generic, Iterator, TypeVar, TYPE_CHECKING
 from psygnal import Signal, SignalGroup
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 from whitecanvas.protocols import BaseProtocol
 from whitecanvas.backend import Backend
 
@@ -182,25 +182,3 @@ class LayerGroup(Layer):
         ymin = np.nan if allnan[2] else np.nanmin(ar[2, :])
         ymax = np.nan if allnan[3] else np.nanmax(ar[3, :])
         return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
-
-
-class XYData(NamedTuple):
-    x: np.ndarray
-    y: np.ndarray
-
-    def stack(self) -> np.ndarray:
-        return np.stack([self.x, self.y], axis=1)
-
-
-class XYYData(NamedTuple):
-    x: np.ndarray
-    y0: np.ndarray
-    y1: np.ndarray
-
-    @property
-    def ycenter(self) -> np.ndarray:
-        return (self.y0 + self.y1) / 2
-
-    @property
-    def ydiff(self) -> np.ndarray:
-        return self.y1 - self.y0

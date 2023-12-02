@@ -10,6 +10,7 @@ from ._enums import (
     Orientation,
 )
 from ._mouse import MouseEvent
+from ._tuples import XYData, XYYData, Rect
 
 __all__ = [
     "ColorType",
@@ -24,4 +25,7 @@ __all__ = [
     "MouseEvent",
     "MouseEventType",
     "Alignment",
+    "XYData",
+    "XYYData",
+    "Rect",
 ]

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from whitecanvas.types import _Void, Symbol, ColorType, FacePattern
+from whitecanvas.types import _Void, Symbol, ColorType, FacePattern, XYData
 from whitecanvas.layers.primitive import Line, Band, Markers
-from whitecanvas.layers._base import XYData
 from whitecanvas.layers.group._collections import ListLayerGroup
 
 _void = _Void()

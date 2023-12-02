@@ -228,7 +228,13 @@ class _AxisNamespace(Namespace):
                 f"low must be less than high, but got {lim!r}. If you "
                 f"want to flip the axis, use `canvas.{a}.flipped = True`."
             )
-        return self._get_object()._plt_set_limits(lim)
+        # Manually emit signal. This is needed when the plot backend is
+        # implemented in JS (such as bokeh) and the python callback is not
+        # enabled. Otherwise axis linking fails.
+        with self.lim_changed.blocked():
+            self._get_object()._plt_set_limits(lim)
+        self.lim_changed.emit(lim)
+        return
 
     @property
     def color(self):

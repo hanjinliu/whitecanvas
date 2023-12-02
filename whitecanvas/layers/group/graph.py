@@ -4,12 +4,11 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.types import _Void, ColorType, Alignment
+from whitecanvas.types import _Void, ColorType, Alignment, XYData
 from whitecanvas.layers.primitive import MultiLine, HeteroMarkers
 from whitecanvas.layers.group.text_group import TextGroup
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset
-from whitecanvas.layers._base import XYData
 
 
 class Graph(ListLayerGroup):

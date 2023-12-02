@@ -3,11 +3,10 @@ from __future__ import annotations
 from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BandProtocol
-from whitecanvas.layers._base import XYYData
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import FacePattern, ColorType, Orientation
+from whitecanvas.types import FacePattern, ColorType, Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
 
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from whitecanvas.types import ColorType, LineStyle, Alignment
+from whitecanvas.types import ColorType, LineStyle, Alignment, XYData
 from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
-from whitecanvas.layers._base import XYData, PrimitiveLayer
+from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group.text_group import TextGroup
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset

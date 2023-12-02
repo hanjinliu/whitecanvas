@@ -3,11 +3,10 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike
 
-from whitecanvas.layers._base import XYYData
 from whitecanvas.layers.primitive.line import MultiLine
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, ColorType, _Void, Orientation
+from whitecanvas.types import LineStyle, ColorType, _Void, Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
 
 

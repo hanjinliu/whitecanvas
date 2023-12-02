@@ -3,14 +3,21 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Sequence
 import numpy as np
-from numpy.typing import ArrayLike
 
 from whitecanvas.protocols import BarProtocol
-from whitecanvas.layers._base import XYYData, PrimitiveLayer
+from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers._mixin import AggFaceEdgeMixin, HeteroFaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import FacePattern, ColorType, _Void, Alignment, Orientation
+from whitecanvas.types import (
+    FacePattern,
+    ColorType,
+    _Void,
+    Alignment,
+    Orientation,
+    XYYData,
+    ArrayLike1D,
+)
 from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
@@ -50,9 +57,9 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
 
     def __init__(
         self,
-        x: ArrayLike,
-        top: ArrayLike,
-        bottom: ArrayLike | None = None,
+        x: ArrayLike1D,
+        top: ArrayLike1D,
+        bottom: ArrayLike1D | None = None,
         *,
         orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8,
@@ -74,9 +81,9 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
     @classmethod
     def from_histogram(
         cls,
-        data: ArrayLike,
+        data: ArrayLike1D,
         *,
-        bins: int | ArrayLike = 10,
+        bins: int | ArrayLike1D = 10,
         density: bool = False,
         range: tuple[float, float] | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -109,9 +116,9 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
 
     def set_data(
         self,
-        x: ArrayLike | None = None,
-        top: ArrayLike | None = None,
-        bottom: ArrayLike | None = None,
+        x: ArrayLike1D | None = None,
+        top: ArrayLike1D | None = None,
+        bottom: ArrayLike1D | None = None,
     ):
         data = self.data
         if x is None:
@@ -154,8 +161,8 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
 
     def with_err(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
@@ -176,8 +183,8 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
 
     def with_xerr(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
@@ -199,8 +206,8 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
 
     def with_yerr(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
@@ -254,8 +261,8 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
     @abstractmethod
     def _create_errorbars(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
@@ -272,9 +279,9 @@ class Bars(AggFaceEdgeMixin[BarProtocol], BarsBase):
 
         def __init__(
             self,
-            x: ArrayLike,
-            top: ArrayLike,
-            bottom: ArrayLike | None = None,
+            x: ArrayLike1D,
+            top: ArrayLike1D,
+            bottom: ArrayLike1D | None = None,
             *,
             orient: str | Orientation = Orientation.VERTICAL,
             bar_width: float = 0.8,
@@ -288,8 +295,8 @@ class Bars(AggFaceEdgeMixin[BarProtocol], BarsBase):
 
     def _create_errorbars(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
@@ -333,9 +340,9 @@ class HeteroBars(HeteroFaceEdgeMixin[BarProtocol], BarsBase):
 
         def __init__(
             self,
-            x: ArrayLike,
-            top: ArrayLike,
-            bottom: ArrayLike | None = None,
+            x: ArrayLike1D,
+            top: ArrayLike1D,
+            bottom: ArrayLike1D | None = None,
             *,
             orient: str | Orientation = Orientation.VERTICAL,
             bar_width: float = 0.8,
@@ -351,8 +358,8 @@ class HeteroBars(HeteroFaceEdgeMixin[BarProtocol], BarsBase):
 
     def _create_errorbars(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,

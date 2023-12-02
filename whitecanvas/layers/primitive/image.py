@@ -154,6 +154,6 @@ def _hint_for(
     shift: tuple[float, float] = (0, 0),
     scale: tuple[float, float] = (1, 1),
 ) -> tuple[float, float]:
-    xhint = np.array([0.0, shape[0] - 1]) * scale[0] + shift[0]
-    yhint = np.array([0.0, shape[1] - 1]) * scale[1] + shift[1]
+    xhint = np.array([-0.5, shape[0] - 0.5]) * scale[0] + shift[0]
+    yhint = np.array([-0.5, shape[1] - 0.5]) * scale[1] + shift[1]
     return tuple(xhint - 0.5), tuple(yhint - 0.5)

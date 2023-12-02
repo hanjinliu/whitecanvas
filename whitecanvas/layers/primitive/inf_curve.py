@@ -6,7 +6,7 @@ import math
 import numpy as np
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, ColorType
+from whitecanvas.types import LineStyle, ColorType, Rect
 from whitecanvas.layers.primitive.line import MonoLine
 
 if TYPE_CHECKING:
@@ -119,6 +119,7 @@ class InfLine(MonoLine):
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias,
         )  # fmt: skip
+        self._last_rect = Rect(0, 0, 0, 0)
 
     @property
     def data(self) -> NoReturn:
@@ -129,26 +130,27 @@ class InfLine(MonoLine):
 
     @property
     def pos(self) -> tuple[float, float]:
+        """One of the points on the line."""
         return self._pos
 
     @pos.setter
     def pos(self, pos: tuple[float, float]):
         self._pos = pos
-        self._recalculate_line(self._get_canvas().lim)  # TODO
+        self._recalculate_line(self._last_rect)
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.lims_changed.connect(self._recalculate_line)
-        self._recalculate_line(canvas.view_rect)
+        canvas.events.lims.connect(self._recalculate_line)
+        self._recalculate_line(canvas.lims)
+        self._last_rect = canvas.lims
         super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
-        canvas.lims_changed.disconnect(self._recalculate_line)
+        canvas.events.lims.disconnect(self._recalculate_line)
         super()._disconnect_canvas(canvas)
 
-    def _recalculate_line(
-        self, lim: tuple[tuple[float, float], tuple[float, float]]
-    ) -> None:
-        (x0, x1), (y0, y1) = lim
+    def _recalculate_line(self, rect: Rect) -> None:
+        x0, x1, y0, y1 = rect
+        self._last_rect = rect
         if self._is_vline:
             x = self._intercept
             xdata = np.array([x, x])

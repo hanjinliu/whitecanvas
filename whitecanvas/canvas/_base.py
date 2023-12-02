@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import Any, Callable, Iterator, overload, TypeVar, TYPE_CHECKING
+from typing import Any, Callable, Iterable, Iterator, overload, TypeVar, TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 from cmap import Color
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from psygnal import Signal
+from psygnal import Signal, SignalGroup
 
 from whitecanvas import protocols
 from whitecanvas import layers as _l
@@ -20,10 +20,12 @@ from whitecanvas.types import (
     FacePattern,
     Orientation,
     ArrayLike1D,
+    Rect,
 )
 from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.canvas._image_info import ImageRef
+from whitecanvas.canvas._imageref import ImageRef
+from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._categorical import CategorizedDataPlotter
 from whitecanvas.canvas._stacked import StackPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
@@ -37,20 +39,25 @@ _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
 
 
+class CanvasSignalGroup(SignalGroup):
+    lims = Signal(Rect)
+
+
 class CanvasBase(ABC):
     """Base class for any canvas object."""
 
-    lims_changed = Signal(tuple)
     title = _ns.TitleNamespace()
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
     layers = _ll.LayerList()
     mouse = _ns.MouseNamespace()
+    events: CanvasSignalGroup
 
     def __init__(self, palette: ColormapType | None = None):
         if palette is None:
             palette = get_theme().palette
         self._color_palette = ColorPalette(palette)
+        self.events = CanvasSignalGroup()
         self._is_grouping = False
         self._autoscale_enabled = True
         if not self._get_backend().name.startswith("."):
@@ -88,11 +95,11 @@ class CanvasBase(ABC):
 
     def _emit_xlim_changed(self, lim):
         self.x.lim_changed.emit(lim)
-        self.lims_changed.emit((lim, self.y.lim))
+        self.events.lims.emit(Rect(*lim, *self.y.lim))
 
     def _emit_ylim_changed(self, lim):
         self.y.lim_changed.emit(lim)
-        self.lims_changed.emit((self.x.lim, lim))
+        self.events.lims.emit(Rect(*self.x.lim, *lim))
 
     @abstractmethod
     def _get_backend(self) -> Backend:
@@ -179,17 +186,19 @@ class CanvasBase(ABC):
         self._canvas()._plt_set_visible(visible)
 
     @property
-    def view_rect(self) -> tuple[tuple[float, float], tuple[float, float]]:
+    def lims(self) -> Rect:
         """Return the x/y limits of the canvas."""
-        return self.x.lim, self.y.lim
+        return Rect(*self.x.lim, *self.y.lim)
 
-    @view_rect.setter
-    def view_rect(self, lims: tuple[tuple[float, float], tuple[float, float]]):
-        xlim, ylim = lims
-        with self.lims_changed.blocked():
-            self.x.lim = xlim
-            self.y.lim = ylim
-        self.lims_changed.emit((self.x.lim, self.y.lim))
+    @lims.setter
+    def lims(self, lims: tuple[float, float, float, float]):
+        xmin, xmax, ymin, ymax = lims
+        if xmin >= xmax or ymin >= ymax:
+            raise ValueError(f"Invalid view rect: {Rect(*lims)}")
+        with self.events.lims.blocked():
+            self.x.lim = xmin, xmax
+            self.y.lim = ymin, ymax
+        self.events.lims.emit(Rect(xmin, xmax, ymin, ymax))
 
     def cat(
         self,
@@ -286,6 +295,9 @@ class CanvasBase(ABC):
 
     def refer_image(self, layer: _l.Image) -> ImageRef[Self]:
         return ImageRef(self, layer)
+
+    def between(self, l0, l1) -> BetweenPlotter[Self]:
+        return BetweenPlotter(self, l0, l1)
 
     @overload
     def add_line(
@@ -701,9 +713,31 @@ class CanvasBase(ABC):
             self.aspect_ratio = 1.0
         return layer
 
-    def add_layer(self, layer: _L) -> _L:
+    def add_layer(
+        self,
+        layer: _L,
+        *,
+        over: _l.Layer | Iterable[_l.Layer] | None = None,
+        under: _l.Layer | Iterable[_l.Layer] | None = None,
+    ) -> _L:
         """Add a layer to the canvas."""
-        self.layers.append(layer)
+        if over is None and under is None:
+            self.layers.append(layer)
+        elif over is not None:
+            if under is not None:
+                raise ValueError("Cannot specify both `over` and `under`")
+            if isinstance(over, _l.Layer):
+                idx = self.layers.index(over)
+            else:
+                idx = max([self.layers.index(l) for l in over])
+            self.layers.append(layer, idx + 1)
+        else:
+            idx = self.layers.index(under)
+            if isinstance(under, _l.Layer):
+                idx = self.layers.index(under)
+            else:
+                idx = min([self.layers.index(l) for l in under])
+            self.layers.append(layer, idx)
         return layer
 
     def _coerce_name(self, layer_type: type[_l.Layer] | str, name: str | None) -> str:
@@ -755,7 +789,7 @@ class CanvasBase(ABC):
             dy = (ymax - ymin) * pad_rel
             ymin -= dy  # TODO: this causes bars/histogram to float
             ymax += dy  #       over the x-axis.
-        self.view_rect = (xmin, xmax), (ymin, ymax)
+        self.lims = xmin, xmax, ymin, ymax
 
     def _cb_inserted(self, idx: int, layer: _l.Layer):
         if self._is_grouping:

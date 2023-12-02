@@ -86,6 +86,39 @@ class CategorizedStruct(Generic[_C, _T]):
     def _get_backend(self):
         return self._canvas()._get_backend()
 
+    def select(self, *names) -> CategorizedStruct[_C, _T]:
+        """Select categories by name."""
+        if len(names) == 0:
+            raise ValueError("At least one category name must be given.")
+        elif len(names) == 1 and isinstance(names[0], list):
+            names = names[0]
+        try:
+            obj = {name: self._obj[name] for name in names}
+        except KeyError:
+            not_found = [n for n in names if n not in self._obj]
+            raise ValueError(f"Categories not found: {not_found!r}.") from None
+        return CategorizedStruct(
+            self._canvas(), obj, self._offsets, self._orient, self._color_palette
+        )
+
+    def sort(
+        self,
+        rule: Callable[[str], float],
+        *,
+        descending: bool = False,
+    ) -> CategorizedStruct[_C, _T]:
+        """Sort categories by name."""
+        names = sorted(self._obj.keys(), reverse=descending, key=rule)
+        return self.select(names)
+
+    def filter(
+        self,
+        rule: Callable[[str], bool],
+    ) -> CategorizedStruct[_C, _T]:
+        """Filter categories by name."""
+        names = [n for n in self._obj.keys() if rule(n)]
+        return self.select(names)
+
     def keys(self) -> Iterator[str]:
         """Iterate over categories."""
         return self._obj.keys()
@@ -146,6 +179,21 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             unsafe=True,
         )
 
+    def select(self, *names) -> CategorizedDataPlotter[_C]:
+        """
+        Select categories by name.
+
+        This method is used for filtering and sorting categories.
+
+        >>> df = {
+        ...     "values": [1, 2, 3, 4, 5, 6],
+        ...     "vars": ["a", "b", "a", "b", "a", "b"],
+        ... }
+        >>> canvas.cat(df, by="vars").select(["b", "a"]).to_stripplot("values")
+        """
+        return super().select(*names)
+
+    # Aggregators
     def mean(self) -> CategorizedAggDataPlotter[_C]:
         agged = {k: _aggregate(v, np.mean) for k, v in self.items()}
         return CategorizedAggDataPlotter(
@@ -197,6 +245,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
+    # Plotting methods
     def to_stripplot(
         self,
         y: str | None = None,
@@ -259,7 +308,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.BoxPlot:
         canvas = self._canvas()
-        name = canvas._coerce_name(_lg.BoxPlot, name)
+        name = canvas._coerce_name("boxplot", name)
         color = self._generate_colors(color)
         data = self._generate_y(y)
         group = _lg.BoxPlot.from_arrays(
@@ -283,9 +332,9 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.ViolinPlot:
         canvas = self._canvas()
-        name = canvas._coerce_name(_lg.ViolinPlot, name)
+        name = canvas._coerce_name("violinplot", name)
         color = self._generate_colors(color)
-        data = [v[y] for v in self._obj.values()]
+        data = self._generate_y(y)
         group = _lg.ViolinPlot.from_arrays(
             self._generate_x(), data, name=name, shape=shape, violin_width=violin_width,
             orient=self._orient, kde_band_width=band_width, color=color, alpha=alpha,
@@ -293,6 +342,139 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         )  # fmt: skip
         self._relabel_axis(y)
         return canvas.add_layer(group)
+
+    def to_countplot(
+        self,
+        *,
+        name: str | None = None,
+        bar_width: float = 0.8,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> _l.Bars:
+        canvas = self._canvas()
+        name = canvas._coerce_name("count", name)
+        color = canvas._generate_colors(color)
+
+        def _len(d: dict[str, Sequence[Any]]) -> int:
+            key = next(iter(d.keys()), None)
+            if key is None:
+                raise ValueError("Empty data.")
+            return len(d[key])
+
+        counts = [_len(v) for v in self._obj.values()]
+        layer = _l.Bars(
+            self._generate_x(),
+            counts,
+            name=name,
+            orient=self._orient,
+            bar_width=bar_width,
+            color=color,
+            alpha=alpha,
+            pattern=pattern,
+            backend=self._get_backend(),
+        )
+        self._relabel_axis("count")
+        return canvas.add_layer(layer)
+
+    def to_scatters(
+        self,
+        y: str | None = None,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: float = 10,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> list[_l.Markers]:
+        canvas = self._canvas()
+        name = canvas._coerce_name("scatter", name)
+        color = self._generate_colors(color)
+        data = self._generate_y(y)
+        layers = []
+        xdata = self._generate_x()
+        for ydata, c, cat in zip(data, color, self.categories):
+            layer = _l.Markers(
+                xdata,
+                ydata,
+                name=f"{name}-{cat}",
+                symbol=symbol,
+                size=size,
+                color=c,
+                alpha=alpha,
+                pattern=pattern,
+                backend=self._get_backend(),
+            )
+            layers.append(canvas.add_layer(layer))
+        for layer in layers:
+            canvas.add_layer(layer)
+        self._relabel_axis(y)
+        return layers
+
+    def to_hist(
+        self,
+        y: str | None = None,
+        *,
+        name: str | None = None,
+        bins: int | Sequence[float] = 10,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> list[_l.Bars]:
+        canvas = self._canvas()
+        name = canvas._coerce_name("histogram", name)
+        color = self._generate_colors(color)
+        data = self._generate_y(y)
+        if hasattr(bins, "__iter__"):
+            bins = np.asarray(bins)
+        else:
+            data_concat = np.concatenate(data)
+            bins = np.linspace(data_concat.min(), data_concat.max(), bins + 1)
+        layers = []
+        for ydata, c, cat in zip(data, color, self.categories):
+            layer = _l.Bars.from_histogram(
+                ydata,
+                bins=bins,
+                name=f"{name}-{cat}",
+                orient=self._orient,
+                color=c,
+                alpha=alpha,
+                pattern=pattern,
+                backend=self._get_backend(),
+            )
+            layers.append(canvas.add_layer(layer))
+        self._relabel_axis(y)
+        return layers
+
+    def to_cdf(
+        self,
+        y: str | None = None,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> list[_l.Line]:
+        canvas = self._canvas()
+        name = canvas._coerce_name("cdf", name)
+        color = self._generate_colors(color)
+        data = self._generate_y(y)
+        layers = []
+        for ydata, c, cat in zip(data, color, self.categories):
+            layer = _l.Line.from_cdf(
+                ydata,
+                name=f"{name}-{cat}",
+                width=width,
+                style=style,
+                color=c,
+                alpha=alpha,
+                backend=self._get_backend(),
+            )
+            layers.append(canvas.add_layer(layer))
+        self._relabel_axis(y)
+        return layers
 
     def __enter__(self) -> CategorizedDataPlotter[_C]:
         return self
@@ -344,6 +526,20 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         if y is None:
             y = self.categories[0]
         return [v[y].compute() for v in self.values()]
+
+    def select(self, *names) -> CategorizedDataPlotter[_C]:
+        """
+        Select categories by name.
+
+        This method is used for filtering and sorting categories.
+
+        >>> df = {
+        ...     "values": [1, 2, 3, 4, 5, 6],
+        ...     "vars": ["a", "b", "a", "b", "a", "b"],
+        ... }
+        >>> canvas.cat(df, by="vars").mean().select(["b", "a"]).to_markers("values")
+        """
+        return super().select(*names)
 
     def to_line(
         self,

@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol
-from whitecanvas.layers._base import XYData, PrimitiveLayer
+from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
@@ -14,10 +14,12 @@ from whitecanvas.types import (
     LineStyle,
     Symbol,
     ColorType,
+    ArrayLike1D,
     _Void,
     Alignment,
     FacePattern,
     Orientation,
+    XYData,
 )
 from whitecanvas.utils.normalize import arr_color, as_array_1d, normalize_xy
 
@@ -41,8 +43,8 @@ class MonoLine(LineMixin[LineProtocol]):
 class Line(MonoLine):
     def __init__(
         self,
-        xdata: ArrayLike,
-        ydata: ArrayLike,
+        xdata: ArrayLike1D,
+        ydata: ArrayLike1D,
         *,
         name: str | None = None,
         color: ColorType = "blue",
@@ -64,8 +66,8 @@ class Line(MonoLine):
 
     def set_data(
         self,
-        xdata: ArrayLike | None = None,
-        ydata: ArrayLike | None = None,
+        xdata: ArrayLike1D | None = None,
+        ydata: ArrayLike1D | None = None,
     ):
         x0, y0 = self.data
         if xdata is not None:
@@ -102,8 +104,8 @@ class Line(MonoLine):
 
     def with_xerr(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
         style: str | _Void = _void,
@@ -133,8 +135,8 @@ class Line(MonoLine):
 
     def with_yerr(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
         style: str | _Void = _void,
@@ -164,8 +166,8 @@ class Line(MonoLine):
 
     def with_xband(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
@@ -187,8 +189,8 @@ class Line(MonoLine):
 
     def with_yband(
         self,
-        err: ArrayLike,
-        err_high: ArrayLike | None = None,
+        err: ArrayLike1D,
+        err_high: ArrayLike1D | None = None,
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
@@ -248,11 +250,71 @@ class Line(MonoLine):
             name=self.name,
         )
 
+    @classmethod
+    def from_histogram(
+        cls,
+        data: ArrayLike1D,
+        *,
+        bins: int | ArrayLike1D = 10,
+        density: bool = False,
+        range: tuple[float, float] | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        name: str | None = None,
+        color: ColorType = "blue",
+        alpha: float = 1.0,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        backend: Backend | str | None = None,
+    ):
+        """Construct a line from a histogram."""
+        data = as_array_1d(data)
+        counts, edges = np.histogram(data, bins, density=density, range=range)
+        xdata = np.concatenate(list(zip(edges[:-1], edges[1:])))
+        ydata = np.concatenate(list(zip(counts, counts)))
+        if not Orientation.parse(orient).is_vertical:
+            xdata, ydata = ydata, xdata
+        return Line(
+            xdata, ydata, name=name, color=color, alpha=alpha, width=width,
+            style=style, backend=backend,
+        )  # fmt: skip
+
+    @classmethod
+    def from_cdf(
+        cls,
+        data: ArrayLike1D,
+        *,
+        sorted: bool = False,
+        orient: str | Orientation = Orientation.VERTICAL,
+        name: str | None = None,
+        color: ColorType = "blue",
+        alpha: float = 1.0,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        backend: Backend | str | None = None,
+    ):
+        """Construct a line from a cumulative histogram."""
+        xdata = as_array_1d(data)
+        if not sorted:
+            xdata = np.sort(xdata)
+        ydata = np.linspace(0, 1, xdata.size)
+        if not Orientation.parse(orient).is_vertical:
+            xdata, ydata = ydata, xdata
+        return Line(
+            xdata,
+            ydata,
+            name=name,
+            color=color,
+            alpha=alpha,
+            width=width,
+            style=style,
+            backend=backend,
+        )
+
 
 class MultiLine(PrimitiveLayer[MultiLineProtocol]):
     def __init__(
         self,
-        data: list[ArrayLike],
+        data: list[ArrayLike1D],
         *,
         name: str | None = None,
         color: ColorType = "blue",
@@ -274,7 +336,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         """Current data of the layer."""
         return [XYData(d[:, 0], d[:, 1]) for d in self._backend._plt_get_data()]
 
-    def set_data(self, data: list[ArrayLike]):
+    def set_data(self, data: list[ArrayLike1D]):
         data, x_hint, y_hint = _norm_data(data)
         self._backend._plt_set_data(data)
         self._x_hint, self._y_hint = x_hint, y_hint
@@ -359,7 +421,7 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         self._backend._plt_set_antialias(antialias)
 
 
-def _norm_data(data: list[ArrayLike]) -> NDArray[np.number]:
+def _norm_data(data: list[ArrayLike1D]) -> NDArray[np.number]:
     data_normed: list[NDArray[np.number]] = []
     xmins, xmaxs, ymins, ymaxs = [], [], [], []
     for each in data:

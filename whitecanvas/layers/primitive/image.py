@@ -39,8 +39,8 @@ class Image(PrimitiveLayer[ImageProtocol]):
         backend: Backend | str | None = None,
     ):
         img = _normalize_image(image)
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), img)
-        self.name = name if name is not None else "Image"
         if img.ndim == 2:
             cmap = clim = _void
         self.update(cmap=cmap, clim=clim, shift=shift, scale=scale)

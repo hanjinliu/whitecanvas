@@ -48,8 +48,8 @@ class Spans(HeteroFaceEdgeMixin[BarProtocol]):
             xxyy = np.zeros(nspans), np.ones(nspans), _spans[:, 0], _spans[:, 1]
             xhint = None
             yhint = _spans.min(), _spans.max()
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), *xxyy)
-        self.name = name if name is not None else self.__class__.__name__
         self._orient = ori
         self.face.update(color=color, alpha=alpha, pattern=pattern)
         self._x_hint, self._y_hint = xhint, yhint

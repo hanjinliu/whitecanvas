@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, FacePattern
+from whitecanvas.types import Symbol
 from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
 from whitecanvas.backend import _not_implemented
 from ._base import (
@@ -72,6 +72,9 @@ class Markers(PlotlyLayer):
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         self._props["marker"]["line"]["color"] = rgba_str_color(color)
+
+    def _plt_connect_pick_event(self, callback):
+        pass  # TODO
 
 
 @check_protocol(HeteroMarkersProtocol)
@@ -148,3 +151,6 @@ class HeteroMarkers(PlotlyLayer):
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         color = as_color_array(color, self._plt_get_ndata())
         self._props["marker"]["line"]["color"] = [rgba_str_color(c) for c in color]
+
+    def _plt_connect_pick_event(self, callback):
+        pass  # TODO

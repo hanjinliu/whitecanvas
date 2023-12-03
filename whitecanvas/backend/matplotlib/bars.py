@@ -18,7 +18,7 @@ class Bars(BarContainer, MplLayer):
         width = xhigh - xlow
         height = yhigh - ylow
         for x, y, dx, dy in zip(xlow, ylow, width, height):
-            r = Rectangle(xy=(x, y), width=dx, height=dy)
+            r = Rectangle(xy=(x, y), width=dx, height=dy, linestyle="-")
             r.get_path()._interpolation_steps = 100
             patches.append(r)
         super().__init__(patches)

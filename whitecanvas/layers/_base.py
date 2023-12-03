@@ -15,10 +15,19 @@ _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
 
 
-class Layer(ABC):
+class LayerEvents(SignalGroup):
+    name = Signal(str)
     _layer_grouped = Signal(object)  # (group)
-    _name: str
-    _x_hint = _y_hint = None
+
+
+class Layer(ABC):
+    events: LayerEvents
+    _events_class = LayerEvents
+
+    def __init__(self, name: str | None = None):
+        self.events = self.__class__._events_class()
+        self._name = name if name is not None else self.__class__.__name__
+        self._x_hint = self._y_hint = None
 
     @abstractproperty
     def visible(self) -> bool:
@@ -60,11 +69,11 @@ class Layer(ABC):
 
     def _connect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is added to a canvas."""
-        self._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
+        self.events._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
 
     def _disconnect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is removed from a canvas."""
-        self._layer_grouped.disconnect(canvas._cb_layer_grouped)
+        self.events._layer_grouped.disconnect(canvas._cb_layer_grouped)
 
     @abstractmethod
     def bbox_hint(self) -> NDArray[np.float64]:
@@ -125,7 +134,7 @@ class LayerGroup(Layer):
     """
 
     def __init__(self, name: str | None = None):
-        self._name = name if name is not None else "LayerGroup"
+        super().__init__(name)
         self._visible = True
 
     @abstractmethod
@@ -142,7 +151,7 @@ class LayerGroup(Layer):
     def _emit_layer_grouped(self):
         """Emit all the grouped signal."""
         for c in self.iter_children():
-            c._layer_grouped.emit(self)
+            c.events._layer_grouped.emit(self)
 
     @property
     def visible(self) -> bool:

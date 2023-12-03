@@ -45,7 +45,6 @@ class StackPlotter(Generic[_C, _L]):
         canvas = self._canvas()
         layer = self._layer()
         xdata = layer.data.x
-        y0 = np.maximum(layer.data.y0, layer.data.y1)
         color = canvas._generate_colors(color)
 
         # unwrap nested layers in a group
@@ -55,8 +54,8 @@ class StackPlotter(Generic[_C, _L]):
         if isinstance(layer, Bars):
             new_layer = Bars(
                 xdata,
-                ydata + y0,
-                y0,
+                ydata,
+                layer.data.y,
                 orient=layer.orient,
                 color=color,
                 alpha=alpha,
@@ -66,6 +65,7 @@ class StackPlotter(Generic[_C, _L]):
                 backend=layer._backend_name,
             )
         elif isinstance(layer, Band):
+            y0 = np.maximum(layer.data.y0, layer.data.y1)
             new_layer = Band(
                 xdata,
                 y0,
@@ -80,8 +80,8 @@ class StackPlotter(Generic[_C, _L]):
         elif isinstance(layer, StemPlot):
             new_layer = StemPlot.from_arrays(
                 xdata,
-                ydata + y0,
-                bottom=y0,
+                ydata,
+                bottom=layer.data.y,
                 name=name,
                 orient=layer.orient,
                 backend=layer._backend_name,

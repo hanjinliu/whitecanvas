@@ -92,6 +92,9 @@ class Markers(BokehLayer[bk_models.Scatter]):
         if self._visible:
             self._model.size = size
 
+    def _plt_connect_pick_event(self, callback):
+        pass  # TODO
+
 
 @check_protocol(HeteroMarkersProtocol)
 class HeteroMarkers(HeteroLayer[bk_models.Scatter]):
@@ -149,3 +152,6 @@ class HeteroMarkers(HeteroLayer[bk_models.Scatter]):
 
     def _plt_get_ndata(self) -> int:
         return len(self._data.data["x"])
+
+    def _plt_connect_pick_event(self, callback):
+        pass  # TODO

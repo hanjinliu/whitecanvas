@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-from numpy.typing import ArrayLike
-
 from whitecanvas.protocols import BandProtocol
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import FacePattern, ColorType, Orientation, XYYData
+from whitecanvas.types import FacePattern, ColorType, Orientation, XYYData, ArrayLike1D
 from whitecanvas.utils.normalize import as_array_1d
 
 
 class Band(FaceEdgeMixin[BandProtocol]):
     def __init__(
         self,
-        t: ArrayLike,
-        edge_low: ArrayLike,
-        edge_high: ArrayLike,
+        t: ArrayLike1D,
+        edge_low: ArrayLike1D,
+        edge_high: ArrayLike1D,
         orient: str | Orientation = Orientation.VERTICAL,
         *,
         name: str | None = None,
@@ -33,8 +31,8 @@ class Band(FaceEdgeMixin[BandProtocol]):
                 "Expected xdata, ydata0, ydata1 to have the same size, "
                 f"got {x.size}, {y0.size}, {y1.size}"
             )
+        super().__init__(name=name if name is not None else "Band")
         self._backend = self._create_backend(Backend(backend), x, y0, y1, ori)
-        self.name = name if name is not None else "Band"
         self._orient = ori
         self.face.update(color=color, alpha=alpha, pattern=pattern)
         self._x_hint, self._y_hint = xyy_size_hint(x, y0, y1, ori)
@@ -55,9 +53,9 @@ class Band(FaceEdgeMixin[BandProtocol]):
 
     def set_data(
         self,
-        t: ArrayLike | None = None,
-        edge_low: ArrayLike | None = None,
-        edge_high: ArrayLike | None = None,
+        t: ArrayLike1D | None = None,
+        edge_low: ArrayLike1D | None = None,
+        edge_high: ArrayLike1D | None = None,
     ):
         t0, y0, y1 = self.data
         if t is not None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 from vispy.scene import visuals
-from vispy.visuals.transforms import STTransform
+from vispy.visuals.transforms import STTransform, NullTransform
 from cmap import Colormap
 from whitecanvas.protocols import ImageProtocol, check_protocol
 
@@ -48,6 +48,8 @@ class Image(visuals.Image):
             return (0.0, 0.0)
         elif isinstance(tr, STTransform):
             return tuple(tr.translate)
+        elif isinstance(tr, NullTransform):
+            return (0.0, 0.0)
         else:
             raise TypeError(f"Unexpected transform type: {type(tr)}")
 
@@ -64,6 +66,8 @@ class Image(visuals.Image):
             return (1.0, 1.0)
         elif isinstance(tr, STTransform):
             return tuple(tr.scale)
+        elif isinstance(tr, NullTransform):
+            return (1.0, 1.0)
         else:
             raise TypeError(f"Unexpected transform type: {type(tr)}")
 

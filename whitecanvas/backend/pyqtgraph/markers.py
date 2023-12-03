@@ -101,6 +101,12 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
         pen.setStyle(to_qt_line_style(style))
         self.setPen(pen)
 
+    def _plt_connect_pick_event(self, callback):
+        def cb(ins, points, ev):
+            callback([p.index() for p in points])
+
+        self.sigClicked.connect(cb)
+
 
 @check_protocol(HeteroMarkersProtocol)
 class HeteroMarkers(pg.ScatterPlotItem, PyQtLayer):
@@ -212,3 +218,9 @@ class HeteroMarkers(pg.ScatterPlotItem, PyQtLayer):
             for pen, s in zip(pens, style):
                 pen.setStyle(to_qt_line_style(s))
         self.setPen(pens)
+
+    def _plt_connect_pick_event(self, callback):
+        def cb(ins, points, ev):
+            callback([p.index() for p in points])
+
+        self.sigClicked.connect(cb)

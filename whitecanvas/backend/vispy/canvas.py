@@ -15,6 +15,7 @@ from ._label import TextLabel, Axis, Ticks
 
 if TYPE_CHECKING:
     from vispy.scene import Grid
+    from vispy.scene.subscene import SubScene
     from vispy.app.canvas import MouseEvent as vispyMouseEvent
 
 
@@ -110,13 +111,13 @@ class Canvas:
 
     def _plt_reorder_layers(self, layers: list[protocols.BaseProtocol]):
         """Reorder layers in the canvas"""
-        vb = self._outer_viewbox
+        vb = self._viewbox
         for idx, layer in enumerate(layers):
             layer.order = idx
         if hasattr(vb, "_scene_ref"):
             scene: SceneCanvas = vb._scene_ref()
             scene._draw_order.clear()
-        scene.update()
+            scene.update()
 
     @property
     def _camera(self) -> Camera:
@@ -216,6 +217,8 @@ _APP_NAMES = {
 
 
 class SceneCanvasExt(SceneCanvas):
+    scene: SubScene
+
     def on_mouse_press(self, event: vispyMouseEvent):
         visual = self.visual_at(event.pos)
         if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):

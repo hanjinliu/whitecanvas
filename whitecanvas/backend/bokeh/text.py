@@ -21,7 +21,7 @@ from ._base import (
 class Text(BokehLayer[bk_models.Text]):
     def __init__(self, x: float, y: float, text: str):
         self._data = bk_models.ColumnDataSource(data=dict(x=[x], y=[y], text=[text]))
-        self._model = bk_models.Text(x="x", y="y", text="text")
+        self._model = bk_models.Text(x="x", y="y", text="text", text_font="Arial")
 
     ##### BaseProtocol #####
     def _plt_get_visible(self) -> bool:
@@ -36,7 +36,7 @@ class Text(BokehLayer[bk_models.Text]):
         return self._model.text[0]
 
     def _plt_set_text(self, text: str):
-        self._model.text = [text]
+        self._model.text = text
 
     def _plt_get_text_color(self):
         return arr_color(self._model.text_color)
@@ -55,8 +55,8 @@ class Text(BokehLayer[bk_models.Text]):
 
     def _plt_set_text_position(self, position: tuple[float, float]):
         x, y = position
-        self._model.x = [x]
-        self._model.y = [y]
+        self._model.x = x
+        self._model.y = y
 
     def _plt_get_text_anchor(self) -> Alignment:
         anc = self._model.anchor

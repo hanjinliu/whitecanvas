@@ -1,4 +1,4 @@
-from typing import Protocol, runtime_checkable
+from typing import Any, Callable, Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 from cmap import Colormap
@@ -60,6 +60,12 @@ class XXYYDataProtocol(BaseProtocol, Protocol):
         self, xdata0: Array1D, xdata1: Array1D, ydata0: Array1D, ydata1: Array1D
     ):
         """Set the x and y array."""
+
+
+@runtime_checkable
+class SupportsPick(Protocol):
+    def _plt_connect_pick_event(self, callback: Callable[[list[int]], Any]):
+        """Connect the item picked event."""
 
 
 @runtime_checkable
@@ -227,7 +233,7 @@ class BarProtocol(XXYYDataProtocol, HasMultiFaces, HasMultiEdges, Protocol):
 
 
 @runtime_checkable
-class MarkersProtocol(XYDataProtocol, HasFaces, HasEdges, Protocol):
+class MarkersProtocol(XYDataProtocol, HasFaces, HasEdges, SupportsPick, Protocol):
     def _plt_get_symbol(self) -> Symbol:
         """Return the symbol."""
 
@@ -242,7 +248,9 @@ class MarkersProtocol(XYDataProtocol, HasFaces, HasEdges, Protocol):
 
 
 @runtime_checkable
-class HeteroMarkersProtocol(XYDataProtocol, HasMultiFaces, HasMultiEdges, Protocol):
+class HeteroMarkersProtocol(
+    XYDataProtocol, HasMultiFaces, SupportsPick, HasMultiEdges, Protocol
+):
     def _plt_get_symbol(self) -> Symbol:
         """Return the symbol."""
 

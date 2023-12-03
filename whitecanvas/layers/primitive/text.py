@@ -40,6 +40,7 @@ class Text(PrimitiveLayer[TextProtocol]):
         fontfamily: str | None = None,
         backend: Backend | str | None = None,
     ):
+        super().__init__()
         self._backend = self._create_backend(Backend(backend), x, y, text)
         self._background_face = TextBackgroundFace(self)
         self._background_edge = TextBackgroundEdge(self)

@@ -29,7 +29,7 @@ class Image(BboxImage, MplLayer):
         h, w = self._image_shape_2d
         return Bbox.from_bounds(-0.5, -0.5, w, h)
 
-    def _transform_bbox(self, ax):
+    def post_add(self, ax):
         self.bbox = ax.transData
 
     def _plt_get_data(self) -> np.ndarray:

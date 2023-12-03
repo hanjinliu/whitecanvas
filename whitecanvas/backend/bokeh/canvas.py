@@ -185,13 +185,13 @@ class CanvasGrid:
             for c in range(nc):
                 row.append(_prep_plot())
             children.append(row)
-        self._grid_plot: bk_layouts.GridPlot = bk_layouts.gridplot(children)
+        self._grid_plot: bk_layouts.GridPlot = bk_layouts.gridplot(
+            children, sizing_mode="fixed"
+        )
         self._shape = (nr, nc)
         self._app = app
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
-        r1 = row + rowspan
-        c1 = col + colspan
         return Canvas(self._grid_plot.children[row][col])
 
     def _plt_show(self):

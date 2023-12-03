@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Sequence
 import numpy as np
+from numpy.typing import NDArray
 
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer
@@ -15,7 +16,7 @@ from whitecanvas.types import (
     _Void,
     Alignment,
     Orientation,
-    XYYData,
+    XYData,
     ArrayLike1D,
 )
 from whitecanvas.utils.normalize import as_array_1d
@@ -28,26 +29,26 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
-def _norm_bar_inputs(t0, top, bot, orient: Orientation, bar_width: float):
+def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):
     t0 = as_array_1d(t0)
-    top = as_array_1d(top)
+    height = as_array_1d(height)
     if bot is None:
         bot = np.zeros_like(t0)
     bot = as_array_1d(bot)
-    if not (t0.size == top.size == bot.size):
+    if not (t0.size == height.size == bot.size):
         raise ValueError(
             "Expected all arrays to have the same size, "
-            f"got {t0.size}, {top.size}, {bot.size}"
+            f"got {t0.size}, {height.size}, {bot.size}"
         )
-    x_hint, y_hint = xyy_size_hint(t0, top, bot, orient, bar_width / 2)
+    x_hint, y_hint = xyy_size_hint(t0, height + bot, bot, orient, bar_width / 2)
 
     if orient.is_vertical:
         dx = bar_width / 2
         x0, x1 = t0 - dx, t0 + dx
-        y0, y1 = top, bot
+        y0, y1 = bot, height + bot
     else:
         dy = bar_width / 2
-        x0, x1 = top, bot
+        x0, x1 = bot, height + bot
         y0, y1 = t0 - dy, t0 + dy
     return (x0, x1, y0, y1), x_hint, y_hint
 
@@ -58,7 +59,7 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
     def __init__(
         self,
         x: ArrayLike1D,
-        top: ArrayLike1D,
+        height: ArrayLike1D,
         bottom: ArrayLike1D | None = None,
         *,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -70,10 +71,10 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         backend: Backend | str | None = None,
     ):
         ori = Orientation.parse(orient)
-        xxyy, xhint, yhint = _norm_bar_inputs(x, top, bottom, ori, bar_width)
+        xxyy, xhint, yhint = _norm_bar_inputs(x, height, bottom, ori, bar_width)
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._bar_width = bar_width
-        self.name = name if name is not None else self.__class__.__name__
         self._orient = ori
         self.face.update(color=color, alpha=alpha, pattern=pattern)
         self._x_hint, self._y_hint = xhint, yhint
@@ -106,32 +107,58 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         )  # fmt: skip
 
     @property
-    def data(self) -> XYYData:
+    def data(self) -> XYData:
         """Current data of the layer."""
         x0, x1, y0, y1 = self._backend._plt_get_data()
         if self._orient.is_vertical:
-            return XYYData((x0 + x1) / 2, y1, y0)
+            return XYData((x0 + x1) / 2, y1 - y0)
         else:
-            return XYYData((y0 + y1) / 2, x1, x0)
+            return XYData((y0 + y1) / 2, x1 - x0)
 
     def set_data(
         self,
-        x: ArrayLike1D | None = None,
-        top: ArrayLike1D | None = None,
+        xdata: ArrayLike1D | None = None,
+        ydata: ArrayLike1D | None = None,
         bottom: ArrayLike1D | None = None,
     ):
-        data = self.data
-        if x is None:
-            x = data.x
-        if top is None:
-            top = data.y1
+        if xdata is None or ydata is None:
+            data = self.data
+            if xdata is None:
+                xdata = data.x
+            if ydata is None:
+                ydata = data.y
         if bottom is None:
-            bottom = data.y0
+            bottom = self.bottom
         xxyy, xhint, yhint = _norm_bar_inputs(
-            x, top, bottom, self._orient, self._bar_width
+            xdata, ydata, bottom, self._orient, self._bar_width
         )
         self._backend._plt_set_data(*xxyy)
         self._x_hint, self._y_hint = xhint, yhint
+
+    @property
+    def bottom(self) -> NDArray[np.floating]:
+        x0, _, y0, _ = self._backend._plt_get_data()
+        if self._orient.is_vertical:
+            return y0
+        else:
+            return x0
+
+    @bottom.setter
+    def bottom(self, bot: ArrayLike1D):
+        self.set_data(bottom=bot)
+
+    @property
+    def top(self) -> NDArray[np.floating]:
+        _, x1, _, y1 = self._backend._plt_get_data()
+        if self._orient.is_vertical:
+            return y1
+        else:
+            return x1
+
+    @top.setter
+    def top(self, top: ArrayLike1D):
+        top = as_array_1d(top)
+        self.set_data(ydata=top - self.bottom)
 
     @property
     def bar_width(self) -> float:
@@ -169,7 +196,7 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         style: str | _Void = _void,
         antialias: bool | _Void = True,
         capsize: float = 0,
-    ) -> _lg.LabeledLine:
+    ) -> _lg.LabeledBars:
         if self.orient is Orientation.VERTICAL:
             return self.with_yerr(
                 err, err_high, color=color, width=width,
@@ -280,7 +307,7 @@ class Bars(AggFaceEdgeMixin[BarProtocol], BarsBase):
         def __init__(
             self,
             x: ArrayLike1D,
-            top: ArrayLike1D,
+            height: ArrayLike1D,
             bottom: ArrayLike1D | None = None,
             *,
             orient: str | Orientation = Orientation.VERTICAL,
@@ -317,12 +344,8 @@ class Bars(AggFaceEdgeMixin[BarProtocol], BarsBase):
             style = self.edge.style
         # if antialias is _void:
         #     antialias = self.antialias
-        if self.orient is Orientation.VERTICAL:
-            x = self.data.x
-            y = self.data.y1
-        else:
-            x = self.data.y1
-            y = self.data.x
+        x, y = self.data
+        y = y + self.bottom
         return Errorbars(
             x, y - err, y + err_high, color=color, width=width,
             style=style, antialias=antialias, capsize=capsize,
@@ -341,7 +364,7 @@ class HeteroBars(HeteroFaceEdgeMixin[BarProtocol], BarsBase):
         def __init__(
             self,
             x: ArrayLike1D,
-            top: ArrayLike1D,
+            height: ArrayLike1D,
             bottom: ArrayLike1D | None = None,
             *,
             orient: str | Orientation = Orientation.VERTICAL,
@@ -380,12 +403,8 @@ class HeteroBars(HeteroFaceEdgeMixin[BarProtocol], BarsBase):
             style = self.edge.style[0]
         # if antialias is _void:
         #     antialias = self.antialias
-        if self.orient is Orientation.VERTICAL:
-            x = self.data.x
-            y = self.data.y1
-        else:
-            x = self.data.y1
-            y = self.data.x
+        x = self.data.x
+        y = self.data.y + self.bottom
         return Errorbars(
             x, y - err, y + err_high, color=color, width=width,
             style=style, antialias=antialias, capsize=capsize,

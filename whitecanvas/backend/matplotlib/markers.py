@@ -29,9 +29,11 @@ class Markers(PathCollection, MplLayer):
             sizes=[6] * len(offsets),
             offsets=offsets,
             offset_transform=plt.gca().transData,
+            picker=True,
         )
         self.set_transform(mtransforms.IdentityTransform())
         self._edge_style = LineStyle.SOLID
+        self._pick_callbacks = []
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -96,6 +98,18 @@ class Markers(PathCollection, MplLayer):
     def _plt_set_edge_width(self, width: float):
         self.set_linewidth(width)
 
+    def _plt_connect_pick_event(self, callback):
+        def cb(event):
+            if event.artist is not self:
+                return
+            callback(event.ind)
+
+        self._pick_callbacks.append(cb)
+
+    def post_add(self, ax):
+        for cb in self._pick_callbacks:
+            self.get_figure().canvas.mpl_connect("pick_event", cb)
+
 
 @check_protocol(HeteroMarkersProtocol)
 class HeteroMarkers(PathCollection, MplLayer):
@@ -110,6 +124,7 @@ class HeteroMarkers(PathCollection, MplLayer):
         )
         self.set_transform(mtransforms.IdentityTransform())
         self._edge_styles = [LineStyle.SOLID] * len(offsets)
+        self._pick_callbacks = []
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -183,3 +198,15 @@ class HeteroMarkers(PathCollection, MplLayer):
         if isinstance(width, (int, float, np.number)):
             width = np.full(len(self.get_offsets()), width)
         self.set_linewidth(width)
+
+    def _plt_connect_pick_event(self, callback):
+        def cb(event):
+            if event.artist is not self:
+                return
+            callback(event.ind)
+
+        self._pick_callbacks.append(cb)
+
+    def post_add(self, ax):
+        for cb in self._pick_callbacks:
+            self.get_figure().canvas.mpl_connect("pick_event", cb)

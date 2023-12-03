@@ -32,7 +32,7 @@ from whitecanvas.canvas._stacked import StackPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
-from ._signal import MouseSignal, GeneratorSignal
+from whitecanvas._signal import MouseSignal, GeneratorSignal
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -42,7 +42,7 @@ _L0 = TypeVar("_L0", _l.Bars, _l.Band)
 _void = _Void()
 
 
-class CanvasSignalGroup(SignalGroup):
+class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
     mouse_clicked = MouseSignal(object)
     mouse_moved = GeneratorSignal()
@@ -56,13 +56,13 @@ class CanvasBase(ABC):
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
     layers = _ll.LayerList()
-    events: CanvasSignalGroup
+    events: CanvasEvents
 
     def __init__(self, palette: ColormapType | None = None):
         if palette is None:
             palette = get_theme().palette
         self._color_palette = ColorPalette(palette)
-        self.events = CanvasSignalGroup()
+        self.events = CanvasEvents()
         self._is_grouping = False
         self._autoscale_enabled = True
         if not self._get_backend().name.startswith("."):
@@ -414,7 +414,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_bars(
-        self, center: ArrayLike, top: ArrayLike, bottom: ArrayLike | None = None,
+        self, center: ArrayLike, height: ArrayLike, bottom: ArrayLike | None = None,
         *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
@@ -423,7 +423,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_bars(
-        self, top: ArrayLike,
+        self, height: ArrayLike,
         *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
@@ -441,15 +441,15 @@ class CanvasBase(ABC):
         alpha=1.0,
         pattern=FacePattern.SOLID,
     ) -> _l.Bars:
-        center, top = normalize_xy(*args)
+        center, height = normalize_xy(*args)
         if bottom is not None:
             bottom = as_array_1d(bottom)
-            if bottom.shape != top.shape:
-                raise ValueError("Expected bottom to have the same shape as top")
+            if bottom.shape != height.shape:
+                raise ValueError("Expected bottom to have the same shape as height")
         name = self._coerce_name(_l.Bars, name)
         color = self._generate_colors(color)
         layer = _l.Bars(
-            center, top, bottom, bar_width=bar_width, name=name, orient=orient,
+            center, height, bottom, bar_width=bar_width, name=name, orient=orient,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -748,14 +748,14 @@ class CanvasBase(ABC):
                 idx = self.layers.index(over)
             else:
                 idx = max([self.layers.index(l) for l in over])
-            self.layers.append(layer, idx + 1)
+            self.layers.insert(idx + 1, layer)
         else:
             idx = self.layers.index(under)
             if isinstance(under, _l.Layer):
                 idx = self.layers.index(under)
             else:
                 idx = min([self.layers.index(l) for l in under])
-            self.layers.append(layer, idx)
+            self.layers.insert(idx, layer)
         return layer
 
     def _coerce_name(self, layer_type: type[_l.Layer] | str, name: str | None) -> str:

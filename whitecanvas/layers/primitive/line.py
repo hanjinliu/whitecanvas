@@ -49,14 +49,17 @@ class Line(MonoLine):
         name: str | None = None,
         color: ColorType = "blue",
         width: float = 1,
+        alpha: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = False,
         backend: Backend | str | None = None,
     ):
         xdata, ydata = normalize_xy(xdata, ydata)
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.name = name if name is not None else "Line"
-        self.update(color=color, width=width, style=style, antialias=antialias)
+        self.update(
+            color=color, width=width, style=style, alpha=alpha, antialias=antialias
+        )
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
 
     @property
@@ -319,8 +322,8 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         backend: Backend | str | None = None,
     ):
         data_normed, self._x_hint, self._y_hint = _norm_data(data)
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), data_normed)
-        self.name = name if name is not None else type(self).__name__
         self.update(
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )

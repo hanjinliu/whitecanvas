@@ -37,8 +37,8 @@ class InfCurve(MonoLine):
         params = params.copy()
         xdata = np.array([_lower, _upper])
         ydata = model(xdata, **params)
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.name = name if name is not None else "InfCurve"
         self.update(
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias
@@ -113,8 +113,8 @@ class InfLine(MonoLine):
             self._tan = math.tan(_radian)
             self._intercept = pos[1] - self._tan * pos[0]
         self._pos = pos
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), np.zeros(1), np.zeros(1))
-        self.name = name if name is not None else "InfCurve"
         self.update(
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias,

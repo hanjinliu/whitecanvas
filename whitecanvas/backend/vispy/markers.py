@@ -111,6 +111,11 @@ class Markers(visuals.Markers):
 
     _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()
 
+    def _plt_connect_pick_event(self, callback):
+        # TODO: implement this
+        # https://github.com/napari/napari/blob/main/napari/layers/points/points.py#L1617
+        pass
+
 
 @check_protocol(HeteroMarkersProtocol)
 class HeteroMarkers(visuals.Markers):
@@ -214,3 +219,6 @@ class HeteroMarkers(visuals.Markers):
         )
 
     _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_styles()
+
+    def _plt_connect_pick_event(self, callback):
+        pass  # TODO

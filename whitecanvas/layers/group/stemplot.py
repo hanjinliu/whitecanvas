@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Orientation
+from whitecanvas.types import Orientation, XYData, ArrayLike1D
 from whitecanvas.layers.primitive import Markers, MultiLine
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.utils.normalize import normalize_xy
@@ -27,11 +27,25 @@ class StemPlot(ListLayerGroup):
         return [1, 0]
 
     @property
+    def data(self) -> XYData:
+        """XYData as (x, height)."""
+        mdata = self.markers.data
+        if self.orient.is_vertical:
+            xdata = mdata.x
+            ydata = np.array([d.y[0] for d in self.lines.data]) + mdata.y
+        else:
+            xdata = np.array([d.x[0] for d in self.lines.data]) + mdata.x
+            ydata = mdata.y
+        return XYData(xdata, ydata)
+
+    @property
     def markers(self) -> Markers:
+        """Markers layer."""
         return self._children[0]
 
     @property
     def lines(self) -> MultiLine:
+        """Lines for the stems."""
         return self._children[1]
 
     @property
@@ -53,14 +67,15 @@ class StemPlot(ListLayerGroup):
     @classmethod
     def from_arrays(
         cls,
-        xdata,
-        top,
-        bottom=None,
+        xdata: ArrayLike1D,
+        ydata: ArrayLike1D,
+        bottom: ArrayLike1D | float = 0,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
     ) -> StemPlot:
-        xdata, top = normalize_xy(xdata, top)
+        xdata, ydata = normalize_xy(xdata, ydata)
+        top = ydata + bottom
         return Markers(xdata, top, name=name, backend=backend).with_stem(
             orient, bottom=bottom
         )

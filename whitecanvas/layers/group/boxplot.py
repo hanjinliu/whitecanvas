@@ -79,8 +79,9 @@ class BoxPlot(ListLayerGroup):
             agg_values.append(np.quantile(d, [0, 0.25, 0.5, 0.75, 1]))
         agg_arr = np.stack(agg_values, axis=1)
         box = HeteroBars(
-            x, agg_arr[3], agg_arr[1], name=name, orient=ori, bar_width=box_width,
-            pattern=pattern, color=color, alpha=alpha, backend=backend,
+            x, agg_arr[3] - agg_arr[1], agg_arr[1], name=name, orient=ori,
+            bar_width=box_width, pattern=pattern, color=color, alpha=alpha,
+            backend=backend,
         ).with_edge(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(

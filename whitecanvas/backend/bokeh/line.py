@@ -103,7 +103,7 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         xs, ys = self._data.data["x"], self._data.data["y"]
         out = []
         for x, y in zip(xs, ys):
-            out.append(np.stack([x, y]), axis=1)
+            out.append(np.stack([x, y], axis=1))
         return out
 
     def _plt_set_data(self, data):

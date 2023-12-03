@@ -16,6 +16,10 @@ class Image(PlotlyLayer):
             "colorscale": "gray",
             "zmin": np.min(data),
             "zmax": np.max(data),
+            "dx": 1,
+            "dy": 1,
+            "x0": 0,
+            "y0": 0,
             "showlegend": False,
         }
         self._cmap = Colormap("gray")

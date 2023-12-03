@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+
 from whitecanvas.types import ColorType, LineStyle, Alignment, XYData
 from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
 from whitecanvas.layers._base import PrimitiveLayer
@@ -26,22 +28,26 @@ class _LabeledLayerBase(ListLayerGroup):
         offset: TextOffset = NoOffset(),
     ):
         if texts is None:
-            data = layer.data
+            px, py = self._get_data_xy(layer)
             texts = TextGroup.from_strings(
-                data.x,
-                data.y,
-                [""] * layer.data.x.size,
+                px,
+                py,
+                [""] * px.size,
                 backend=layer._backend_name,
             )
         super().__init__([layer, xerr, yerr, texts], name=name)
         self._text_offset = offset
 
+    def _get_data_xy(
+        self, layer: PrimitiveLayer | None = None
+    ) -> tuple[np.ndarray, np.ndarray]:
+        if layer is None:
+            layer = self._children[0]
+        return layer.data
+
     def _default_ordering(self, n: int) -> list[int]:
         assert n == 4
         return [2, 0, 1, 3]
-
-    def _set_data_to_first_layer(self, xdata=None, ydata=None):
-        self._children[0].set_data(xdata, ydata)
 
     @property
     def xerr(self) -> Errorbars:
@@ -65,16 +71,16 @@ class _LabeledLayerBase(ListLayerGroup):
 
     def set_data(self, xdata=None, ydata=None):
         """Set the (x, y) data of this layer."""
-        data = self.data
+        px, py = self._get_data_xy()
         if xdata is None:
             dx = 0
         else:
-            dx = xdata - data.x
+            dx = xdata - px
         if ydata is None:
             dy = 0
         else:
-            dy = ydata - data.y
-        self._set_data_to_first_layer(xdata, ydata)
+            dy = ydata - py
+        self._children[0].set_data(xdata, ydata)
         if self.xerr.ndata > 0:
             y, x0, x1 = self.xerr.data
             self.xerr.set_data(y + dy, x0 + dx, x1 + dx)
@@ -83,7 +89,7 @@ class _LabeledLayerBase(ListLayerGroup):
             self.yerr.set_data(x + dx, y0 + dy, y1 + dy)
         if self.texts.ntexts > 0:
             dx, dy = self._text_offset._asarray()
-            self.texts.set_pos(data.x + dx, data.y + dy)
+            self.texts.set_pos(px + dx, py + dy)
 
     @property
     def text_offset(self) -> TextOffset:
@@ -94,9 +100,9 @@ class _LabeledLayerBase(ListLayerGroup):
         """Add offset to text positions."""
         _offset = self._text_offset._add(dx, dy)
         if self.texts.ntexts > 0:
-            data = self.data
+            px, py = self._get_data_xy()
             xoff, yoff = _offset._asarray()
-            self.texts.set_pos(data.x + xoff, data.y + yoff)
+            self.texts.set_pos(px + xoff, py + yoff)
         self._text_offset = _offset
 
     def with_xerr(
@@ -238,14 +244,14 @@ class LabeledBars(_LabeledLayerBase):
         """The bars layer."""
         return self._children[0]
 
-    @property
-    def data(self) -> XYData:
-        x, top, _ = self.bars.data
-        return XYData(x, top)
+    def _get_data_xy(self, layer: Bars | None = None) -> tuple[np.ndarray, np.ndarray]:
+        if layer is None:
+            layer = self.bars
+        return layer.data.x, layer.top
 
-    def _set_data_to_first_layer(self, xdata=None, ydata=None):
-        _, _, bottom = self.bars.data
-        self.bars.set_data(xdata, ydata, bottom)
+    def _default_ordering(self, n: int) -> list[int]:
+        assert n == 4
+        return [0, 1, 2, 3]
 
 
 class LabeledPlot(_LabeledLayerBase):

@@ -88,10 +88,11 @@ class Canvas:
             layer.set_transform(self._axes.transData)
             self._axes._add_text(layer)
         elif isinstance(layer, whitecanvasImage):
-            layer._transform_bbox(self._axes)
             self._axes.add_artist(layer)
         else:
             raise NotImplementedError(f"{layer}")
+        if hasattr(layer, "post_add"):
+            layer.post_add(self._axes)
 
     def _plt_remove_layer(self, layer):
         """Remove layer from the canvas"""

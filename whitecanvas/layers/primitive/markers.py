@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Sequence
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from psygnal import Signal
 
 from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol
-from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import FaceEdgeMixin, HeteroFaceEdgeMixin
 from whitecanvas.backend import Backend
@@ -33,9 +34,15 @@ if TYPE_CHECKING:
 _void = _Void()
 
 
+class MarkersLayerEvents(LayerEvents):
+    picked = Signal(list)
+
+
 class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
     face: FaceNamespace | MultiFaceNamespace
     edge: EdgeNamespace | MultiEdgeNamespace
+    events: MarkersLayerEvents
+    _events_class = MarkersLayerEvents
 
     def __init__(
         self,
@@ -51,16 +58,16 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         backend: Backend | str | None = None,
     ):
         xdata, ydata = normalize_xy(xdata, ydata)
+        super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.name = name if name is not None else "Line"
-        self.update(
-            symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha
-        )  # fmt: skip
+        self.update(symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha)
         self.edge.color = color
         if not self.symbol.has_face():
             self.edge.width = 1.0
         pad_r = size / 400
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
+
+        self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     @classmethod
     def empty(cls, backend: Backend | str | None = None) -> Self:
@@ -128,6 +135,11 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             self.face.alpha = alpha
         return self
 
+    def with_hover_text(self, text: str) -> Self:
+        """Add hover text to the markers."""
+        self._backend._plt_set_hover_text(text)
+        return self
+
     def with_xerr(
         self,
         err: ArrayLike,
@@ -138,6 +150,32 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.LabeledMarkers:
+        """
+        Add horizontal error bars to the markers.
+
+        Parameters
+        ----------
+        err : ArrayLike
+            Error values. If `err_high` is not specified, the error bars are
+            symmetric.
+        err_high : array-like, optional
+            Upper error values.
+        color : color-like, optional
+            Line color of the error bars.
+        width : float
+            Width of the error bars.
+        style : str or LineStyle
+            Line style of the error bars.
+        antialias : bool
+            Antialiasing of the error bars.
+        capsize : float, optional
+            Size of the caps at the end of the error bars.
+
+        Returns
+        -------
+        LabeledMarkers
+            Layer group containing the markers and the error bars as children.
+        """
         from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers.primitive import Errorbars
 
@@ -167,6 +205,32 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         antialias: bool = True,
         capsize: float = 0,
     ) -> _lg.LabeledMarkers:
+        """
+        Add vertical error bars to the markers.
+
+        Parameters
+        ----------
+        err : ArrayLike
+            Error values. If `err_high` is not specified, the error bars are
+            symmetric.
+        err_high : array-like, optional
+            Upper error values.
+        color : color-like, optional
+            Line color of the error bars.
+        width : float
+            Width of the error bars.
+        style : str or LineStyle
+            Line style of the error bars.
+        antialias : bool
+            Antialiasing of the error bars.
+        capsize : float, optional
+            Size of the caps at the end of the error bars.
+
+        Returns
+        -------
+        LabeledMarkers
+            Layer group containing the markers and the error bars as children.
+        """
         from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers.primitive import Errorbars
 
@@ -378,6 +442,13 @@ class Markers(MarkersBase, FaceEdgeMixin[MarkersProtocol]):
     def size(self, size: float):
         """Set marker size"""
         self._backend._plt_set_symbol_size(size)
+
+    def add(self, x: float, y: float):
+        """Add a new data point."""
+        xdata, ydata = self.data
+        xdata = np.append(xdata, x)
+        ydata = np.append(ydata, y)
+        self.set_data(xdata, ydata)
 
 
 class HeteroMarkers(MarkersBase, HeteroFaceEdgeMixin[HeteroMarkersProtocol]):

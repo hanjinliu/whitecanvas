@@ -28,7 +28,6 @@ from whitecanvas.types import (
     Orientation,
 )
 from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.utils.normalize import as_array_1d
 
 from whitecanvas._exceptions import ReferenceDeletedError
 
@@ -379,7 +378,8 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
 
     def to_scatters(
         self,
-        y: str | None = None,
+        x: str,
+        y: str,
         *,
         name: str | None = None,
         color: ColorType | None = None,
@@ -391,22 +391,15 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         canvas = self._canvas()
         name = canvas._coerce_name("scatter", name)
         color = self._generate_colors(color)
-        data = self._generate_y(y)
-        layers = []
-        xdata = self._generate_x()
-        for ydata, c, cat in zip(data, color, self.categories):
+        xdatas = [v[x] for v in self._obj.values()]
+        ydatas = [v[y] for v in self._obj.values()]
+        layers: list[_l.Markers] = []
+        for xdata, ydata, c, cat in zip(xdatas, ydatas, color, self.categories):
             layer = _l.Markers(
-                xdata,
-                ydata,
-                name=f"{name}-{cat}",
-                symbol=symbol,
-                size=size,
-                color=c,
-                alpha=alpha,
-                pattern=pattern,
-                backend=self._get_backend(),
-            )
-            layers.append(canvas.add_layer(layer))
+                xdata, ydata, name=f"{name}-{cat}", symbol=symbol, size=size,
+                color=c, alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            )  # fmt: skip
+            layers.append(layer)
         for layer in layers:
             canvas.add_layer(layer)
         self._relabel_axis(y)
@@ -493,7 +486,8 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
 
     def _generate_y(self, y):
         if y is None:
-            y = self.categories[0]
+            v = next(iter(self._obj.values()))
+            y = next(iter(v.keys()))
         return [v[y] for v in self._obj.values()]
 
     def _get_backend(self):
@@ -647,7 +641,7 @@ def _norm_input(data: Any, by: Any | None):
             array_dict: dict[str, NDArray[np.number]] = {}
             lengths: set[int] = set()
             for k, v in data.items():
-                arr = as_array_1d(v)
+                arr = np.asarray(v)
                 array_dict[k] = arr
                 lengths.add(arr.size)
             if len(lengths) > 1:
@@ -659,7 +653,7 @@ def _norm_input(data: Any, by: Any | None):
                 dict_filt = {k: v[sl] for k, v in array_dict.items()}
                 obj[unique_val] = dict_filt
         else:
-            obj = {k: {"value": as_array_1d(v)} for k, v in data.items()}
+            obj = {k: {"value": np.asarray(v)} for k, v in data.items()}
     elif _is_pandas_dataframe(data):
         if nested:
             obj = {cat: val for cat, val in data.groupby(by)}

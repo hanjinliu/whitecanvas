@@ -191,7 +191,7 @@ class CanvasGrid:
             nr, nc, height_ratios=heights, width_ratios=widths
         )
         if app == "qt":
-            app = "Qt5Agg"
+            app = "QtAgg"
         elif app == "wx":
             app = "WXAgg"
         elif app == "gtk":

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -79,10 +79,6 @@ class CategorizedStruct(ABC, Generic[_C, _T]):
     def _get_backend(self):
         return self._canvas()._get_backend()
 
-    @abstractmethod
-    def _replace_object(self, obj) -> Self:
-        """Create a new struct with new object."""
-
     def _default_y_label(self) -> str:
         try:
             v = next(iter(self._obj.values()))
@@ -91,25 +87,12 @@ class CategorizedStruct(ABC, Generic[_C, _T]):
             y = "value"
         return y
 
-    def select(self, *names) -> CategorizedStruct[_C, _T]:
-        """Select categories by name."""
-        if len(names) == 0:
-            raise ValueError("At least one category name must be given.")
-        elif len(names) == 1 and isinstance(names[0], list):
-            names = names[0]
-        try:
-            obj = {name: self._obj[name] for name in names}
-        except KeyError:
-            not_found = [n for n in names if n not in self._obj]
-            raise ValueError(f"Categories not found: {not_found!r}.") from None
-        return self._replace_object(obj)
-
     def sort(
         self,
         rule: Callable[[str], float],
         *,
         descending: bool = False,
-    ) -> CategorizedStruct[_C, _T]:
+    ) -> Self:
         """Sort categories by name."""
         names = sorted(self._obj.keys(), reverse=descending, key=rule)
         return self.select(names)
@@ -117,7 +100,7 @@ class CategorizedStruct(ABC, Generic[_C, _T]):
     def filter(
         self,
         rule: Callable[[str], bool],
-    ) -> CategorizedStruct[_C, _T]:
+    ) -> Self:
         """Filter categories by name."""
         names = [n for n in self._obj.keys() if rule(n)]
         return self.select(names)
@@ -398,11 +381,25 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         x = np.arange(self.n_categories, dtype=np.float64)
         return x + self._offsets
 
-    def _replace_object(self, obj) -> CategorizedDataPlotter[_C]:
+    def select(self, *names) -> CategorizedDataPlotter[_C]:
+        """Select categories by name."""
+        if len(names) == 0:
+            raise ValueError("At least one category name must be given.")
+        elif len(names) == 1 and isinstance(names[0], list):
+            names = names[0]
+        try:
+            obj = {name: self._obj[name] for name in names}
+        except KeyError:
+            not_found = [n for n in names if n not in self._obj]
+            raise ValueError(f"Categories not found: {not_found!r}.") from None
+        # reorder offsets
+        offsets = np.asarray(
+            [self._offsets[self.categories.index(name)] for name in names]
+        )
         return CategorizedDataPlotter(
             self._canvas(),
             obj,
-            offsets=self._offsets,
+            offsets=offsets,
             orient=self._orient,
             palette=self._color_palette,
             update_label=self._update_label,
@@ -410,9 +407,16 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         )
 
     def _relabel_axis(self, y):
+        canvas = self._canvas()
+        tick_pos = np.arange(len(self.categories))
+        tick_labels = self.categories
+        if self._orient.is_vertical:
+            canvas.x.ticks.set_labels(tick_pos, tick_labels)
+        else:
+            canvas.y.ticks.set_labels(tick_pos, tick_labels)
+
         if not self._update_label:
             return
-        canvas = self._canvas()
         if y is None:
             y = self._default_y_label()
         if self._orient.is_vertical:
@@ -531,17 +535,31 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         )  # fmt: skip
         return canvas.add_layer(layer)
 
-    def _replace_object(self, obj) -> CategorizedAggDataPlotter[_C]:
+    def select(self, *names) -> CategorizedAggDataPlotter[_C]:
+        """Select categories by name."""
+        if len(names) == 0:
+            raise ValueError("At least one category name must be given.")
+        elif len(names) == 1 and isinstance(names[0], list):
+            names = names[0]
+        try:
+            obj = {name: self._obj[name] for name in names}
+        except KeyError:
+            not_found = [n for n in names if n not in self._obj]
+            raise ValueError(f"Categories not found: {not_found!r}.") from None
+        # reorder offsets
+        offsets = np.asarray(
+            [self._offsets[self.categories.index(name)] for name in names]
+        )
         return CategorizedAggDataPlotter(
             self._canvas(),
             obj,
-            self._offsets,
-            self._orient,
-            self._color_palette,
+            offsets=offsets,
+            orient=self._orient,
+            palette=self._color_palette,
         )
 
 
-class ColorCategorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
+class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
     def __init__(
         self,
         canvas: _C,
@@ -702,8 +720,18 @@ class ColorCategorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             y = self._default_y_label()
         return [v[y] for v in self._obj.values()]
 
-    def _replace_object(self, obj) -> ColorCategorizedPlotter[_C]:
-        return ColorCategorizedPlotter(
+    def select(self, *names) -> ColorizedPlotter[_C]:
+        """Select categories by name."""
+        if len(names) == 0:
+            raise ValueError("At least one category name must be given.")
+        elif len(names) == 1 and isinstance(names[0], list):
+            names = names[0]
+        try:
+            obj = {name: self._obj[name] for name in names}
+        except KeyError:
+            not_found = [n for n in names if n not in self._obj]
+            raise ValueError(f"Categories not found: {not_found!r}.") from None
+        return ColorizedPlotter(
             self._canvas(),
             obj,
             orient=self._orient,

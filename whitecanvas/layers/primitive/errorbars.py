@@ -4,7 +4,6 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from whitecanvas.layers.primitive.line import MultiLine
-from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, _Void, Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
@@ -58,7 +57,6 @@ class Errorbars(MultiLine):
             color=color, width=width, style=style, alpha=alpha,
             antialias=antialias, capsize=capsize
         )  # fmt: skip
-        self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)
 
     @classmethod
     def empty(
@@ -97,7 +95,6 @@ class Errorbars(MultiLine):
             data = _yxx_to_segments(t, y0, y1, self.capsize)
         super().set_data(data)
         self._data = XYYData(x0, y0, y1)
-        self._x_hint, self._y_hint = xyy_size_hint(x0, y0, y1, self.orient)
 
     @property
     def ndata(self) -> int:

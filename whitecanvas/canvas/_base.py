@@ -229,7 +229,6 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         offsets: float | ArrayLike1D | None = None,
         palette: ColormapType | None = None,
-        update_axis: bool = True,
         update_labels: bool = True,
     ) -> _cat.CategorizedDataPlotter[Self]:
         """
@@ -255,8 +254,6 @@ class CanvasBase(ABC):
             Offset for each category. If scalar, the same offset is used for all.
         palette : ColormapType, optional
             Color palette used for plotting the categories.
-        update_axis : bool, default is True
-            If True, update the axis labels and ticks to the categories.
         update_labels : bool, default is True
             If True, update the x/y labels to the corresponding names.
 
@@ -270,14 +267,6 @@ class CanvasBase(ABC):
             self, data, by=by, orient=orient, offsets=offsets,
             update_label=update_labels, palette=palette
         )  # fmt: skip
-        if update_axis:
-            tick_pos = np.arange(len(plotter.categories))
-            tick_labels = plotter.categories
-            if orient.is_vertical:
-                self.x.ticks.set_labels(tick_pos, tick_labels)
-            else:
-                self.y.ticks.set_labels(tick_pos, tick_labels)
-
         if update_labels:
             if orient.is_vertical:
                 self.x.label.text = by
@@ -292,10 +281,10 @@ class CanvasBase(ABC):
         *,
         update_labels: bool = True,
         palette: ColormapType | None = None,
-    ) -> _cat.ColorCategorizedPlotter[Self]:
+    ) -> _cat.ColorizedPlotter[Self]:
         if palette is None:
             palette = self._color_palette
-        plotter = _cat.ColorCategorizedPlotter(
+        plotter = _cat.ColorizedPlotter(
             self, data, by, palette=palette, update_label=update_labels
         )
         return plotter

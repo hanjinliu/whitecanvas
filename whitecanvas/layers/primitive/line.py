@@ -321,8 +321,9 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         alpha: float = 1.0,
         backend: Backend | str | None = None,
     ):
-        data_normed, self._x_hint, self._y_hint = _norm_data(data)
+        data_normed, xhint, yhint = _norm_data(data)
         super().__init__(name=name)
+        self._x_hint, self._y_hint = xhint, yhint
         self._backend = self._create_backend(Backend(backend), data_normed)
         self.update(
             color=color, width=width, style=style, alpha=alpha, antialias=antialias

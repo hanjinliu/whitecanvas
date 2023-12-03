@@ -46,14 +46,17 @@ class BoxPlot(ListLayerGroup):
 
     @property
     def boxes(self) -> HeteroBars:
+        """The boxes layer (HeteroBars)."""
         return self._children[0]
 
     @property
     def whiskers(self) -> MultiLine:
+        """The whiskers layer (MultiLine)."""
         return self._children[1]
 
     @property
     def medians(self) -> MultiLine:
+        """The median line layer (MultiLine)."""
         return self._children[2]
 
     @classmethod
@@ -111,7 +114,18 @@ class BoxPlot(ListLayerGroup):
 
     @property
     def orient(self) -> Orientation:
+        """Orientation of the boxplot."""
         return self._orient
+
+    def with_face(
+        self,
+        color: ColorType | list[ColorType],
+        alpha: float | list[float] = 1.0,
+        pattern: str | FacePattern | list[FacePattern] = FacePattern.SOLID,
+    ) -> BoxPlot:
+        """Add face to the strip plot."""
+        self.boxes.with_face(color=color, alpha=alpha, pattern=pattern)
+        return self
 
     def with_edge(
         self,

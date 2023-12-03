@@ -123,7 +123,7 @@ class Axis(_CanvasComponent):
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        return self._plt_get_axis().range
+        return tuple(self._plt_get_axis().range)
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         if self._axis == "bottom":

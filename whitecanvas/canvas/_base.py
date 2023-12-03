@@ -23,11 +23,14 @@ from whitecanvas.types import (
     Rect,
     _Void,
 )
-from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
+from whitecanvas.canvas import (
+    _namespaces as _ns,
+    layerlist as _ll,
+    _categorical as _cat,
+)
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._imageref import ImageRef
 from whitecanvas.canvas._between import BetweenPlotter
-from whitecanvas.canvas._categorical import CategorizedDataPlotter
 from whitecanvas.canvas._stacked import StackPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
@@ -228,7 +231,7 @@ class CanvasBase(ABC):
         palette: ColormapType | None = None,
         update_axis: bool = True,
         update_labels: bool = True,
-    ) -> CategorizedDataPlotter[Self]:
+    ) -> _cat.CategorizedDataPlotter[Self]:
         """
         Categorize input data for plotting.
 
@@ -263,7 +266,7 @@ class CanvasBase(ABC):
             Plotter object.
         """
         orient = Orientation.parse(orient)
-        plotter = CategorizedDataPlotter(
+        plotter = _cat.CategorizedDataPlotter(
             self, data, by=by, orient=orient, offsets=offsets,
             update_label=update_labels, palette=palette
         )  # fmt: skip
@@ -280,6 +283,21 @@ class CanvasBase(ABC):
                 self.x.label.text = by
             else:
                 self.y.label.text = by
+        return plotter
+
+    def colorize(
+        self,
+        data: Any,
+        by: str | None = None,
+        *,
+        update_labels: bool = True,
+        palette: ColormapType | None = None,
+    ) -> _cat.ColorCategorizedPlotter[Self]:
+        if palette is None:
+            palette = self._color_palette
+        plotter = _cat.ColorCategorizedPlotter(
+            self, data, by, palette=palette, update_label=update_labels
+        )
         return plotter
 
     def stack_over(self, layer: _L0) -> StackPlotter[Self, _L0]:
@@ -458,7 +476,7 @@ class CanvasBase(ABC):
         self,
         data: ArrayLike,
         *,
-        bins: int | ArrayLike | None = None,
+        bins: int | ArrayLike = 10,
         range: tuple[float, float] | None = None,
         density: bool = False,
         name: str | None = None,

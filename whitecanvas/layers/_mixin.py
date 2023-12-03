@@ -479,64 +479,51 @@ class LineMixin(PrimitiveLayer[_HasEdges]):
         return self
 
 
-class FaceEdgeMixin(PrimitiveLayer[_P]):
+class _AbstractFaceEdgeMixin(PrimitiveLayer[_P]):
+    def with_face(
+        self,
+        color: ColorType | None = None,
+        pattern: FacePattern | str = FacePattern.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the face properties."""
+        if color is None:
+            color = self.edge.color
+        self.face.color = color
+        self.face.pattern = pattern
+        self.face.alpha = alpha
+        return self
+
+    def with_edge(
+        self,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the edge properties."""
+        if color is None:
+            color = self.face.color
+        self.edge.color = color
+        self.edge.width = width
+        self.edge.style = style
+        self.edge.alpha = alpha
+        return self
+
+
+class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P]):
     face = FaceNamespace()
     edge = EdgeNamespace()
 
-    def with_edge(
-        self,
-        color: ColorType | None = None,
-        width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
-    ) -> Self:
-        if color is None:
-            color = self.face.color
-        self.edge.color = color
-        self.edge.width = width
-        self.edge.style = style
-        self.edge.alpha = alpha
-        return self
 
-
-class AggFaceEdgeMixin(PrimitiveLayer[_P]):
+class AggFaceEdgeMixin(_AbstractFaceEdgeMixin[_P]):
     face = AggFaceNamespace()
     edge = AggEdgeNamespace()
 
-    def with_edge(
-        self,
-        color: ColorType | None = None,
-        width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
-    ) -> Self:
-        if color is None:
-            color = self.face.color
-        self.edge.color = color
-        self.edge.width = width
-        self.edge.style = style
-        self.edge.alpha = alpha
-        return self
 
-
-class HeteroFaceEdgeMixin(PrimitiveLayer[_P]):
+class HeteroFaceEdgeMixin(_AbstractFaceEdgeMixin[_P]):
     face = MultiFaceNamespace()
     edge = MultiEdgeNamespace()
-
-    def with_edge(
-        self,
-        color: ColorType | None = None,
-        width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
-    ) -> Self:
-        if color is None:
-            color = self.face.color
-        self.edge.color = color
-        self.edge.width = width
-        self.edge.style = style
-        self.edge.alpha = alpha
-        return self
 
 
 # just for typing

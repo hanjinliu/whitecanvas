@@ -28,6 +28,7 @@ class Canvas:
     def __init__(self, plot: bk_models.Plot | None = None):
         if plot is None:
             plot = _prep_plot()
+        assert isinstance(plot, bk_models.Plot)
         self._plot = plot
         self._xaxis = XAxis(self)
         self._yaxis = YAxis(self)
@@ -192,7 +193,10 @@ class CanvasGrid:
         self._app = app
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
-        return Canvas(self._grid_plot.children[row][col])
+        for plot, r0, c0 in self._grid_plot.children:
+            if r0 == row and c0 == col:
+                return Canvas(plot)
+        raise ValueError(f"Canvas at ({row}, {col}) not found")
 
     def _plt_show(self):
         if self._app == "notebook":

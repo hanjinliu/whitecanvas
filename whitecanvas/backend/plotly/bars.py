@@ -38,8 +38,9 @@ class Bars(PlotlyLayer):
     def _plt_get_data(self):
         half_width = self._props["width"] / 2
         x = self._props["x"]
-        ylow = self._props["base"]
         yhigh = self._props["y"]
+        # for some reason, the base property is dtype=object
+        ylow = self._props["base"].astype(yhigh.dtype, copy=False)
         xlow = x - half_width / 2
         xhigh = x + half_width / 2
         return xlow, xhigh, ylow, yhigh

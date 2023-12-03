@@ -134,11 +134,11 @@ class CanvasGrid:
         self,
         row: int,
         col: int,
+        rowspan: int = 1,
+        colspan: int = 1,
         palette: str | None = None,
     ) -> Canvas:
         """Add a canvas to the grid at the given position"""
-        rowspan = self._heights[row]
-        colspan = self._widths[col]
         for idx, item in np.ndenumerate(self._canvas_array[row, col]):
             if item is not None:
                 raise ValueError(f"Canvas already exists at {idx}")
@@ -254,9 +254,14 @@ class CanvasVGrid(CanvasGrid):
     @override
     @classmethod
     def uniform(
-        cls, nrows: int = 1, *, backend: Backend | str | None = None
+        cls,
+        nrows: int = 1,
+        *,
+        link_x: bool = False,
+        link_y: bool = False,
+        backend: Backend | str | None = None,
     ) -> CanvasVGrid:
-        return CanvasVGrid([1] * nrows, backend=backend)
+        return CanvasVGrid([1] * nrows, link_x=link_x, link_y=link_y, backend=backend)
 
     @override
     def add_canvas(self, row: int, **kwargs) -> Canvas:
@@ -285,9 +290,14 @@ class CanvasHGrid(CanvasGrid):
     @override
     @classmethod
     def uniform(
-        cls, ncols: int = 1, *, backend: Backend | str | None = None
+        cls,
+        ncols: int = 1,
+        *,
+        link_x: bool = False,
+        link_y: bool = False,
+        backend: Backend | str | None = None,
     ) -> CanvasHGrid:
-        return CanvasHGrid([1] * ncols, backend=backend)
+        return CanvasHGrid([1] * ncols, link_x=link_x, link_y=link_y, backend=backend)
 
     @override
     def add_canvas(self, col: int, **kwargs) -> Canvas:

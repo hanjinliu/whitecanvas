@@ -34,13 +34,16 @@ class Image(PrimitiveLayer[ImageProtocol]):
         name: str | None = None,
         cmap: ColormapType = "gray",
         clim: tuple[float | None, float | None] | None = None,
+        shift: tuple[float, float] = (0, 0),
+        scale: tuple[float, float] = (1.0, 1.0),
         backend: Backend | str | None = None,
     ):
         img = _normalize_image(image)
         self._backend = self._create_backend(Backend(backend), img)
         self.name = name if name is not None else "Image"
         if img.ndim == 2:
-            self.update(cmap=cmap, clim=clim)
+            cmap = clim = _void
+        self.update(cmap=cmap, clim=clim, shift=shift, scale=scale)
         self._x_hint, self._y_hint = _hint_for((img.shape[1], img.shape[0]))
 
     @property
@@ -114,11 +117,21 @@ class Image(PrimitiveLayer[ImageProtocol]):
         *,
         cmap: ColormapType | _void = _void,
         clim: tuple[float | None, float | None] | None | _Void = _void,
+        shift: tuple[float, float] | _void = _void,
+        scale: tuple[float, float] | _void = _void,
     ) -> Image:
         if cmap is not _void:
+            if self.is_rgba:
+                raise ValueError("Cannot set colormap for an RGBA image.")
             self.cmap = cmap
         if clim is not _void:
+            if self.is_rgba:
+                raise ValueError("Cannot set contrast limits for an RGBA image.")
             self.clim = clim
+        if shift is not _void:
+            self.shift = shift
+        if scale is not _void:
+            self.scale = scale
         return self
 
     def fit_to(self, bbox: tuple[float, float, float, float]) -> Image:
@@ -128,6 +141,11 @@ class Image(PrimitiveLayer[ImageProtocol]):
         self.shift = (x0 + 0.5, y0 + 0.5)
         self.scale = (dx / self.data.shape[0], dy / self.data.shape[1])
         return self
+
+    @property
+    def is_rgba(self) -> bool:
+        """Whether the image is RGBA."""
+        return self.data.ndim == 3
 
 
 def _normalize_image(image):

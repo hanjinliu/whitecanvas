@@ -108,19 +108,19 @@ class Canvas:
 
     def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
+        # TODO
+        # def _cb(trace, points, state):
+        #     x, y = points.xs[0], points.ys[0]
+        #     callback(
+        #         MouseEvent(
+        #             points.point_inds[0],
+        #             modifiers=(),
+        #             pos=(x, y),
+        #             type=MouseEventType.CLICK,
+        #         )
+        #     )
 
-        def _cb(trace, points, state):
-            x, y = points.xs[0], points.ys[0]
-            callback(
-                MouseEvent(
-                    points.point_inds[0],
-                    modifiers=(),
-                    pos=(x, y),
-                    type=MouseEventType.CLICK,
-                )
-            )
-
-        self._scatter.on_click(_cb)
+        # self._scatter.on_click(_cb)
 
     def _plt_connect_mouse_drag(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""

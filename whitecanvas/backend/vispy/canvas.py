@@ -78,6 +78,12 @@ class Canvas:
         self._mouse_move_callbacks: list[Callable[[MouseEvent], None]] = []
         self._mouse_double_click_callbacks: list[Callable[[MouseEvent], None]] = []
 
+    def _set_scene_ref(self, scene):
+        self._viewbox.unfreeze()
+        self._viewbox._canvas_ref = weakref.ref(self)
+        self._viewbox._scene_ref = weakref.ref(scene)
+        self._viewbox.freeze()
+
     def _plt_get_native(self):
         return self._viewbox.scene
 
@@ -179,10 +185,7 @@ class CanvasGrid:
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int):
         viewbox: ViewBox = self._grid.add_view(row, col, rowspan, colspan)
         canvas = Canvas(viewbox)
-        viewbox.unfreeze()
-        viewbox._canvas_ref = weakref.ref(canvas)
-        viewbox._scene_ref = weakref.ref(self._scene)
-        viewbox.freeze()
+        canvas._set_scene_ref(self._scene)
         return canvas
 
     def _plt_get_background_color(self):
@@ -225,7 +228,6 @@ class SceneCanvasExt(SceneCanvas):
                 pos=pos,
                 type=MouseEventType.CLICK,
             )
-
             for callback in canvas._mouse_click_callbacks:
                 callback(ev)
 

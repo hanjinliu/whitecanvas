@@ -300,15 +300,9 @@ class Line(MonoLine):
         if not Orientation.parse(orient).is_vertical:
             xdata, ydata = ydata, xdata
         return Line(
-            xdata,
-            ydata,
-            name=name,
-            color=color,
-            alpha=alpha,
-            width=width,
-            style=style,
-            backend=backend,
-        )
+            xdata, ydata, name=name, color=color, alpha=alpha,
+            width=width, style=style, backend=backend,
+        )  # fmt: skip
 
 
 class MultiLine(PrimitiveLayer[MultiLineProtocol]):

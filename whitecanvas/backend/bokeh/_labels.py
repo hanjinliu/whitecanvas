@@ -9,7 +9,7 @@ from ._base import to_bokeh_line_style
 
 if TYPE_CHECKING:
     from .canvas import Canvas
-    from bokeh.models import Axis as BokehAxis, Grid as BokehGrid
+    from bokeh.models import Axis as BokehAxis, Grid as BokehGrid, DataRange1d
 
 
 class _CanvasComponent:
@@ -75,15 +75,6 @@ class Axis(_CanvasComponent):
 
     def _plt_set_visible(self, visible: bool):
         self._plot.xaxis.visible = visible
-
-    def _plt_get_limits(self) -> tuple[float, float]:
-        limits = self._plt_get_axis().bounds
-        if limits == "auto":
-            return 0, 1  # just a dummy value
-        return limits
-
-    def _plt_set_limits(self, limits: tuple[float, float]):
-        self._plt_get_axis().bounds = limits
 
     def _plt_get_color(self):
         return np.array(Color(self._plt_get_axis().axis_label_text_color).rgba)
@@ -192,6 +183,14 @@ class XAxis(X, Axis):
         fig = self._canvas()._plot
         fig.x_range.flipped = not fig.x_range.flipped
 
+    def _plt_get_limits(self) -> tuple[float, float]:
+        limits: DataRange1d = self._canvas()._plot.x_range
+        return limits.start, limits.end
+
+    def _plt_set_limits(self, limits: tuple[float, float]):
+        x_range: DataRange1d = self._canvas()._plot.x_range
+        x_range.start, x_range.end = limits
+
 
 class YAxis(Y, Axis):
     def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
@@ -204,6 +203,14 @@ class YAxis(Y, Axis):
     def _plt_flip(self) -> None:
         fig = self._canvas()._plot
         fig.y_range.flipped = not fig.y_range.flipped
+
+    def _plt_get_limits(self) -> tuple[float, float]:
+        limits: DataRange1d = self._canvas()._plot.y_range
+        return limits.start, limits.end
+
+    def _plt_set_limits(self, limits: tuple[float, float]):
+        x_range: DataRange1d = self._canvas()._plot.y_range
+        x_range.start, x_range.end = limits
 
 
 class XLabel(X, Label):

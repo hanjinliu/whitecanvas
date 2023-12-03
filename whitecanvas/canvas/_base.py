@@ -21,6 +21,7 @@ from whitecanvas.types import (
     Orientation,
     ArrayLike1D,
     Rect,
+    _Void,
 )
 from whitecanvas.canvas import _namespaces as _ns, layerlist as _ll
 from whitecanvas.canvas._palette import ColorPalette
@@ -31,16 +32,21 @@ from whitecanvas.canvas._stacked import StackPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
+from ._signal import MouseSignal, GeneratorSignal
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
 _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
+_void = _Void()
 
 
 class CanvasSignalGroup(SignalGroup):
     lims = Signal(Rect)
+    mouse_clicked = MouseSignal(object)
+    mouse_moved = GeneratorSignal()
+    mouse_double_clicked = MouseSignal(object)
 
 
 class CanvasBase(ABC):
@@ -50,7 +56,6 @@ class CanvasBase(ABC):
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
     layers = _ll.LayerList()
-    mouse = _ns.MouseNamespace()
     events: CanvasSignalGroup
 
     def __init__(self, palette: ColormapType | None = None):
@@ -87,18 +92,18 @@ class CanvasBase(ABC):
 
     def _install_mouse_events(self):
         canvas = self._canvas()
-        canvas._plt_connect_mouse_click(self.mouse.clicked.emit)
-        canvas._plt_connect_mouse_click(self.mouse.moved.emit)
-        canvas._plt_connect_mouse_drag(self.mouse.moved.emit)
-        canvas._plt_connect_mouse_double_click(self.mouse.double_clicked.emit)
-        canvas._plt_connect_mouse_double_click(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_click(self.events.mouse_clicked.emit)
+        canvas._plt_connect_mouse_click(self.events.mouse_moved.emit)
+        canvas._plt_connect_mouse_drag(self.events.mouse_moved.emit)
+        canvas._plt_connect_mouse_double_click(self.events.mouse_double_clicked.emit)
+        canvas._plt_connect_mouse_double_click(self.events.mouse_moved.emit)
 
     def _emit_xlim_changed(self, lim):
-        self.x.lim_changed.emit(lim)
+        self.x.events.lim.emit(lim)
         self.events.lims.emit(Rect(*lim, *self.y.lim))
 
     def _emit_ylim_changed(self, lim):
-        self.y.lim_changed.emit(lim)
+        self.y.events.lim.emit(lim)
         self.events.lims.emit(Rect(*self.x.lim, *lim))
 
     @abstractmethod
@@ -125,20 +130,16 @@ class CanvasBase(ABC):
             ratio = float(ratio)
         self._canvas()._plt_set_aspect_ratio(ratio)
 
-    def bbox_hint(self) -> NDArray[np.float64]:
-        ar = np.stack([layer.bbox_hint() for layer in self.layers], axis=0)
-        xmin = np.min(ar[:, 0])
-        xmax = np.max(ar[:, 1])
-        ymin = np.min(ar[:, 2])
-        ymax = np.max(ar[:, 3])
-        return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
-
     def autoscale(
         self,
         xpad: float | tuple[float, float] | None = None,
         ypad: float | tuple[float, float] | None = None,
     ):
-        xmin, xmax, ymin, ymax = self.bbox_hint()
+        ar = np.stack([layer.bbox_hint() for layer in self.layers], axis=0)
+        xmin = np.min(ar[:, 0])
+        xmax = np.max(ar[:, 1])
+        ymin = np.min(ar[:, 2])
+        ymax = np.max(ar[:, 3])
         x0, x1 = self.x.lim
         y0, y1 = self.y.lim
         if np.isnan(xmin):
@@ -199,6 +200,23 @@ class CanvasBase(ABC):
             self.x.lim = xmin, xmax
             self.y.lim = ymin, ymax
         self.events.lims.emit(Rect(xmin, xmax, ymin, ymax))
+
+    def update_axes(
+        self,
+        visible: bool = _void,
+        color: ColorType | None = _void,
+    ):
+        if visible is not _void:
+            self.x.ticks.visible = visible
+            self.y.ticks.visible = visible
+        if color is not _void:
+            self.x.color = color
+            self.x.ticks.color = color
+            self.x.label.color = color
+            self.y.color = color
+            self.y.ticks.color = color
+            self.y.label.color = color
+        return self
 
     def cat(
         self,

@@ -5,17 +5,20 @@ import weakref
 import numpy as np
 from numpy.typing import NDArray
 
-from psygnal import Signal
+from psygnal import Signal, SignalGroup
 from cmap import Color
 from whitecanvas import protocols
 from whitecanvas.types import ColorType, LineStyle
 from whitecanvas.utils.normalize import arr_color
 from whitecanvas._exceptions import ReferenceDeletedError
-from ._signal import GeneratorSignal
 
 if TYPE_CHECKING:
     from typing_extensions import Self
     from whitecanvas.canvas._base import CanvasBase
+
+
+class AxisSignals(SignalGroup):
+    lim = Signal(tuple)
 
 
 class Namespace:
@@ -205,10 +208,11 @@ class YLabelNamespace(_TextLabelNamespace):
 
 
 class _AxisNamespace(Namespace):
-    lim_changed = Signal(tuple)
+    events: AxisSignals
 
     def __init__(self, canvas: CanvasBase | None = None):
         super().__init__(canvas)
+        self.events = AxisSignals()
         self._flipped = False
 
     def _get_object(self) -> protocols.AxisProtocol:
@@ -231,9 +235,9 @@ class _AxisNamespace(Namespace):
         # Manually emit signal. This is needed when the plot backend is
         # implemented in JS (such as bokeh) and the python callback is not
         # enabled. Otherwise axis linking fails.
-        with self.lim_changed.blocked():
+        with self.events.blocked():
             self._get_object()._plt_set_limits(lim)
-        self.lim_changed.emit(lim)
+        self.events.lim.emit(lim)
         return
 
     @property
@@ -285,12 +289,3 @@ class YAxisNamespace(_AxisNamespace):
 
     def _get_object(self):
         return self._get_canvas()._plt_get_yaxis()
-
-
-class MouseNamespace(Namespace):
-    clicked = Signal(object)
-    double_clicked = Signal(object)
-
-    def __init__(self, canvas: CanvasBase | None = None):
-        super().__init__(canvas)
-        self.moved = GeneratorSignal()

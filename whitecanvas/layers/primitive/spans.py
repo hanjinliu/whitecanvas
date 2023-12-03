@@ -83,11 +83,11 @@ class Spans(HeteroFaceEdgeMixin[BarProtocol]):
         return self._backend._plt_get_data()[0].size
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.y.lim_changed.connect(self._recalculate_spans)
+        canvas.y.events.lim.connect(self._recalculate_spans)
         return super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
-        canvas.x.lim_changed.connect(self._recalculate_spans)
+        canvas.x.events.lim.connect(self._recalculate_spans)
         return super()._disconnect_canvas(canvas)
 
     def _recalculate_spans(self, lim: tuple[float, float]):

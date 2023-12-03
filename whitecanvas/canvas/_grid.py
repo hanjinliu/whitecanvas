@@ -81,10 +81,10 @@ class CanvasGrid:
             return
         if value:
             for _, canvas in self.iter_canvas():
-                canvas.x.lim_changed.connect(self._align_xlims, unique=True)
+                canvas.x.events.lim.connect(self._align_xlims, unique=True)
         else:
             for _, canvas in self.iter_canvas():
-                canvas.x.lim_changed.disconnect(self._align_xlims)
+                canvas.x.events.lim.disconnect(self._align_xlims)
         self._x_linked = value
 
     @property
@@ -99,10 +99,10 @@ class CanvasGrid:
             return
         if value:
             for _, canvas in self.iter_canvas():
-                canvas.y.lim_changed.connect(self._align_ylims, unique=True)
+                canvas.y.events.lim.connect(self._align_ylims, unique=True)
         else:
             for _, canvas in self.iter_canvas():
-                canvas.y.lim_changed.disconnect(self._align_ylims)
+                canvas.y.events.lim.disconnect(self._align_ylims)
         self._y_linked = value
 
     def __repr__(self) -> str:
@@ -122,12 +122,12 @@ class CanvasGrid:
 
     def _align_xlims(self, lim: tuple[float, float]):
         for _, canvas in self.iter_canvas():
-            with canvas.x.lim_changed.blocked():
+            with canvas.x.events.lim.blocked():
                 canvas.x.lim = lim
 
     def _align_ylims(self, lim: tuple[float, float]):
         for _, canvas in self.iter_canvas():
-            with canvas.y.lim_changed.blocked():
+            with canvas.y.events.lim.blocked():
                 canvas.y.lim = lim
 
     def add_canvas(
@@ -155,9 +155,9 @@ class CanvasGrid:
 
         # link axes if needed
         if self.x_linked:
-            canvas.x.lim_changed.connect(self._align_xlims, unique=True)
+            canvas.x.events.lim.connect(self._align_xlims, unique=True)
         if self.y_linked:
-            canvas.y.lim_changed.connect(self._align_ylims, unique=True)
+            canvas.y.events.lim.connect(self._align_ylims, unique=True)
         return canvas
 
     def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
@@ -347,12 +347,3 @@ class SingleCanvas(CanvasBase):
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         return self._grid._repr_png_()
-
-    def add_side_area(self):
-        side = self._grid._backend_object._plt_add_canvas(0, 1, 1, 1)
-
-        canvas = Canvas.from_backend(side, backend=self._grid._backend)
-        # Now backend axes/viewbox are created, we can install mouse events
-        canvas._install_mouse_events()
-
-        return canvas

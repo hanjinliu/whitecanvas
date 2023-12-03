@@ -69,12 +69,12 @@ class InfCurve(MonoLine):
         return self._model
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.x.lim_changed.connect(self._recalculate_line)
+        canvas.x.events.lim.connect(self._recalculate_line)
         self._recalculate_line(canvas.x.lim)
         super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
-        canvas.x.lim_changed.disconnect(self._recalculate_line)
+        canvas.x.events.lim.disconnect(self._recalculate_line)
         super()._disconnect_canvas(canvas)
 
     def _recalculate_line(self, lim: tuple[float, float]) -> None:

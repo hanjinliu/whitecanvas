@@ -14,7 +14,7 @@ from bokeh import (
     layouts as bk_layouts,
     plotting as bk_plotting,
 )
-from bokeh.io.state import curstate
+from bokeh.io import output_notebook
 from ._base import BokehLayer
 
 
@@ -129,7 +129,7 @@ class Canvas:
                 button=self._mouse_button,
                 modifiers=_translate_modifiers(event.modifiers),
                 pos=(event.x, event.y),
-                type=MouseEventType.CLICK,
+                type=MouseEventType.MOVE,
             )
             callback(ev)
 
@@ -143,7 +143,7 @@ class Canvas:
                 button=MouseButton.LEFT,
                 modifiers=_translate_modifiers(event.modifiers),
                 pos=(event.x, event.y),
-                type=MouseEventType.CLICK,
+                type=MouseEventType.DOUBLE_CLICK,
             )
             callback(ev)
 
@@ -152,16 +152,14 @@ class Canvas:
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        self._plot.x_range.on_change(
-            "start", lambda attr, old, new: callback((new, self._plot.x_range.end))
-        )
+        rng = self._plot.x_range
+        rng.on_change("start", lambda attr, old, new: callback((rng.start, rng.end)))
 
     def _plt_connect_ylim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        self._plot.y_range.on_change(
-            "start", lambda attr, old, new: callback((new, self._plot.y_range.end))
-        )
+        rng = self._plot.y_range
+        rng.on_change("start", lambda attr, old, new: callback((rng.start, rng.end)))
 
 
 def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, ...]:
@@ -197,7 +195,8 @@ class CanvasGrid:
         return Canvas(self._grid_plot.children[row][col])
 
     def _plt_show(self):
-        if is_notebook() or self._app == "notebook":
+        if self._app == "notebook":
+            output_notebook()
             bk_plotting.show(lambda doc: doc.add_root(self._grid_plot))
         else:
             bk_plotting.show(self._grid_plot)
@@ -231,14 +230,3 @@ class CanvasGrid:
     def _plt_set_figsize(self, width: int, height: int):
         self._grid_plot.width = width
         self._grid_plot.height = height
-
-
-def is_notebook() -> bool:
-    try:
-        shell = get_ipython().__class__.__name__  # type: ignore
-    except NameError:
-        return False
-    state = curstate()
-    if state.notebook_type is None:
-        return False
-    return shell == 'ZMQInteractiveShell'

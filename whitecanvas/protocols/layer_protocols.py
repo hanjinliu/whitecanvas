@@ -237,22 +237,7 @@ class BarProtocol(XXYYDataProtocol, HasMultiFaces, HasMultiEdges, Protocol):
 
 
 @runtime_checkable
-class MarkersProtocol(XYDataProtocol, HasFaces, HasEdges, SupportsPick, Protocol):
-    def _plt_get_symbol(self) -> Symbol:
-        """Return the symbol."""
-
-    def _plt_set_symbol(self, symbol: Symbol):
-        """Set the symbol."""
-
-    def _plt_get_symbol_size(self) -> float:
-        """Return the symbol size."""
-
-    def _plt_set_symbol_size(self, size: float):
-        """Set the symbol size."""
-
-
-@runtime_checkable
-class HeteroMarkersProtocol(
+class MarkersProtocol(
     XYDataProtocol, HasMultiFaces, SupportsPick, HasMultiEdges, Protocol
 ):
     def _plt_get_symbol(self) -> Symbol:

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod, abstractproperty
 from typing import (
     Any,
     Generic,
     Iterable,
     Iterator,
+    Sequence,
     TypeVar,
     overload,
     SupportsIndex,
@@ -22,14 +24,14 @@ from whitecanvas.utils.normalize import arr_color, as_color_array
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-_HasFaces = TypeVar("_HasFaces", bound=_lp.HasFaces)
+
 _HasEdges = TypeVar("_HasEdges", bound=_lp.HasEdges)
 _P = TypeVar("_P", bound=_lp.BaseProtocol)
 _L = TypeVar("_L", bound=PrimitiveLayer)
 _void = _Void()
 
 
-class LayerNamespace(Generic[_L]):
+class LayerNamespace(ABC, Generic[_L]):
     _properties = ()
 
     def __init__(self, layer: _L | None = None) -> None:
@@ -57,9 +59,51 @@ class LayerNamespace(Generic[_L]):
         raise AttributeError(f"Cannot set attribute {name!r} on {self!r}")
 
 
-class FaceNamespace(LayerNamespace[_L]):
+class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
     _properties = ("color", "pattern")
 
+    @abstractproperty
+    def color(self):
+        raise NotImplementedError
+
+    @abstractproperty
+    def pattern(self):
+        raise NotImplementedError
+
+    @abstractproperty
+    def alpha(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, color, pattern, alpha):
+        ...
+
+
+class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
+    _properties = ("color", "style", "width")
+
+    @abstractproperty
+    def color(self):
+        raise NotImplementedError
+
+    @abstractproperty
+    def width(self):
+        raise NotImplementedError
+
+    @abstractproperty
+    def style(self):
+        raise NotImplementedError
+
+    @abstractproperty
+    def alpha(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, color, width, style, alpha):
+        ...
+
+
+class MonoFace(FaceNamespace):
     @property
     def color(self) -> NDArray[np.floating]:
         return self._layer._backend._plt_get_face_color()
@@ -114,9 +158,7 @@ class FaceNamespace(LayerNamespace[_L]):
         return self._layer
 
 
-class AggFaceNamespace(LayerNamespace[_L]):
-    _properties = ("color", "pattern")
-
+class ConstFace(FaceNamespace):
     @property
     def color(self) -> NDArray[np.floating]:
         return self._layer._backend._plt_get_face_color()[0]
@@ -171,9 +213,7 @@ class AggFaceNamespace(LayerNamespace[_L]):
         return self._layer
 
 
-class EdgeNamespace(LayerNamespace[_L]):
-    _properties = ("color", "style", "width")
-
+class MonoEdge(EdgeNamespace):
     @property
     def color(self) -> NDArray[np.floating]:
         return self._layer._backend._plt_get_edge_color()
@@ -229,7 +269,7 @@ class EdgeNamespace(LayerNamespace[_L]):
         return self._layer
 
 
-class AggEdgeNamespace(LayerNamespace[_L]):
+class ConstEdge(EdgeNamespace):
     _properties = ("color", "style", "width")
 
     @property
@@ -287,9 +327,7 @@ class AggEdgeNamespace(LayerNamespace[_L]):
         return self._layer
 
 
-class MultiFaceNamespace(LayerNamespace[_L]):
-    _properties = ("color", "pattern")
-
+class MultiFace(FaceNamespace):
     @property
     def color(self) -> NDArray[np.floating]:
         """Face color of the bar."""
@@ -352,9 +390,7 @@ class MultiFaceNamespace(LayerNamespace[_L]):
         return self._layer
 
 
-class MultiEdgeNamespace(LayerNamespace[_L]):
-    _properties = ("color", "style", "width")
-
+class MultiEdge(EdgeNamespace):
     @property
     def color(self) -> NDArray[np.floating]:
         """Edge color of the bar."""
@@ -479,7 +515,24 @@ class LineMixin(PrimitiveLayer[_HasEdges]):
         return self
 
 
-class _AbstractFaceEdgeMixin(PrimitiveLayer[_P]):
+_NFace = TypeVar("_NFace", bound=FaceNamespace)
+_NEdge = TypeVar("_NEdge", bound=EdgeNamespace)
+
+
+class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
+    face: _NFace
+    edge: _NEdge
+    _face_namespace: _NFace
+    _edge_namespace: _NEdge
+
+    @property
+    def face(self) -> _NFace:
+        return self._face_namespace
+
+    @property
+    def edge(self) -> _NEdge:
+        return self._edge_namespace
+
     def with_face(
         self,
         color: ColorType | None = None,
@@ -488,7 +541,9 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P]):
     ) -> Self:
         """Update the face properties."""
         if color is None:
-            color = self.edge.color
+            color = self.face.color
+        if not isinstance(self._face_namespace, ConstFace):
+            self._face_namespace = ConstFace(self)  # type: ignore
         self.face.color = color
         self.face.pattern = pattern
         self.face.alpha = alpha
@@ -504,6 +559,8 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P]):
         """Update the edge properties."""
         if color is None:
             color = self.face.color
+        if not isinstance(self._edge_namespace, ConstEdge):
+            self._edge_namespace = ConstEdge(self)  # type: ignore
         self.edge.color = color
         self.edge.width = width
         self.edge.style = style
@@ -511,19 +568,53 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P]):
         return self
 
 
-class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P]):
-    face = FaceNamespace()
-    edge = EdgeNamespace()
+class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P]):
+    def __init__(self, name: str | None = None):
+        super().__init__(name=name)
+        self._face_namespace = MonoFace(self)
+        self._edge_namespace = MonoEdge(self)
 
 
-class AggFaceEdgeMixin(_AbstractFaceEdgeMixin[_P]):
-    face = AggFaceNamespace()
-    edge = AggEdgeNamespace()
+class MultiFaceEdgeMixin(
+    _AbstractFaceEdgeMixin[_P, _NFace, _NEdge], Generic[_P, _NFace, _NEdge]
+):
+    def __init__(self, name: str | None = None):
+        super().__init__(name=name)
+        self._face_namespace = ConstFace(self)
+        self._edge_namespace = ConstEdge(self)
 
+    def with_face_multi(
+        self,
+        color: ColorType | Sequence[ColorType] | None = None,
+        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        if color is None:
+            color = self.face.color
+        if not isinstance(self._face_namespace, MultiFace):
+            self._face_namespace = MultiFace(self)  # type: ignore
+        self.face.color = color
+        self.face.pattern = pattern
+        self.face.alpha = alpha
+        return self
 
-class HeteroFaceEdgeMixin(_AbstractFaceEdgeMixin[_P]):
-    face = MultiFaceNamespace()
-    edge = MultiEdgeNamespace()
+    def with_edge_multi(
+        self,
+        color: ColorType | Sequence[ColorType] | None = None,
+        width: float | Sequence[float] = 1,
+        style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the edge properties."""
+        if color is None:
+            color = self.face.color
+        if not isinstance(self._edge_namespace, MultiEdge):
+            self._edge_namespace = MultiEdge(self)  # type: ignore
+        self.edge.color = color
+        self.edge.width = width
+        self.edge.style = style
+        self.edge.alpha = alpha
+        return self
 
 
 # just for typing

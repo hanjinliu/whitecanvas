@@ -37,19 +37,6 @@ class Bars(HeteroLayer[bk_models.Quad]):
             line_dash="style",
         )
 
-    ##### LayerProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self._visible
-
-    def _plt_set_visible(self, visible: bool):
-        if visible:
-            self._model.line_color = "edge_color"
-            self._model.fill_color = "face_color"
-        else:
-            self._model.line_color = "#00000000"
-            self._model.fill_color = "#00000000"
-        self._visible = visible
-
     ##### XXYYDataProtocol #####
     def _plt_get_data(self):
         return (

@@ -10,7 +10,7 @@ from psygnal import Signal, SignalGroup
 
 from whitecanvas import protocols
 from whitecanvas import layers as _l
-from whitecanvas.layers import group as _lg
+from whitecanvas.layers import group as _lg, _mixin
 from whitecanvas.types import (
     LineStyle,
     Symbol,
@@ -386,18 +386,18 @@ class CanvasBase(ABC):
     def add_markers(
         self, ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, color: ColorType | None = None, alpha: float = 1.0,
+        size: float = 15, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
-    ) -> _l.Markers:  # fmt: skip
+    ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
 
     @overload
     def add_markers(
         self, xdata: ArrayLike, ydata: ArrayLike, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 6, color: ColorType | None = None, alpha: float = 1.0,
+        size: float = 15, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
-    ) -> _l.Markers:  # fmt: skip
+    ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
 
     def add_markers(
@@ -405,7 +405,7 @@ class CanvasBase(ABC):
         *args,
         name=None,
         symbol=Symbol.CIRCLE,
-        size=6,
+        size=15,
         color=None,
         alpha=1.0,
         pattern=FacePattern.SOLID,
@@ -425,7 +425,7 @@ class CanvasBase(ABC):
         *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
-    ) -> _l.Bars:  # fmt: skip
+    ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
     @overload
@@ -434,7 +434,7 @@ class CanvasBase(ABC):
         *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
-    ) -> _l.Bars:  # fmt: skip
+    ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
     def add_bars(
@@ -447,7 +447,7 @@ class CanvasBase(ABC):
         color=None,
         alpha=1.0,
         pattern=FacePattern.SOLID,
-    ) -> _l.Bars:
+    ):
         center, height = normalize_xy(*args)
         if bottom is not None:
             bottom = as_array_1d(bottom)

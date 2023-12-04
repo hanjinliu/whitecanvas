@@ -17,6 +17,19 @@ class BokehLayer(BaseProtocol, Generic[_M]):
 
 
 class HeteroLayer(BokehLayer[_M]):
+    ##### LayerProtocol #####
+    def _plt_get_visible(self) -> bool:
+        return self._visible
+
+    def _plt_set_visible(self, visible: bool):
+        if visible:
+            self._model.line_color = "edge_color"
+            self._model.fill_color = "face_color"
+        else:
+            self._model.line_color = "#00000000"
+            self._model.fill_color = "#00000000"
+        self._visible = visible
+
     ##### HasFace protocol #####
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:

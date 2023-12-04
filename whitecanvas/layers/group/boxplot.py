@@ -5,10 +5,10 @@ from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.types import ColorType, FacePattern, LineStyle, Orientation
-from whitecanvas.layers.primitive import HeteroBars, MultiLine
+from whitecanvas.layers.primitive import Bars, MultiLine
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._cat_utils import check_array_input
-from whitecanvas.utils.normalize import as_color_array, arr_color
+from whitecanvas.utils.normalize import as_color_array
 
 
 class BoxPlot(ListLayerGroup):
@@ -16,7 +16,7 @@ class BoxPlot(ListLayerGroup):
     A group for boxplot.
 
     Children layers are:
-    - HeteroBars (boxes)
+    - Bars (boxes)
     - MultiLine (whiskers)
     - MultiLine (median line)
     - Markers (outliers)
@@ -33,7 +33,7 @@ class BoxPlot(ListLayerGroup):
 
     def __init__(
         self,
-        boxes: HeteroBars,
+        boxes: Bars,
         whiskers: MultiLine,
         medians: MultiLine,
         # outliers: Markers | None = None,
@@ -45,8 +45,8 @@ class BoxPlot(ListLayerGroup):
         self._orient = Orientation.parse(orient)
 
     @property
-    def boxes(self) -> HeteroBars:
-        """The boxes layer (HeteroBars)."""
+    def boxes(self) -> Bars:
+        """The boxes layer (Bars)."""
         return self._children[0]
 
     @property
@@ -81,10 +81,11 @@ class BoxPlot(ListLayerGroup):
         for d in data:
             agg_values.append(np.quantile(d, [0, 0.25, 0.5, 0.75, 1]))
         agg_arr = np.stack(agg_values, axis=1)
-        box = HeteroBars(
+        box = Bars(
             x, agg_arr[3] - agg_arr[1], agg_arr[1], name=name, orient=ori,
-            bar_width=box_width, pattern=pattern, color=color, alpha=alpha,
-            backend=backend,
+            bar_width=box_width, backend=backend,
+        ).with_face_multi(
+            pattern=pattern, color=color, alpha=alpha,
         ).with_edge(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(

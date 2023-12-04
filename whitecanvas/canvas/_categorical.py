@@ -498,7 +498,7 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         size=10,
         symbol=Symbol.CIRCLE,
         pattern=FacePattern.SOLID,
-    ) -> _l.HeteroMarkers:
+    ) -> _l.Markers:
         canvas = self._canvas()
         name = canvas._coerce_name("markers", name)
         color = self._generate_colors(color)
@@ -507,9 +507,10 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
             x_, y_ = self._generate_x(), data
         else:
             x_, y_ = data, self._generate_x()
-        layer = _l.HeteroMarkers(
-            x_, y_, name=name, symbol=symbol, size=size, color=color,
-            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+        layer = _l.Markers(
+            x_, y_, name=name, symbol=symbol, size=size, backend=self._get_backend(),
+        ).with_edge_multi(
+            color=color, alpha=alpha, pattern=pattern,
         )  # fmt: skip
         return canvas.add_layer(layer)
 
@@ -522,16 +523,17 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         color=None,
         alpha=1.0,
         pattern=FacePattern.SOLID,
-    ) -> _l.HeteroBars:
+    ) -> _l.Bars:
         canvas = self._canvas()
         name = canvas._coerce_name(_l.Bars, name)
         if color is None:
             color = self._generate_colors()
         data = self._generate_y(y)
-        layer = _l.HeteroBars(
+        layer = _l.Bars(
             self._generate_x(), data, name=name, orient=self._orient,
-            bar_width=bar_width, color=color, alpha=alpha, pattern=pattern,
-            backend=self._get_backend()
+            bar_width=bar_width, backend=self._get_backend()
+        ).with_face_multi(
+            color=color, alpha=alpha, pattern=pattern
         )  # fmt: skip
         return canvas.add_layer(layer)
 

@@ -68,7 +68,7 @@ class Bars(BarContainer, MplLayer):
             patch.set_facecolor(c)
 
     def _plt_get_face_pattern(self) -> list[FacePattern]:
-        return [FacePattern(patch.get_hatch()) for patch in self.patches]
+        return [FacePattern(patch.get_hatch() or "") for patch in self.patches]
 
     def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
         if isinstance(pattern, FacePattern):

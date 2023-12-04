@@ -26,6 +26,7 @@ class Band(PolyCollection, MplLayer):
         verts = np.concatenate([fw, bw], axis=0)
         self._edge_style = LineStyle.SOLID
         super().__init__([verts], closed=True)
+        self.set_edgecolor("#00000000")
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
@@ -70,7 +71,7 @@ class Band(PolyCollection, MplLayer):
         self.set_facecolor(color)
 
     def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern(self.get_hatch())
+        return FacePattern(self.get_hatch() or "")
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
         if pattern is FacePattern.SOLID:

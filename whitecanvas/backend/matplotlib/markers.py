@@ -9,7 +9,7 @@ import matplotlib.markers as mmarkers
 import matplotlib.transforms as mtransforms
 
 from whitecanvas.backend.matplotlib._base import MplLayer
-from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol, check_protocol
+from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol, FacePattern, LineStyle
 from whitecanvas.utils.normalize import as_color_array
 
@@ -21,98 +21,6 @@ def _get_path(symbol: Symbol):
 
 @check_protocol(MarkersProtocol)
 class Markers(PathCollection, MplLayer):
-    def __init__(self, xdata, ydata):
-        offsets = np.stack([xdata, ydata], axis=1)
-        self._symbol = Symbol.CIRCLE
-        super().__init__(
-            (_get_path(self._symbol),),
-            sizes=[6] * len(offsets),
-            offsets=offsets,
-            offset_transform=plt.gca().transData,
-            picker=True,
-        )
-        self.set_transform(mtransforms.IdentityTransform())
-        self._edge_style = LineStyle.SOLID
-        self._pick_callbacks = []
-
-    ##### XYDataProtocol #####
-    def _plt_get_data(self):
-        offsets = self.get_offsets()
-        return offsets[:, 0], offsets[:, 1]
-
-    def _plt_set_data(self, xdata, ydata):
-        data = np.stack([xdata, ydata], axis=1)
-        self.set_offsets(data)
-
-    ##### HasSymbol protocol #####
-
-    def _plt_get_symbol(self) -> Symbol:
-        return self._symbol
-
-    def _plt_set_symbol(self, symbol: Symbol):
-        path = _get_path(symbol)
-        self.set_paths([path] * len(self.get_offsets()))
-        self._symbol = symbol
-
-    def _plt_get_symbol_size(self) -> float:
-        return float(np.sqrt(self.get_sizes()[0] * 2))
-
-    def _plt_set_symbol_size(self, size: float):
-        self.set_sizes([size**2 / 2] * len(self.get_offsets()))
-
-    ##### HasFaces protocol #####
-    def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return self.get_facecolor()[0]
-
-    def _plt_set_face_color(self, color: NDArray[np.float32]):
-        self.set_facecolor([color] * len(self.get_offsets()))
-
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern(self.get_hatch())
-
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        if pattern is FacePattern.SOLID:
-            ptn = None
-        else:
-            ptn = pattern.value
-        self.set_hatch(ptn)
-
-    ##### HasEdges protocol #####
-
-    def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return self.get_edgecolor()[0]
-
-    def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        self.set_edgecolor([color] * len(self.get_offsets()))
-
-    def _plt_get_edge_style(self) -> LineStyle:
-        return self._edge_style
-
-    def _plt_set_edge_style(self, style: LineStyle):
-        self.set_linestyle([style.value] * len(self.get_offsets()))
-        self._edge_style = style
-
-    def _plt_get_edge_width(self) -> float:
-        return self.get_linewidth()[0]
-
-    def _plt_set_edge_width(self, width: float):
-        self.set_linewidth(width)
-
-    def _plt_connect_pick_event(self, callback):
-        def cb(event):
-            if event.artist is not self:
-                return
-            callback(event.ind)
-
-        self._pick_callbacks.append(cb)
-
-    def post_add(self, ax):
-        for cb in self._pick_callbacks:
-            self.get_figure().canvas.mpl_connect("pick_event", cb)
-
-
-@check_protocol(HeteroMarkersProtocol)
-class HeteroMarkers(PathCollection, MplLayer):
     def __init__(self, xdata, ydata):
         offsets = np.stack([xdata, ydata], axis=1)
         self._symbol = Symbol.CIRCLE
@@ -162,9 +70,11 @@ class HeteroMarkers(PathCollection, MplLayer):
         self.set_facecolor(color)
 
     def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern(self.get_hatch())
+        return [FacePattern(self.get_hatch() or "")] * len(self.get_offsets())
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
+    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+        if not isinstance(pattern, FacePattern):
+            pattern = pattern[0]
         if pattern is FacePattern.SOLID:
             ptn = None
         else:

@@ -6,8 +6,8 @@ from numpy.typing import ArrayLike, NDArray
 from cmap import Color
 
 
-def as_array_1d(x: ArrayLike) -> NDArray[np.number]:
-    x = np.asarray(x)
+def as_array_1d(x: ArrayLike, dtype=None) -> NDArray[np.number]:
+    x = np.asarray(x, dtype=dtype)
     if x.ndim != 1:
         raise ValueError(f"Expected 1D array, got {x.ndim}D array")
     if x.dtype.kind not in "iuf":
@@ -50,7 +50,11 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
 
 def arr_color(color) -> np.ndarray:
     """Normalize a color input to a 4-element float array."""
-    return np.array(Color(color).rgba, dtype=np.float32)
+    try:
+        c = Color(color)
+    except Exception as e:
+        raise ValueError(f"Invalid input for a color: {color!r}") from None
+    return np.array(c.rgba, dtype=np.float32)
 
 
 def hex_color(color) -> str:

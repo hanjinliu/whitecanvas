@@ -5,7 +5,7 @@ import weakref
 import numpy as np
 from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.types import Orientation, LineStyle, ColorType, XYData
-from whitecanvas.layers import MultiLine, Markers, HeteroMarkers, Layer
+from whitecanvas.layers import MultiLine, Markers, Layer
 
 if TYPE_CHECKING:
     from whitecanvas.canvas._base import CanvasBase

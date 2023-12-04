@@ -1,14 +1,20 @@
 from __future__ import annotations
 
-from abc import abstractmethod
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Sequence, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.protocols import BarProtocol
-from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers.primitive.text import Texts
-from whitecanvas.layers._mixin import AggFaceEdgeMixin, HeteroFaceEdgeMixin
+from whitecanvas.layers._mixin import (
+    MultiFaceEdgeMixin,
+    FaceNamespace,
+    EdgeNamespace,
+    ConstFace,
+    ConstEdge,
+    MultiFace,
+    MultiEdge,
+)
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
@@ -16,6 +22,7 @@ from whitecanvas.types import (
     ColorType,
     _Void,
     Alignment,
+    LineStyle,
     Orientation,
     XYData,
     ArrayLike1D,
@@ -24,10 +31,11 @@ from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
-    from whitecanvas.layers import Errorbars
 
 
 _void = _Void()
+_Face = TypeVar("_Face", bound=FaceNamespace)
+_Edge = TypeVar("_Edge", bound=EdgeNamespace)
 
 
 def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):
@@ -54,9 +62,7 @@ def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):
     return (x0, x1, y0, y1), x_hint, y_hint
 
 
-class BarsBase(PrimitiveLayer[BarProtocol]):
-    _backend_class_name = "Bars"
-
+class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
     def __init__(
         self,
         x: ArrayLike1D,
@@ -286,41 +292,6 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
             name=self.name,
         )
 
-    @abstractmethod
-    def _create_errorbars(
-        self,
-        err: ArrayLike1D,
-        err_high: ArrayLike1D | None = None,
-        *,
-        color: ColorType | _Void = _void,
-        width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool = True,
-        capsize: float = 0,
-        orient: str | Orientation = Orientation.VERTICAL,
-    ) -> Errorbars:
-        ...
-
-
-class Bars(AggFaceEdgeMixin[BarProtocol], BarsBase):
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            x: ArrayLike1D,
-            height: ArrayLike1D,
-            bottom: ArrayLike1D | None = None,
-            *,
-            orient: str | Orientation = Orientation.VERTICAL,
-            bar_width: float = 0.8,
-            name: str | None = None,
-            color: ColorType = "blue",
-            alpha: float = 1.0,
-            pattern: str | FacePattern = FacePattern.SOLID,
-            backend: Backend | str | None = None,
-        ):
-            ...
-
     def _create_errorbars(
         self,
         err: ArrayLike1D,
@@ -358,61 +329,36 @@ class Bars(AggFaceEdgeMixin[BarProtocol], BarsBase):
         """The number of data points"""
         return self._backend._plt_get_data()[0].size
 
-
-class HeteroBars(HeteroFaceEdgeMixin[BarProtocol], BarsBase):
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            x: ArrayLike1D,
-            height: ArrayLike1D,
-            bottom: ArrayLike1D | None = None,
-            *,
-            orient: str | Orientation = Orientation.VERTICAL,
-            bar_width: float = 0.8,
-            name: str | None = None,
-            color: ColorType | Sequence[ColorType] = "blue",
-            alpha: float = 1.0,
-            pattern: str
-            | FacePattern
-            | Sequence[str | FacePattern] = FacePattern.SOLID,
-            backend: Backend | str | None = None,
-        ):
-            ...
-
-    def _create_errorbars(
+    def with_face(
         self,
-        err: ArrayLike1D,
-        err_high: ArrayLike1D | None = None,
-        *,
-        color: ColorType | _Void = _void,
-        width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool = True,
-        capsize: float = 0,
-        orient: str | Orientation = Orientation.VERTICAL,
-    ):
-        from whitecanvas.layers.primitive import Errorbars
+        color: ColorType | None = None,
+        pattern: FacePattern | str = FacePattern.SOLID,
+        alpha: float = 1,
+    ) -> Bars[ConstFace, _Edge]:
+        return super().with_face(color, pattern, alpha)
 
-        if err_high is None:
-            err_high = err
-        if color is _void:
-            color = self.edge.color[0]
-        if width is _void:
-            width = self.edge.width[0]
-        if style is _void:
-            style = self.edge.style[0]
-        # if antialias is _void:
-        #     antialias = self.antialias
-        x = self.data.x
-        y = self.data.y + self.bottom
-        return Errorbars(
-            x, y - err, y + err_high, color=color, width=width,
-            style=style, antialias=antialias, capsize=capsize,
-            orient=orient, backend=self._backend_name
-        )  # fmt: skip
+    def with_face_multi(
+        self,
+        color: ColorType | Sequence[ColorType] | None = None,
+        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        alpha: float = 1,
+    ) -> Bars[MultiFace, _Edge]:
+        return super().with_face_multi(color, pattern, alpha)
 
-    @property
-    def ndata(self) -> int:
-        """The number of data points"""
-        return self._backend._plt_get_data()[0].size
+    def with_edge(
+        self,
+        color: ColorType | None = None,
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Bars[_Face, ConstEdge]:
+        return super().with_edge(color, width, style, alpha)
+
+    def with_edge_multi(
+        self,
+        color: ColorType | Sequence[ColorType] | None = None,
+        width: float | Sequence[float] = 1,
+        style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Bars[_Face, MultiEdge]:
+        return super().with_edge_multi(color, width, style, alpha)

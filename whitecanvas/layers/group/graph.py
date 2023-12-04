@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.types import _Void, ColorType, Alignment, XYData
-from whitecanvas.layers.primitive import MultiLine, HeteroMarkers, Texts
+from whitecanvas.layers.primitive import MultiLine, Markers, Texts
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset
 
@@ -13,7 +13,7 @@ from whitecanvas.layers.group._offsets import TextOffset, NoOffset
 class Graph(ListLayerGroup):
     def __init__(
         self,
-        nodes: HeteroMarkers,
+        nodes: Markers,
         edges: MultiLine,
         texts: Texts,
         edges_data: NDArray[np.intp],
@@ -29,7 +29,7 @@ class Graph(ListLayerGroup):
         return [1, 0, 2]
 
     @property
-    def nodes(self) -> HeteroMarkers:
+    def nodes(self) -> Markers:
         """The nodes layer."""
         return self._children[0]
 

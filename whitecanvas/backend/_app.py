@@ -42,8 +42,7 @@ class QtApplication(Application):
 
     def run_app(self):
         """Start the event loop."""
-        if self.instance() is None:
-            return self.get_app().exec_()
+        return self.get_app().exec_()
 
     def instance(self):
         from qtpy.QtWidgets import QApplication
@@ -83,8 +82,7 @@ class WxApplication(Application):
 
     def run_app(self):
         """Start the event loop."""
-        if self.instance() is None:
-            return self.get_app().MainLoop()
+        return self.get_app().MainLoop()
 
     def instance(self):
         import wx
@@ -136,6 +134,23 @@ class TkApplication(Application):
         if shell and shell.active_eventloop != "tk":
             shell.enable_gui("tk")
         return None
+
+
+class EmptyApplication(Application):
+    def get_app(self):
+        return None
+
+    def run_app(self):
+        return None
+
+
+def get_app(name: str) -> Application:
+    if name == "qt":
+        return QtApplication()
+    elif name == "wx":
+        return WxApplication()
+    else:
+        return EmptyApplication()
 
 
 def get_shell() -> InteractiveShell | None:

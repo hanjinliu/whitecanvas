@@ -174,20 +174,22 @@ class CanvasGrid:
             yield idx, canvas
             yielded.add(_id)
 
-    def show(self) -> None:
+    def show(self, block=False) -> None:
         """Show the grid."""
-        app = self._backend._app
-        # TODO: implement other event loops
-        if app == "qt":
-            from whitecanvas.backend._app import QtApplication
+        from whitecanvas.backend._app import get_app
 
-            qapp = QtApplication().get_app()
+        # TODO: implement other event loops
+        app = get_app(self._backend._app)
+        _backend_app = app.get_app()
         out = self._backend_object._plt_show()
 
         if out is NotImplemented:
             from whitecanvas.backend._window import view
 
             view(self, self._backend.app)
+
+        if block:
+            app.run_app()
 
     @property
     def background_color(self) -> NDArray[np.floating]:
@@ -328,9 +330,9 @@ class SingleCanvas(CanvasBase):
         """The native backend object."""
         return self._main_canvas.native
 
-    def show(self) -> None:
+    def show(self, block: bool = False) -> None:
         """Show the canvas using the method defined in the backend."""
-        self._grid.show()
+        self._grid.show(block=block)
 
     @property
     def background_color(self) -> NDArray[np.floating]:

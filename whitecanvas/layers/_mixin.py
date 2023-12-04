@@ -533,6 +533,52 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
     def edge(self) -> _NEdge:
         return self._edge_namespace
 
+
+class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P]):
+    def __init__(self, name: str | None = None):
+        super().__init__(name=name)
+        self._face_namespace = MonoFace(self)
+        self._edge_namespace = MonoEdge(self)
+
+    def with_face(
+        self,
+        color: ColorType | None = None,
+        pattern: FacePattern | str = FacePattern.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the face properties."""
+        if color is None:
+            color = self.face.color
+        self.face.color = color
+        self.face.pattern = pattern
+        self.face.alpha = alpha
+        return self
+
+    def with_edge(
+        self,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the edge properties."""
+        if color is None:
+            color = self.face.color
+        self.edge.color = color
+        self.edge.width = width
+        self.edge.style = style
+        self.edge.alpha = alpha
+        return self
+
+
+class MultiFaceEdgeMixin(
+    _AbstractFaceEdgeMixin[_P, _NFace, _NEdge], Generic[_P, _NFace, _NEdge]
+):
+    def __init__(self, name: str | None = None):
+        super().__init__(name=name)
+        self._face_namespace = ConstFace(self)
+        self._edge_namespace = ConstEdge(self)
+
     def with_face(
         self,
         color: ColorType | None = None,
@@ -566,22 +612,6 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
         self.edge.style = style
         self.edge.alpha = alpha
         return self
-
-
-class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P]):
-    def __init__(self, name: str | None = None):
-        super().__init__(name=name)
-        self._face_namespace = MonoFace(self)
-        self._edge_namespace = MonoEdge(self)
-
-
-class MultiFaceEdgeMixin(
-    _AbstractFaceEdgeMixin[_P, _NFace, _NEdge], Generic[_P, _NFace, _NEdge]
-):
-    def __init__(self, name: str | None = None):
-        super().__init__(name=name)
-        self._face_namespace = ConstFace(self)
-        self._edge_namespace = ConstEdge(self)
 
     def with_face_multi(
         self,

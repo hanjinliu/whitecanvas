@@ -69,7 +69,7 @@ class Markers(
         self._size_is_array = False
         self.edge.color = color
         if not self.symbol.has_face():
-            self.edge.width = 1.0
+            self.edge.update(width=1.0, color=color)
         pad_r = size / 400
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
 
@@ -456,9 +456,45 @@ class Markers(
         self,
         color: ColorType | None = None,
         pattern: FacePattern | str = FacePattern.SOLID,
-        alpha: float = 1,
+        alpha: float = 1.0,
     ) -> Markers[ConstFace, _Edge, _Size]:
-        return super().with_face(color, pattern, alpha)
+        """
+        Return a markers layer with constant face properties.
+
+        In most cases, this function is not needed because the face properties
+        can be set directly on construction. Examples below are equivalent:
+
+        >>> markers = canvas.add_markers(x, y).with_face(color="red")
+        >>> markers = canvas.add_markers(x, y, color="red")
+
+        This function will be useful when you want to change the markers from
+        multi-face state to constant-face state:
+
+        >>> markers = canvas.add_markers(x, y).with_face_multi(color=colors)
+        >>> markers = markers.with_face(color="red")
+
+        Parameters
+        ----------
+        color : color-like, optional
+            Color of the marker faces.
+        pattern : str or FacePattern, optional
+            Pattern (hatch) of the faces.
+        alpha : float, optional
+            Alpha channel of the faces.
+
+        Returns
+        -------
+        Markers
+            The updated markers layer.
+        """
+        super().with_face(color, pattern, alpha)
+        if not self.symbol.has_face():
+            width = self.edge.width
+            if isinstance(width, (float, int, np.number)):
+                self.edge.update(width=width or 1.0, color=color)
+            else:
+                self.edge.update(width=width[0] or 1.0, color=color)
+        return self
 
     def with_face_multi(
         self,
@@ -466,23 +502,52 @@ class Markers(
         pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
         alpha: float = 1,
     ) -> Markers[MultiFace, _Edge, _Size]:
-        return super().with_face_multi(color, pattern, alpha)
+        """
+        Return a markers layer with multi-face properties.
+
+        This function is used to create a markers layer with multiple face
+        properties, such as colorful markers.
+
+        >>> markers = canvas.add_markers(x, y).with_face_multi(color=colors)
+
+        Parameters
+        ----------
+        color : color-like or sequence of color-like, optional
+            Color(s) of the marker faces.
+        pattern : str or FacePattern or sequence of it, optional
+            Pattern(s) of the faces.
+        alpha : float or sequence of float, optional
+            Alpha channel(s) of the faces.
+
+        Returns
+        -------
+        Markers
+            The updated markers layer.
+        """
+        super().with_face_multi(color, pattern, alpha)
+        if not self.symbol.has_face():
+            width = self.edge.width
+            if isinstance(width, (float, int, np.number)):
+                self.edge.update(width=width or 1.0, color=color)
+            else:
+                self.edge.update(width=width[0] or 1.0, color=color)
+        return self
 
     def with_edge(
         self,
         color: ColorType | None = None,
-        width: float = 1,
+        width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float = 1.0,
     ) -> Markers[_Face, ConstEdge, _Size]:
         return super().with_edge(color, width, style, alpha)
 
     def with_edge_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        width: float | Sequence[float] = 1,
+        width: float | Sequence[float] = 1.0,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float = 1.0,
     ) -> Markers[_Face, MultiEdge, _Size]:
         return super().with_edge_multi(color, width, style, alpha)
 

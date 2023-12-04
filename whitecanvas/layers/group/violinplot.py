@@ -5,8 +5,6 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import PrimitiveLayer
-from whitecanvas.protocols import BaseProtocol
 from whitecanvas.types import ColorType, FacePattern, Orientation, LineStyle
 from whitecanvas.layers.primitive import Band
 from whitecanvas.layers.group._collections import ListLayerGroup

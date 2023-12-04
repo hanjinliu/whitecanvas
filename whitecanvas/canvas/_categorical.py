@@ -509,7 +509,7 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
             x_, y_ = data, self._generate_x()
         layer = _l.Markers(
             x_, y_, name=name, symbol=symbol, size=size, backend=self._get_backend(),
-        ).with_edge_multi(
+        ).with_face_multi(
             color=color, alpha=alpha, pattern=pattern,
         )  # fmt: skip
         return canvas.add_layer(layer)

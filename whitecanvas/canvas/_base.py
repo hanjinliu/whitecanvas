@@ -326,7 +326,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_line(
-        self, ydata: ArrayLike, *, name: str | None = None, color: ColorType | None = None,
+        self, ydata: ArrayLike1D, *, name: str | None = None, color: ColorType | None = None,
         width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
@@ -334,7 +334,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_line(
-        self, xdata: ArrayLike, ydata: ArrayLike, *, name: str | None = None,
+        self, xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
         color: ColorType | None = None, width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
@@ -342,7 +342,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_line(
-        self, xdata: ArrayLike, ydata: Callable[[ArrayLike], ArrayLike], *,
+        self, xdata: ArrayLike1D, ydata: Callable[[ArrayLike1D], ArrayLike1D], *,
         name: str | None = None, color: ColorType | None = None, width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
@@ -384,7 +384,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_markers(
-        self, ydata: ArrayLike, *,
+        self, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 15, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -393,7 +393,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_markers(
-        self, xdata: ArrayLike, ydata: ArrayLike, *,
+        self, xdata: ArrayLike1D, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 15, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -421,7 +421,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_bars(
-        self, center: ArrayLike, height: ArrayLike, bottom: ArrayLike | None = None,
+        self, center: ArrayLike1D, height: ArrayLike1D, bottom: ArrayLike1D | None = None,
         *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
@@ -430,7 +430,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_bars(
-        self, height: ArrayLike,
+        self, height: ArrayLike1D,
         *, name=None, orient: str | Orientation = Orientation.VERTICAL,
         bar_width: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
@@ -463,9 +463,9 @@ class CanvasBase(ABC):
 
     def add_hist(
         self,
-        data: ArrayLike,
+        data: ArrayLike1D,
         *,
-        bins: int | ArrayLike = 10,
+        bins: int | ArrayLike1D = 10,
         range: tuple[float, float] | None = None,
         density: bool = False,
         name: str | None = None,
@@ -542,9 +542,9 @@ class CanvasBase(ABC):
 
     def add_band(
         self,
-        xdata: ArrayLike,
-        ydata0: ArrayLike,
-        ydata1: ArrayLike,
+        xdata: ArrayLike1D,
+        ydata0: ArrayLike1D,
+        ydata1: ArrayLike1D,
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -562,9 +562,9 @@ class CanvasBase(ABC):
 
     def add_errorbars(
         self,
-        xdata: ArrayLike,
-        ylow: ArrayLike,
-        yhigh: ArrayLike,
+        xdata: ArrayLike1D,
+        ylow: ArrayLike1D,
+        yhigh: ArrayLike1D,
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -585,7 +585,7 @@ class CanvasBase(ABC):
 
     def add_rug(
         self,
-        events: ArrayLike,
+        events: ArrayLike1D,
         *,
         low: float = 0.0,
         high: float = 1.0,
@@ -604,7 +604,7 @@ class CanvasBase(ABC):
 
     def add_kde(
         self,
-        data: ArrayLike,
+        data: ArrayLike1D,
         *,
         bottom: float = 0.0,
         name: str | None = None,
@@ -636,7 +636,7 @@ class CanvasBase(ABC):
         self,
         x: ArrayLike1D,
         y: ArrayLike1D,
-        string: str,
+        string: list[str],
         *,
         color: ColorType = "black",
         size: float = 12,
@@ -653,7 +653,7 @@ class CanvasBase(ABC):
             X position of the text.
         y : float or array-like
             Y position of the text.
-        string : str
+        string : str or list[str]
             Text string to display.
         color : ColorType, optional
             Color of the text string.

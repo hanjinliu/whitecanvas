@@ -3,7 +3,7 @@ import pandas as pd
 
 def main():
     canvas = new_canvas(
-        backend="matplotlib",
+        backend="matplotlib:qt",
         palette=["#EE6363", "#7777FF", "#57A557"],
     )
 
@@ -16,7 +16,7 @@ def main():
     cat_plt.with_offset(0).mean().to_markers(y, size=10, symbol="+", color="black")
     cat_plt.with_offset(0.2).to_violinplot(y, violin_width=0.5, shape="right").with_edge(color="#3F3F00")
 
-    canvas.show()
+    canvas.show(block=True)
 
 if __name__ == "__main__":
     main()

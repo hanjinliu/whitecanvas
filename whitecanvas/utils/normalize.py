@@ -31,6 +31,8 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
                 "Expected 1D array or 2D array with shape (N, 2), " f"got {arr.shape}"
             )
     elif len(args) == 2:
+        if np.isscalar(args[0]) and np.isscalar(args[1]):
+            return np.array(args[0]), np.array(args[1])
         xdata = as_array_1d(args[0])
         if not hasattr(args[1], "__array__") and callable(args[1]):
             ydata = args[1](xdata)
@@ -89,7 +91,7 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
             return color
         else:
             raise ValueError(
-                "Color array must have shape (3,), (4,), (N, 3), or (N, 4) "
+                f"Color array must have shape (3,), (4,), (N={size}, 3), or (N={size}, 4) "
                 f"but got {color.shape}"
             )
     arr = np.array(color)

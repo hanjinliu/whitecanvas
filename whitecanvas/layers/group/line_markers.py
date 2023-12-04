@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from numpy.typing import ArrayLike
 from whitecanvas.types import ColorType, _Void, Alignment, LineStyle, Orientation
-from whitecanvas.layers.primitive import Line, Markers, Errorbars
+from whitecanvas.layers.primitive import Line, Markers, Errorbars, Texts
 from whitecanvas.layers.group._collections import ListLayerGroup
 
 if TYPE_CHECKING:
@@ -54,9 +54,8 @@ class Plot(ListLayerGroup):
         fontfamily: str | None = None,
     ) -> LabeledPlot:
         from whitecanvas.layers.group.labeled import LabeledPlot
-        from .text_group import TextGroup
 
-        texts = TextGroup.from_strings(
+        texts = Texts(
             *self.line.data,
             strings,
             color=color,

@@ -634,8 +634,8 @@ class CanvasBase(ABC):
 
     def add_text(
         self,
-        x: float,
-        y: float,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
         string: str,
         *,
         color: ColorType = "black",
@@ -643,15 +643,15 @@ class CanvasBase(ABC):
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str | None = None,
-    ) -> _l.Text:
+    ) -> _l.Texts:
         """
         Add a text layer to the canvas.
 
         Parameters
         ----------
-        x : float
+        x : float or array-like
             X position of the text.
-        y : float
+        y : float or array-like
             Y position of the text.
         string : str
             Text string to display.
@@ -672,28 +672,15 @@ class CanvasBase(ABC):
         Text
             The text layer.
         """
-        layer = _l.Text(
-            x, y, string, color=color, size=size, rotation=rotation, anchor=anchor,
+        x_, y_ = normalize_xy(x, y)
+        if isinstance(string, str):
+            string = [string] * x_.size
+        else:
+            if len(string) != x_.size:
+                raise ValueError("Expected string to have the same size as x/y")
+        layer = _l.Texts(
+            x_, y_, string, color=color, size=size, rotation=rotation, anchor=anchor,
             fontfamily=fontfamily, backend=self._get_backend(),
-        )  # fmt: skip
-        return self.add_layer(layer)
-
-    def add_texts(
-        self,
-        x: ArrayLike,
-        y: ArrayLike,
-        texts: list[str],
-        *,
-        name: str | None = None,
-        color: ColorType = "black",
-        size: float = 12,
-        rotation: float = 0.0,
-        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str | None = None,
-    ) -> _lg.TextGroup:
-        layer = _lg.TextGroup.from_strings(
-            x, y, texts, name=name, color=color, size=size, rotation=rotation,
-            anchor=anchor, fontfamily=fontfamily, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

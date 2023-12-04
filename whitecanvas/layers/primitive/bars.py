@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers.primitive.text import Texts
 from whitecanvas.layers._mixin import AggFaceEdgeMixin, HeteroFaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
@@ -263,11 +264,11 @@ class BarsBase(PrimitiveLayer[BarProtocol]):
         fontfamily: str | None = None,
     ) -> _lg.LabeledBars:
         from whitecanvas.layers import Errorbars
-        from whitecanvas.layers.group import TextGroup, LabeledBars
+        from whitecanvas.layers.group import LabeledBars
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
-        texts = TextGroup.from_strings(
+        texts = Texts(
             *self.data,
             strings,
             color=color,

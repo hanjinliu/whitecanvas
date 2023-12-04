@@ -4,4 +4,4 @@ from .canvas import Canvas, CanvasGrid
 from .bars import Bars
 from .band import Band
 from .image import Image
-from .text import Text
+from .text import Texts

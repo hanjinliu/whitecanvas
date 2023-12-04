@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Callable
+from matplotlib.artist import Artist
 
 import numpy as np
 import matplotlib as mpl
@@ -11,8 +12,8 @@ from matplotlib.backend_bases import (
 )
 from matplotlib.lines import Line2D
 from matplotlib.collections import Collection
-from matplotlib.text import Text as mplText
 from .bars import Bars
+from .text import Texts as whitecanvasText
 from .image import Image as whitecanvasImage
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
@@ -75,7 +76,7 @@ class Canvas:
         else:
             self._axes.set_aspect(ratio)
 
-    def _plt_add_layer(self, layer: protocols.BaseProtocol):
+    def _plt_add_layer(self, layer: Artist):
         if isinstance(layer, Line2D):
             self._axes.add_line(layer)
         elif isinstance(layer, Collection):
@@ -84,9 +85,10 @@ class Canvas:
             for child in layer.patches:
                 self._axes.add_patch(child)
             self._axes.add_container(layer)
-        elif isinstance(layer, mplText):
+        elif isinstance(layer, whitecanvasText):
             layer.set_transform(self._axes.transData)
-            self._axes._add_text(layer)
+            for child in layer._children:
+                self._axes._add_text(child)
         elif isinstance(layer, whitecanvasImage):
             self._axes.add_artist(layer)
         else:
@@ -94,9 +96,9 @@ class Canvas:
         if hasattr(layer, "post_add"):
             layer.post_add(self._axes)
 
-    def _plt_remove_layer(self, layer):
+    def _plt_remove_layer(self, layer: Artist):
         """Remove layer from the canvas"""
-        raise NotImplementedError
+        layer.remove()
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""

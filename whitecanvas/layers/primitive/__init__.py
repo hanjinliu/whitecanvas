@@ -5,7 +5,7 @@ from .band import Band
 from .spans import Spans
 from .errorbars import Errorbars
 from .inf_curve import InfCurve, InfLine
-from .text import Text
+from .text import Texts
 from .image import Image
 from .rug import Rug
 
@@ -22,6 +22,6 @@ __all__ = [
     "Rug",
     "InfLine",
     "InfCurve",
-    "Text",
+    "Texts",
     "Image",
 ]

@@ -31,6 +31,6 @@ def test_colored_plots(backend: str):
     }
 
     canvas.colorize(df, by="label").to_markers("x", "y")
-    canvas.colorize(df, by="label").to_lines("x", "y")
+    canvas.colorize(df, by="label").to_line("x", "y")
     canvas.colorize(df, by="label").to_hist("y")
     canvas.colorize(df, by="label").to_cdf(value_column="y")

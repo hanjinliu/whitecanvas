@@ -11,7 +11,7 @@ from .primitive import (
     Band,
     HeteroBars,
     Errorbars,
-    Text,
+    Texts,
     Image,
     Rug,
 )
@@ -32,6 +32,6 @@ __all__ = [
     "Rug",
     "InfLine",
     "InfCurve",
-    "Text",
+    "Texts",
     "Image",
 ]

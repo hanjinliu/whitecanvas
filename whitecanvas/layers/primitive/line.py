@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol
+from whitecanvas.layers.primitive.text import Texts
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import LineMixin
@@ -224,7 +225,7 @@ class Line(MonoLine):
         fontfamily: str | None = None,
     ) -> _lg.LabeledLine:
         from whitecanvas.layers import Errorbars
-        from whitecanvas.layers.group import TextGroup, LabeledLine
+        from whitecanvas.layers.group import LabeledLine
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
@@ -235,7 +236,7 @@ class Line(MonoLine):
                     f"Number of strings ({len(strings)}) does not match the "
                     f"number of data ({self.data.x.size})."
                 )
-        texts = TextGroup.from_strings(
+        texts = Texts(
             *self.data,
             strings,
             color=color,

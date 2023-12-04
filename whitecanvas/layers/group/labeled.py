@@ -5,10 +5,9 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from whitecanvas.types import ColorType, LineStyle, Alignment, XYData
-from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars
+from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars, Texts
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers.group._collections import ListLayerGroup
-from whitecanvas.layers.group.text_group import TextGroup
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset
 
 
@@ -23,13 +22,13 @@ class _LabeledLayerBase(ListLayerGroup):
         layer: PrimitiveLayer,
         xerr: Errorbars,
         yerr: Errorbars,
-        texts: TextGroup | None = None,
+        texts: Texts | None = None,
         name: str | None = None,
         offset: TextOffset = NoOffset(),
     ):
         if texts is None:
             px, py = self._get_data_xy(layer)
-            texts = TextGroup.from_strings(
+            texts = Texts(
                 px,
                 py,
                 [""] * px.size,
@@ -60,7 +59,7 @@ class _LabeledLayerBase(ListLayerGroup):
         return self._children[2]
 
     @property
-    def texts(self) -> TextGroup:
+    def texts(self) -> Texts:
         """The text group layer."""
         return self._children[3]
 

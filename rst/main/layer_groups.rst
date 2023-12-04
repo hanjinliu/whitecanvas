@@ -3,18 +3,18 @@ Layer Grouping
 ==============
 
 To plot complex layers, :mod:`whitecanvas` uses the layer-grouping architecture.
-There are several layer groups.
+There are several built-in layer groups.
 
 - :class:`Plot` ... :class:`Line` + :class:`Markers`
 - :class:`LineBand` ... :class:`Line` + :class:`Band`
-- :class:`LabeledLine` ... :class:`Line` + :class:`Errorbar` x2 + :class:`TextGroup`
-- :class:`LabeledMarkers` ... :class:`Markers` + :class:`Errorbar` x2 + :class:`TextGroup`
-- :class:`LabeledBars` ... :class:`Bars` + :class:`Errorbar` x2 + :class:`TextGroup`
-- :class:`LabeledPlot` ... :class:`Plot` + :class:`Errorbar` x2 + :class:`TextGroup`
+- :class:`LabeledLine` ... :class:`Line` + :class:`Errorbar` x2 + :class:`Texts`
+- :class:`LabeledMarkers` ... :class:`Markers` + :class:`Errorbar` x2 + :class:`Texts`
+- :class:`LabeledBars` ... :class:`Bars` + :class:`Errorbar` x2 + :class:`Texts`
+- :class:`LabeledPlot` ... :class:`Plot` + :class:`Errorbar` x2 + :class:`Texts`
 - :class:`Stem` ... :class:`Markers` + :class:`MultiLine`
-- :class:`Graph` ... :class:`Markers` + :class:`MultiLine` + :class:`TextGroup`
+- :class:`Graph` ... :class:`Markers` + :class:`MultiLine` + :class:`Texts`
 
-Although
+These layer groups can be derived from primitive layers.
 
 .. code-block:: python
 

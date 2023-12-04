@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Sequence
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
+from whitecanvas.layers.primitive.text import Texts
 
 from whitecanvas.protocols import MarkersProtocol, HeteroMarkersProtocol
 from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
@@ -261,7 +262,7 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
         fontfamily: str | None = None,
     ) -> _lg.LabeledMarkers:
         from whitecanvas.layers import Errorbars
-        from whitecanvas.layers.group import TextGroup, LabeledMarkers
+        from whitecanvas.layers.group import LabeledMarkers
 
         if isinstance(strings, str):
             strings = [strings] * self.data.x.size
@@ -272,7 +273,7 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
                     f"Number of strings ({len(strings)}) does not match the "
                     f"number of data ({self.data.x.size})."
                 )
-        texts = TextGroup.from_strings(
+        texts = Texts(
             *self.data, strings, color=color, size=size, rotation=rotation,
             anchor=anchor, fontfamily=fontfamily, backend=self._backend_name,
         )  # fmt: skip
@@ -314,7 +315,7 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             A Graph layer that contains the markers and the edges as children.
         """
         from whitecanvas.layers.primitive import MultiLine
-        from whitecanvas.layers.group import Graph, TextGroup
+        from whitecanvas.layers.group import Graph
 
         edges = np.asarray(connections, dtype=np.intp)
         if edges.ndim != 2 or edges.shape[1] != 2:
@@ -334,7 +335,7 @@ class MarkersBase(PrimitiveLayer[MarkersProtocol | HeteroMarkersProtocol]):
             segs, name="edges", color=color, width=width, style=style,
             antialias=antialias, backend=self._backend_name
         )  # fmt: skip
-        texts = TextGroup.from_strings(
+        texts = Texts(
             nodes[:, 0],
             nodes[:, 1],
             [""] * nodes.shape[0],

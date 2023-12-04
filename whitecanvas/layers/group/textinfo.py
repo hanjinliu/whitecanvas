@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.types import Alignment
 from whitecanvas.layers.group._collections import ListLayerGroup
-from whitecanvas.layers.primitive import Text, Line
+from whitecanvas.layers.primitive import Texts, Line
 
 
 def _norm_bracket_data(
@@ -42,14 +42,14 @@ class BracketText(ListLayerGroup):
         name: str | None = None,
     ):
         line_data, text_pos = _norm_bracket_data(pos0, pos1, capsize)
-        text = Text(*text_pos, string)
+        text = Texts(*text_pos, string)
         line = Line(
             line_data[:, 0], line_data[:, 1], name="bracket", width=1, color="black"
         )
         super().__init__([text, line], name=name)
 
     @property
-    def text(self) -> Text:
+    def text(self) -> Texts:
         return self._children[0]
 
     @property
@@ -97,7 +97,7 @@ class Panel(ListLayerGroup):
         br = bl + np.array([width, 0])
         tr = bl + np.array([width, height])
         text_pos = tl + np.array([width / 2, 0])
-        text = Text(*text_pos, title, anchor=Alignment.BOTTOM)
+        text = Texts(*text_pos, title, anchor=Alignment.BOTTOM)
         line_data = np.stack([tl, tr, br, bl, tl], axis=0)
         line = Line(
             line_data[:, 0], line_data[:, 1], name="panel", width=1, color="black"
@@ -105,7 +105,7 @@ class Panel(ListLayerGroup):
         super().__init__([text, line], name=name)
 
     @property
-    def text(self) -> Text:
+    def text(self) -> Texts:
         """Text layer of this panel."""
         return self._children[0]
 

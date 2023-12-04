@@ -2,7 +2,7 @@ from typing import Any, Callable, Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 from cmap import Colormap
-from whitecanvas.types import LineStyle, Symbol, FacePattern, Orientation
+from whitecanvas.types import LineStyle, Symbol, FacePattern, Orientation, Alignment
 
 Array1D = NDArray[np.number]
 
@@ -142,7 +142,7 @@ class HasMultiEdges(Protocol):
 
 @runtime_checkable
 class HasText(BaseProtocol, Protocol):
-    def _plt_get_text(self) -> str:
+    def _plt_get_text(self) -> list[str]:
         """Return the text."""
 
     def _plt_set_text(self, text: list[str]):
@@ -154,34 +154,38 @@ class HasText(BaseProtocol, Protocol):
     def _plt_set_text_color(self, color: NDArray[np.float32]):
         """Set the text color."""
 
-    def _plt_get_text_size(self) -> float:
+    def _plt_get_text_size(self) -> NDArray[np.floating]:
         """Return the text size."""
 
-    def _plt_set_text_size(self, size: float):
+    def _plt_set_text_size(self, size: NDArray[np.floating]):
         """Set the text size."""
 
-    def _plt_get_text_position(self) -> tuple[float, float]:
+    def _plt_get_text_position(
+        self,
+    ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
         """Return the text position."""
 
-    def _plt_set_text_position(self, position: tuple[float, float]):
+    def _plt_set_text_position(
+        self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
+    ):
         """Set the text position."""
 
-    def _plt_get_text_anchor(self) -> tuple[float, float]:
+    def _plt_get_text_anchor(self) -> list[Alignment]:
         """Return the text position."""
 
-    def _plt_set_text_anchor(self, position: tuple[float, float]):
+    def _plt_set_text_anchor(self, position: list[Alignment]):
         """Set the text position."""
 
-    def _plt_get_text_rotation(self) -> float:
+    def _plt_get_text_rotation(self) -> NDArray[np.floating]:
         """Return the text rotation in degree."""
 
-    def _plt_set_text_rotation(self, rotation: float):
+    def _plt_set_text_rotation(self, rotation: NDArray[np.floating]):
         """Set the text rotation in degree."""
 
-    def _plt_get_text_fontfamily(self) -> str:
+    def _plt_get_text_fontfamily(self) -> list[str]:
         """Return the text font family."""
 
-    def _plt_set_text_fontfamily(self, family: str):
+    def _plt_set_text_fontfamily(self, family: list[str]):
         """Set the text font family."""
 
 
@@ -281,6 +285,15 @@ class ErrorbarProtocol(OrientedXYYDataProtocol, HasEdges, Protocol):
 @runtime_checkable
 class TextProtocol(HasText, HasEdges, HasFaces, Protocol):
     pass
+
+
+@runtime_checkable
+class TextsProtocol(HasText, HasMultiEdges, HasMultiFaces, Protocol):
+    def _plt_get_data(self) -> list[tuple[float, float]]:
+        """Return the data."""
+
+    def _plt_set_data(self, data: list[tuple[float, float]]):
+        """Set the data."""
 
 
 @runtime_checkable

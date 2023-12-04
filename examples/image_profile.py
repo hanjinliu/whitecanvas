@@ -19,7 +19,7 @@ def main():
 
     c0.add_line([p0[1], p1[1]], [p0[0], p1[0]], color="yellow", width=3)
     c1.add_line(get_profile(p0, p1), color="black")
-    grid.show()
+    grid.show(block=True)
 
 if __name__ == "__main__":
     main()

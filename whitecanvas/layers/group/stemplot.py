@@ -32,11 +32,27 @@ class StemPlot(ListLayerGroup):
         mdata = self.markers.data
         if self.orient.is_vertical:
             xdata = mdata.x
-            ydata = np.array([d.y[0] for d in self.lines.data]) + mdata.y
+            ydata = mdata.y - self.bottom
         else:
-            xdata = np.array([d.x[0] for d in self.lines.data]) + mdata.x
+            xdata = mdata.x - self.bottom
             ydata = mdata.y
         return XYData(xdata, ydata)
+
+    @property
+    def bottom(self) -> NDArray[np.floating]:
+        """Bottom of the stem."""
+        if self.orient.is_vertical:
+            return np.array([d.y[1] for d in self.lines.data])
+        else:
+            return np.array([d.x[1] for d in self.lines.data])
+
+    @property
+    def top(self) -> NDArray[np.floating]:
+        """Top of the stem."""
+        if self.orient.is_vertical:
+            return self.markers.data.y
+        else:
+            return self.markers.data.x
 
     @property
     def markers(self) -> Markers:

@@ -2,7 +2,7 @@ import numpy as np
 from whitecanvas import new_canvas
 
 def main():
-    canvas = new_canvas(backend="matplotlib")
+    canvas = new_canvas(backend="matplotlib:qt")
     x = np.arange(30)
     y = np.sin(x / 5)
     yerr = np.random.default_rng(12345).normal(size=30, scale=0.2)
@@ -14,8 +14,7 @@ def main():
         .with_yerr(yerr, capsize=0.5, color="black")
     )
 
-    print(layer)
-    canvas.show()
+    canvas.show(block=True)
 
 if __name__ == "__main__":
     main()

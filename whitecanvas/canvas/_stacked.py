@@ -55,7 +55,7 @@ class StackPlotter(Generic[_C, _L]):
             new_layer = Bars(
                 xdata,
                 ydata,
-                layer.data.y,
+                bottom=layer.top,
                 orient=layer.orient,
                 color=color,
                 alpha=alpha,
@@ -81,7 +81,7 @@ class StackPlotter(Generic[_C, _L]):
             new_layer = StemPlot.from_arrays(
                 xdata,
                 ydata,
-                bottom=layer.data.y,
+                bottom=layer.top,
                 name=name,
                 orient=layer.orient,
                 backend=layer._backend_name,

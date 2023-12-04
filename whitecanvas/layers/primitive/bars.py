@@ -49,15 +49,16 @@ def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):
             "Expected all arrays to have the same size, "
             f"got {t0.size}, {height.size}, {bot.size}"
         )
-    x_hint, y_hint = xyy_size_hint(t0, height + bot, bot, orient, bar_width / 2)
+    y0 = height + bot
+    x_hint, y_hint = xyy_size_hint(t0, y0, bot, orient, bar_width / 2)
 
     if orient.is_vertical:
         dx = bar_width / 2
         x0, x1 = t0 - dx, t0 + dx
-        y0, y1 = bot, height + bot
+        y0, y1 = bot, y0
     else:
         dy = bar_width / 2
-        x0, x1 = bot, height + bot
+        x0, x1 = bot, y0
         y0, y1 = t0 - dy, t0 + dy
     return (x0, x1, y0, y1), x_hint, y_hint
 

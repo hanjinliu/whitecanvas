@@ -183,7 +183,10 @@ class ConstFace(FaceNamespace):
     def alpha(self, value: float):
         if not 0 <= value <= 1:
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
-        self.color = (*self.color[:3], value)
+        try:
+            self.color = (*self.color[:3], value)
+        except IndexError:
+            pass  # when the layer is empty
 
     def update(
         self,

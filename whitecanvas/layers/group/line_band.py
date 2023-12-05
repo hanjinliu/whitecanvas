@@ -25,7 +25,7 @@ class LineBand(ListLayerGroup):
         name: str | None = None,
     ):
         if markers is None:
-            markers = Markers([], [], name="Markers")
+            markers = Markers([], [], name="markers")
         super().__init__([line, band, markers], name=name)
 
     @property

@@ -123,7 +123,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         self,
         canvas: _C,
         data: Any,
-        by: str | None = None,
+        by: str | None = None,  # TODO: support multiple columns
         *,
         orient: Orientation = Orientation.VERTICAL,
         offsets=None,
@@ -168,64 +168,60 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             unsafe=True,
         )
 
-    def select(self, *names) -> CategorizedDataPlotter[_C]:
-        """
-        Select categories by name.
-
-        This method is used for filtering and sorting categories.
-
-        >>> df = {
-        ...     "values": [1, 2, 3, 4, 5, 6],
-        ...     "vars": ["a", "b", "a", "b", "a", "b"],
-        ... }
-        >>> canvas.cat(df, by="vars").select(["b", "a"]).to_stripplot("values")
-        """
-        return super().select(*names)
-
-    # Aggregators
+    #####################################################################################
+    ######   Aggregators   ##############################################################
+    #####################################################################################
     def mean(self) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by mean."""
         agged = {k: _aggregate(v, np.mean) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def min(self) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by min."""
         agged = {k: _aggregate(v, np.min) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def max(self) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by max."""
         agged = {k: _aggregate(v, np.max) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def std(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by standard deviation."""
         agged = {k: _aggregate(v, np.std, ddof=ddof) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def var(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by variance."""
         agged = {k: _aggregate(v, np.var, ddof=ddof) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def sum(self) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by sum."""
         agged = {k: _aggregate(v, np.sum) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def count(self) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by the number of data."""
         agged = {k: _aggregate(v, len) for k, v in self.items()}
         return CategorizedAggDataPlotter(
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
     def sem(self, ddof: int = 1) -> CategorizedAggDataPlotter[_C]:
+        """Aggregate data by standard error."""
         agged = {
             k: _aggregate(v, lambda x: np.std(x, ddof=ddof) / np.sqrt(len(x)))
             for k, v in self.items()
@@ -234,13 +230,15 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             self._canvas(), agged, self._offsets, self._orient, self._color_palette
         )
 
-    # Plotting methods
-    def to_stripplot(
+    #####################################################################################
+    ######   Plotting Methods   #########################################################
+    #####################################################################################
+    def add_stripplot(
         self,
         y: str | None = None,
         *,
         name: str | None = None,
-        strip_width: float = 0.3,
+        extent: float = 0.3,
         color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
         symbol: str | Symbol = Symbol.CIRCLE,
@@ -254,18 +252,18 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         data = self._generate_y(y)
         group = _lg.MarkerCollection.build_strip(
             self._generate_x(), data, name=name, orient=self._orient,
-            strip_width=strip_width, seed=seed, symbol=symbol, size=size,
+            strip_width=extent, seed=seed, symbol=symbol, size=size,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
         )  # fmt: skip
         self._relabel_axis(y)
         return canvas.add_layer(group)
 
-    def to_swarmplot(
+    def add_swarmplot(
         self,
         y: str | None = None,
         *,
         name: str | None = None,
-        strip_width: float = 0.3,
+        extent: float = 0.3,
         color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
         symbol: str | Symbol = Symbol.CIRCLE,
@@ -279,18 +277,18 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         data = self._generate_y(y)
         group = _lg.MarkerCollection.build_swarm(
             self._generate_x(), data, name=name, orient=self._orient,
-            strip_width=strip_width, symbol=symbol, size=size, sort=sort,
+            strip_width=extent, symbol=symbol, size=size, sort=sort,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
         )  # fmt: skip
         self._relabel_axis(y)
         return canvas.add_layer(group)
 
-    def to_boxplot(
+    def add_boxplot(
         self,
         y: str | None = None,
         *,
         name: str | None = None,
-        box_width: float = 0.3,
+        extent: float = 0.3,
         capsize: float = 0.15,
         color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
@@ -302,19 +300,19 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         data = self._generate_y(y)
         group = _lg.BoxPlot.from_arrays(
             self._generate_x(), data, name=name, orient=self._orient,
-            box_width=box_width, capsize=capsize, color=color, alpha=alpha,
+            box_width=extent, capsize=capsize, color=color, alpha=alpha,
             pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         self._relabel_axis(y)
         return canvas.add_layer(group)
 
-    def to_violinplot(
+    def add_violinplot(
         self,
         y: str | None = None,
         *,
         name: str | None = None,
         shape: Literal["both", "left", "right"] = "both",
-        violin_width: float = 0.3,
+        extent: float = 0.3,
         band_width: float | str = "scott",
         color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
@@ -325,18 +323,18 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         color = self._generate_colors(color)
         data = self._generate_y(y)
         group = _lg.ViolinPlot.from_arrays(
-            self._generate_x(), data, name=name, shape=shape, violin_width=violin_width,
+            self._generate_x(), data, name=name, shape=shape, violin_width=extent,
             orient=self._orient, kde_band_width=band_width, color=color, alpha=alpha,
             pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         self._relabel_axis(y)
         return canvas.add_layer(group)
 
-    def to_countplot(
+    def add_countplot(
         self,
         *,
         name: str | None = None,
-        bar_width: float = 0.8,
+        extent: float = 0.8,
         color: ColorType | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -357,7 +355,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             counts,
             name=name,
             orient=self._orient,
-            bar_width=bar_width,
+            bar_width=extent,
             color=color,
             alpha=alpha,
             pattern=pattern,
@@ -382,7 +380,17 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         return x + self._offsets
 
     def select(self, *names) -> CategorizedDataPlotter[_C]:
-        """Select categories by name."""
+        """
+        Select categories by name.
+
+        This method is used for filtering and sorting categories.
+
+        >>> df = {
+        ...     "values": [1, 2, 3, 4, 5, 6],
+        ...     "vars": ["a", "b", "a", "b", "a", "b"],
+        ... }
+        >>> canvas.cat(df, by="vars").select(["b", "a"]).add_stripplot("values")
+        """
         if len(names) == 0:
             raise ValueError("At least one category name must be given.")
         elif len(names) == 1 and isinstance(names[0], list):
@@ -449,21 +457,11 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
             y = self.categories[0]
         return [v[y].compute() for v in self.values()]
 
-    def select(self, *names) -> CategorizedDataPlotter[_C]:
-        """
-        Select categories by name.
+    #####################################################################################
+    ######   Plotting Methods   #########################################################
+    #####################################################################################
 
-        This method is used for filtering and sorting categories.
-
-        >>> df = {
-        ...     "values": [1, 2, 3, 4, 5, 6],
-        ...     "vars": ["a", "b", "a", "b", "a", "b"],
-        ... }
-        >>> canvas.cat(df, by="vars").mean().select(["b", "a"]).to_markers("values")
-        """
-        return super().select(*names)
-
-    def to_line(
+    def add_line(
         self,
         y: str | None = None,
         *,
@@ -488,7 +486,7 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         )  # fmt: skip
         return canvas.add_layer(layer)
 
-    def to_markers(
+    def add_markers(
         self,
         y: str | None = None,
         *,
@@ -514,12 +512,12 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         )  # fmt: skip
         return canvas.add_layer(layer)
 
-    def to_bars(
+    def add_bars(
         self,
         y: str | None = None,
         *,
         name=None,
-        bar_width=0.8,
+        extent=0.8,
         color=None,
         alpha=1.0,
         pattern=FacePattern.SOLID,
@@ -531,14 +529,24 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         data = self._generate_y(y)
         layer = _l.Bars(
             self._generate_x(), data, name=name, orient=self._orient,
-            bar_width=bar_width, backend=self._get_backend()
+            bar_width=extent, backend=self._get_backend()
         ).with_face_multi(
             color=color, alpha=alpha, pattern=pattern
         )  # fmt: skip
         return canvas.add_layer(layer)
 
     def select(self, *names) -> CategorizedAggDataPlotter[_C]:
-        """Select categories by name."""
+        """
+        Select categories by name.
+
+        This method is used for filtering and sorting categories.
+
+        >>> df = {
+        ...     "values": [1, 2, 3, 4, 5, 6],
+        ...     "vars": ["a", "b", "a", "b", "a", "b"],
+        ... }
+        >>> canvas.cat(df, by="vars").mean().select(["b", "a"]).add_markers("values")
+        """
         if len(names) == 0:
             raise ValueError("At least one category name must be given.")
         elif len(names) == 1 and isinstance(names[0], list):
@@ -587,7 +595,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         self._color_palette = _color_palette
         self._update_label = update_label
 
-    def to_markers(
+    def add_markers(
         self,
         x: str,
         y: str,
@@ -600,7 +608,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> list[_l.Markers]:
         canvas = self._canvas()
-        name = canvas._coerce_name("scatter", name)
+        name = canvas._coerce_name("markers", name)
         color = self._generate_colors(color)
         xdatas = [v[x] for v in self._obj.values()]
         ydatas = [v[y] for v in self._obj.values()]
@@ -616,7 +624,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         self._relabel_axes(x, y)
         return layers
 
-    def to_line(
+    def add_line(
         self,
         x: str,
         y: str,
@@ -645,7 +653,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         self._relabel_axes(x, y)
         return layers
 
-    def to_hist(
+    def add_hist(
         self,
         value_column: str | None = None,
         *,
@@ -686,7 +694,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         self._relabel_axes(value_column, "count")
         return layers
 
-    def to_cdf(
+    def add_cdf(
         self,
         value_column: str | None = None,
         *,

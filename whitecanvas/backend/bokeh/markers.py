@@ -68,9 +68,8 @@ class Markers(HeteroLayer[bk_models.Scatter]):
         return len(self._data.data["x"])
 
     def _plt_connect_pick_event(self, callback):
-        self._model.on_event(Tap, lambda e: print(e))
-        # self._model.on_event(Tap, lambda e: callback(e.indices))
-        pass  # TODO
+        # TODO: not working
+        self._model.on_event(Tap, lambda e: callback(e.indices))
 
     def _plt_set_hover_text(self, text: list[str]):
         self._data.data["hovertexts"] = text

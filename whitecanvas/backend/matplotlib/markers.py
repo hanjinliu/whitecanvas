@@ -139,7 +139,7 @@ class Markers(PathCollection, MplLayer):
         )
 
     def _on_hover(self, event: mplMouseEvent = None):
-        if self._hover_texts is None:
+        if self._hover_texts is None or not self._plt_get_visible():
             return
         canvas = self._canvas()
         if canvas is None:

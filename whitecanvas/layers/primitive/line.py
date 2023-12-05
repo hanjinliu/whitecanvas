@@ -214,6 +214,48 @@ class Line(MonoLine):
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
+    def with_xfill(
+        self,
+        bottom: float = 0.0,
+        *,
+        color: ColorType | _Void = _void,
+        alpha: float = 0.5,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> _lg.LineBand:
+        from whitecanvas.layers.group import LineBand
+        from whitecanvas.layers.primitive import Band
+
+        if color is _void:
+            color = self.color
+        data = self.data
+        x0 = np.full_like(data.x, bottom)
+        band = Band(
+            data.y, x0, data.x, orient=Orientation.HORIZONTAL,
+            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+        )  # fmt: skip
+        return LineBand(self, band, name=self.name)
+
+    def with_yfill(
+        self,
+        bottom: float = 0.0,
+        *,
+        color: ColorType | _Void = _void,
+        alpha: float = 0.5,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ) -> _lg.LineBand:
+        from whitecanvas.layers.group import LineBand
+        from whitecanvas.layers.primitive import Band
+
+        if color is _void:
+            color = self.color
+        data = self.data
+        y0 = np.full_like(data.y, bottom)
+        band = Band(
+            data.x, y0, data.y, orient=Orientation.VERTICAL,
+            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+        )  # fmt: skip
+        return LineBand(self, band, name=self.name)
+
     def with_text(
         self,
         strings: list[str],

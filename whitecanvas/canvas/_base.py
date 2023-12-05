@@ -327,7 +327,7 @@ class CanvasBase(ABC):
     @overload
     def add_line(
         self, ydata: ArrayLike1D, *, name: str | None = None, color: ColorType | None = None,
-        width: float = 1.0, style: LineStyle | str = LineStyle.SOLID,
+        width: float = 1.0, style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
@@ -336,7 +336,7 @@ class CanvasBase(ABC):
     def add_line(
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
         color: ColorType | None = None, width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
+        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
@@ -344,7 +344,7 @@ class CanvasBase(ABC):
     def add_line(
         self, xdata: ArrayLike1D, ydata: Callable[[ArrayLike1D], ArrayLike1D], *,
         name: str | None = None, color: ColorType | None = None, width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID, antialias: bool = True,
+        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
@@ -355,6 +355,7 @@ class CanvasBase(ABC):
         color=None,
         width=1.0,
         style=LineStyle.SOLID,
+        alpha=1.0,
         antialias=True,
     ):
         """
@@ -367,6 +368,16 @@ class CanvasBase(ABC):
         ----------
         name : str, optional
             Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        width : float, default is 1.0
+            Line width.
+        style : str or LineStyle, default is LineStyle.SOLID
+            Line style.
+        alpha : float, default is 1.0
+            Alpha channel of the bars.
+        antialias : bool, default is True
+            Antialiasing of the lines.
 
         Returns
         -------
@@ -378,7 +389,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Line(
             xdata, ydata, name=name, color=color, width=width, style=style,
-            antialias=antialias, backend=self._get_backend(),
+            alpha=alpha, antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -386,7 +397,7 @@ class CanvasBase(ABC):
     def add_markers(
         self, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 15, color: ColorType | None = None, alpha: float = 1.0,
+        size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
@@ -395,7 +406,7 @@ class CanvasBase(ABC):
     def add_markers(
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 15, color: ColorType | None = None, alpha: float = 1.0,
+        size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
@@ -405,11 +416,37 @@ class CanvasBase(ABC):
         *args,
         name=None,
         symbol=Symbol.CIRCLE,
-        size=15,
+        size=12,
         color=None,
         alpha=1.0,
         pattern=FacePattern.SOLID,
     ):
+        """
+        Add markers (scatter plot).
+
+        >>> canvas.add_markers(x, y)  # standard usage
+        >>> canvas.add_markers(y)  # use 0, 1, ... for the x values
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        symbol : str or Symbol, default is Symbol.CIRCLE
+            Marker symbols.
+        size : float, default is 15
+            Marker size.
+        color : color-like, optional
+            Color of the marker faces.
+        alpha : float, default is 1.0
+            Alpha channel of the marker faces.
+        pattern : str or FacePattern, default is FacePattern.SOLID
+            Pattern of the marker faces.
+
+        Returns
+        -------
+        Markers
+            The markers layer.
+        """
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Markers, name)
         color = self._generate_colors(color)
@@ -421,18 +458,18 @@ class CanvasBase(ABC):
 
     @overload
     def add_bars(
-        self, center: ArrayLike1D, height: ArrayLike1D, bottom: ArrayLike1D | None = None,
-        *, name=None, orient: str | Orientation = Orientation.VERTICAL,
-        bar_width: float = 0.8, color: ColorType | None = None,
+        self, center: ArrayLike1D, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
+        name=None, orient: str | Orientation = Orientation.VERTICAL,
+        extent: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
     @overload
     def add_bars(
-        self, height: ArrayLike1D,
-        *, name=None, orient: str | Orientation = Orientation.VERTICAL,
-        bar_width: float = 0.8, color: ColorType | None = None,
+        self, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
+        name=None, orient: str | Orientation = Orientation.VERTICAL,
+        extent: float = 0.8, color: ColorType | None = None,
         alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
@@ -443,11 +480,40 @@ class CanvasBase(ABC):
         bottom=None,
         name=None,
         orient=Orientation.VERTICAL,
-        bar_width=0.8,
+        extent=0.8,
         color=None,
         alpha=1.0,
         pattern=FacePattern.SOLID,
     ):
+        """
+        Add a bar plot.
+
+        >>> canvas.add_bars(x, heights)  # standard usage
+        >>> canvas.add_bars(heights)  # use 0, 1, ... for the x values
+        >>> canvas.add_bars(..., orient="horizontal")  # horizontal bars
+
+        Parameters
+        ----------
+        bottom : float or array-like, optional
+            Bottom level of the bars.
+        name : str, optional
+            Name of the layer.
+        orient : str or Orientation, default is Orientation.VERTICAL
+            Orientation of the bars.
+        extent : float, default is 0.8
+            Bar width in the canvas coordinate
+        color : color-like, optional
+            Color of the bars.
+        alpha : float, default is 1.0
+            Alpha channel of the bars.
+        pattern : str or FacePattern, default is FacePattern.SOLID
+            Pattern of the bar faces.
+
+        Returns
+        -------
+        Bars
+            The bars layer.
+        """
         center, height = normalize_xy(*args)
         if bottom is not None:
             bottom = as_array_1d(bottom)
@@ -456,7 +522,7 @@ class CanvasBase(ABC):
         name = self._coerce_name(_l.Bars, name)
         color = self._generate_colors(color)
         layer = _l.Bars(
-            center, height, bottom, bar_width=bar_width, name=name, orient=orient,
+            center, height, bottom, bar_width=extent, name=name, orient=orient,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)

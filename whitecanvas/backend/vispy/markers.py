@@ -4,6 +4,9 @@ from vispy.scene import visuals
 
 import numpy as np
 from numpy.typing import NDArray
+
+# from vispy.visuals.filters.markers import MarkerPickingFilter
+
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol
 from whitecanvas.utils.normalize import as_color_array
@@ -16,6 +19,9 @@ class Markers(visuals.Markers):
         pos = np.stack([xdata, ydata], axis=1)
         super().__init__(pos=pos, edge_width=0, face_color="blue")
         self.unfreeze()
+        self._hover_texts: list[str] | None = None
+        # self._picking_filter = MarkerPickingFilter()
+        # self.attach(self._picking_filter)
 
     def _plt_get_ndata(self):
         return len(self._data["a_position"])
@@ -116,4 +122,8 @@ class Markers(visuals.Markers):
     def _plt_connect_pick_event(self, callback):
         # TODO: implement this
         # https://github.com/napari/napari/blob/main/napari/layers/points/points.py#L1617
-        pass  # TODO
+        pass
+
+    def _plt_set_hover_text(self, text: list[str]):
+        # TODO: not used yet
+        self._hover_texts = text

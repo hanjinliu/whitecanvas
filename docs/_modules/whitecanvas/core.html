@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>whitecanvas.core &mdash; whitecanvas 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../../index.html" class="icon icon-home">
+            whitecanvas
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../main/quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../main/line_layers.html">Line-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../main/face_layers.html">Face&amp;edge-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../main/layer_groups.html">Layer Grouping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../main/categorical.html">Categorical Plots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">whitecanvas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">whitecanvas.core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <h1>Source code for whitecanvas.core</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span> <span class="nn">whitecanvas.canvas</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CanvasGrid</span><span class="p">,</span>
+    <span class="n">CanvasVGrid</span><span class="p">,</span>
+    <span class="n">CanvasHGrid</span><span class="p">,</span>
+    <span class="n">SingleCanvas</span><span class="p">,</span>
+    <span class="n">Canvas</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.backend</span> <span class="kn">import</span> <span class="n">Backend</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">ColormapType</span>
+
+
+<div class="viewcode-block" id="grid"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.grid">[docs]</a><span class="k">def</span> <span class="nf">grid</span><span class="p">(</span>
+    <span class="n">nrows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">link_x</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">link_y</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanvasGrid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a canvas grid with uniform cell sizes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nrows : int, optional</span>
+<span class="sd">        Number of rows, by default 1</span>
+<span class="sd">    ncols : int, optional</span>
+<span class="sd">        Number of columns, by default 1</span>
+<span class="sd">    link_x : bool, optional</span>
+<span class="sd">        Whether to link x axes, by default False</span>
+<span class="sd">    link_y : bool, optional</span>
+<span class="sd">        Whether to link y axes, by default False</span>
+<span class="sd">    backend : Backend or str, optional</span>
+<span class="sd">        Backend name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CanvasGrid</span>
+<span class="sd">        Grid of empty canvases.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">CanvasGrid</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+        <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">link_x</span><span class="o">=</span><span class="n">link_x</span><span class="p">,</span> <span class="n">link_y</span><span class="o">=</span><span class="n">link_y</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="grid_nonuniform"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.grid_nonuniform">[docs]</a><span class="k">def</span> <span class="nf">grid_nonuniform</span><span class="p">(</span>
+    <span class="n">heights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">widths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">link_x</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">link_y</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanvasGrid</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">CanvasGrid</span><span class="p">(</span><span class="n">heights</span><span class="p">,</span> <span class="n">widths</span><span class="p">,</span> <span class="n">link_x</span><span class="o">=</span><span class="n">link_x</span><span class="p">,</span> <span class="n">link_y</span><span class="o">=</span><span class="n">link_y</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="vgrid"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.vgrid">[docs]</a><span class="k">def</span> <span class="nf">vgrid</span><span class="p">(</span>
+    <span class="n">nrows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">link_x</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">link_y</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanvasVGrid</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">CanvasVGrid</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">link_x</span><span class="o">=</span><span class="n">link_x</span><span class="p">,</span> <span class="n">link_y</span><span class="o">=</span><span class="n">link_y</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="vgrid_nonuniform"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.vgrid_nonuniform">[docs]</a><span class="k">def</span> <span class="nf">vgrid_nonuniform</span><span class="p">(</span>
+    <span class="n">heights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">link_x</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">link_y</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanvasVGrid</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">CanvasVGrid</span><span class="p">(</span><span class="n">heights</span><span class="p">,</span> <span class="n">link_x</span><span class="o">=</span><span class="n">link_x</span><span class="p">,</span> <span class="n">link_y</span><span class="o">=</span><span class="n">link_y</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hgrid"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.hgrid">[docs]</a><span class="k">def</span> <span class="nf">hgrid</span><span class="p">(</span>
+    <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">link_x</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">link_y</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanvasHGrid</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">CanvasHGrid</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">ncols</span><span class="p">,</span> <span class="n">link_x</span><span class="o">=</span><span class="n">link_x</span><span class="p">,</span> <span class="n">link_y</span><span class="o">=</span><span class="n">link_y</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hgrid_nonuniform"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.hgrid_nonuniform">[docs]</a><span class="k">def</span> <span class="nf">hgrid_nonuniform</span><span class="p">(</span>
+    <span class="n">widths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">link_x</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">link_y</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanvasHGrid</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">CanvasHGrid</span><span class="p">(</span><span class="n">widths</span><span class="p">,</span> <span class="n">link_x</span><span class="o">=</span><span class="n">link_x</span><span class="p">,</span> <span class="n">link_y</span><span class="o">=</span><span class="n">link_y</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="new_canvas"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.new_canvas">[docs]</a><span class="k">def</span> <span class="nf">new_canvas</span><span class="p">(</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">palette</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">ColormapType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SingleCanvas</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new canvas with a single cell.&quot;&quot;&quot;</span>
+    <span class="n">_grid</span> <span class="o">=</span> <span class="n">grid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">_grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">)</span>
+    <span class="n">cvs</span> <span class="o">=</span> <span class="n">SingleCanvas</span><span class="p">(</span><span class="n">_grid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cvs</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="k">return</span> <span class="n">cvs</span></div>
+
+
+<div class="viewcode-block" id="wrap_canvas"><a class="viewcode-back" href="../../apidoc/whitecanvas.html#whitecanvas.core.wrap_canvas">[docs]</a><span class="k">def</span> <span class="nf">wrap_canvas</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrap a backend object into a whitecanvas Canvas.</span>
+
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; canvas = wrap_canvas(plt.gca())</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mod</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">typ</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="k">if</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="s2">&quot;Axes&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">matplotlib.axes</span> <span class="kn">import</span> <span class="n">Axes</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.backend.matplotlib</span> <span class="kn">import</span> <span class="n">Canvas</span> <span class="k">as</span> <span class="n">BackendCanvas</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Axes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected matplotlib Axes, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span>
+
+    <span class="k">elif</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;plotly&quot;</span><span class="p">,</span> <span class="s2">&quot;FigureWidget&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">plotly.graph_objs</span> <span class="kn">import</span> <span class="n">FigureWidget</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.backend.plotly</span> <span class="kn">import</span> <span class="n">Canvas</span> <span class="k">as</span> <span class="n">BackendCanvas</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">FigureWidget</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected plotly FigureWidget, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;plotly&quot;</span>
+    <span class="k">elif</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;bokeh&quot;</span><span class="p">,</span> <span class="s2">&quot;Plot&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">bokeh.models</span> <span class="kn">import</span> <span class="n">Plot</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.backend.bokeh</span> <span class="kn">import</span> <span class="n">Canvas</span> <span class="k">as</span> <span class="n">BackendCanvas</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Plot</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected bokeh Plot, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;bokeh&quot;</span>
+    <span class="k">elif</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;vispy&quot;</span><span class="p">,</span> <span class="s2">&quot;ViewBox&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">vispy.scene</span> <span class="kn">import</span> <span class="n">ViewBox</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.backend.vispy</span> <span class="kn">import</span> <span class="n">Canvas</span> <span class="k">as</span> <span class="n">BackendCanvas</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ViewBox</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected vispy ViewBox, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;vispy&quot;</span>
+    <span class="k">elif</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;pyqtgraph&quot;</span><span class="p">,</span> <span class="s2">&quot;ViewBox&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pyqtgraph</span> <span class="kn">import</span> <span class="n">ViewBox</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.backend.pyqtgraph</span> <span class="kn">import</span> <span class="n">Canvas</span> <span class="k">as</span> <span class="n">BackendCanvas</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ViewBox</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected pyqtgraph ViewBox, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;pyqtgraph&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot convert </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2"> to Canvas&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Canvas</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">BackendCanvas</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_is_in_module</span><span class="p">(</span><span class="n">typ_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mod_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cls_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">mod_name</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span> <span class="ow">and</span> <span class="n">typ_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">cls_name</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hanjin Liu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

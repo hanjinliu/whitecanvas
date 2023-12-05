@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>whitecanvas.backend.matplotlib.canvas &mdash; whitecanvas 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../../../../index.html" class="icon icon-home">
+            whitecanvas
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/line_layers.html">Line-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/face_layers.html">Face&amp;edge-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/layer_groups.html">Layer Grouping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/categorical.html">Categorical Plots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">whitecanvas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">whitecanvas.backend.matplotlib.canvas</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <h1>Source code for whitecanvas.backend.matplotlib.canvas</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span> <span class="nn">matplotlib.artist</span> <span class="kn">import</span> <span class="n">Artist</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backend_bases</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MouseEvent</span> <span class="k">as</span> <span class="n">mplMouseEvent</span><span class="p">,</span>
+    <span class="n">MouseButton</span> <span class="k">as</span> <span class="n">mplMouseButton</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">matplotlib.lines</span> <span class="kn">import</span> <span class="n">Line2D</span>
+<span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">Collection</span>
+<span class="kn">from</span> <span class="nn">.bars</span> <span class="kn">import</span> <span class="n">Bars</span>
+<span class="kn">from</span> <span class="nn">.text</span> <span class="kn">import</span> <span class="n">Texts</span> <span class="k">as</span> <span class="n">whitecanvasText</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">whitecanvasImage</span>
+<span class="kn">from</span> <span class="nn">._labels</span> <span class="kn">import</span> <span class="n">Title</span><span class="p">,</span> <span class="n">XAxis</span><span class="p">,</span> <span class="n">YAxis</span><span class="p">,</span> <span class="n">XLabel</span><span class="p">,</span> <span class="n">YLabel</span><span class="p">,</span> <span class="n">XTicks</span><span class="p">,</span> <span class="n">YTicks</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">protocols</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">MouseEvent</span><span class="p">,</span> <span class="n">Modifier</span><span class="p">,</span> <span class="n">MouseButton</span><span class="p">,</span> <span class="n">MouseEventType</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.backend.matplotlib._base</span> <span class="kn">import</span> <span class="n">MplLayer</span>
+
+
+<div class="viewcode-block" id="Canvas"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.matplotlib.html#whitecanvas.backend.matplotlib.canvas.Canvas">[docs]</a><span class="nd">@protocols</span><span class="o">.</span><span class="n">check_protocol</span><span class="p">(</span><span class="n">protocols</span><span class="o">.</span><span class="n">CanvasProtocol</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Canvas</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span> <span class="o">=</span> <span class="n">ax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xaxis</span> <span class="o">=</span> <span class="n">XAxis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yaxis</span> <span class="o">=</span> <span class="n">YAxis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_title</span> <span class="o">=</span> <span class="n">Title</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xlabel</span> <span class="o">=</span> <span class="n">XLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ylabel</span> <span class="o">=</span> <span class="n">YLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xticks</span> <span class="o">=</span> <span class="n">XTicks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yticks</span> <span class="o">=</span> <span class="n">YTicks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># grid lines below other layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_annot</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+            <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">),</span> <span class="n">textcoords</span><span class="o">=</span><span class="s2">&quot;offset points&quot;</span><span class="p">,</span>
+            <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">fc</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">),</span> <span class="n">fontproperties</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span> <span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;Arial&quot;</span><span class="p">},</span>
+        <span class="p">)</span>  <span class="c1"># fmt: skip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_annot</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_tooltip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_annot</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_annot</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_annot</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fig</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">get_figure</span><span class="p">():</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw_idle</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_hide_tooltip</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annot</span><span class="o">.</span><span class="n">get_visible</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_annot</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fig</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">get_figure</span><span class="p">():</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw_idle</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_native</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_title</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_xaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xaxis</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_yaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yaxis</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_xlabel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xlabel</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ylabel</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_xticks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xticks</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_yticks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yticks</span>
+
+    <span class="k">def</span> <span class="nf">_plt_reorder_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MplLayer</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">_plt_set_zorder</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_aspect_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">get_aspect</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_aspect_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ratio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_add_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Artist</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Line2D</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Collection</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">autolim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Bars</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">patches</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">add_container</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">whitecanvasText</span><span class="p">):</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">set_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">transData</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">_add_text</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">whitecanvasImage</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;post_add&quot;</span><span class="p">):</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">post_add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_remove_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Artist</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove layer from the canvas&quot;&quot;&quot;</span>
+        <span class="n">layer</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get visibility of canvas&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">get_visible</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visible</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set visibility of canvas&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="n">visible</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_mouse_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to clicked event&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_cb</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">mplMouseEvent</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">inaxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span> <span class="ow">or</span> <span class="n">ev</span><span class="o">.</span><span class="n">dblclick</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_translate_mouse_event</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">MouseEventType</span><span class="o">.</span><span class="n">CLICK</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s2">&quot;button_press_event&quot;</span><span class="p">,</span> <span class="n">_cb</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_mouse_drag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to clicked event&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_cb</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">mplMouseEvent</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">inaxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span> <span class="ow">or</span> <span class="n">ev</span><span class="o">.</span><span class="n">dblclick</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_translate_mouse_event</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">MouseEventType</span><span class="o">.</span><span class="n">MOVE</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s2">&quot;motion_notify_event&quot;</span><span class="p">,</span> <span class="n">_cb</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_mouse_double_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to clicked event&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_cb</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">mplMouseEvent</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">inaxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">ev</span><span class="o">.</span><span class="n">dblclick</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_translate_mouse_event</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">MouseEventType</span><span class="o">.</span><span class="n">DOUBLE_CLICK</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s2">&quot;button_press_event&quot;</span><span class="p">,</span> <span class="n">_cb</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_translate_mouse_event</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">:</span> <span class="n">mplMouseEvent</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">MouseEventType</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MouseEvent</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">modifiers</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">modifiers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ev</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">_MOUSE_MOD_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                    <span class="n">modifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_MOUSE_MOD_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="n">modifiers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">modifiers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">MouseEvent</span><span class="p">(</span>
+            <span class="n">pos</span><span class="o">=</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">ydata</span><span class="p">),</span>
+            <span class="n">button</span><span class="o">=</span><span class="n">_MOUSE_BUTTON_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">button</span><span class="p">,</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">NONE</span><span class="p">),</span>
+            <span class="n">modifiers</span><span class="o">=</span><span class="n">modifiers</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">typ</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_xlim_changed</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to x-limits changed event&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;xlim_changed&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ax</span><span class="p">:</span> <span class="n">callback</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_ylim_changed</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to y-limits changed event&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;ylim_changed&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ax</span><span class="p">:</span> <span class="n">callback</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()))</span></div>
+
+
+<span class="n">_MOUSE_BUTTON_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">mplMouseButton</span><span class="o">.</span><span class="n">LEFT</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span>
+    <span class="n">mplMouseButton</span><span class="o">.</span><span class="n">MIDDLE</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">MIDDLE</span><span class="p">,</span>
+    <span class="n">mplMouseButton</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span>
+    <span class="n">mplMouseButton</span><span class="o">.</span><span class="n">BACK</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">BACK</span><span class="p">,</span>
+    <span class="n">mplMouseButton</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_MOUSE_MOD_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;control&quot;</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">CTRL</span><span class="p">,</span>
+    <span class="s2">&quot;ctrl&quot;</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">CTRL</span><span class="p">,</span>
+    <span class="s2">&quot;shift&quot;</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">SHIFT</span><span class="p">,</span>
+    <span class="s2">&quot;alt&quot;</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">ALT</span><span class="p">,</span>
+    <span class="s2">&quot;meta&quot;</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">META</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="CanvasGrid"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.matplotlib.html#whitecanvas.backend.matplotlib.canvas.CanvasGrid">[docs]</a><span class="nd">@protocols</span><span class="o">.</span><span class="n">check_protocol</span><span class="p">(</span><span class="n">protocols</span><span class="o">.</span><span class="n">CanvasGridProtocol</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CanvasGrid</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">widths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">app</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">):</span>
+        <span class="n">nr</span><span class="p">,</span> <span class="n">nc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">heights</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">widths</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gridspec</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span>
+            <span class="n">nr</span><span class="p">,</span> <span class="n">nc</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="n">heights</span><span class="p">,</span> <span class="n">width_ratios</span><span class="o">=</span><span class="n">widths</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">app</span> <span class="o">==</span> <span class="s2">&quot;qt&quot;</span><span class="p">:</span>
+            <span class="n">app</span> <span class="o">=</span> <span class="s2">&quot;QtAgg&quot;</span>
+        <span class="k">elif</span> <span class="n">app</span> <span class="o">==</span> <span class="s2">&quot;wx&quot;</span><span class="p">:</span>
+            <span class="n">app</span> <span class="o">=</span> <span class="s2">&quot;WXAgg&quot;</span>
+        <span class="k">elif</span> <span class="n">app</span> <span class="o">==</span> <span class="s2">&quot;gtk&quot;</span><span class="p">:</span>
+            <span class="n">app</span> <span class="o">=</span> <span class="s2">&quot;GTK3Agg&quot;</span>
+        <span class="k">elif</span> <span class="n">app</span> <span class="o">==</span> <span class="s2">&quot;tk&quot;</span><span class="p">:</span>
+            <span class="n">app</span> <span class="o">=</span> <span class="s2">&quot;TkAgg&quot;</span>
+        <span class="k">elif</span> <span class="n">app</span> <span class="o">==</span> <span class="s2">&quot;notebook&quot;</span><span class="p">:</span>
+            <span class="n">app</span> <span class="o">=</span> <span class="s2">&quot;nbAgg&quot;</span>
+        <span class="k">if</span> <span class="n">app</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_add_canvas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rowspan</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">colspan</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="n">rowspan</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="n">col</span> <span class="o">+</span> <span class="n">colspan</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gridspec</span><span class="p">[</span><span class="n">row</span><span class="p">:</span><span class="n">r1</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span><span class="n">c1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Canvas</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">get_visible</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_background_color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">get_facecolor</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_background_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">io</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span>
+        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">buff</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;raw&quot;</span><span class="p">)</span>
+            <span class="n">buff</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">get_width_height</span><span class="p">()</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">img</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_figsize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">dpi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">get_dpi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="n">width</span> <span class="o">/</span> <span class="n">dpi</span><span class="p">,</span> <span class="n">height</span> <span class="o">/</span> <span class="n">dpi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hanjin Liu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

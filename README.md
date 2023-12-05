@@ -5,6 +5,8 @@
 
 A type safe and backend independent plotting library for Python.
 
+&rarr; [Documentation](https://hanjinliu.github.io/whitecanvas/)
+
 |**matplotlib**||**pyqtgraph**|
 |:--------:|:-:|:-------:|
 |![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud_matplotlib.png)|**Rain-cloud plot** in different backends ([Source code](https://github.com/hanjinliu/whitecanvas/blob/main/examples/raincloud_plot.py))|![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud_pyqtgraph.png)|

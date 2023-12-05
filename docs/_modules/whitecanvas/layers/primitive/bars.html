@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>whitecanvas.layers.primitive.bars &mdash; whitecanvas 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../../../../index.html" class="icon icon-home">
+            whitecanvas
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/line_layers.html">Line-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/face_layers.html">Face&amp;edge-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/layer_groups.html">Layer Grouping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/categorical.html">Categorical Plots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">whitecanvas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">whitecanvas.layers.primitive.bars</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <h1>Source code for whitecanvas.layers.primitive.bars</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">NDArray</span>
+
+<span class="kn">from</span> <span class="nn">whitecanvas.protocols</span> <span class="kn">import</span> <span class="n">BarProtocol</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.layers.primitive.text</span> <span class="kn">import</span> <span class="n">Texts</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.layers._mixin</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MultiFaceEdgeMixin</span><span class="p">,</span>
+    <span class="n">FaceNamespace</span><span class="p">,</span>
+    <span class="n">EdgeNamespace</span><span class="p">,</span>
+    <span class="n">ConstFace</span><span class="p">,</span>
+    <span class="n">ConstEdge</span><span class="p">,</span>
+    <span class="n">MultiFace</span><span class="p">,</span>
+    <span class="n">MultiEdge</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.layers._sizehint</span> <span class="kn">import</span> <span class="n">xyy_size_hint</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.backend</span> <span class="kn">import</span> <span class="n">Backend</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FacePattern</span><span class="p">,</span>
+    <span class="n">ColorType</span><span class="p">,</span>
+    <span class="n">_Void</span><span class="p">,</span>
+    <span class="n">Alignment</span><span class="p">,</span>
+    <span class="n">LineStyle</span><span class="p">,</span>
+    <span class="n">Orientation</span><span class="p">,</span>
+    <span class="n">XYData</span><span class="p">,</span>
+    <span class="n">ArrayLike1D</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.utils.normalize</span> <span class="kn">import</span> <span class="n">as_array_1d</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">whitecanvas.layers</span> <span class="kn">import</span> <span class="n">group</span> <span class="k">as</span> <span class="n">_lg</span>
+
+
+<span class="n">_void</span> <span class="o">=</span> <span class="n">_Void</span><span class="p">()</span>
+<span class="n">_Face</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_Face&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">FaceNamespace</span><span class="p">)</span>
+<span class="n">_Edge</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_Edge&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">EdgeNamespace</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_norm_bar_inputs</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">bot</span><span class="p">,</span> <span class="n">orient</span><span class="p">:</span> <span class="n">Orientation</span><span class="p">,</span> <span class="n">bar_width</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">as_array_1d</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">as_array_1d</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
+    <span class="n">bot</span> <span class="o">=</span> <span class="n">as_array_1d</span><span class="p">(</span><span class="n">bot</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">t0</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">height</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">bot</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected all arrays to have the same size, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="n">t0</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">height</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">bot</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">height</span> <span class="o">+</span> <span class="n">bot</span>
+    <span class="n">x_hint</span><span class="p">,</span> <span class="n">y_hint</span> <span class="o">=</span> <span class="n">xyy_size_hint</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">bot</span><span class="p">,</span> <span class="n">orient</span><span class="p">,</span> <span class="n">bar_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">orient</span><span class="o">.</span><span class="n">is_vertical</span><span class="p">:</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">bar_width</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">-</span> <span class="n">dx</span><span class="p">,</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">dx</span>
+        <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">bot</span><span class="p">,</span> <span class="n">y0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">bar_width</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">bot</span><span class="p">,</span> <span class="n">y0</span>
+        <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">-</span> <span class="n">dy</span><span class="p">,</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">dy</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="n">x_hint</span><span class="p">,</span> <span class="n">y_hint</span>
+
+
+<div class="viewcode-block" id="Bars"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars">[docs]</a><span class="k">class</span> <span class="nc">Bars</span><span class="p">(</span><span class="n">MultiFaceEdgeMixin</span><span class="p">[</span><span class="n">BarProtocol</span><span class="p">,</span> <span class="n">_Face</span><span class="p">,</span> <span class="n">_Edge</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
+        <span class="n">height</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
+        <span class="n">bottom</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">orient</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Orientation</span> <span class="o">=</span> <span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">,</span>
+        <span class="n">bar_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">FacePattern</span> <span class="o">=</span> <span class="n">FacePattern</span><span class="o">.</span><span class="n">SOLID</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">ori</span> <span class="o">=</span> <span class="n">Orientation</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">orient</span><span class="p">)</span>
+        <span class="n">xxyy</span><span class="p">,</span> <span class="n">xhint</span><span class="p">,</span> <span class="n">yhint</span> <span class="o">=</span> <span class="n">_norm_bar_inputs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">ori</span><span class="p">,</span> <span class="n">bar_width</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_backend</span><span class="p">(</span><span class="n">Backend</span><span class="p">(</span><span class="n">backend</span><span class="p">),</span> <span class="o">*</span><span class="n">xxyy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bar_width</span> <span class="o">=</span> <span class="n">bar_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orient</span> <span class="o">=</span> <span class="n">ori</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">face</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x_hint</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y_hint</span> <span class="o">=</span> <span class="n">xhint</span><span class="p">,</span> <span class="n">yhint</span>
+
+<div class="viewcode-block" id="Bars.from_histogram"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.from_histogram">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_histogram</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">ArrayLike1D</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">density</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="nb">range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">orient</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Orientation</span> <span class="o">=</span> <span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">,</span>
+        <span class="n">bar_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">FacePattern</span> <span class="o">=</span> <span class="n">FacePattern</span><span class="o">.</span><span class="n">SOLID</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="n">Backend</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a bar plot from a histogram.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">as_array_1d</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">counts</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="nb">range</span><span class="p">)</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">bar_width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bar_width</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Bars</span><span class="p">(</span>
+            <span class="n">centers</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">bar_width</span><span class="o">=</span><span class="n">bar_width</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">orient</span><span class="o">=</span><span class="n">orient</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># fmt: skip</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XYData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Current data of the layer.&quot;&quot;&quot;</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="o">.</span><span class="n">_plt_get_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orient</span><span class="o">.</span><span class="n">is_vertical</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XYData</span><span class="p">((</span><span class="n">x0</span> <span class="o">+</span> <span class="n">x1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y1</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XYData</span><span class="p">((</span><span class="n">y0</span> <span class="o">+</span> <span class="n">y1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Bars.set_data"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">xdata</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ydata</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bottom</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">xdata</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ydata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">if</span> <span class="n">xdata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">xdata</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">x</span>
+            <span class="k">if</span> <span class="n">ydata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ydata</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">y</span>
+        <span class="k">if</span> <span class="n">bottom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span>
+        <span class="n">xxyy</span><span class="p">,</span> <span class="n">xhint</span><span class="p">,</span> <span class="n">yhint</span> <span class="o">=</span> <span class="n">_norm_bar_inputs</span><span class="p">(</span>
+            <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orient</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bar_width</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="o">.</span><span class="n">_plt_set_data</span><span class="p">(</span><span class="o">*</span><span class="n">xxyy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x_hint</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y_hint</span> <span class="o">=</span> <span class="n">xhint</span><span class="p">,</span> <span class="n">yhint</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="o">.</span><span class="n">_plt_get_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orient</span><span class="o">.</span><span class="n">is_vertical</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">y0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x0</span>
+
+    <span class="nd">@bottom</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="n">bot</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="o">.</span><span class="n">_plt_get_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orient</span><span class="o">.</span><span class="n">is_vertical</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">y1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x1</span>
+
+    <span class="nd">@top</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">):</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">as_array_1d</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">ydata</span><span class="o">=</span><span class="n">top</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bar_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Width of the bars.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bar_width</span>
+
+    <span class="nd">@bar_width</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">bar_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected width &gt; 0, got </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="o">.</span><span class="n">_plt_get_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orient</span> <span class="ow">is</span> <span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">:</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bar_width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">dx</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">dx</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bar_width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">y0</span> <span class="o">=</span> <span class="n">y0</span> <span class="o">-</span> <span class="n">dy</span>
+            <span class="n">y1</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">+</span> <span class="n">dy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="o">.</span><span class="n">_plt_set_data</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bar_width</span> <span class="o">=</span> <span class="n">w</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">orient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Orientation</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Orientation of the bars.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orient</span>
+
+<div class="viewcode-block" id="Bars.with_err"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_err">[docs]</a>    <span class="k">def</span> <span class="nf">with_err</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">err</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
+        <span class="n">err_high</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">capsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_lg</span><span class="o">.</span><span class="n">LabeledBars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orient</span> <span class="ow">is</span> <span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_yerr</span><span class="p">(</span>
+                <span class="n">err</span><span class="p">,</span> <span class="n">err_high</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+                <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span> <span class="n">antialias</span><span class="o">=</span><span class="n">antialias</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="n">capsize</span>
+            <span class="p">)</span>  <span class="c1"># fmt: skip</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_xerr</span><span class="p">(</span>
+                <span class="n">err</span><span class="p">,</span> <span class="n">err_high</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+                <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span> <span class="n">antialias</span><span class="o">=</span><span class="n">antialias</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="n">capsize</span>
+            <span class="p">)</span>  <span class="c1"># fmt: skip</span></div>
+
+<div class="viewcode-block" id="Bars.with_xerr"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_xerr">[docs]</a>    <span class="k">def</span> <span class="nf">with_xerr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">err</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
+        <span class="n">err_high</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">capsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_lg</span><span class="o">.</span><span class="n">LabeledBars</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.layers.group</span> <span class="kn">import</span> <span class="n">LabeledBars</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.layers.primitive</span> <span class="kn">import</span> <span class="n">Errorbars</span>
+
+        <span class="n">xerr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_errorbars</span><span class="p">(</span>
+            <span class="n">err</span><span class="p">,</span> <span class="n">err_high</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">antialias</span><span class="o">=</span><span class="n">antialias</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="n">capsize</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">Orientation</span><span class="o">.</span><span class="n">HORIZONTAL</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># fmt: skip</span>
+        <span class="n">yerr</span> <span class="o">=</span> <span class="n">Errorbars</span><span class="p">(</span>
+            <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="n">orient</span><span class="o">=</span><span class="n">Orientation</span><span class="o">.</span><span class="n">HORIZONTAL</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_name</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">LabeledBars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xerr</span><span class="p">,</span> <span class="n">yerr</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bars.with_yerr"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_yerr">[docs]</a>    <span class="k">def</span> <span class="nf">with_yerr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">err</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
+        <span class="n">err_high</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">capsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_lg</span><span class="o">.</span><span class="n">LabeledBars</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.layers.group</span> <span class="kn">import</span> <span class="n">LabeledBars</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.layers.primitive</span> <span class="kn">import</span> <span class="n">Errorbars</span>
+
+        <span class="n">yerr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_errorbars</span><span class="p">(</span>
+            <span class="n">err</span><span class="p">,</span> <span class="n">err_high</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">antialias</span><span class="o">=</span><span class="n">antialias</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="n">capsize</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># fmt: skip</span>
+        <span class="n">xerr</span> <span class="o">=</span> <span class="n">Errorbars</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LabeledBars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xerr</span><span class="p">,</span> <span class="n">yerr</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bars.with_text"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_text">[docs]</a>    <span class="k">def</span> <span class="nf">with_text</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">strings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+        <span class="n">rotation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">anchor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Alignment</span> <span class="o">=</span> <span class="n">Alignment</span><span class="o">.</span><span class="n">BOTTOM_LEFT</span><span class="p">,</span>
+        <span class="n">fontfamily</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_lg</span><span class="o">.</span><span class="n">LabeledBars</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.layers</span> <span class="kn">import</span> <span class="n">Errorbars</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.layers.group</span> <span class="kn">import</span> <span class="n">LabeledBars</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">strings</span> <span class="o">=</span> <span class="p">[</span><span class="n">strings</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">texts</span> <span class="o">=</span> <span class="n">Texts</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">strings</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+            <span class="n">rotation</span><span class="o">=</span><span class="n">rotation</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="n">anchor</span><span class="p">,</span>
+            <span class="n">fontfamily</span><span class="o">=</span><span class="n">fontfamily</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_name</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">LabeledBars</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">Errorbars</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">Orientation</span><span class="o">.</span><span class="n">HORIZONTAL</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_name</span><span class="p">),</span>
+            <span class="n">Errorbars</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_name</span><span class="p">),</span>
+            <span class="n">texts</span><span class="o">=</span><span class="n">texts</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_errorbars</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">err</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
+        <span class="n">err_high</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">_Void</span> <span class="o">=</span> <span class="n">_void</span><span class="p">,</span>
+        <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">capsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">orient</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Orientation</span> <span class="o">=</span> <span class="n">Orientation</span><span class="o">.</span><span class="n">VERTICAL</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">whitecanvas.layers.primitive</span> <span class="kn">import</span> <span class="n">Errorbars</span>
+
+        <span class="k">if</span> <span class="n">err_high</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">err_high</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="n">_void</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">color</span>
+        <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="n">_void</span><span class="p">:</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">width</span>
+        <span class="k">if</span> <span class="n">style</span> <span class="ow">is</span> <span class="n">_void</span><span class="p">:</span>
+            <span class="n">style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">style</span>
+        <span class="c1"># if antialias is _void:</span>
+        <span class="c1">#     antialias = self.antialias</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span>
+        <span class="k">return</span> <span class="n">Errorbars</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">err</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">err_high</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span> <span class="n">antialias</span><span class="o">=</span><span class="n">antialias</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="n">capsize</span><span class="p">,</span>
+            <span class="n">orient</span><span class="o">=</span><span class="n">orient</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_name</span>
+        <span class="p">)</span>  <span class="c1"># fmt: skip</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ndata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of data points&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="o">.</span><span class="n">_plt_get_data</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+
+<div class="viewcode-block" id="Bars.with_face"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_face">[docs]</a>    <span class="k">def</span> <span class="nf">with_face</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pattern</span><span class="p">:</span> <span class="n">FacePattern</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">FacePattern</span><span class="o">.</span><span class="n">SOLID</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bars</span><span class="p">[</span><span class="n">ConstFace</span><span class="p">,</span> <span class="n">_Edge</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">with_face</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bars.with_face_multi"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_face_multi">[docs]</a>    <span class="k">def</span> <span class="nf">with_face_multi</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ColorType</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">FacePattern</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">FacePattern</span><span class="p">]</span> <span class="o">=</span> <span class="n">FacePattern</span><span class="o">.</span><span class="n">SOLID</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bars</span><span class="p">[</span><span class="n">MultiFace</span><span class="p">,</span> <span class="n">_Edge</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">with_face_multi</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bars.with_edge"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_edge">[docs]</a>    <span class="k">def</span> <span class="nf">with_edge</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">LineStyle</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">LineStyle</span><span class="o">.</span><span class="n">SOLID</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bars</span><span class="p">[</span><span class="n">_Face</span><span class="p">,</span> <span class="n">ConstEdge</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">with_edge</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bars.with_edge_multi"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.layers.primitive.html#whitecanvas.layers.Bars.with_edge_multi">[docs]</a>    <span class="k">def</span> <span class="nf">with_edge_multi</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ColorType</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">LineStyle</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">LineStyle</span><span class="p">]</span> <span class="o">=</span> <span class="n">LineStyle</span><span class="o">.</span><span class="n">SOLID</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bars</span><span class="p">[</span><span class="n">_Face</span><span class="p">,</span> <span class="n">MultiEdge</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">with_edge_multi</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hanjin Liu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>whitecanvas.backend.vispy.canvas &mdash; whitecanvas 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../../../../index.html" class="icon icon-home">
+            whitecanvas
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/line_layers.html">Line-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/face_layers.html">Face&amp;edge-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/layer_groups.html">Layer Grouping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../main/categorical.html">Categorical Plots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">whitecanvas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">whitecanvas.backend.vispy.canvas</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <h1>Source code for whitecanvas.backend.vispy.canvas</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+
+<span class="kn">from</span> <span class="nn">psygnal</span> <span class="kn">import</span> <span class="n">Signal</span>
+<span class="kn">from</span> <span class="nn">vispy.scene</span> <span class="kn">import</span> <span class="n">ViewBox</span><span class="p">,</span> <span class="n">SceneCanvas</span><span class="p">,</span> <span class="n">PanZoomCamera</span><span class="p">,</span> <span class="n">visuals</span>
+<span class="kn">from</span> <span class="nn">vispy.util</span> <span class="kn">import</span> <span class="n">keys</span>
+<span class="kn">from</span> <span class="nn">vispy</span> <span class="kn">import</span> <span class="n">use</span> <span class="k">as</span> <span class="n">vispy_use</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">NDArray</span>
+
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">protocols</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">MouseButton</span><span class="p">,</span> <span class="n">Modifier</span><span class="p">,</span> <span class="n">MouseEventType</span><span class="p">,</span> <span class="n">MouseEvent</span>
+<span class="kn">from</span> <span class="nn">._label</span> <span class="kn">import</span> <span class="n">TextLabel</span><span class="p">,</span> <span class="n">Axis</span><span class="p">,</span> <span class="n">Ticks</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">vispy.scene</span> <span class="kn">import</span> <span class="n">Grid</span>
+    <span class="kn">from</span> <span class="nn">vispy.scene.subscene</span> <span class="kn">import</span> <span class="n">SubScene</span>
+    <span class="kn">from</span> <span class="nn">vispy.app.canvas</span> <span class="kn">import</span> <span class="n">MouseEvent</span> <span class="k">as</span> <span class="n">vispyMouseEvent</span>
+
+
+<div class="viewcode-block" id="Camera"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.Camera">[docs]</a><span class="k">class</span> <span class="nc">Camera</span><span class="p">(</span><span class="n">PanZoomCamera</span><span class="p">):</span>
+    <span class="n">resized</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Camera.viewbox_resize_event"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.Camera.viewbox_resize_event">[docs]</a>    <span class="k">def</span> <span class="nf">viewbox_resize_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">viewbox_resize_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resized</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="Canvas"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.Canvas">[docs]</a><span class="nd">@protocols</span><span class="o">.</span><span class="n">check_protocol</span><span class="p">(</span><span class="n">protocols</span><span class="o">.</span><span class="n">CanvasProtocol</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Canvas</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewbox</span><span class="p">:</span> <span class="n">ViewBox</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outer_viewbox</span> <span class="o">=</span> <span class="n">viewbox</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;Grid&quot;</span><span class="p">,</span> <span class="n">viewbox</span><span class="o">.</span><span class="n">add_grid</span><span class="p">())</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">spacing</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">_viewbox</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">camera</span><span class="o">=</span><span class="n">Camera</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="p">:</span> <span class="n">ViewBox</span> <span class="o">=</span> <span class="n">_viewbox</span>
+
+        <span class="n">title</span> <span class="o">=</span> <span class="n">TextLabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">title</span><span class="o">.</span><span class="n">height_max</span> <span class="o">=</span> <span class="mi">40</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">add_widget</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">col_span</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="n">x_axis</span> <span class="o">=</span> <span class="n">Axis</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
+            <span class="n">anchors</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;bottom&quot;</span><span class="p">),</span>
+            <span class="n">font_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">axis_label_margin</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+            <span class="n">tick_label_margin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">axis_label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">x_axis</span><span class="o">.</span><span class="n">stretch</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">add_widget</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">x_axis</span><span class="o">.</span><span class="n">link_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="p">)</span>
+        <span class="n">y_axis</span> <span class="o">=</span> <span class="n">Axis</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="n">anchors</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;middle&quot;</span><span class="p">),</span>
+            <span class="n">font_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">axis_label_margin</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+            <span class="n">tick_label_margin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">axis_label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">y_axis</span><span class="o">.</span><span class="n">stretch</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">add_widget</span><span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y_axis</span><span class="o">.</span><span class="n">link_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xaxis</span> <span class="o">=</span> <span class="n">x_axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yaxis</span> <span class="o">=</span> <span class="n">y_axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xticks</span> <span class="o">=</span> <span class="n">Ticks</span><span class="p">(</span><span class="n">x_axis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yticks</span> <span class="o">=</span> <span class="n">Ticks</span><span class="p">(</span><span class="n">y_axis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_title</span> <span class="o">=</span> <span class="n">TextLabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xlabel</span> <span class="o">=</span> <span class="n">TextLabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ylabel</span> <span class="o">=</span> <span class="n">TextLabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span> <span class="o">=</span> <span class="n">grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mouse_click_callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mouse_move_callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mouse_double_click_callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_set_scene_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">unfreeze</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">_canvas_ref</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">_scene_ref</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_native</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">scene</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_title</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_xaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xaxis</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_yaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yaxis</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_xlabel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xlabel</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_xticks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xticks</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_yticks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yticks</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ylabel</span>
+
+    <span class="k">def</span> <span class="nf">_plt_reorder_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">protocols</span><span class="o">.</span><span class="n">BaseProtocol</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reorder layers in the canvas&quot;&quot;&quot;</span>
+        <span class="n">vb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">vb</span><span class="p">,</span> <span class="s2">&quot;_scene_ref&quot;</span><span class="p">):</span>
+            <span class="n">scene</span><span class="p">:</span> <span class="n">SceneCanvas</span> <span class="o">=</span> <span class="n">vb</span><span class="o">.</span><span class="n">_scene_ref</span><span class="p">()</span>
+            <span class="n">scene</span><span class="o">.</span><span class="n">_draw_order</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="n">scene</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_camera</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">camera</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_aspect_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get aspect ratio of canvas&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">aspect</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_aspect_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set aspect ratio of canvas&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">aspect</span> <span class="o">=</span> <span class="n">ratio</span>
+
+    <span class="k">def</span> <span class="nf">_plt_add_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">visuals</span><span class="o">.</span><span class="n">visuals</span><span class="o">.</span><span class="n">Visual</span><span class="p">):</span>
+        <span class="n">layer</span><span class="o">.</span><span class="n">set_gl_state</span><span class="p">(</span><span class="s2">&quot;opaque&quot;</span><span class="p">,</span> <span class="n">depth_test</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">layer</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">scene</span>
+
+    <span class="k">def</span> <span class="nf">_plt_remove_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove layer from the canvas&quot;&quot;&quot;</span>
+        <span class="n">layer</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get visibility of canvas&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span><span class="o">.</span><span class="n">visible</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visible</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set visibility of canvas&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="n">visible</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SceneCanvas</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_viewbox</span><span class="o">.</span><span class="n">scene</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_mouse_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to clicked event&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mouse_click_callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_mouse_drag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to clicked event&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mouse_move_callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_mouse_double_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">MouseEvent</span><span class="p">],</span> <span class="kc">None</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect callback to clicked event&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mouse_double_click_callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_xlim_changed</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">resized</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_xaxis</span><span class="o">.</span><span class="n">_plt_get_limits</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">_plt_connect_ylim_changed</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span><span class="o">.</span><span class="n">resized</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_yaxis</span><span class="o">.</span><span class="n">_plt_get_limits</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="CanvasGrid"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.CanvasGrid">[docs]</a><span class="nd">@protocols</span><span class="o">.</span><span class="n">check_protocol</span><span class="p">(</span><span class="n">protocols</span><span class="o">.</span><span class="n">CanvasGridProtocol</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CanvasGrid</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">widths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">app</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">app</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="n">vispy_use</span><span class="p">(</span><span class="n">_APP_NAMES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">app</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span> <span class="o">=</span> <span class="n">SceneCanvasExt</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="s2">&quot;interactive&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span><span class="p">:</span> <span class="n">Grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="o">.</span><span class="n">central_widget</span><span class="o">.</span><span class="n">add_grid</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="o">.</span><span class="n">create_native</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_add_canvas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rowspan</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">colspan</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">viewbox</span><span class="p">:</span> <span class="n">ViewBox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">rowspan</span><span class="p">,</span> <span class="n">colspan</span><span class="p">)</span>
+        <span class="n">canvas</span> <span class="o">=</span> <span class="n">Canvas</span><span class="p">(</span><span class="n">viewbox</span><span class="p">)</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">_set_scene_ref</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">canvas</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_background_color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="o">.</span><span class="n">bgcolor</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_background_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="o">.</span><span class="n">bgcolor</span> <span class="o">=</span> <span class="n">color</span>
+
+    <span class="k">def</span> <span class="nf">_plt_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set visibility of canvas&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_figsize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scene</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
+
+
+<span class="n">_APP_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;qt4&quot;</span><span class="p">:</span> <span class="s2">&quot;pyqt4&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;qt5&quot;</span><span class="p">:</span> <span class="s2">&quot;pyqt5&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;qt6&quot;</span><span class="p">:</span> <span class="s2">&quot;pyqt6&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;qt&quot;</span><span class="p">:</span> <span class="s2">&quot;pyqt5&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tk&quot;</span><span class="p">:</span> <span class="s2">&quot;tkinter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;notebook&quot;</span><span class="p">:</span> <span class="s2">&quot;jupyter_rfb&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="SceneCanvasExt"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.SceneCanvasExt">[docs]</a><span class="k">class</span> <span class="nc">SceneCanvasExt</span><span class="p">(</span><span class="n">SceneCanvas</span><span class="p">):</span>
+    <span class="n">scene</span><span class="p">:</span> <span class="n">SubScene</span>
+
+<div class="viewcode-block" id="SceneCanvasExt.on_mouse_press"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.SceneCanvasExt.on_mouse_press">[docs]</a>    <span class="k">def</span> <span class="nf">on_mouse_press</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">vispyMouseEvent</span><span class="p">):</span>
+        <span class="n">visual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visual_at</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">visual</span><span class="p">,</span> <span class="n">ViewBox</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">visual</span><span class="p">,</span> <span class="s2">&quot;_canvas_ref&quot;</span><span class="p">):</span>
+            <span class="n">canvas</span><span class="p">:</span> <span class="n">Canvas</span> <span class="o">=</span> <span class="n">visual</span><span class="o">.</span><span class="n">_canvas_ref</span><span class="p">()</span>
+            <span class="n">tr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">node_transform</span><span class="p">(</span><span class="n">visual</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">MouseEvent</span><span class="p">(</span>
+                <span class="n">button</span><span class="o">=</span><span class="n">_VISPY_BUTTON_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">,</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">NONE</span><span class="p">),</span>
+                <span class="n">modifiers</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">_VISPY_KEY_MAP</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">),</span>
+                <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="n">MouseEventType</span><span class="o">.</span><span class="n">CLICK</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">canvas</span><span class="o">.</span><span class="n">_mouse_click_callbacks</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SceneCanvasExt.on_mouse_move"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.SceneCanvasExt.on_mouse_move">[docs]</a>    <span class="k">def</span> <span class="nf">on_mouse_move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">vispyMouseEvent</span><span class="p">):</span>
+        <span class="n">visual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visual_at</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">visual</span><span class="p">,</span> <span class="n">ViewBox</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">visual</span><span class="p">,</span> <span class="s2">&quot;_canvas_ref&quot;</span><span class="p">):</span>
+            <span class="n">canvas</span><span class="p">:</span> <span class="n">Canvas</span> <span class="o">=</span> <span class="n">visual</span><span class="o">.</span><span class="n">_canvas_ref</span><span class="p">()</span>
+            <span class="n">tr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">node_transform</span><span class="p">(</span><span class="n">visual</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">MouseEvent</span><span class="p">(</span>
+                <span class="n">button</span><span class="o">=</span><span class="n">_VISPY_BUTTON_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">,</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">NONE</span><span class="p">),</span>
+                <span class="n">modifiers</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">_VISPY_KEY_MAP</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">),</span>
+                <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="n">MouseEventType</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">canvas</span><span class="o">.</span><span class="n">_mouse_move_callbacks</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SceneCanvasExt.on_mouse_double_click"><a class="viewcode-back" href="../../../../apidoc/whitecanvas.backend.vispy.html#whitecanvas.backend.vispy.canvas.SceneCanvasExt.on_mouse_double_click">[docs]</a>    <span class="k">def</span> <span class="nf">on_mouse_double_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">vispyMouseEvent</span><span class="p">):</span>
+        <span class="n">visual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visual_at</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">visual</span><span class="p">,</span> <span class="n">ViewBox</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">visual</span><span class="p">,</span> <span class="s2">&quot;_canvas_ref&quot;</span><span class="p">):</span>
+            <span class="n">canvas</span><span class="p">:</span> <span class="n">Canvas</span> <span class="o">=</span> <span class="n">visual</span><span class="o">.</span><span class="n">_canvas_ref</span><span class="p">()</span>
+            <span class="n">tr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">node_transform</span><span class="p">(</span><span class="n">visual</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">MouseEvent</span><span class="p">(</span>
+                <span class="n">button</span><span class="o">=</span><span class="n">_VISPY_BUTTON_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">,</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">NONE</span><span class="p">),</span>
+                <span class="n">modifiers</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">_VISPY_KEY_MAP</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">),</span>
+                <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="n">MouseEventType</span><span class="o">.</span><span class="n">DOUBLE_CLICK</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">canvas</span><span class="o">.</span><span class="n">_mouse_double_click_callbacks</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div></div>
+
+
+<span class="n">_VISPY_KEY_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">keys</span><span class="o">.</span><span class="n">SHIFT</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">SHIFT</span><span class="p">,</span>
+    <span class="n">keys</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">CTRL</span><span class="p">,</span>
+    <span class="n">keys</span><span class="o">.</span><span class="n">ALT</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">ALT</span><span class="p">,</span>
+    <span class="n">keys</span><span class="o">.</span><span class="n">META</span><span class="p">:</span> <span class="n">Modifier</span><span class="o">.</span><span class="n">META</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">_VISPY_BUTTON_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">MIDDLE</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hanjin Liu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

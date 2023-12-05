@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>whitecanvas.protocols.layer_protocols &mdash; whitecanvas 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+
+
+          <a href="../../../index.html" class="icon icon-home">
+            whitecanvas
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../main/quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../main/line_layers.html">Line-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../main/face_layers.html">Face&amp;edge-type Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../main/layer_groups.html">Layer Grouping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../main/categorical.html">Categorical Plots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">whitecanvas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">whitecanvas.protocols.layer_protocols</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+
+  <h1>Source code for whitecanvas.protocols.layer_protocols</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span> <span class="nn">cmap</span> <span class="kn">import</span> <span class="n">Colormap</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">LineStyle</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">FacePattern</span><span class="p">,</span> <span class="n">Orientation</span><span class="p">,</span> <span class="n">Alignment</span>
+
+<span class="n">Array1D</span> <span class="o">=</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="BaseProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.BaseProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">BaseProtocol</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the visibility.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visible</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the visibility.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="XYDataProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.XYDataProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">XYDataProtocol</span><span class="p">(</span><span class="n">BaseProtocol</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the x and y array.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xdata</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the x and y array.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="XYYDataProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.XYYDataProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">XYYDataProtocol</span><span class="p">(</span><span class="n">BaseProtocol</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the x and y array.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xdata</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata0</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata1</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the x and y array.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="OrientedXYYDataProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.OrientedXYYDataProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">OrientedXYYDataProtocol</span><span class="p">(</span><span class="n">BaseProtocol</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_vertical_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the vertical representative data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_horizontal_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the horizontal representative data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_vertical_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xdata</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata0</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata1</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the vertical representative data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_horizontal_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">xdata</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata0</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata1</span><span class="p">:</span> <span class="n">Array1D</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the horizontal representative data.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="XXYYDataProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.XXYYDataProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">XXYYDataProtocol</span><span class="p">(</span><span class="n">BaseProtocol</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the x and y array.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">xdata0</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">xdata1</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata0</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">ydata1</span><span class="p">:</span> <span class="n">Array1D</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the x and y array.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SupportsPick"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.SupportsPick">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">SupportsPick</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_connect_pick_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect the item picked event.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HasFaces"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.HasFaces">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">HasFaces</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_face_color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the face color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_face_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the face color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_face_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FacePattern</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the face pattern.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_face_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="n">FacePattern</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the face pattern.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HasMultiFaces"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.HasMultiFaces">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">HasMultiFaces</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_face_color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the face color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_face_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the face color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_face_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FacePattern</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the face pattern.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_face_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="n">FacePattern</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">FacePattern</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the face pattern.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HasEdges"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.HasEdges">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">HasEdges</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_edge_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge width.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge width.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_edge_style</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LineStyle</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge style.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">style</span><span class="p">:</span> <span class="n">LineStyle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge style.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HasMultiEdges"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.HasMultiEdges">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">HasMultiEdges</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_edge_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge width.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge width.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_edge_style</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">LineStyle</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge style.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">style</span><span class="p">:</span> <span class="n">LineStyle</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">LineStyle</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge style.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HasText"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.HasText">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">HasText</span><span class="p">(</span><span class="n">BaseProtocol</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the text.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the text.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_text_color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the text color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_text_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the text color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_text_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the text size.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_text_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the text size.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_text_position</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the text position.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_text_position</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the text position.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_text_anchor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Alignment</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the text position.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_text_anchor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Alignment</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the text position.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_text_rotation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the text rotation in degree.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_text_rotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rotation</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the text rotation in degree.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_text_fontfamily</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the text font family.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_text_fontfamily</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the text font family.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="LineProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.LineProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">LineProtocol</span><span class="p">(</span><span class="n">XYDataProtocol</span><span class="p">,</span> <span class="n">HasEdges</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_antialias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the anti alias.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_antialias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the anti alias.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="MultiLineProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.MultiLineProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">MultiLineProtocol</span><span class="p">(</span><span class="n">XYDataProtocol</span><span class="p">,</span> <span class="n">HasEdges</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the x and y array.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the x and y array.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge color.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_edge_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge width.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge width.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_edge_style</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LineStyle</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the edge style.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_edge_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">style</span><span class="p">:</span> <span class="n">LineStyle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the edge style.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_antialias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the anti alias.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_antialias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the anti alias.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="BarProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.BarProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">BarProtocol</span><span class="p">(</span><span class="n">XXYYDataProtocol</span><span class="p">,</span> <span class="n">HasMultiFaces</span><span class="p">,</span> <span class="n">HasMultiEdges</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Protocols for plt.bar, plt.errorbar&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="MarkersProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.MarkersProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">MarkersProtocol</span><span class="p">(</span>
+    <span class="n">XYDataProtocol</span><span class="p">,</span> <span class="n">HasMultiFaces</span><span class="p">,</span> <span class="n">SupportsPick</span><span class="p">,</span> <span class="n">HasMultiEdges</span><span class="p">,</span> <span class="n">Protocol</span>
+<span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Symbol</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the symbol.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the symbol.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_symbol_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the symbol size.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_symbol_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the symbol size.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_hover_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set hover texts to the markers&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="BandProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.BandProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">BandProtocol</span><span class="p">(</span><span class="n">OrientedXYYDataProtocol</span><span class="p">,</span> <span class="n">HasFaces</span><span class="p">,</span> <span class="n">HasEdges</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ErrorbarProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.ErrorbarProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">ErrorbarProtocol</span><span class="p">(</span><span class="n">OrientedXYYDataProtocol</span><span class="p">,</span> <span class="n">HasEdges</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_capsize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the capsize of the error bar edges.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_capsize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capsize</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">orient</span><span class="p">:</span> <span class="n">Orientation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the capsize of the error bar edges.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="TextProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.TextProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">TextProtocol</span><span class="p">(</span><span class="n">HasText</span><span class="p">,</span> <span class="n">HasEdges</span><span class="p">,</span> <span class="n">HasFaces</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="TextsProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.TextsProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">TextsProtocol</span><span class="p">(</span><span class="n">HasText</span><span class="p">,</span> <span class="n">HasMultiEdges</span><span class="p">,</span> <span class="n">HasMultiFaces</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the data.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ImageProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.ImageProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">ImageProtocol</span><span class="p">(</span><span class="n">BaseProtocol</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the image data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the image data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_colormap</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Colormap</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the colormap.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_colormap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n">Colormap</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the colormap.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_clim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the clim.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_clim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clim</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the clim.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_translation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the translation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_translation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">translation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the translation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_get_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the scale.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the scale.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="RangeDataProtocol"><a class="viewcode-back" href="../../../apidoc/whitecanvas.protocols.html#whitecanvas.protocols.layer_protocols.RangeDataProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">RangeDataProtocol</span><span class="p">(</span><span class="n">HasFaces</span><span class="p">,</span> <span class="n">HasEdges</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plt_get_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]:</span>  <span class="c1"># (N, 2)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the ranges.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_plt_set_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">range</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the ranges.&quot;&quot;&quot;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hanjin Liu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+</body>
+</html>

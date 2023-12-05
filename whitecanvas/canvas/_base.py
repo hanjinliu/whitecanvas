@@ -38,7 +38,9 @@ from whitecanvas.theme import get_theme
 from whitecanvas._signal import MouseSignal, GeneratorSignal
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing_extensions import Self, Concatenate, ParamSpec
+
+    _P = ParamSpec("_P")
 
 _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
@@ -375,9 +377,9 @@ class CanvasBase(ABC):
         style : str or LineStyle, default is LineStyle.SOLID
             Line style.
         alpha : float, default is 1.0
-            Alpha channel of the bars.
+            Alpha channel of the line.
         antialias : bool, default is True
-            Antialiasing of the lines.
+            Antialiasing of the line.
 
         Returns
         -------
@@ -395,7 +397,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_markers(
-        self, ydata: ArrayLike1D, *,
+        self, xdata: ArrayLike1D, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -404,7 +406,7 @@ class CanvasBase(ABC):
 
     @overload
     def add_markers(
-        self, xdata: ArrayLike1D, ydata: ArrayLike1D, *,
+        self, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
@@ -587,8 +589,7 @@ class CanvasBase(ABC):
 
     def add_infcurve(
         self,
-        model: Callable[..., NDArray[np.floating]],
-        params: dict[str, Any] = {},
+        model: Callable[Concatenate[Any, _P], Any],
         *,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
@@ -596,13 +597,43 @@ class CanvasBase(ABC):
         width: float = 1.0,
         style: str | LineStyle = LineStyle.SOLID,
         antialias: bool = True,
-    ) -> _l.InfCurve:
+    ) -> _l.InfCurve[_P]:
+        """
+        Add an infinite curve to the canvas.
+
+        >>> canvas.add_infcurve(lambda x: x ** 2)  # parabola
+        >>> canvas.add_infcurve(lambda x, a: np.sin(a*x)).with_params(2)  # parametric
+
+        Parameters
+        ----------
+        model : callable
+            The model function. The first argument must be the x coordinates. Same
+            signature as `scipy.optimize.curve_fit`.
+        bounds : (float, float), default is (-np.inf, np.inf)
+            Lower and upper bounds that the function is defined.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        width : float, default is 1.0
+            Line width.
+        style : str or LineStyle, default is LineStyle.SOLID
+            Line style.
+        alpha : float, default is 1.0
+            Alpha channel of the line.
+        antialias : bool, default is True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        InfCurve
+            The infcurve layer.
+        """
         name = self._coerce_name(_l.InfCurve, name)
         color = self._generate_colors(color)
         layer = _l.InfCurve(
-            model, params=params, bounds=bounds, name=name, color=color,
-            width=width, style=style, antialias=antialias,
-            backend=self._get_backend(),
+            model, bounds=bounds, name=name, color=color, width=width,
+            style=style, antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

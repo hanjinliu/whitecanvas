@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Any, Callable, TYPE_CHECKING
-from typing_extensions import Concatenate
+
+from typing import Callable, TYPE_CHECKING, Generic
+from typing_extensions import Concatenate, ParamSpec
+import inspect
 
 import math
 import numpy as np
@@ -13,12 +15,13 @@ if TYPE_CHECKING:
     from typing import NoReturn
     from whitecanvas.canvas import Canvas
 
+_P = ParamSpec("_P")
 
-class InfCurve(MonoLine):
+
+class InfCurve(MonoLine, Generic[_P]):
     def __init__(
         self,
-        model: Callable[[Concatenate[np.ndarray, ...]], np.ndarray],
-        params: dict[str, Any] = {},
+        model: Callable[[Concatenate[np.ndarray, _P]], np.ndarray],
         *,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
@@ -34,10 +37,20 @@ class InfCurve(MonoLine):
             _lower = 0
         if not np.isfinite(_upper):
             _upper = 1
-        params = params.copy()
-        xdata = np.array([_lower, _upper])
-        ydata = model(xdata, **params)
         super().__init__(name=name)
+
+        xdata = np.array([_lower, _upper])
+        self._sig = inspect.signature(model)
+        try:
+            self._sig.bind(xdata)
+        except TypeError:
+            ydata = np.zeros_like(xdata)
+            self._y_hint = None
+            self._params_ready = False
+        else:
+            ydata = model(xdata)
+            self._y_hint = ydata.min(), ydata.max()
+            self._params_ready = True
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.update(
             color=color, width=width, style=style, alpha=alpha,
@@ -46,7 +59,8 @@ class InfCurve(MonoLine):
 
         self._bounds = bounds
         self._model = model
-        self._params = params
+        self._args = ()
+        self._kwargs = {}
         self._linspace_num = 256
 
     @property
@@ -56,12 +70,13 @@ class InfCurve(MonoLine):
     def set_data(self, xdata=None, ydata=None) -> NoReturn:
         raise NotImplementedError("Cannot set data to an InfCurve layer.")
 
-    def set_params(self, **params):
+    def with_params(self, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        """Set the parameters of the model function."""
         xdata, _ = self._backend._plt_get_data()
-        params = params.copy()
-        ydata = self._model(xdata, **self._params)
+        ydata = self._model(xdata, *args, **kwargs)
         self._backend._plt_set_data(xdata, ydata)
-        self._params = params
+        self._args, self._kwargs = args, kwargs
+        self._params_ready = True
 
     @property
     def model(self) -> Callable[[np.ndarray], np.ndarray]:
@@ -86,7 +101,10 @@ class InfCurve(MonoLine):
             xdata, ydata = np.array([]), np.array([])
         else:
             xdata = np.linspace(x0, x1, self._linspace_num)
-            ydata = self._model(xdata, **self._params)
+            if self._params_ready:
+                ydata = self._model(xdata, *self._args, **self._kwargs)
+            else:
+                ydata = self._backend._plt_get_data()[1]
         self._backend._plt_set_data(xdata, ydata)
 
 

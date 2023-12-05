@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
@@ -25,7 +25,6 @@ from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
-    from typing_extensions import Self
     from whitecanvas.layers._mixin import (
         ConstFace,
         ConstEdge,
@@ -76,9 +75,10 @@ class Markers(
         self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     @classmethod
-    def empty(cls, backend: Backend | str | None = None) -> Self:
+    def empty(
+        cls, backend: Backend | str | None = None
+    ) -> Markers[ConstFace, ConstEdge, float]:
         """Return an empty markers layer."""
-        # TODO: not works with size 0
         return cls([], [], backend=backend)
 
     @property
@@ -144,13 +144,6 @@ class Markers(
                 )
         self._backend._plt_set_symbol_size(size)
 
-    # def add(self, x: float, y: float):
-    #     """Add a new data point."""
-    #     xdata, ydata = self.data
-    #     xdata = np.append(xdata, x)
-    #     ydata = np.append(ydata, y)
-    #     self.set_data(xdata, ydata)
-
     def update(
         self,
         *,
@@ -159,7 +152,7 @@ class Markers(
         color: ColorType | _Void = _void,
         alpha: float | _Void = _void,
         pattern: str | FacePattern | _Void = _void,
-    ) -> Self:
+    ) -> Markers[_Face, _Edge, _Size]:
         """Update the properties of the markers."""
         if symbol is not _void:
             self.symbol = symbol
@@ -173,9 +166,31 @@ class Markers(
             self.face.alpha = alpha
         return self
 
-    def with_hover_text(self, text: str) -> Self:
+    def with_hover_text(self, text: Iterable[Any]) -> Markers[_Face, _Edge, _Size]:
         """Add hover text to the markers."""
-        self._backend._plt_set_hover_text(text)
+        texts = [str(t) for t in text]
+        if len(texts) != self.ndata:
+            raise ValueError(
+                "Expected text to have the same size as the data, "
+                f"got {len(texts)} and {self.ndata}"
+            )
+        self._backend._plt_set_hover_text(texts)
+        return self
+
+    def with_hover_template(
+        self, template: str, **kwargs
+    ) -> Markers[_Face, _Edge, _Size]:
+        """Add hover template to the markers."""
+        xs, ys = self.data
+        custom_keys = list(kwargs.keys())
+        custom_values = [kwargs[k] for k in custom_keys]
+        if "x" in custom_keys or "y" in custom_keys or "i" in custom_keys:
+            raise ValueError("x, y and i are reserved formats.")
+        texts = []
+        for i in range(xs.size):
+            others = {k: v[i] for k, v in zip(custom_keys, custom_values)}
+            texts.append(template.format(x=xs[i], y=ys[i], i=i, **others))
+        self._backend._plt_set_hover_text(texts)
         return self
 
     def with_xerr(

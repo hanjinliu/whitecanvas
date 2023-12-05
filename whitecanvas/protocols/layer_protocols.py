@@ -252,6 +252,9 @@ class MarkersProtocol(
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
         """Set the symbol size."""
 
+    def _plt_set_hover_text(self, text: list[str]) -> None:
+        """Set hover texts to the markers"""
+
 
 @runtime_checkable
 class BandProtocol(OrientedXYYDataProtocol, HasFaces, HasEdges, Protocol):

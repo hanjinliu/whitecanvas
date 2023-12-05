@@ -35,6 +35,24 @@ class Canvas:
         self._xticks = XTicks(self)
         self._yticks = YTicks(self)
         ax.set_axisbelow(True)  # grid lines below other layers
+        self._annot = ax.annotate(
+            text="", xy=(0, 0), xytext=(20, -20), textcoords="offset points",
+            bbox=dict(fc="w"), fontproperties={"size": 14, "family": "Arial"},
+        )  # fmt: skip
+        self._annot.set_visible(False)
+
+    def _set_tooltip(self, pos, text: str):
+        self._annot.xy = pos
+        self._annot.set_text(text)
+        self._annot.set_visible(True)
+        if fig := self._axes.get_figure():
+            fig.canvas.draw_idle()
+
+    def _hide_tooltip(self):
+        if self._annot.get_visible():
+            self._annot.set_visible(False)
+            if fig := self._axes.get_figure():
+                fig.canvas.draw_idle()
 
     def _plt_get_native(self):
         return self._axes
@@ -94,7 +112,7 @@ class Canvas:
         else:
             raise NotImplementedError(f"{layer}")
         if hasattr(layer, "post_add"):
-            layer.post_add(self._axes)
+            layer.post_add(self)
 
     def _plt_remove_layer(self, layer: Artist):
         """Remove layer from the canvas"""

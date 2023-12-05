@@ -6,6 +6,7 @@ from whitecanvas.types import Symbol
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 
 import bokeh.models as bk_models
+from bokeh.events import Tap
 
 from ._base import HeteroLayer, to_bokeh_symbol, from_bokeh_symbol
 
@@ -24,6 +25,7 @@ class Markers(HeteroLayer[bk_models.Scatter]):
                 width=np.zeros(ndata),
                 pattern=[" "] * ndata,
                 style=["solid"] * ndata,
+                hovertexts=[""] * ndata,
             )
         )
         self._model = bk_models.Scatter(
@@ -66,4 +68,9 @@ class Markers(HeteroLayer[bk_models.Scatter]):
         return len(self._data.data["x"])
 
     def _plt_connect_pick_event(self, callback):
+        self._model.on_event(Tap, lambda e: print(e))
+        # self._model.on_event(Tap, lambda e: callback(e.indices))
         pass  # TODO
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self._data.data["hovertexts"] = text

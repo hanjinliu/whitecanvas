@@ -1,11 +1,13 @@
 import sys
 from typing import Callable
+import weakref
 import numpy as np
 from plotly import graph_objects as go
 
 from whitecanvas import protocols
 from whitecanvas.types import MouseEventType, MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
+from .markers import Markers
 from ._base import PlotlyLayer
 from ._labels import Title, AxisLabel, Axis, Ticks
 
@@ -84,6 +86,11 @@ class Canvas:
     def _plt_add_layer(self, layer: PlotlyLayer):
         self._fig.add_trace(layer._props, row=self._row, col=self._col)
         layer._props = self._fig._data[-1]
+        if isinstance(layer, Markers):
+            gobj: go.Scatter = self._fig.data[-1]
+            for cb in layer._click_callbacks:
+                gobj.on_click(_convert_cb(cb), append=True)
+            layer._fig_ref = weakref.ref(self._fig)
 
     def _plt_remove_layer(self, layer: PlotlyLayer):
         """Remove layer from the canvas"""
@@ -109,26 +116,18 @@ class Canvas:
     def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
         # TODO
-        # def _cb(trace, points, state):
-        #     x, y = points.xs[0], points.ys[0]
-        #     callback(
-        #         MouseEvent(
-        #             points.point_inds[0],
-        #             modifiers=(),
-        #             pos=(x, y),
-        #             type=MouseEventType.CLICK,
-        #         )
-        #     )
-
-        # self._scatter.on_click(_cb)
 
     def _plt_connect_mouse_drag(self, callback: Callable[[MouseEvent], None]):
-        """Connect callback to clicked event"""
+        """Connect callback to drag event"""
         # TODO
 
     def _plt_connect_mouse_double_click(self, callback: Callable[[MouseEvent], None]):
-        """Connect callback to clicked event"""
+        """Connect callback to double-clicked event"""
         # TODO
+
+
+def _convert_cb(cb):
+    return lambda _, points, state: cb(points.point_inds)
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)

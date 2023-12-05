@@ -31,7 +31,11 @@ class Markers(PlotlyLayer):
             "type": "scatter",
             "showlegend": False,
             "visible": True,
+            "customdata": list(zip([""] * ndata, [id(self)] * ndata)),
+            "hovertemplate": "%{customdata[0]}<extra></extra>",
         }
+        self._fig_ref = lambda: None
+        self._click_callbacks = []
 
     def _plt_get_ndata(self) -> int:
         return len(self._props["x"])
@@ -90,4 +94,26 @@ class Markers(PlotlyLayer):
         self._props["marker"]["line"]["color"] = [rgba_str_color(c) for c in color]
 
     def _plt_connect_pick_event(self, callback):
-        pass  # TODO
+        fig = self._fig_ref()
+        if fig is None:
+            self._click_callbacks.append(callback)
+            return
+        else:
+            raise NotImplementedError("post connection not implemented yet")
+
+    def _plt_set_hover_text(self, text: list[str]):
+        fig = self._fig_ref()
+        if fig is None:
+            return
+
+        # check by ID
+        def selector(trace):
+            s = trace["customdata"]
+            if s is None:
+                return False
+            return s[0][1] == id(self)
+
+        fig.update_traces(
+            customdata=list(zip(text, [id(self)] * self._plt_get_ndata())),
+            selector=selector,
+        )

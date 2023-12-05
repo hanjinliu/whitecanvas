@@ -35,6 +35,7 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
             useCache=False,  # NOTE: should be True eventually, but pyqtgraph has
             # a bug in caching
         )
+        self.opts["tip"] = "{data}".format
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -136,3 +137,7 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
             callback([p.index() for p in points])
 
         self.sigClicked.connect(cb)
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self.data["data"] = text
+        self.opts["hoverable"] = True

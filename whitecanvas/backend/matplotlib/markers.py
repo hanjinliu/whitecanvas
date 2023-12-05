@@ -1,4 +1,6 @@
 from __future__ import annotations
+import weakref
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,10 +10,15 @@ from matplotlib.collections import PathCollection
 import matplotlib.markers as mmarkers
 import matplotlib.transforms as mtransforms
 
+from psygnal import throttled
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol, FacePattern, LineStyle
 from whitecanvas.utils.normalize import as_color_array
+
+if TYPE_CHECKING:
+    from whitecanvas.backend.matplotlib.canvas import Canvas
+    from matplotlib.backend_bases import MouseEvent as mplMouseEvent
 
 
 def _get_path(symbol: Symbol):
@@ -33,6 +40,8 @@ class Markers(PathCollection, MplLayer):
         self.set_transform(mtransforms.IdentityTransform())
         self._edge_styles = [LineStyle.SOLID] * len(offsets)
         self._pick_callbacks = []
+        self._hover_texts: list[str] | None = None
+        self._canvas = lambda: None
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -117,6 +126,35 @@ class Markers(PathCollection, MplLayer):
 
         self._pick_callbacks.append(cb)
 
-    def post_add(self, ax):
+    def _plt_set_hover_text(self, texts: list[str]):
+        self._hover_texts = texts
+
+    def post_add(self, canvas: Canvas):
+        fig = self.get_figure()
         for cb in self._pick_callbacks:
-            self.get_figure().canvas.mpl_connect("pick_event", cb)
+            fig.canvas.mpl_connect("pick_event", cb)
+        self._canvas = weakref.ref(canvas)
+        fig.canvas.mpl_connect(
+            "motion_notify_event", throttled(self._on_hover, timeout=500)
+        )
+
+    def _on_hover(self, event: mplMouseEvent = None):
+        if self._hover_texts is None:
+            return
+        canvas = self._canvas()
+        if canvas is None:
+            return
+        if event.inaxes is not canvas._axes:
+            return
+        contains, ind = self.contains(event)
+        if not contains:
+            canvas._hide_tooltip()
+            return
+        indices = ind["ind"]
+        if len(indices) == 0:
+            canvas._hide_tooltip()
+            return
+        index: int = indices[0]
+        hover_text = self._hover_texts[index]
+        xy = self.get_offsets()[index]
+        canvas._set_tooltip(xy, hover_text)

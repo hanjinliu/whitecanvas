@@ -1,9 +1,11 @@
-from typing import Any
+from typing import Any, Callable
 from whitecanvas.types import LineStyle, Symbol
+from plotly.graph_objs import FigureWidget
 
 
 class PlotlyLayer:
     _props: dict[str, Any]
+    _fig_ref: Callable[[], FigureWidget]
 
     def _plt_get_visible(self) -> bool:
         return self._props["visible"]

@@ -19,7 +19,12 @@ from ._base import BokehLayer
 
 
 def _prep_plot(width=400, height=300):
-    plot = bk_plotting.figure(width=width, height=height)
+    plot = bk_plotting.figure(
+        width=width,
+        height=height,
+        tooltips="@hovertexts",
+    )
+    plot.title.align = "center"
     return plot
 
 

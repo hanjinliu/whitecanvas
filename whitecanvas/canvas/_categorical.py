@@ -252,7 +252,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         data = self._generate_y(y)
         group = _lg.MarkerCollection.build_strip(
             self._generate_x(), data, name=name, orient=self._orient,
-            strip_width=extent, seed=seed, symbol=symbol, size=size,
+            extent=extent, seed=seed, symbol=symbol, size=size,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
         )  # fmt: skip
         self._relabel_axis(y)
@@ -277,7 +277,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         data = self._generate_y(y)
         group = _lg.MarkerCollection.build_swarm(
             self._generate_x(), data, name=name, orient=self._orient,
-            strip_width=extent, symbol=symbol, size=size, sort=sort,
+            extent=extent, symbol=symbol, size=size, sort=sort,
             color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
         )  # fmt: skip
         self._relabel_axis(y)
@@ -323,7 +323,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         color = self._generate_colors(color)
         data = self._generate_y(y)
         group = _lg.ViolinPlot.from_arrays(
-            self._generate_x(), data, name=name, shape=shape, violin_width=extent,
+            self._generate_x(), data, name=name, shape=shape, extent=extent,
             orient=self._orient, kde_band_width=band_width, color=color, alpha=alpha,
             pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip

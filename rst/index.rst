@@ -2,7 +2,7 @@
 whitecanvas
 ===========
 
-`whitecanvas` is a type safe and backend independent plotting library for Python.
+:mod:`whitecanvas` is a type safe and backend independent plotting library for Python.
 
 Source
 ======
@@ -12,7 +12,7 @@ Source
 Installation
 ============
 
-``whitecanvas`` is available on PyPI.
+:mod:`whitecanvas` is available on PyPI.
 
 .. code-block:: bash
 
@@ -33,7 +33,12 @@ Contents
 
 .. toctree::
     :maxdepth: 1
+
     ./main/quick_start
+    ./main/line_layers
+    ./main/face_layers
+    ./main/layer_groups
+    ./main/categorical
 
 
 Indices and tables

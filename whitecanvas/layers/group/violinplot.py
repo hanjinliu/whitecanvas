@@ -19,12 +19,12 @@ class ViolinPlot(ListLayerGroup):
         *,
         name: str | None = None,
         shape: Literal["both", "left", "right"] = "both",
-        violin_width: float = 0.5,
+        extent: float = 0.5,
         orient: Orientation = Orientation.VERTICAL,
     ):
         super().__init__(bands, name=name)
         self._shape = shape
-        self._violin_width = violin_width
+        self._extent = extent
         self._orient = Orientation(orient)
 
     @classmethod
@@ -36,7 +36,7 @@ class ViolinPlot(ListLayerGroup):
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         shape: Literal["both", "left", "right"] = "both",
-        violin_width: float = 0.5,
+        extent: float = 0.5,
         kde_band_width: float | str = "scott",
         color: ColorType | list[ColorType] = "blue",
         alpha: float = 1,
@@ -48,8 +48,8 @@ class ViolinPlot(ListLayerGroup):
         backend = Backend(backend)
         _violin_o = Orientation.parse(orient)
         _o = _violin_o.transpose()
-        if violin_width <= 0:
-            raise ValueError(f"violin_width must be positive, got {violin_width}")
+        if extent <= 0:
+            raise ValueError(f"extent must be positive, got {extent}")
         x, data = check_array_input(x, data)
         color = as_color_array(color, len(x))
         layers: list[Band] = []
@@ -82,15 +82,13 @@ class ViolinPlot(ListLayerGroup):
             if shape == "both":
                 half_width /= 2
             half_widths.append(half_width)
-        factor = violin_width / np.max(half_widths) / 2
+        factor = extent / np.max(half_widths) / 2
         for band, xoffset in zip(layers, x):
             bd = band.data
             y0 = (bd.y0 - xoffset) * factor + xoffset
             y1 = (bd.y1 - xoffset) * factor + xoffset
             band.set_data(bd.x, y0, y1)
-        return cls(
-            layers, name=name, shape=shape, violin_width=violin_width, orient=_violin_o
-        )
+        return cls(layers, name=name, shape=shape, extent=extent, orient=_violin_o)
 
     def __getitem__(self, key: Hashable) -> Band:
         return self._children[key]
@@ -112,21 +110,21 @@ class ViolinPlot(ListLayerGroup):
         return self._orient
 
     @property
-    def violin_width(self):
-        return self._violin_width
+    def extent(self):
+        return self._extent
 
-    @violin_width.setter
-    def violin_width(self, width: float):
+    @extent.setter
+    def extent(self, width: float):
         if width <= 0:
-            raise ValueError(f"violin_width must be positive, got {width}")
-        factor = width / self.violin_width
+            raise ValueError(f"extent must be positive, got {width}")
+        factor = width / self.extent
         for band in self.iter_children():
             bd = band.data
             ycenter = bd.ycenter
             y0 = (bd.y0 - ycenter) * factor + ycenter
             y1 = (bd.y1 - ycenter) * factor + ycenter
             band.set_data(bd.x, y0, y1)
-        self._violin_width = width
+        self._extent = width
 
     def with_edge(
         self,

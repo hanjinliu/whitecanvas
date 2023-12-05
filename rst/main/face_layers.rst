@@ -59,3 +59,34 @@ All the properties can be set via properties of :attr:`face` and :attr:`edge`, o
     # use `update`
     layer.face.update(color="yellow", pattern="x")
     layer.edge.update(color="black", width=2, style="--")
+
+Multi-faces and Multi-edges
+===========================
+
+:class:`Markers` and :class:`Bars` supports multi-faces and multi-edges. This means that
+you can create a layer with multiple colors, widths, etc.
+
+To do this, you have to call :meth:`with_face_multi` or :meth:`with_edge_multi` method.
+Here's an example of :class:`Markers` with multi-faces.
+
+.. code-block:: python
+
+    import numpy as np
+    from whitecanvas import new_canvas
+
+    canvas = new_canvas("matplotlib")
+
+    layer = canvas.add_markers(
+        np.arange(10),
+    ).with_face_multi(
+        color=np.random.random((10, 3)),  # random colors
+    )
+
+After calling :meth:`with_face_multi`, the layer :attr:`face` property will return arrays
+instead of scalar values.
+
+.. code-block:: python
+
+    layer.face.color  # (N, 4) array of RGBA colors
+    layer.face.pattern  # (N,) array of patterns
+    layer.alpha # (N,) array of alpha values

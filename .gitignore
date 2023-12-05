@@ -1,6 +1,7 @@
 .vscode/
 main.py
 *.ipynb
+_docs_temp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

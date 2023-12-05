@@ -18,11 +18,11 @@ class MarkerCollection(ListLayerGroup):
         markers: list[Markers],
         *,
         name: str | None = None,
-        strip_width: float = 0.3,
+        extent: float = 0.3,
         orient: Orientation = Orientation.VERTICAL,
     ):
         super().__init__(markers, name=name)
-        self._strip_width = strip_width
+        self._extent = extent
         self._orient = Orientation.parse(orient)
 
     def nth(self, n: int) -> Markers:
@@ -50,7 +50,7 @@ class MarkerCollection(ListLayerGroup):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        strip_width: float = 0.3,
+        extent: float = 0.3,
         seed: int | None = 0,
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
@@ -65,7 +65,7 @@ class MarkerCollection(ListLayerGroup):
         layers: list[Markers] = []
         color = as_color_array(color, len(x))
         for ith, (x0, values, color) in enumerate(zip(x, data, color)):
-            offsets = rng.uniform(-strip_width / 2, strip_width / 2, size=len(values))
+            offsets = rng.uniform(-extent / 2, extent / 2, size=len(values))
             if ori.is_vertical:
                 _x = np.full_like(values, x0) + offsets
                 _y = values
@@ -78,7 +78,7 @@ class MarkerCollection(ListLayerGroup):
             )  # fmt: skip
             layers.append(markers)
 
-        return cls(layers, name=name, strip_width=strip_width, orient=ori)
+        return cls(layers, name=name, extent=extent, orient=ori)
 
     @classmethod
     def build_swarm(
@@ -88,7 +88,7 @@ class MarkerCollection(ListLayerGroup):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        strip_width: float = 0.3,
+        extent: float = 0.3,
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 10,
         sort: bool = False,
@@ -122,8 +122,8 @@ class MarkerCollection(ListLayerGroup):
                     offset_pre[i] = -(c + 1) / 2
                 offset_count[idx] += 1
             offset_max = np.abs(offset_pre).max()
-            width_default = dv / (len(data) + 1) * 2
-            offsets = offset_pre / offset_max * min(strip_width, width_default)
+            width_default = dv * offset_max
+            offsets = offset_pre / offset_max * min(extent / 2, width_default)
             if ori.is_vertical:
                 _x = np.full_like(values, x0) + offsets
                 _y = values
@@ -144,7 +144,7 @@ class MarkerCollection(ListLayerGroup):
                 backend=backend,
             )
             layers.append(markers)
-        return cls(layers, name=name, strip_width=strip_width, orient=ori)
+        return cls(layers, name=name, extent=extent, orient=ori)
 
     @property
     def orient(self) -> Orientation:

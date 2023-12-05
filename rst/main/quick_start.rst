@@ -84,3 +84,42 @@ Color, size, style, etc. can also be configured via the layer properties.
 
     line_layer.color = "red"
     markers_layer.symbol = "s"
+
+A major difference between :mod:`whitecanvas` and other plotting libraries is that
+all the edge properties are set using :meth:`with_edge` method.
+
+.. code-block:: python
+
+    from whitecanvas import new_canvas
+
+    canvas = new_canvas(backend="matplotlib")
+    markers_layer = canvas.add_markers(
+        [0, 1, 2, 3], [1, 2, 0, 1]
+    ).with_edge(color="black", width=1)
+
+Wanna use DataFrame?
+====================
+
+:mod:`whitecanvas` has a built-in support for DataFrame-like objects for categorical
+plotting.
+
+.. code-block:: python
+
+    from whitecanvas import new_canvas
+    import pandas as pd
+
+    canvas = new_canvas(backend="matplotlib")
+
+    # load iris
+    df = pd.read_csv('https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv')
+
+    swarm = (
+        canvas.cat(df, "species", offsets=-0.2)
+        .add_swarmplot("sepal_length", size=8)
+        .with_edge(color="black")
+    )
+    box = (
+        canvas.cat(df, "species", offsets=0.2)
+        .add_boxplot("sepal_length")
+    )
+    canvas.show()

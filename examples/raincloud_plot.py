@@ -11,10 +11,10 @@ def main():
     x = "species"
     y = "sepal_width"
     cat_plt = canvas.cat(df, by=x)
-    cat_plt.with_offset(-0.3).to_stripplot(y).with_edge(color="#3F3F00")
-    cat_plt.with_offset(0).to_boxplot(y)
-    cat_plt.with_offset(0).mean().to_markers(y, size=10, symbol="+", color="black")
-    cat_plt.with_offset(0.2).to_violinplot(y, violin_width=0.5, shape="right").with_edge(color="#3F3F00")
+    cat_plt.with_offset(-0.3).add_stripplot(y).with_edge(color="#3F3F00")
+    cat_plt.with_offset(0).add_boxplot(y)
+    cat_plt.with_offset(0).mean().add_markers(y, size=10, symbol="+", color="black")
+    cat_plt.with_offset(0.2).add_violinplot(y, violin_width=0.5, shape="right").with_edge(color="#3F3F00")
 
     canvas.show(block=True)
 

@@ -134,7 +134,6 @@ _SYMBOL_MAP = {
     Symbol.CROSS: ("x", 0),
     Symbol.PLUS: ("cross", 0),
     Symbol.STAR: ("star", 0),
-    Symbol.DOT: ("dot", 0),
     Symbol.VBAR: ("dash", 1),
     Symbol.HBAR: ("dash", 0),
 }
@@ -142,7 +141,7 @@ _SYMBOL_MAP = {
 _SYMBOL_MAP_INV = {v: k for k, v in _SYMBOL_MAP.items()}
 
 _HATCH_MAP = {
-    FacePattern.SOLID: " ",
+    FacePattern.SOLID: "",
     FacePattern.HORIZONTAL: "horizontal_line",
     FacePattern.VERTICAL: "vertical_line",
     FacePattern.CROSS: "cross",

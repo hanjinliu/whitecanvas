@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from cmap import Colormap
 from whitecanvas.layers.group._collections import ListLayerGroup
-from whitecanvas.layers.primitive import Image
+from whitecanvas.layers._primitive import Image
 from whitecanvas.types import ColormapType, Orientation
 
 

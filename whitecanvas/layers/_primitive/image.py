@@ -3,12 +3,21 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from cmap import Colormap
+from psygnal import Signal
+
 from whitecanvas.protocols import ImageProtocol
 from whitecanvas.types import ColormapType, _Void
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
 
 _void = _Void()
+
+
+class ImageEvents(LayerEvents):
+    cmap = Signal(Colormap)
+    clim = Signal(tuple)
+    shift = Signal(tuple)
+    scale = Signal(tuple)
 
 
 class Image(PrimitiveLayer[ImageProtocol]):
@@ -26,6 +35,9 @@ class Image(PrimitiveLayer[ImageProtocol]):
         You can also pass ``None`` separately to either limit to only autoscale one of
         them.
     """
+
+    events: ImageEvents
+    _events_class = ImageEvents
 
     def __init__(
         self,
@@ -53,7 +65,9 @@ class Image(PrimitiveLayer[ImageProtocol]):
 
     @data.setter
     def data(self, data: ArrayLike):
-        self._backend._plt_set_data(_normalize_image(data))
+        img = _normalize_image(data)
+        self._backend._plt_set_data(img)
+        self.events.data.emit(img)
 
     @property
     def cmap(self) -> Colormap:
@@ -62,7 +76,9 @@ class Image(PrimitiveLayer[ImageProtocol]):
 
     @cmap.setter
     def cmap(self, cmap: ColormapType):
-        self._backend._plt_set_colormap(Colormap(cmap))
+        _cmap = Colormap(cmap)
+        self._backend._plt_set_colormap(_cmap)
+        self.events.cmap.emit(_cmap)
 
     @property
     def clim(self) -> tuple[float, float]:
@@ -80,6 +96,7 @@ class Image(PrimitiveLayer[ImageProtocol]):
         if high is None:
             high = self.data.max()
         self._backend._plt_set_clim((low, high))
+        self.events.clim.emit((low, high))
 
     @property
     def shift(self) -> tuple[float, float]:
@@ -93,6 +110,7 @@ class Image(PrimitiveLayer[ImageProtocol]):
         self._x_hint, self._y_hint = _hint_for(
             (img.shape[1], img.shape[0]), shift=shift, scale=self.scale
         )
+        self.events.shift.emit(shift)
 
     @property
     def scale(self) -> tuple[float, float]:
@@ -111,6 +129,7 @@ class Image(PrimitiveLayer[ImageProtocol]):
         self._x_hint, self._y_hint = _hint_for(
             (img.shape[1], img.shape[0]), shift=self.shift, scale=scale
         )
+        self.events.scale.emit(scale)
 
     def update(
         self,

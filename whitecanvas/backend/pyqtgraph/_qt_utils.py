@@ -24,6 +24,7 @@ _LINE_STYLE = {
 }
 
 _LINE_STYLE_INV = {v: k for k, v in _LINE_STYLE.items()}
+_LINE_STYLE_INV[Qt.PenStyle.NoPen] = LineStyle.SOLID
 
 
 def _create_symbol(coords: list[tuple[float, float]]):
@@ -38,6 +39,7 @@ def _create_symbol(coords: list[tuple[float, float]]):
 Symbols["-"] = _create_symbol([(0, -0.5), (0, 0.5)])
 Symbols["|"] = _create_symbol([(-0.5, 0), (0.5, 0)])
 Symbols["s"] = _create_symbol([(-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5), (0.5, -0.5)])
+Symbols["."] = _create_symbol([(0, -0.1), (0.1, 0), (0, 0.1), (-0.1, 0)])
 
 _SYMBOL = {
     Symbol.STAR: "star",
@@ -64,6 +66,7 @@ _PAINT_STYLE = {
 }
 
 _PAINT_STYLE_INV = {v: k for k, v in _PAINT_STYLE.items()}
+_PAINT_STYLE_INV[Qt.BrushStyle.NoBrush] = FacePattern.SOLID
 
 
 def from_qt_line_style(style: Qt.PenStyle) -> LineStyle:
@@ -75,7 +78,10 @@ def to_qt_line_style(style: LineStyle) -> Qt.PenStyle:
 
 
 def from_qt_symbol(symbol: str) -> Symbol:
-    return _SYMBOL_INV.get(symbol, Symbol(symbol))
+    out = _SYMBOL_INV.get(symbol, None)
+    if out is None:
+        return Symbol(symbol)
+    return out
 
 
 def to_qt_symbol(symbol: Symbol) -> str:

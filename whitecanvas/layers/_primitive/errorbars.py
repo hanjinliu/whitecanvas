@@ -3,7 +3,8 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike
 
-from whitecanvas.layers.primitive.line import MultiLine
+from psygnal import Signal
+from whitecanvas.layers._primitive.line import MultiLine, LineLayerEvents
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, _Void, Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
@@ -12,8 +13,15 @@ from whitecanvas.utils.normalize import as_array_1d
 _void = _Void()
 
 
+class ErrorbarsEvents(LineLayerEvents):
+    capsize = Signal(float)
+
+
 class Errorbars(MultiLine):
     """Errorbars layer (parallel lines with caps)."""
+
+    events: ErrorbarsEvents
+    _events_class = ErrorbarsEvents
 
     def __init__(
         self,
@@ -93,8 +101,10 @@ class Errorbars(MultiLine):
             data = _xyy_to_segments(t, y0, y1, self.capsize)
         else:
             data = _yxx_to_segments(t, y0, y1, self.capsize)
-        super().set_data(data)
+        with self.events.data.blocked():
+            super().set_data(data)
         self._data = XYYData(x0, y0, y1)
+        self.events.data.emit(x0, y0, y1)
 
     @property
     def ndata(self) -> int:
@@ -116,16 +126,9 @@ class Errorbars(MultiLine):
         if capsize < 0:
             raise ValueError(f"Capsize must be non-negative, got {capsize!r}")
         self._capsize = capsize
-        self.set_data(*self._data)
-
-    @property
-    def antialias(self) -> bool:
-        """Whether to use antialiasing."""
-        return self._backend._plt_get_antialias()
-
-    @antialias.setter
-    def antialias(self, antialias: bool):
-        self._backend._plt_set_antialias(antialias)
+        with self.events.data.blocked():
+            self.set_data(*self._data)
+        self.events.capsize.emit(capsize)
 
     def update(
         self,
@@ -136,16 +139,9 @@ class Errorbars(MultiLine):
         antialias: bool | _Void = _void,
         capsize: float | _Void = _void,
     ):
-        if color is not _void:
-            self.color = color
-        if width is not _void:
-            self.width = width
-        if style is not _void:
-            self.style = style
-        if antialias is not _void:
-            self.antialias = antialias
-        if alpha is not _void:
-            self.alpha = alpha
+        super().update(
+            color=color, width=width, style=style, alpha=alpha, antialias=antialias
+        )
         if capsize is not _void:
             self.capsize = capsize
         return self

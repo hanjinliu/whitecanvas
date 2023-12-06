@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, Sequence, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
+from psygnal import Signal
 from whitecanvas.protocols import BarProtocol
-from whitecanvas.layers.primitive.text import Texts
+from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._base import LayerEvents
 from whitecanvas.layers._mixin import (
     MultiFaceEdgeMixin,
     FaceNamespace,
@@ -38,32 +40,15 @@ _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 
 
-def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):
-    t0 = as_array_1d(t0)
-    height = as_array_1d(height)
-    if bot is None:
-        bot = np.zeros_like(t0)
-    bot = as_array_1d(bot)
-    if not (t0.size == height.size == bot.size):
-        raise ValueError(
-            "Expected all arrays to have the same size, "
-            f"got {t0.size}, {height.size}, {bot.size}"
-        )
-    y0 = height + bot
-    x_hint, y_hint = xyy_size_hint(t0, y0, bot, orient, bar_width / 2)
-
-    if orient.is_vertical:
-        dx = bar_width / 2
-        x0, x1 = t0 - dx, t0 + dx
-        y0, y1 = bot, y0
-    else:
-        dy = bar_width / 2
-        x0, x1 = bot, y0
-        y0, y1 = t0 - dy, t0 + dy
-    return (x0, x1, y0, y1), x_hint, y_hint
+class BarEvents(LayerEvents):
+    bar_width = Signal(float)
+    bottom = Signal(np.ndarray)
 
 
 class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
+    events: BarEvents
+    _events_class = BarEvents
+
     def __init__(
         self,
         x: ArrayLike1D,
@@ -129,19 +114,25 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         ydata: ArrayLike1D | None = None,
         bottom: ArrayLike1D | None = None,
     ):
+        emit_data = xdata is not None or ydata is not None
+        emit_bottom = bottom is not None
         if xdata is None or ydata is None:
             data = self.data
             if xdata is None:
                 xdata = data.x
             if ydata is None:
                 ydata = data.y
-        if bottom is None:
+        if not emit_bottom:
             bottom = self.bottom
         xxyy, xhint, yhint = _norm_bar_inputs(
             xdata, ydata, bottom, self._orient, self._bar_width
         )
         self._backend._plt_set_data(*xxyy)
         self._x_hint, self._y_hint = xhint, yhint
+        if emit_data:
+            self.events.data.emit(xdata, ydata)
+        if emit_bottom:
+            self.events.bottom.emit(bottom)
 
     @property
     def bottom(self) -> NDArray[np.floating]:
@@ -188,6 +179,7 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
             y1 = y1 + dy
         self._backend._plt_set_data(x0, x1, y0, y1)
         self._bar_width = w
+        self.events.bar_width.emit(w)
 
     @property
     def orient(self) -> Orientation:
@@ -228,7 +220,7 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         capsize: float = 0,
     ) -> _lg.LabeledBars:
         from whitecanvas.layers.group import LabeledBars
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         xerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
@@ -251,7 +243,7 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         capsize: float = 0,
     ) -> _lg.LabeledBars:
         from whitecanvas.layers.group import LabeledBars
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         yerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
@@ -282,7 +274,7 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
             size=size,
             rotation=rotation,
             anchor=anchor,
-            fontfamily=fontfamily,
+            family=fontfamily,
             backend=self._backend_name,
         )
         return LabeledBars(
@@ -305,7 +297,7 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         capsize: float = 0,
         orient: str | Orientation = Orientation.VERTICAL,
     ):
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         if err_high is None:
             err_high = err
@@ -363,3 +355,28 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         alpha: float = 1,
     ) -> Bars[_Face, MultiEdge]:
         return super().with_edge_multi(color, width, style, alpha)
+
+
+def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):
+    t0 = as_array_1d(t0)
+    height = as_array_1d(height)
+    if bot is None:
+        bot = np.zeros_like(t0)
+    bot = as_array_1d(bot)
+    if not (t0.size == height.size == bot.size):
+        raise ValueError(
+            "Expected all arrays to have the same size, "
+            f"got {t0.size}, {height.size}, {bot.size}"
+        )
+    y0 = height + bot
+    x_hint, y_hint = xyy_size_hint(t0, y0, bot, orient, bar_width / 2)
+
+    if orient.is_vertical:
+        dx = bar_width / 2
+        x0, x1 = t0 - dx, t0 + dx
+        y0, y1 = bot, y0
+    else:
+        dy = bar_width / 2
+        x0, x1 = bot, y0
+        y0, y1 = t0 - dy, t0 + dy
+    return (x0, x1, y0, y1), x_hint, y_hint

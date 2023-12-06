@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING, Generic
+from typing import Any, Callable, TYPE_CHECKING, Generic
 from typing_extensions import Concatenate, ParamSpec
 import inspect
 
@@ -9,16 +9,18 @@ import numpy as np
 
 from whitecanvas.backend import Backend
 from whitecanvas.types import LineStyle, ColorType, Rect
-from whitecanvas.layers.primitive.line import MonoLine
+from whitecanvas.protocols import LineProtocol
+from whitecanvas.layers._primitive.line import LineMixin
 
 if TYPE_CHECKING:
-    from typing import NoReturn
     from whitecanvas.canvas import Canvas
 
 _P = ParamSpec("_P")
 
 
-class InfCurve(MonoLine, Generic[_P]):
+class InfCurve(LineMixin[LineProtocol], Generic[_P]):
+    _backend_class_name = "MonoLine"
+
     def __init__(
         self,
         model: Callable[[Concatenate[np.ndarray, _P]], np.ndarray],
@@ -40,9 +42,9 @@ class InfCurve(MonoLine, Generic[_P]):
         super().__init__(name=name)
 
         xdata = np.array([_lower, _upper])
-        self._sig = inspect.signature(model)
+        _sig = inspect.signature(model)
         try:
-            self._sig.bind(xdata)
+            _sig.bind(xdata)
         except TypeError:
             ydata = np.zeros_like(xdata)
             self._y_hint = None
@@ -63,13 +65,6 @@ class InfCurve(MonoLine, Generic[_P]):
         self._kwargs = {}
         self._linspace_num = 256
 
-    @property
-    def data(self) -> NoReturn:
-        raise NotImplementedError("Cannot get data from an InfCurve layer.")
-
-    def set_data(self, xdata=None, ydata=None) -> NoReturn:
-        raise NotImplementedError("Cannot set data to an InfCurve layer.")
-
     def with_params(self, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Set the parameters of the model function."""
         xdata, _ = self._backend._plt_get_data()
@@ -79,7 +74,12 @@ class InfCurve(MonoLine, Generic[_P]):
         self._params_ready = True
 
     @property
-    def model(self) -> Callable[[np.ndarray], np.ndarray]:
+    def params(self) -> tuple[tuple, dict[str, Any]]:
+        """The parameters of the model function."""
+        return self._args, self._kwargs
+
+    @property
+    def model(self) -> Callable[[Concatenate[np.ndarray, _P]], np.ndarray]:
         """The model function of the layer."""
         return self._model
 
@@ -108,7 +108,9 @@ class InfCurve(MonoLine, Generic[_P]):
         self._backend._plt_set_data(xdata, ydata)
 
 
-class InfLine(MonoLine):
+class InfLine(LineMixin[LineProtocol]):
+    _backend_class_name = "MonoLine"
+
     def __init__(
         self,
         pos: tuple[float, float] = (0, 0),
@@ -122,15 +124,15 @@ class InfLine(MonoLine):
         antialias: bool = True,
         backend: Backend | str | None = None,
     ):
+        self._pos = pos
         self._is_vline = angle % 180 == 90
         if self._is_vline:
             self._tan = 0  # not used
-            self._intercept = pos[0]
+            self._intercept = self._pos[0]
         else:
             _radian = math.radians(angle) % (2 * math.pi)
             self._tan = math.tan(_radian)
-            self._intercept = pos[1] - self._tan * pos[0]
-        self._pos = pos
+            self._intercept = self._pos[1] - self._tan * self._pos[0]
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), np.zeros(1), np.zeros(1))
         self.update(
@@ -140,13 +142,6 @@ class InfLine(MonoLine):
         self._last_rect = Rect(0, 0, 0, 0)
 
     @property
-    def data(self) -> NoReturn:
-        raise NotImplementedError("Cannot get data from an Line layer.")
-
-    def set_data(self, xdata=None, ydata=None) -> NoReturn:
-        raise NotImplementedError("Cannot set data to an Line layer.")
-
-    @property
     def pos(self) -> tuple[float, float]:
         """One of the points on the line."""
         return self._pos
@@ -154,6 +149,26 @@ class InfLine(MonoLine):
     @pos.setter
     def pos(self, pos: tuple[float, float]):
         self._pos = pos
+        self._recalculate_line(self._last_rect)
+
+    @property
+    def angle(self) -> float:
+        """The angle of the line in degrees."""
+        if self._is_vline:
+            return 90.0
+        else:
+            return math.degrees(math.atan(self._tan))
+
+    @angle.setter
+    def angle(self, angle: float):
+        self._is_vline = angle % 180 == 90
+        if self._is_vline:
+            self._tan = 0  # not used
+            self._intercept = self._pos[0]
+        else:
+            _radian = math.radians(angle) % (2 * math.pi)
+            self._tan = math.tan(_radian)
+            self._intercept = self._pos[1] - self._tan * self._pos[0]
         self._recalculate_line(self._last_rect)
 
     def _connect_canvas(self, canvas: Canvas):

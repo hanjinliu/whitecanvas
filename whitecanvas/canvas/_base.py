@@ -739,8 +739,8 @@ class CanvasBase(ABC):
         size: float = 12,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str | None = None,
-    ) -> _l.Texts:
+        family: str | None = None,
+    ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
         """
         Add a text layer to the canvas.
 
@@ -761,7 +761,7 @@ class CanvasBase(ABC):
         anchor : str or Alignment, default is Alignment.BOTTOM_LEFT
             Anchor position of the text. The anchor position will be the coordinate
             given by (x, y).
-        fontfamily : str, optional
+        family : str, optional
             Font family of the text.
 
         Returns
@@ -777,7 +777,7 @@ class CanvasBase(ABC):
                 raise ValueError("Expected string to have the same size as x/y")
         layer = _l.Texts(
             x_, y_, string, color=color, size=size, rotation=rotation, anchor=anchor,
-            fontfamily=fontfamily, backend=self._get_backend(),
+            family=family, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

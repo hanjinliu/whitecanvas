@@ -276,15 +276,6 @@ class TextProtocol(HasText, HasEdges, HasFaces, Protocol):
 
 
 @runtime_checkable
-class TextsProtocol(HasText, HasMultiEdges, HasMultiFaces, Protocol):
-    def _plt_get_data(self) -> list[tuple[float, float]]:
-        """Return the data."""
-
-    def _plt_set_data(self, data: list[tuple[float, float]]):
-        """Set the data."""
-
-
-@runtime_checkable
 class ImageProtocol(BaseProtocol, Protocol):
     def _plt_get_data(self) -> NDArray[np.number]:
         """Return the image data."""

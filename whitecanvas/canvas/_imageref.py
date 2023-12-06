@@ -6,7 +6,7 @@ from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.types import Orientation
 
 if TYPE_CHECKING:
-    from whitecanvas.layers.primitive import Image
+    from whitecanvas.layers._primitive import Image
     from whitecanvas.canvas._base import CanvasBase
 
 _C = TypeVar("_C", bound="CanvasBase")

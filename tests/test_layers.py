@@ -1,6 +1,6 @@
 import pytest
 from whitecanvas import new_canvas
-from whitecanvas.layers import Line, Markers, Layer
+from whitecanvas.layers import Layer
 import numpy as np
 from ._utils import assert_color_equal
 
@@ -64,6 +64,10 @@ def test_markers(backend: str):
     layer.size
     layer.size = 20
     assert layer.size == 20
+
+    for sym in ["o", "s", "^", "v", "<", ">", "D", "x", "+", "*", "|", "_"]:
+        layer.symbol = sym
+        assert layer.symbol == sym
     _test_visibility(layer)
 
 @pytest.mark.parametrize("backend", BACKENDS)
@@ -163,4 +167,44 @@ def test_errorbars(backend: str):
     assert layer.style == ":"
     layer.width = 2
     assert layer.width == 2
+    _test_visibility(layer)
+
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_texts(backend: str):
+    canvas = new_canvas(backend=backend)
+
+    layer = canvas.add_text(np.arange(10), np.zeros(10), list("abcdefghij"))
+
+    repr(layer)
+    repr(layer.face)
+    repr(layer.edge)
+    repr(layer.font)
+    layer.anchor
+    for anc in ["top", "bottom", "left", "right", "center", "top_left", "top_right", "bottom_left", "bottom_right"]:
+        layer.anchor = anc
+        assert layer.anchor == anc
+
+    layer.size
+    layer.size = 28
+    assert layer.size == 28
+
+    assert layer.ntexts == 10
+    assert layer.string == list("abcdefghij")
+    layer.string = list("ABCDEFGHIJ")
+    assert layer.string == list("ABCDEFGHIJ")
+    layer.face.color
+    layer.face.color = "green"
+    layer.face.pattern
+    layer.face.pattern = "/"
+    layer.face.alpha
+    layer.face.alpha = 0.6
+
+    layer.edge.color
+    layer.edge.color = "blue"
+    layer.edge.style
+    layer.edge.style = ":"
+    layer.edge.width
+    layer.edge.width = 2
+    layer.edge.alpha
+    layer.edge.alpha = 0.6
     _test_visibility(layer)

@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.types import Alignment
 from whitecanvas.layers.group._collections import ListLayerGroup
-from whitecanvas.layers.primitive import Texts, Line
+from whitecanvas.layers._primitive import Texts, Line
 
 
 def _norm_bracket_data(

@@ -1,5 +1,5 @@
 from ._base import PrimitiveLayer, Layer, LayerGroup
-from .primitive import (
+from ._primitive import (
     Line,
     MultiLine,
     InfCurve,

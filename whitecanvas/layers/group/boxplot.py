@@ -5,7 +5,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.types import ColorType, FacePattern, LineStyle, Orientation
-from whitecanvas.layers.primitive import Bars, MultiLine
+from whitecanvas.layers._primitive import Bars, MultiLine
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.utils.normalize import as_color_array

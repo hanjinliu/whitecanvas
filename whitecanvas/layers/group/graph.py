@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.types import _Void, ColorType, Alignment, XYData
-from whitecanvas.layers.primitive import MultiLine, Markers, Texts
+from whitecanvas.layers._primitive import MultiLine, Markers, Texts
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset
 
@@ -94,6 +94,6 @@ class Graph(ListLayerGroup):
             size=size,
             rotation=rotation,
             anchor=anchor,
-            fontfamily=fontfamily,
+            family=fontfamily,
         )
         return self

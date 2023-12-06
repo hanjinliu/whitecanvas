@@ -54,13 +54,22 @@ class Texts(BokehLayer[bk_models.Text]):
             border_line_width="border_line_width",
             border_line_dash="border_line_dash",
         )
+        self._visible = True
 
     ##### BaseProtocol #####
     def _plt_get_visible(self) -> bool:
-        return self._model.visible
+        return self._visible
 
     def _plt_set_visible(self, visible: bool):
-        self._model.visible = visible
+        self._visible = visible
+        if visible:
+            self._model.text_color = "#00000000"
+            self._model.background_fill_color = "#00000000"
+            self._model.border_line_color = "#00000000"
+        else:
+            self._model.text_color = "text_color"
+            self._model.background_fill_color = "background_fill_color"
+            self._model.border_line_color = "border_line_color"
 
     ##### TextProtocol #####
 

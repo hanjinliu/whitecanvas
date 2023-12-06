@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
+from psygnal import Signal
 
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol
-from whitecanvas.layers.primitive.text import Texts
-from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
 from whitecanvas.layers._sizehint import xy_size_hint
-from whitecanvas.layers._mixin import LineMixin
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
     LineStyle,
@@ -28,20 +28,106 @@ if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
 
 _void = _Void()
+_Line = TypeVar("_Line", LineProtocol, MultiLineProtocol)
 
 
-class MonoLine(LineMixin[LineProtocol]):
+class LineLayerEvents(LayerEvents):
+    color = Signal(np.ndarray)
+    width = Signal(float)
+    style = Signal(str)
+    antialias = Signal(bool)
+
+
+class LineMixin(PrimitiveLayer[_Line]):
+    events: LineLayerEvents
+    _events_class = LineLayerEvents
+
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Color of the line."""
+        return self._backend._plt_get_edge_color()
+
+    @color.setter
+    def color(self, color: ColorType):
+        col = arr_color(color)
+        self._backend._plt_set_edge_color(col)
+        self.events.color.emit(col)
+
+    @property
+    def width(self) -> float:
+        """Width of the line."""
+        return self._backend._plt_get_edge_width()
+
+    @width.setter
+    def width(self, width: float):
+        if not isinstance(width, (int, float, np.number)):
+            raise TypeError(f"Width must be a number, got {type(width)}")
+        if width < 0:
+            raise ValueError(f"Width must be non-negative, got {width!r}")
+        w = float(width)
+        self._backend._plt_set_edge_width(w)
+        self.events.width.emit(w)
+
+    @property
+    def style(self) -> LineStyle:
+        """Style of the line."""
+        return LineStyle(self._backend._plt_get_edge_style())
+
+    @style.setter
+    def style(self, style: str | LineStyle):
+        s = LineStyle(style)
+        self._backend._plt_set_edge_style(s)
+        self.events.style.emit(s.value)
+
+    @property
+    def alpha(self) -> float:
+        return float(self.color[3])
+
+    @alpha.setter
+    def alpha(self, value: float):
+        if not 0 <= value <= 1:
+            raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
+        self.color = (*self.color[:3], value)
+
     @property
     def antialias(self) -> bool:
         """Whether to use antialiasing."""
         return self._backend._plt_get_antialias()
 
     @antialias.setter
-    def antialias(self, antialias: bool):
+    def antialias(self, antialias: bool) -> None:
+        if not isinstance(antialias, bool):
+            raise TypeError(f"Expected antialias to be bool, got {type(antialias)}")
         self._backend._plt_set_antialias(antialias)
+        self.events.antialias.emit(antialias)
+
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        alpha: float | _Void = _void,
+        width: float | _Void = _void,
+        style: str | _Void = _void,
+        antialias: bool | _Void = _void,
+    ):
+        if color is not _void:
+            self.color = color
+        if width is not _void:
+            self.width = width
+        if style is not _void:
+            self.style = style
+        if alpha is not _void:
+            self.alpha = alpha
+        if antialias is not _void:
+            self.antialias = antialias
+        return self
 
 
-class Line(MonoLine):
+class Line(LineMixin[LineProtocol]):
+    _backend_class_name = "MonoLine"
+    events: LineLayerEvents
+    _events_class = LineLayerEvents
+
     def __init__(
         self,
         xdata: ArrayLike1D,
@@ -85,6 +171,7 @@ class Line(MonoLine):
             )
         self._backend._plt_set_data(x0, y0)
         self._x_hint, self._y_hint = xy_size_hint(x0, y0)
+        self.events.data.emit(x0, y0)
 
     def with_markers(
         self,
@@ -95,7 +182,7 @@ class Line(MonoLine):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.Plot:
         from whitecanvas.layers.group import Plot
-        from whitecanvas.layers.primitive import Markers
+        from whitecanvas.layers._primitive import Markers
 
         if color is _void:
             color = self.color
@@ -117,7 +204,7 @@ class Line(MonoLine):
         capsize: float = 0,
     ) -> _lg.LabeledLine:
         from whitecanvas.layers.group import LabeledLine
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         if err_high is None:
             err_high = err
@@ -148,7 +235,7 @@ class Line(MonoLine):
         capsize: float = 0,
     ) -> _lg.LabeledLine:
         from whitecanvas.layers.group import LabeledLine
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         if err_high is None:
             err_high = err
@@ -178,7 +265,7 @@ class Line(MonoLine):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
-        from whitecanvas.layers.primitive import Band
+        from whitecanvas.layers._primitive import Band
 
         if err_high is None:
             err_high = err
@@ -201,7 +288,7 @@ class Line(MonoLine):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
-        from whitecanvas.layers.primitive import Band
+        from whitecanvas.layers._primitive import Band
 
         if err_high is None:
             err_high = err
@@ -223,7 +310,7 @@ class Line(MonoLine):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
-        from whitecanvas.layers.primitive import Band
+        from whitecanvas.layers._primitive import Band
 
         if color is _void:
             color = self.color
@@ -244,7 +331,7 @@ class Line(MonoLine):
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
-        from whitecanvas.layers.primitive import Band
+        from whitecanvas.layers._primitive import Band
 
         if color is _void:
             color = self.color
@@ -285,7 +372,7 @@ class Line(MonoLine):
             size=size,
             rotation=rotation,
             anchor=anchor,
-            fontfamily=fontfamily,
+            family=fontfamily,
             backend=self._backend_name,
         )
         return LabeledLine(
@@ -351,7 +438,7 @@ class Line(MonoLine):
         )  # fmt: skip
 
 
-class MultiLine(PrimitiveLayer[MultiLineProtocol]):
+class MultiLine(LineMixin[MultiLineProtocol]):
     def __init__(
         self,
         data: list[ArrayLike1D],
@@ -381,85 +468,12 @@ class MultiLine(PrimitiveLayer[MultiLineProtocol]):
         data, x_hint, y_hint = _norm_data(data)
         self._backend._plt_set_data(data)
         self._x_hint, self._y_hint = x_hint, y_hint
+        self.events.data.emit(data)
 
     @property
     def nlines(self) -> int:
         """Number of lines."""
         return len(self._backend._plt_get_data())
-
-    @property
-    def color(self) -> NDArray[np.floating]:
-        """Color of the line."""
-        return self._backend._plt_get_edge_color()
-
-    @color.setter
-    def color(self, color: ColorType):
-        self._backend._plt_set_edge_color(arr_color(color))
-
-    @property
-    def width(self) -> float:
-        """Width of the line."""
-        return self._backend._plt_get_edge_width()
-
-    @width.setter
-    def width(self, width: float):
-        if not isinstance(width, (int, float, np.number)):
-            raise TypeError(f"Expected width to be numeric, got {type(width)}")
-        elif width < 0:
-            raise ValueError(f"Expected width to be non-negative, got {width!r}")
-        self._backend._plt_set_edge_width(float(width))
-
-    @property
-    def style(self) -> LineStyle:
-        """Style of the line."""
-        return LineStyle(self._backend._plt_get_edge_style())
-
-    @style.setter
-    def style(self, style: str | LineStyle):
-        self._backend._plt_set_edge_style(LineStyle(style))
-
-    @property
-    def alpha(self) -> float:
-        """Alpha value of the line."""
-        return float(self.color[3])
-
-    @alpha.setter
-    def alpha(self, value: float):
-        if not 0 <= value <= 1:
-            raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
-        color = self.color.copy()
-        color[3] = value
-        self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        alpha: float | _Void = _void,
-        width: float | _Void = _void,
-        style: str | _Void = _void,
-        antialias: bool | _Void = _void,
-    ):
-        if color is not _void:
-            self.color = color
-        if width is not _void:
-            self.width = width
-        if style is not _void:
-            self.style = style
-        if alpha is not _void:
-            self.alpha = alpha
-        if antialias is not _void:
-            self.antialias = antialias
-        return self
-
-    @property
-    def antialias(self) -> bool:
-        """Whether to use antialiasing."""
-        return self._backend._plt_get_antialias()
-
-    @antialias.setter
-    def antialias(self, antialias: bool):
-        self._backend._plt_set_antialias(antialias)
 
 
 def _norm_data(data: list[ArrayLike1D]) -> NDArray[np.number]:

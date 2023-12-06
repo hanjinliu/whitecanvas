@@ -67,6 +67,7 @@ class Spans(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
 
     @property
     def orient(self) -> Orientation:
+        """Orientation of the spans."""
         return self._orient
 
     @property
@@ -87,6 +88,7 @@ class Spans(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
             xxyy = _old_spans[:, 0], _old_spans[:, 1], _spans[:, 0], _spans[:, 1]
             self._y_hint = _spans.min(), _spans.max()
         self._backend._plt_set_data(*xxyy)
+        self.events.data.emit(_spans)
 
     @property
     def ndata(self) -> int:

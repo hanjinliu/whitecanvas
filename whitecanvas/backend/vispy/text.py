@@ -19,6 +19,7 @@ class Texts(visuals.Compound):
         super().__init__(
             [SingleText(x0, y0, text0) for x0, y0, text0 in zip(x, y, text)]
         )
+        self.unfreeze()
 
     @property
     def subvisuals(self) -> list[SingleText]:
@@ -39,11 +40,14 @@ class Texts(visuals.Compound):
         for t, text0 in zip(self.subvisuals, text):
             t.text = text0
 
+    def _plt_get_ndata(self) -> int:
+        return len(self.subvisuals)
+
     def _plt_get_text_color(self):
         return np.array([t.color for t in self.subvisuals])
 
     def _plt_set_text_color(self, color):
-        color = as_color_array(color, len(self.subvisuals))
+        color = as_color_array(color, self._plt_get_ndata())
         for t, color0 in zip(self.subvisuals, color):
             t.color = color0
 
@@ -52,7 +56,7 @@ class Texts(visuals.Compound):
 
     def _plt_set_text_size(self, size: float | NDArray[np.floating]):
         if isinstance(size, (int, float, np.number)):
-            size = np.full(len(self.subvisuals), size)
+            size = np.full(self._plt_get_ndata(), size)
         for t, size0 in zip(self.subvisuals, size):
             t.font_size = size0
 
@@ -72,7 +76,7 @@ class Texts(visuals.Compound):
 
     def _plt_set_text_anchor(self, anc: Alignment | list[Alignment]):
         if isinstance(anc, Alignment):
-            anc = [anc] * len(self.subvisuals)
+            anc = [anc] * self._plt_get_ndata()
         for t, anc0 in zip(self.subvisuals, anc):
             va, ha = anc0.split()
             t.anchors = va.value, ha.value
@@ -83,7 +87,7 @@ class Texts(visuals.Compound):
 
     def _plt_set_text_rotation(self, rotation: float | NDArray[np.floating]):
         if isinstance(rotation, (int, float, np.number)):
-            rotation = np.full(len(self.subvisuals), rotation)
+            rotation = np.full(self._plt_get_ndata(), rotation)
         for t, rotation0 in zip(self.subvisuals, rotation):
             t.rotation = rotation0
 
@@ -92,12 +96,12 @@ class Texts(visuals.Compound):
 
     def _plt_set_text_fontfamily(self, fontfamily: str | list[str]):
         if isinstance(fontfamily, str):
-            fontfamily = [fontfamily] * len(self.subvisuals)
+            fontfamily = [fontfamily] * self._plt_get_ndata()
         for t, fontfamily0 in zip(self.subvisuals, fontfamily):
             t.face = fontfamily0
 
     def _plt_get_face_color(self):
-        return np.zeros((len(self.subvisuals), 4))
+        return np.zeros((self._plt_get_ndata(), 4))
 
     def _plt_set_face_color(self, color):
         pass
@@ -105,19 +109,19 @@ class Texts(visuals.Compound):
     _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_patterns()
 
     def _plt_get_edge_color(self):
-        return np.zeros((len(self.subvisuals), 4))
+        return np.zeros((self._plt_get_ndata(), 4))
 
     def _plt_set_edge_color(self, color):
         pass
 
     def _plt_get_edge_width(self) -> float:
-        return np.zeros(len(self.subvisuals))
+        return np.zeros(self._plt_get_ndata())
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
         pass
 
     def _plt_get_edge_style(self) -> LineStyle:
-        return [LineStyle.SOLID] * len(self.subvisuals)
+        return [LineStyle.SOLID] * self._plt_get_ndata()
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         pass

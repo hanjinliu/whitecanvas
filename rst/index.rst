@@ -39,6 +39,7 @@ Contents
     ./main/face_layers
     ./main/layer_groups
     ./main/categorical
+    ./main/native_objects
 
 
 Indices and tables

@@ -25,25 +25,16 @@ class Texts(PlotlyLayer):
             },
             "text": text,
             "textposition": ["bottom left"] * ntexts,
-            "textfont_color": ["black"] * ntexts,
-            "textfont_size": np.full(ntexts, 10),
-            "textfont_family": ["Arial"] * ntexts,
+            "textfont": {
+                "family": ["Arial"] * ntexts,
+                "size": np.full(ntexts, 10),
+                "color": ["black"] * ntexts,
+            },
             "type": "scatter",
             "showlegend": False,
+            "angle": np.zeros(ntexts),
             "visible": True,
         }
-        # TODO: plotly does not support text rotation.
-        # It seems that rotation (and background) can be implemented with
-        # fig.add_annotation, but since it is a layout instead of a trace,
-        # we need additional work to make it work.
-        self._rotation = 0
-
-    ##### BaseProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.visible
-
-    def _plt_set_visible(self, visible: bool):
-        self.visible = visible
 
     ##### TextProtocol #####
 
@@ -54,19 +45,22 @@ class Texts(PlotlyLayer):
         self._props["text"] = text
 
     def _plt_get_text_color(self):
-        return arr_color(self._props["textfont_color"])
+        return np.stack(
+            [arr_color(c) for c in self._props["textfont"]["color"]],
+            axis=0,
+        )
 
     def _plt_set_text_color(self, color):
         color = as_color_array(color, len(self._props["text"]))
-        self._props["textfont_color"] = [rgba_str_color(c) for c in color]
+        self._props["textfont"]["color"] = [rgba_str_color(c) for c in color]
 
     def _plt_get_text_size(self) -> NDArray[np.floating]:
-        return self._props["textfont_size"]
+        return self._props["textfont"]["size"]
 
     def _plt_set_text_size(self, size: NDArray[np.floating]):
         if np.isscalar(size):
             size = np.full(len(self._props["text"]), size)
-        self._props["textfont_size"] = size
+        self._props["textfont"]["size"] = size
 
     def _plt_get_text_position(
         self,
@@ -90,20 +84,20 @@ class Texts(PlotlyLayer):
             self._props["textposition"] = [a.value.replace("_", " ") for a in anc]
 
     def _plt_get_text_rotation(self) -> float:
-        return self._rotation
+        return self._props["angle"]
 
     def _plt_set_text_rotation(self, rotation: float):
         if np.isscalar(rotation):
             rotation = np.full(len(self._props["text"]), rotation)
-        self._rotation = rotation
+        self._props["angle"] = rotation
 
     def _plt_get_text_fontfamily(self) -> list[str]:
-        return self._props["textfont_family"]
+        return self._props["textfont"]["family"]
 
     def _plt_set_text_fontfamily(self, fontfamily: list[str]):
         if isinstance(fontfamily, str):
-            fontfamily = [fontfamily] * len(self._props["textfont_family"])
-        self._props["textfont_family"] = fontfamily
+            fontfamily = [fontfamily] * len(self._props["textfont"]["family"])
+        self._props["textfont"]["family"] = fontfamily
 
     ##### HasFaces #####
 
@@ -141,7 +135,17 @@ class Texts(PlotlyLayer):
 
 
 def _norm_alignment(s: str) -> Alignment:
-    if s == "center":
-        return Alignment.CENTER
-    va, ha = s.lower().split(" ")
-    return Alignment(f"{va}_{ha}")
+    return _ALIGNMENT_MAP.get(s.lower(), Alignment.CENTER)
+
+
+_ALIGNMENT_MAP = {
+    "top": Alignment.TOP,
+    "bottom": Alignment.BOTTOM,
+    "left": Alignment.LEFT,
+    "right": Alignment.RIGHT,
+    "center": Alignment.CENTER,
+    "top left": Alignment.TOP_LEFT,
+    "top right": Alignment.TOP_RIGHT,
+    "bottom left": Alignment.BOTTOM_LEFT,
+    "bottom right": Alignment.BOTTOM_RIGHT,
+}

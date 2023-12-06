@@ -229,6 +229,8 @@ class CanvasGrid:
         else:
             raise ValueError(f"pyqtgraph does not support {app!r}. Must be ")
         self._layoutwidget = GraphicsLayoutWidget()
+        self._heights = heights  # TODO: not used
+        self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         vb = pg.ViewBox()

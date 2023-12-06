@@ -9,6 +9,7 @@ from matplotlib.artist import Artist
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.types import Alignment, FacePattern, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.utils.normalize import as_color_array
 
 
 class Texts(Artist, MplLayer):
@@ -54,6 +55,7 @@ class Texts(Artist, MplLayer):
         return np.stack([child.get_color() for child in self.get_children()], axis=0)
 
     def _plt_set_text_color(self, color):
+        color = as_color_array(color, len(self.get_children()))
         for child, color0 in zip(self.get_children(), color):
             child.set_color(color0)
 
@@ -62,7 +64,9 @@ class Texts(Artist, MplLayer):
             [child.get_fontsize() for child in self.get_children()], dtype=np.float32
         )
 
-    def _plt_set_text_size(self, size: NDArray[np.float32]):
+    def _plt_set_text_size(self, size: float | NDArray[np.float32]):
+        if isinstance(size, (int, float, np.number)):
+            size = np.full(len(self.get_children()), size, dtype=np.float32)
         for child, size0 in zip(self.get_children(), size):
             child.set_fontsize(size0)
 
@@ -120,7 +124,9 @@ class Texts(Artist, MplLayer):
     def _plt_get_text_fontfamily(self) -> list[str]:
         return [child.get_fontfamily() for child in self.get_children()]
 
-    def _plt_set_text_fontfamily(self, fontfamily: list[str]):
+    def _plt_set_text_fontfamily(self, fontfamily: str | list[str]):
+        if isinstance(fontfamily, str):
+            fontfamily = [fontfamily] * len(self.get_children())
         for child, fontfamily0 in zip(self.get_children(), fontfamily):
             child.set_fontfamily(fontfamily0)
 
@@ -144,6 +150,7 @@ class Texts(Artist, MplLayer):
         return np.stack(out, axis=0)
 
     def _plt_set_face_color(self, color):
+        color = as_color_array(color, len(self.get_children()))
         for child, color0 in zip(self.get_children(), color):
             self._set_bbox_props(child, facecolor=color0)
 
@@ -154,7 +161,7 @@ class Texts(Artist, MplLayer):
             if patch is None:
                 out.append(FacePattern.SOLID)
             else:
-                out.append(FacePattern(patch.get_hatch()))
+                out.append(FacePattern(patch.get_hatch() or ""))
         return out
 
     def _plt_set_face_pattern(self, pattern: FacePattern):
@@ -179,6 +186,7 @@ class Texts(Artist, MplLayer):
         return np.stack(out, axis=0)
 
     def _plt_set_edge_color(self, color):
+        color = as_color_array(color, len(self.get_children()))
         for child, color0 in zip(self.get_children(), color):
             self._set_bbox_props(child, edgecolor=color0)
 
@@ -192,7 +200,9 @@ class Texts(Artist, MplLayer):
                 out.append(patch.get_linewidth())
         return np.array(out, dtype=np.float32)
 
-    def _plt_set_edge_width(self, width: float):
+    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
+        if isinstance(width, (int, float, np.number)):
+            width = np.full(len(self.get_children()), width, dtype=np.float32)
         for child, width0 in zip(self.get_children(), width):
             self._set_bbox_props(child, linewidth=width0)
 
@@ -203,7 +213,11 @@ class Texts(Artist, MplLayer):
             if patch is None:
                 out.append(LineStyle.SOLID)
             else:
-                out.append(LineStyle(patch.get_linestyle()))
+                style = patch.get_linestyle()
+                if style == "solid":
+                    out.append(LineStyle.SOLID)
+                else:
+                    out.append(LineStyle(style))
         return out
 
     def _plt_set_edge_style(self, style: LineStyle):

@@ -50,10 +50,25 @@ class Markers(visuals.Markers):
 
     ##### HasSymbol protocol #####
     def _plt_get_symbol(self) -> Symbol:
-        return Symbol(self.symbol[0])
+        sym = self.symbol[0]
+        if sym == "clobber":
+            return Symbol.TRIANGLE_LEFT
+        elif sym == "diamond":
+            return Symbol.DIAMOND
+        elif sym == "-":
+            return Symbol.HBAR
+        return Symbol(sym)
 
     def _plt_set_symbol(self, symbol: Symbol):
-        self.symbol = symbol.value
+        if symbol is Symbol.DIAMOND:
+            self.symbol = "diamond"
+        elif symbol is Symbol.HBAR:
+            self.symbol = "-"
+        elif symbol is Symbol.TRIANGLE_LEFT:
+            # NOTE: vispy does not have "<"
+            self.symbol = "clobber"
+        else:
+            self.symbol = symbol.value
 
     def _plt_get_symbol_size(self) -> NDArray[np.floating]:
         return self._data["a_size"]

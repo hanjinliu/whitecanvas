@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.types import Orientation, XYData, ArrayLike1D
-from whitecanvas.layers.primitive import Markers, MultiLine
+from whitecanvas.layers._primitive import Markers, MultiLine
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.utils.normalize import normalize_xy
 from whitecanvas.backend import Backend

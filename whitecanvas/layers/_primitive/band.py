@@ -74,3 +74,4 @@ class Band(FaceEdgeMixin[BandProtocol]):
         else:
             self._backend._plt_set_horizontal_data(t0, y0, y1)
         self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)
+        self.events.data.emit(t0, y0, y1)

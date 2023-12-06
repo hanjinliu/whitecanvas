@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from whitecanvas.types import ColorType, LineStyle, Alignment, XYData
-from whitecanvas.layers.primitive import Line, Markers, Bars, Errorbars, Texts
+from whitecanvas.layers._primitive import Line, Markers, Bars, Errorbars, Texts
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers.group._collections import ListLayerGroup
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset
@@ -219,7 +219,7 @@ class _LabeledLayerBase(ListLayerGroup):
             size=size,
             rotation=rotation,
             anchor=anchor,
-            fontfamily=fontfamily,
+            family=fontfamily,
         )
         return self
 

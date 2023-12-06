@@ -50,7 +50,6 @@ class Symbol(_strEnum):
     CROSS = "x"
     PLUS = "+"
     STAR = "*"
-    DOT = "."
     VBAR = "|"
     HBAR = "_"
 
@@ -58,7 +57,6 @@ class Symbol(_strEnum):
         return self not in (
             Symbol.CROSS,
             Symbol.PLUS,
-            Symbol.DOT,
             Symbol.VBAR,
             Symbol.HBAR,
         )

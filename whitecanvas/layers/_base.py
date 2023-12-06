@@ -16,7 +16,9 @@ _L = TypeVar("_L", bound="Layer")
 
 
 class LayerEvents(SignalGroup):
+    data = Signal(check_nargs_on_connect=False)  # (data)
     name = Signal(str)
+    visible = Signal(bool)
     _layer_grouped = Signal(object)  # (group)
 
 
@@ -96,6 +98,7 @@ class PrimitiveLayer(Layer, Generic[_P]):
     def visible(self, visible: bool):
         """Set the visibility of the layer"""
         self._backend._plt_set_visible(visible)
+        self.events.visible.emit(visible)
 
     def _create_backend(self, backend: Backend, *args) -> _P:
         """Create a backend object."""
@@ -164,6 +167,7 @@ class LayerGroup(Layer):
         self._visible = visible
         for child in self.iter_children():
             child.visible = visible
+        self.events.visible.emit(visible)
 
     @property
     def _backend_name(self) -> str:

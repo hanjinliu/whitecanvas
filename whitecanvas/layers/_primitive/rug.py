@@ -3,10 +3,17 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from whitecanvas.layers.primitive.line import MultiLine
+from psygnal import Signal
+
+from whitecanvas.layers._primitive.line import MultiLine, LineLayerEvents
 from whitecanvas.backend import Backend
 from whitecanvas.types import ColorType, _Void, Orientation
 from whitecanvas.utils.normalize import as_array_1d
+
+
+class RugEvents(LineLayerEvents):
+    low = Signal(float)
+    high = Signal(float)
 
 
 class Rug(MultiLine):
@@ -16,6 +23,9 @@ class Rug(MultiLine):
       │ ││  │   │
     ──┴─┴┴──┴───┴──>
     """
+
+    events: RugEvents
+    _events_class = RugEvents
 
     def __init__(
         self,
@@ -47,8 +57,10 @@ class Rug(MultiLine):
     @low.setter
     def low(self, val):
         _, segs, _ = _norm_input(self._events, val, self.high, self.orient)
-        super().set_data(segs)
+        with self.events.data.blocked():
+            super().set_data(segs)
         self._low = val
+        self.events.low.emit(val)
 
     @property
     def high(self) -> float:
@@ -57,16 +69,21 @@ class Rug(MultiLine):
     @high.setter
     def high(self, val):
         _, segs, _ = _norm_input(self._events, self.low, val, self.orient)
-        super().set_data(segs)
+        with self.events.data.blocked():
+            super().set_data(segs)
         self._high = val
+        self.events.high.emit(val)
 
     def set_data(self, events: ArrayLike):
         events, segs, orient = _norm_input(events, self.low, self.high, self.orient)
-        super().set_data(segs)
+        with self.events.data.blocked():
+            super().set_data(segs)
         self._events = events
+        self.events.data.emit(events)
 
     @property
     def orient(self) -> Orientation:
+        """Orientation of the rug plot."""
         return self._orient
 
 
@@ -76,6 +93,8 @@ def _norm_input(
     high: float,
     orient: str | Orientation,
 ) -> tuple[NDArray[np.number], NDArray[np.number], Orientation]:
+    if low > high:
+        raise ValueError(f"low must be less than high, got {low} and {high}")
     _t = as_array_1d(events)
     y0 = np.full_like(_t, low)
     y1 = np.full_like(_t, high)

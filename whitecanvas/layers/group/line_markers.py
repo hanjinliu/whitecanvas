@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from numpy.typing import ArrayLike
 from whitecanvas.types import ColorType, _Void, Alignment, LineStyle, Orientation
-from whitecanvas.layers.primitive import Line, Markers, Errorbars, Texts
+from whitecanvas.layers._primitive import Line, Markers, Errorbars, Texts
 from whitecanvas.layers.group._collections import ListLayerGroup
 
 if TYPE_CHECKING:
@@ -62,7 +62,7 @@ class Plot(ListLayerGroup):
             size=size,
             rotation=rotation,
             anchor=anchor,
-            fontfamily=fontfamily,
+            family=fontfamily,
             backend=self._backend_name,
         )
         xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
@@ -80,7 +80,7 @@ class Plot(ListLayerGroup):
         capsize: float = 0,
     ) -> LabeledPlot:
         from whitecanvas.layers.group.labeled import LabeledPlot
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         if err_high is None:
             err_high = err
@@ -111,7 +111,7 @@ class Plot(ListLayerGroup):
         capsize: float = 0,
     ) -> LabeledPlot:
         from whitecanvas.layers.group.labeled import LabeledPlot
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         if err_high is None:
             err_high = err

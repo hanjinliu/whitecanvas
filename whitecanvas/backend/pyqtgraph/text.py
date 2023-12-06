@@ -43,11 +43,14 @@ class Texts(pg.ItemGroup, PyQtLayer):
         for t, text0 in zip(self.childItems(), text):
             t.setPlainText(text0)
 
+    def _plt_get_ndata(self) -> int:
+        return len(self.childItems())
+
     def _plt_get_text_color(self):
         return np.array([t.color.getRgbF() for t in self.childItems()])
 
     def _plt_set_text_color(self, color):
-        color = as_color_array(color, len(self.childItems()))
+        color = as_color_array(color, self._plt_get_ndata())
         for t, color0 in zip(self.childItems(), color):
             t.setColor(array_to_qcolor(color0))
 
@@ -56,7 +59,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     def _plt_set_text_size(self, size: float | NDArray[np.floating]):
         if isinstance(size, (int, float, np.number)):
-            size = np.full(len(self.childItems()), size)
+            size = np.full(self._plt_get_ndata(), size)
         for t, size0 in zip(self.childItems(), size):
             t._plt_set_text_size(size0)
 
@@ -78,7 +81,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     def _plt_set_text_anchor(self, anc: Alignment | list[Alignment]):
         if isinstance(anc, Alignment):
-            anc = [anc] * len(self.childItems())
+            anc = [anc] * self._plt_get_ndata()
         for t, anc0 in zip(self.childItems(), anc):
             t._plt_set_text_anchor(anc0)
 
@@ -87,7 +90,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     def _plt_set_text_rotation(self, rotation: float):
         if isinstance(rotation, (int, float, np.number)):
-            rotation = np.full(len(self.childItems()), rotation)
+            rotation = np.full(self._plt_get_ndata(), rotation)
         for t, rotation0 in zip(self.childItems(), rotation):
             t.setAngle(rotation0)
 
@@ -96,7 +99,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     def _plt_set_text_fontfamily(self, fontfamily: str | list[str]):
         if isinstance(fontfamily, str):
-            fontfamily = [fontfamily] * len(self.childItems())
+            fontfamily = [fontfamily] * self._plt_get_ndata()
         for t, fontfamily0 in zip(self.childItems(), fontfamily):
             font = t._get_qfont()
             font.setFamily(fontfamily0)
@@ -108,18 +111,18 @@ class Texts(pg.ItemGroup, PyQtLayer):
         return np.array([t._get_brush().color().getRgbF() for t in self.childItems()])
 
     def _plt_set_face_color(self, color):
-        color = as_color_array(color, len(self.childItems()))
+        color = as_color_array(color, self._plt_get_ndata())
         for t, color0 in zip(self.childItems(), color):
             brush = t._get_brush()
             brush.setColor(array_to_qcolor(color0))
             t.fill = brush
 
     def _plt_get_face_pattern(self) -> list[FacePattern]:
-        return from_qt_brush_style(self._get_brush().style())
+        return [from_qt_brush_style(s._get_brush().style()) for s in self.childItems()]
 
     def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
         if isinstance(pattern, FacePattern):
-            pattern = [pattern] * len(self.childItems())
+            pattern = [pattern] * self._plt_get_ndata()
         for t, pattern0 in zip(self.childItems(), pattern):
             brush = t._get_brush()
             brush.setStyle(to_qt_brush_style(pattern0))
@@ -134,7 +137,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
         )
 
     def _plt_set_edge_color(self, color):
-        color = as_color_array(color, len(self.childItems()))
+        color = as_color_array(color, self._plt_get_ndata())
         for t, color0 in zip(self.childItems(), color):
             pen = t._get_pen()
             pen.setColor(array_to_qcolor(color0))
@@ -147,18 +150,18 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
         if isinstance(width, (int, float, np.number)):
-            width = np.full(len(self.childItems()), width)
+            width = np.full(self._plt_get_ndata(), width)
         for t, width0 in zip(self.childItems(), width):
             pen = t._get_pen()
             pen.setWidthF(width0)
             t.border = pen
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
-        return from_qt_line_style(self._get_pen().style())
+        return [from_qt_line_style(s._get_pen().style()) for s in self.childItems()]
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         if isinstance(style, LineStyle):
-            style = [style] * len(self.childItems())
+            style = [style] * self._plt_get_ndata()
         for t, style0 in zip(self.childItems(), style):
             pen = t._get_pen()
             pen.setStyle(to_qt_line_style(style0))
@@ -174,18 +177,6 @@ class SingleText(pg.TextItem, PyQtLayer):
         self._alignment = Alignment.BOTTOM_LEFT
 
     ##### TextProtocol #####
-
-    def _plt_get_text(self) -> str:
-        return self.toPlainText()
-
-    def _plt_set_text(self, text: str):
-        self.setPlainText(text)
-
-    def _plt_get_text_color(self):
-        return np.array(self.color.getRgbF())
-
-    def _plt_set_text_color(self, color):
-        self.setColor(array_to_qcolor(color))
 
     def _get_qfont(self) -> QtGui.QFont:
         return self.textItem.font()
@@ -211,69 +202,11 @@ class SingleText(pg.TextItem, PyQtLayer):
         self.setAnchor(_split_anchor(anc))
         self._alignment = anc
 
-    def _plt_get_text_rotation(self) -> float:
-        return self.angle
-
-    def _plt_set_text_rotation(self, rotation: float):
-        self.setAngle(rotation)
-
-    def _plt_get_text_fontfamily(self) -> str:
-        return self._get_qfont().family()
-
-    def _plt_set_text_fontfamily(self, fontfamily: str):
-        font = self._get_qfont()
-        font.setFamily(fontfamily)
-        self.setFont(font)
-
-    ##### HasFaces #####
-
     def _get_brush(self) -> QtGui.QBrush:
         return self.fill
 
     def _get_pen(self) -> QtGui.QPen:
         return self.border
-
-    def _plt_get_face_color(self):
-        return np.array(self._get_brush().color().getRgbF())
-
-    def _plt_set_face_color(self, color):
-        brush = self._get_brush()
-        brush.setColor(array_to_qcolor(color))
-        self.fill = brush
-
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return from_qt_brush_style(self._get_brush().style())
-
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        brush = self._get_brush()
-        brush.setStyle(to_qt_brush_style(pattern))
-        self.fill = brush
-
-    ##### HasEdges #####
-
-    def _plt_get_edge_color(self):
-        return np.array(self._get_pen().color().getRgbF())
-
-    def _plt_set_edge_color(self, color):
-        pen = self._get_pen()
-        pen.setColor(array_to_qcolor(color))
-        self.border = pen
-
-    def _plt_get_edge_width(self) -> float:
-        return self._get_pen().widthF()
-
-    def _plt_set_edge_width(self, width: float):
-        pen = self._get_pen()
-        pen.setWidthF(width)
-        self.border = pen
-
-    def _plt_get_edge_style(self) -> LineStyle:
-        return from_qt_line_style(self._get_pen().style())
-
-    def _plt_set_edge_style(self, style: LineStyle):
-        pen = self._get_pen()
-        pen.setStyle(to_qt_line_style(style))
-        self.border = pen
 
 
 @lru_cache(maxsize=9)

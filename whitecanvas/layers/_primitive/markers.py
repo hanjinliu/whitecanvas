@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
-from whitecanvas.layers.primitive.text import Texts
+from whitecanvas.layers._primitive.text import Texts
 
 from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.layers._base import LayerEvents
@@ -40,6 +40,8 @@ _Size = TypeVar("_Size", float, NDArray[np.floating])
 
 class MarkersLayerEvents(LayerEvents):
     picked = Signal(list)
+    symbol = Signal(Symbol)
+    size = Signal(float)
 
 
 class Markers(
@@ -107,6 +109,7 @@ class Markers(
                 f"got {x0.size} and {y0.size}"
             )
         self._backend._plt_set_data(x0, y0)
+        self.events.data.emit(x0, y0)
         pad_r = self.size / 400
         self._x_hint, self._y_hint = xy_size_hint(x0, y0, pad_r, pad_r)
 
@@ -117,7 +120,9 @@ class Markers(
 
     @symbol.setter
     def symbol(self, symbol: str | Symbol):
-        self._backend._plt_set_symbol(Symbol(symbol))
+        sym = Symbol(symbol)
+        self._backend._plt_set_symbol(sym)
+        self.events.symbol.emit(sym)
 
     @property
     def size(self) -> _Size:
@@ -128,7 +133,7 @@ class Markers(
         elif size.size > 0:
             return size[0]
         else:
-            return 15.0
+            return 10.0  # default size
 
     @size.setter
     def size(self, size: _Size):
@@ -143,6 +148,7 @@ class Markers(
                     f"got {size.size} and {self.ndata}"
                 )
         self._backend._plt_set_symbol_size(size)
+        self.events.size.emit(size)
 
     def update(
         self,
@@ -230,7 +236,7 @@ class Markers(
             Layer group containing the markers and the error bars as children.
         """
         from whitecanvas.layers.group import LabeledMarkers
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         if err_high is None:
             err_high = err
@@ -285,7 +291,7 @@ class Markers(
             Layer group containing the markers and the error bars as children.
         """
         from whitecanvas.layers.group import LabeledMarkers
-        from whitecanvas.layers.primitive import Errorbars
+        from whitecanvas.layers._primitive import Errorbars
 
         if err_high is None:
             err_high = err
@@ -327,7 +333,7 @@ class Markers(
                 )
         texts = Texts(
             *self.data, strings, color=color, size=size, rotation=rotation,
-            anchor=anchor, fontfamily=fontfamily, backend=self._backend_name,
+            anchor=anchor, family=fontfamily, backend=self._backend_name,
         )  # fmt: skip
         return LabeledMarkers(
             self,
@@ -366,7 +372,7 @@ class Markers(
         Graph
             A Graph layer that contains the markers and the edges as children.
         """
-        from whitecanvas.layers.primitive import MultiLine
+        from whitecanvas.layers._primitive import MultiLine
         from whitecanvas.layers.group import Graph
 
         edges = np.asarray(connections, dtype=np.intp)
@@ -433,7 +439,7 @@ class Markers(
             StemPlot layer containing the markers and the stems as children.
         """
         from whitecanvas.layers.group import StemPlot
-        from whitecanvas.layers.primitive import MultiLine
+        from whitecanvas.layers._primitive import MultiLine
 
         ori = Orientation.parse(orient)
         xdata, ydata = self.data

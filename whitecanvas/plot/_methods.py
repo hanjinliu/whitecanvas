@@ -20,10 +20,12 @@ from ._current import current_canvas, current_grid
 
 if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec
+    from whitecanvas.canvas._stacked import StackOverPlotter
 
     _P = ParamSpec("_P")
 
 _F = TypeVar("_F")
+_L = TypeVar("_L", bound=_l.Layer)
 
 
 def _copy_method(f: _F) -> _F:
@@ -291,6 +293,13 @@ def cat(
     palette: ColormapType | None = None,
     update_labels: bool = True,
 ):
+    ...
+
+
+@_copy_method
+def stack_over(
+    layer: _L,
+) -> StackOverPlotter[Canvas, _L]:
     ...
 
 

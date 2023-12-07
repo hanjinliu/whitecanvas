@@ -10,6 +10,7 @@ from whitecanvas.layers._mixin import (
     EdgeNamespace,
     FontNamespace,
 )
+from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
     ColorType,
@@ -51,6 +52,8 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
             anchor=anchor,
             family=family,
         )
+        pad = 0.0  # TODO: better padding
+        self._x_hint, self._y_hint = xy_size_hint(x, y, pad, pad)
 
     @property
     def ntexts(self):

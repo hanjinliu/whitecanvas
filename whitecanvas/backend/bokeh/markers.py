@@ -57,12 +57,12 @@ class Markers(HeteroLayer[bk_models.Scatter]):
         self._model.angle = rot * np.pi / 2
 
     def _plt_get_symbol_size(self) -> NDArray[np.floating]:
-        return self._data.data["sizes"]
+        return self._data.data["sizes"] * 2
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
         if isinstance(size, (int, float, np.number)):
             size = np.full(self._plt_get_ndata(), size)
-        self._data.data["sizes"] = size
+        self._data.data["sizes"] = size / 2
 
     def _plt_get_ndata(self) -> int:
         return len(self._data.data["x"])

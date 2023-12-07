@@ -71,6 +71,7 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         self._orient = ori
         self.face.update(color=color, alpha=alpha, pattern=pattern)
         self._x_hint, self._y_hint = xhint, yhint
+        self._bar_type = "bars"
 
     @classmethod
     def from_histogram(
@@ -94,10 +95,15 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         centers = (edges[:-1] + edges[1:]) / 2
         if bar_width is None:
             bar_width = edges[1] - edges[0]
-        return Bars(
+        self = Bars(
             centers, counts, bar_width=bar_width, name=name, color=color, alpha=alpha,
             orient=orient, pattern=pattern, backend=backend,
         )  # fmt: skip
+        if density:
+            self._bar_type = "histogram-density"
+        else:
+            self._bar_type = "histogram-count"
+        return self
 
     @property
     def data(self) -> XYData:
@@ -307,10 +313,10 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
             width = self.edge.width
         if style is _void:
             style = self.edge.style
-        # if antialias is _void:
-        #     antialias = self.antialias
         x, y = self.data
         y = y + self.bottom
+        if orient is not self.orient:
+            x, y = y, x
         return Errorbars(
             x, y - err, y + err_high, color=color, width=width,
             style=style, antialias=antialias, capsize=capsize,

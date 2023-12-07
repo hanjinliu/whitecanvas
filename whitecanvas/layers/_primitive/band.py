@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import numpy as np
+
 from whitecanvas.protocols import BandProtocol
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
@@ -36,6 +38,7 @@ class Band(FaceEdgeMixin[BandProtocol]):
         self._orient = ori
         self.face.update(color=color, alpha=alpha, pattern=pattern)
         self._x_hint, self._y_hint = xyy_size_hint(x, y0, y1, ori)
+        self._band_type = "band"
 
     @property
     def data(self) -> XYYData:
@@ -75,3 +78,34 @@ class Band(FaceEdgeMixin[BandProtocol]):
             self._backend._plt_set_horizontal_data(t0, y0, y1)
         self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)
         self.events.data.emit(t0, y0, y1)
+
+    @classmethod
+    def from_kde(
+        cls,
+        data: ArrayLike1D,
+        bottom: float = 0.0,
+        *,
+        name: str | None = None,
+        band_width: float | None = None,
+        color: ColorType = "blue",
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: Backend | str | None = None,
+    ):
+        from whitecanvas.utils.kde import gaussian_kde
+
+        data = as_array_1d(data)
+        kde = gaussian_kde(data, bw_method=band_width)
+
+        sigma = np.sqrt(kde.covariance[0, 0])
+        pad = sigma * 2.5
+        x = np.linspace(data.min() - pad, data.max() + pad, 100)
+        y1 = kde(x)
+        y0 = np.full_like(y1, bottom)
+        self = cls(
+            x, y0, y1, name=name, orient=orient, color=color, alpha=alpha,
+            pattern=pattern, backend=backend,
+        )  # fmt: skip
+        self._band_type = "kde"
+        return self

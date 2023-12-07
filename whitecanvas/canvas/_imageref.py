@@ -47,6 +47,3 @@ class ImageRef(Generic[_C]):
             cbar.scale = image.data.shape[1] / 512
         canvas.add_layer(cbar)
         return cbar
-
-    def add_scalebar(self):
-        ...

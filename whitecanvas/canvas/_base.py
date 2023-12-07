@@ -40,7 +40,7 @@ from whitecanvas.canvas import (
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._imageref import ImageRef
 from whitecanvas.canvas._between import BetweenPlotter
-from whitecanvas.canvas._stacked import StackPlotter
+from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
@@ -99,6 +99,7 @@ class CanvasBase(ABC):
         self.layers.events.inserted.connect(self._cb_inserted, unique=True)
         self.layers.events.removed.connect(self._cb_removed, unique=True)
         self.layers.events.reordered.connect(self._cb_reordered, unique=True)
+        self.layers.events.connect(self._canvas()._plt_draw, unique=True)
 
         canvas = self._canvas()
         canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
@@ -149,6 +150,16 @@ class CanvasBase(ABC):
         xpad: float | tuple[float, float] | None = None,
         ypad: float | tuple[float, float] | None = None,
     ):
+        """
+        Autoscale the canvas to fit the contents.
+
+        Parameters
+        ----------
+        xpad : float or (float, float), optional
+            Padding in the x direction.
+        ypad : float or (float, float), optional
+            Padding in the y direction.
+        """
         ar = np.stack([layer.bbox_hint() for layer in self.layers], axis=0)
         xmin = np.min(ar[:, 0])
         xmax = np.max(ar[:, 1])
@@ -300,7 +311,7 @@ class CanvasBase(ABC):
         )
         return plotter
 
-    def stack_over(self, layer: _L0) -> StackPlotter[Self, _L0]:
+    def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
         """
         Stack new data over the existing layer.
 
@@ -323,14 +334,11 @@ class CanvasBase(ABC):
                 f"Only Bars and Band are supported as an input, "
                 f"got {type(layer)!r}."
             )
-        return StackPlotter(self, layer)
+        return StackOverPlotter(self, layer)
 
     # TODO
     # def annotate(self, layer, at: int):
     #     ...
-
-    def refer_image(self, layer: _l.Image) -> ImageRef[Self]:
-        return ImageRef(self, layer)
 
     def between(self, l0, l1) -> BetweenPlotter[Self]:
         return BetweenPlotter(self, l0, l1)
@@ -949,25 +957,23 @@ class CanvasBase(ABC):
 
         Returns
         -------
-        _l.Band
+        Band
             The band layer representing KDE.
         """
-        from whitecanvas.utils.kde import gaussian_kde
-
-        data = as_array_1d(data)
         name = self._coerce_name(_l.Band, name)
         color = self._generate_colors(color)
-        kde = gaussian_kde(data, bw_method=band_width)
 
-        sigma = np.sqrt(kde.covariance[0, 0])
-        pad = sigma * 4
-        x = np.linspace(data.min() - pad, data.max() + pad, 100)
-        y1 = kde(x)
-        y0 = np.full_like(y1, bottom)
-        layer = _l.Band(
-            x, y0, y1, name=name, orient=orient, color=color, alpha=alpha,
-            pattern=pattern, backend=self._get_backend(),
-        )  # fmt: skip
+        layer = _l.Band.from_kde(
+            data,
+            bottom,
+            name=name,
+            band_width=band_width,
+            orient=orient,
+            color=color,
+            alpha=alpha,
+            pattern=pattern,
+            backend=self._get_backend(),
+        )
         return self.add_layer(layer)
 
     def add_text(
@@ -984,6 +990,10 @@ class CanvasBase(ABC):
     ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
         """
         Add a text layer to the canvas.
+
+        >>> canvas.add_text([0, 0], [1, 1], ["text-0", "text-1])
+        >>> canvas.add_text(...).with_face(color="red")  # with background
+        >>> canvas.add_text(...).with_edge(color="red")  # with outline
 
         Parameters
         ----------

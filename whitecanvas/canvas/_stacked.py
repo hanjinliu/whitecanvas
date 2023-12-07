@@ -8,6 +8,7 @@ from whitecanvas.types import ArrayLike1D, ColorType, FacePattern
 from whitecanvas.layers import Layer, Bars, Band
 from whitecanvas.layers.group import LabeledBars, StemPlot
 from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
     from whitecanvas.canvas._base import CanvasBase
@@ -16,7 +17,7 @@ _C = TypeVar("_C", bound="CanvasBase")
 _L = TypeVar("_L", bound=Layer)
 
 
-class StackPlotter(Generic[_C, _L]):
+class StackOverPlotter(Generic[_C, _L]):
     def __init__(self, canvas: _C, over: _L):
         self._canvas_ref = weakref.ref(canvas)
         self._relative_to_ref = weakref.ref(over)
@@ -44,7 +45,6 @@ class StackPlotter(Generic[_C, _L]):
     ) -> _L:
         canvas = self._canvas()
         layer = self._layer()
-        xdata = layer.data.x
         color = canvas._generate_colors(color)
 
         # unwrap nested layers in a group
@@ -53,7 +53,7 @@ class StackPlotter(Generic[_C, _L]):
 
         if isinstance(layer, Bars):
             new_layer = Bars(
-                xdata,
+                layer.data.x,
                 ydata,
                 bottom=layer.top,
                 orient=layer.orient,
@@ -67,7 +67,7 @@ class StackPlotter(Generic[_C, _L]):
         elif isinstance(layer, Band):
             y0 = np.maximum(layer.data.y0, layer.data.y1)
             new_layer = Band(
-                xdata,
+                layer.data.x,
                 y0,
                 ydata + y0,
                 orient=layer.orient,
@@ -79,7 +79,7 @@ class StackPlotter(Generic[_C, _L]):
             )
         elif isinstance(layer, StemPlot):
             new_layer = StemPlot.from_arrays(
-                xdata,
+                layer.data.x,
                 ydata,
                 bottom=layer.top,
                 name=name,
@@ -90,3 +90,59 @@ class StackPlotter(Generic[_C, _L]):
             raise TypeError("Only Bars and Band are supported.")
         canvas.add_layer(new_layer)
         return new_layer
+
+    def add_hist(
+        self,
+        data: ArrayLike1D,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        pattern: str | FacePattern = FacePattern.SOLID,
+        alpha: float = 1.0,
+    ) -> _L:
+        """
+        Add data as histogram on top of the existing histogram.
+
+        Parameters
+        ----------
+        data : array-like
+            Data to be added as histogram.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the layer face.
+        alpha : float, default is 1.0
+            Alpha channel of the bars.
+        pattern : str or FacePattern, default is FacePattern.SOLID
+            Pattern of the bar faces.
+
+        Returns
+        -------
+        Bars
+            The newly added histogram layer.
+        """
+        data = as_array_1d(data)
+        canvas = self._canvas()
+        layer = self._layer()
+        color = canvas._generate_colors(color)
+        if isinstance(layer, LabeledBars):
+            layer = layer.bars
+
+        if not isinstance(layer, Bars):
+            raise TypeError(f"Can not stack histogram on {layer!r}.")
+        if not layer._bar_type.startswith("histogram"):
+            raise TypeError(f"{layer!r} is not histogram.")
+        centers = layer.data.x
+        density = layer._bar_type == "histogram-density"
+        dx = layer.bar_width / 2
+        bins = np.concatenate([[centers[0] - dx], centers + dx])
+        counts, edges = np.histogram(
+            data, bins, density=density, range=(bins.min(), bins.max())
+        )
+        new_layer = Bars(
+            centers, counts, bottom=layer.top, bar_width=dx * 2, name=name,
+            color=color, alpha=alpha, orient=layer.orient, pattern=pattern,
+            backend=layer._backend_name,
+        )  # fmt: skip
+        new_layer._bar_type = layer._bar_type
+        return canvas.add_layer(new_layer)

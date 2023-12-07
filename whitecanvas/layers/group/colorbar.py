@@ -15,19 +15,21 @@ class Colorbar(LayerContainer):
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
     ):
-        lut = cmap.lut()  # (N, 4)
-        width = 50
-        if orient.is_vertical:
-            arr = np.repeat(lut[:, np.newaxis, :], width, axis=1)
-        else:
-            arr = np.repeat(lut[np.newaxis, :, :], width, axis=0)
+        self._cmap = cmap
+        arr = _cmap_to_image(cmap, orient)
         image = Image(arr, name="lut")
         super().__init__([image], name=name)
+        self._orient = orient
 
     @property
     def lut(self) -> Image:
         """The LUT image layer."""
         return self._children[0]
+
+    @property
+    def orient(self) -> Orientation:
+        """The orientation of the colorbar."""
+        return self._orient
 
     @property
     def shift(self):
@@ -49,9 +51,32 @@ class Colorbar(LayerContainer):
         self.lut.scale = value
         self._move_children()
 
+    @property
+    def cmap(self) -> ColormapType:
+        """The colormap of the colorbar."""
+        return self._cmap
+
+    @cmap.setter
+    def cmap(self, cmap: ColormapType):
+        """Set the colormap of the colorbar."""
+        cmap = Colormap(cmap)
+        arr = _cmap_to_image(cmap, self.orient)
+        self.lut.data = arr
+        self._cmap = cmap
+
     # def with_text(self, ) -> Colorbar:
     #     return self
 
     def _move_children(self):
         # Move other children to fit the colorbar.
         pass
+
+
+def _cmap_to_image(cmap: Colormap, orient: Orientation):
+    lut = cmap.lut()  # (N, 4)
+    width = 50
+    if orient.is_vertical:
+        arr = np.repeat(lut[:, np.newaxis, :], width, axis=1)
+    else:
+        arr = np.repeat(lut[np.newaxis, :, :], width, axis=0)
+    return arr

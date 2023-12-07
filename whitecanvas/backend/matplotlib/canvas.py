@@ -238,6 +238,7 @@ class CanvasGrid:
         return self._fig.get_visible()
 
     def _plt_show(self):
+        # TODO: show the inline plot again
         self._fig.show(warn=False)
 
     def _plt_get_background_color(self):

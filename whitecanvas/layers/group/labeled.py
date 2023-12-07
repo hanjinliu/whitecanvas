@@ -7,7 +7,7 @@ import numpy as np
 from whitecanvas.types import ColorType, LineStyle, Alignment, XYData
 from whitecanvas.layers._primitive import Line, Markers, Bars, Errorbars, Texts
 from whitecanvas.layers._base import PrimitiveLayer
-from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset
 
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from whitecanvas.layers.group.line_markers import Plot
 
 
-class _LabeledLayerBase(ListLayerGroup):
+class _LabeledLayerBase(LayerContainer):
     def __init__(
         self,
         layer: PrimitiveLayer,

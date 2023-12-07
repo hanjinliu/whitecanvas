@@ -79,6 +79,9 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     ):
         """Connect callback to y-limits changed event"""
 
+    def _plt_draw(self):
+        """Draw (update) canvas"""
+
 
 @runtime_checkable
 class TextLabelProtocol(HasVisibility, Protocol):

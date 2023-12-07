@@ -5,12 +5,12 @@ from numpy.typing import NDArray
 
 from whitecanvas.types import Orientation, XYData, ArrayLike1D
 from whitecanvas.layers._primitive import Markers, MultiLine
-from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.utils.normalize import normalize_xy
 from whitecanvas.backend import Backend
 
 
-class StemPlot(ListLayerGroup):
+class StemPlot(LayerContainer):
     def __init__(
         self,
         markers: Markers,

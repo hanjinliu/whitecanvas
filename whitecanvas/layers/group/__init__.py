@@ -7,6 +7,7 @@ from .marker_collection import MarkerCollection
 from .boxplot import BoxPlot
 from .graph import Graph
 from .stemplot import StemPlot
+from ._collections import LayerTuple
 
 __all__ = [
     "Plot",
@@ -22,4 +23,5 @@ __all__ = [
     "BoxPlot",
     "Graph",
     "StemPlot",
+    "LayerTuple",
 ]

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from whitecanvas.types import _Void, Symbol, ColorType, FacePattern, XYData
 from whitecanvas.layers._primitive import Line, Band, Markers
-from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.layers.group._collections import LayerContainer
 
 _void = _Void()
 
 
-class LineBand(ListLayerGroup):
+class LineBand(LayerContainer):
     """
     Group of Line, Band and Markers.
 

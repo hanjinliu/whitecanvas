@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 from cmap import Colormap
-from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers._primitive import Image
 from whitecanvas.types import ColormapType, Orientation
 
 
-class Colorbar(ListLayerGroup):
+class Colorbar(LayerContainer):
     def __init__(
         self,
         cmap: Colormap,

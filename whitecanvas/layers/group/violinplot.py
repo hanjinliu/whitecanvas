@@ -7,12 +7,12 @@ from numpy.typing import ArrayLike, NDArray
 from whitecanvas.backend import Backend
 from whitecanvas.types import ColorType, FacePattern, Orientation, LineStyle
 from whitecanvas.layers._primitive import Band
-from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.utils.normalize import as_array_1d, as_color_array
 
 
-class ViolinPlot(ListLayerGroup):
+class ViolinPlot(LayerContainer):
     def __init__(
         self,
         bands: dict[Hashable, Band],

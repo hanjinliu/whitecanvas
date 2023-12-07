@@ -167,6 +167,9 @@ class Canvas:
         rng = self._plot.y_range
         rng.on_change("start", lambda attr, old, new: callback((rng.start, rng.end)))
 
+    def _plt_draw(self):
+        pass
+
 
 def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, ...]:
     if mod is None:

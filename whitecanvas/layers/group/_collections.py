@@ -1,15 +1,26 @@
 from __future__ import annotations
 
-from typing import Iterable, Iterator
-from whitecanvas.layers._base import Layer, LayerGroup
+from typing import Iterable, Iterator, TYPE_CHECKING, Sequence
+from psygnal import Signal
+from whitecanvas.layers._base import Layer, LayerGroup, LayerEvents
+
+if TYPE_CHECKING:
+    from whitecanvas.canvas import Canvas
 
 
-class ListLayerGroup(LayerGroup):
+class ListLayerEvents(LayerEvents):
+    reordered = Signal(list)
+
+
+class LayerContainer(LayerGroup):
     """Layer group that stores children in a list."""
+
+    events: ListLayerEvents
+    _events_class = ListLayerEvents
 
     def __init__(self, children: Iterable[Layer], name: str | None = None):
         super().__init__(name=name)
-        self._children = list(children)
+        self._children = [_check_layer(c) for c in children]
         self._ordering_indices = self._default_ordering(len(self._children))
         self._emit_layer_grouped()
 
@@ -38,4 +49,40 @@ class ListLayerGroup(LayerGroup):
                 f"like [0, 2, 1, 3], but got {zorders}"
             )
         self._ordering_indices = zorders
-        # TODO: emit event
+        self.events.reordered.emit(zorders)
+
+    def _connect_canvas(self, canvas: Canvas):
+        # TODO: connect plt.draw
+        return super()._connect_canvas(canvas)
+
+    def _disconnect_canvas(self, canvas: Canvas):
+        return super()._disconnect_canvas(canvas)
+
+
+class LayerTuple(LayerContainer, Sequence[Layer]):
+    def __getitem__(self, key: int | str) -> Layer:
+        if isinstance(key, str):
+            for child in self.iter_children():
+                if child.name == key:
+                    return child
+            raise ValueError(f"Layer {key!r} not found")
+        return self._children[key]
+
+    def __len__(self) -> int:
+        return len(self._children)
+
+    def __iter__(self) -> Iterator[Layer]:
+        return self.iter_children()
+
+    def __repr__(self) -> str:
+        cname = type(self).__name__
+        return f"{cname}{tuple(self.iter_children())!r}"
+
+
+def _check_layer(l) -> Layer:
+    if not isinstance(l, Layer):
+        raise TypeError(f"{l!r} is not a Layer")
+    if l._is_grouped:
+        raise ValueError(f"{l!r} is already grouped")
+    l._is_grouped = True
+    return l

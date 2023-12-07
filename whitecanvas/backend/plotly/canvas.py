@@ -125,6 +125,9 @@ class Canvas:
         """Connect callback to double-clicked event"""
         # TODO
 
+    def _plt_draw(self):
+        pass
+
 
 def _convert_cb(cb):
     return lambda _, points, state: cb(points.point_inds)

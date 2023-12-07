@@ -30,6 +30,7 @@ class Layer(ABC):
         self.events = self.__class__._events_class()
         self._name = name if name is not None else self.__class__.__name__
         self._x_hint = self._y_hint = None
+        self._is_grouped = False
 
     @abstractproperty
     def visible(self) -> bool:
@@ -72,10 +73,12 @@ class Layer(ABC):
     def _connect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is added to a canvas."""
         self.events._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
+        self.events.connect(canvas._canvas()._plt_draw, unique=True)
 
     def _disconnect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is removed from a canvas."""
         self.events._layer_grouped.disconnect(canvas._cb_layer_grouped)
+        self.events.disconnect(canvas._canvas()._plt_draw)
 
     @abstractmethod
     def bbox_hint(self) -> NDArray[np.float64]:

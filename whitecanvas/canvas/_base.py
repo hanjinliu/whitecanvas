@@ -849,6 +849,38 @@ class CanvasBase(ABC):
             self.layers.insert(idx, layer)
         return layer
 
+    @overload
+    def group_layers(
+        self,
+        layers: Iterable[_l.Layer],
+        name: str | None = None,
+    ) -> _l.LayerGroup:
+        ...
+
+    @overload
+    def group_layers(self, *layers: _l.Layer, name: str | None = None) -> _l.LayerGroup:
+        ...
+
+    def group_layers(self, layers, *more_layers, name=None):
+        """
+        Group layers.
+
+        Parameters
+        ----------
+        layers : iterable of Layer
+            Layers to group.
+
+        Returns
+        -------
+        LayerGroup
+            The grouped layer.
+        """
+        if more_layers:
+            if not isinstance(layers, _l.Layer):
+                raise TypeError("No overload matches the arguments")
+            layers = [layers, *more_layers]
+        return _lg.LayerTuple(layers, name=name)
+
     def _coerce_name(self, layer_type: type[_l.Layer] | str, name: str | None) -> str:
         if name is None:
             if isinstance(layer_type, str):

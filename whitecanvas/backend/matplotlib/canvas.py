@@ -156,6 +156,10 @@ class Canvas:
 
         self._axes.figure.canvas.mpl_connect("button_press_event", _cb)
 
+    def _plt_draw(self):
+        if fig := self._axes.get_figure():
+            fig.canvas.draw_idle()
+
     def _translate_mouse_event(
         self, ev: mplMouseEvent, typ: MouseEventType
     ) -> MouseEvent:

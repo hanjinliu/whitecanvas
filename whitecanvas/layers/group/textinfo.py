@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.types import Alignment
-from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers._primitive import Texts, Line
 
 
@@ -23,7 +23,7 @@ def _norm_bracket_data(
     return line_data, text_pos
 
 
-class BracketText(ListLayerGroup):
+class BracketText(LayerContainer):
     """
     A group of shaped bracket and text.
 
@@ -70,7 +70,7 @@ class BracketText(ListLayerGroup):
         self.text.pos = text_pos
 
 
-class Panel(ListLayerGroup):
+class Panel(LayerContainer):
     """
     A rectangle titled with a text.
 

@@ -153,6 +153,9 @@ class Canvas:
         """Connect callback to y-limits changed event"""
         self._plot_item.sigYRangeChanged.connect(lambda _, y: callback(y))
 
+    def _plt_draw(self):
+        pass  # pyqtgraph has its own draw mechanism
+
     def _translate_mouse_event(
         self,
         ev: pgMouseClickEvent | pgMouseDragEvent,

@@ -6,11 +6,11 @@ import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.types import _Void, ColorType, Alignment, XYData
 from whitecanvas.layers._primitive import MultiLine, Markers, Texts
-from whitecanvas.layers.group._collections import ListLayerGroup
+from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._offsets import TextOffset, NoOffset
 
 
-class Graph(ListLayerGroup):
+class Graph(LayerContainer):
     def __init__(
         self,
         nodes: Markers,

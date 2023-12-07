@@ -173,6 +173,9 @@ class Canvas:
     ):
         self._camera.resized.connect(lambda: callback(self._yaxis._plt_get_limits()))
 
+    def _plt_draw(self):
+        pass  # vispy has its own draw mechanism
+
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:

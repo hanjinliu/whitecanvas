@@ -20,7 +20,7 @@ from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
 from whitecanvas.protocols import layer_protocols as _lp
-from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
 from whitecanvas.theme import get_theme
 from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, _Void
 from whitecanvas.utils.normalize import arr_color, as_any_1d_array, as_color_array
@@ -520,26 +520,40 @@ _NFace = TypeVar("_NFace", bound=FaceNamespace)
 _NEdge = TypeVar("_NEdge", bound=EdgeNamespace)
 
 
+class FaceEdgeMixinEvents(LayerEvents):
+    face = Signal(object)
+    edge = Signal(object)
+
+
 class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
     face: _NFace
     edge: _NEdge
     _face_namespace: _NFace
     _edge_namespace: _NEdge
+    events: FaceEdgeMixinEvents
+    _events_class = FaceEdgeMixinEvents
+
+    def __init__(self, name: str | None = None):
+        super().__init__(name=name)
+        self._face_namespace.events.connect(self.events.face.emit)
+        self._edge_namespace.events.connect(self.events.edge.emit)
 
     @property
     def face(self) -> _NFace:
+        """The face namespace."""
         return self._face_namespace
 
     @property
     def edge(self) -> _NEdge:
+        """The edge namespace."""
         return self._edge_namespace
 
 
 class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P]):
     def __init__(self, name: str | None = None):
-        super().__init__(name=name)
         self._face_namespace = MonoFace(self)
         self._edge_namespace = MonoEdge(self)
+        super().__init__(name=name)
 
     def with_face(
         self,
@@ -550,9 +564,7 @@ class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P])
         """Update the face properties."""
         if color is None:
             color = self.face.color
-        self.face.color = color
-        self.face.pattern = pattern
-        self.face.alpha = alpha
+        self.face.update(color=color, pattern=pattern, alpha=alpha)
         return self
 
     def with_edge(
@@ -565,10 +577,7 @@ class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P])
         """Update the edge properties."""
         if color is None:
             color = self.face.color
-        self.edge.color = color
-        self.edge.width = width
-        self.edge.style = style
-        self.edge.alpha = alpha
+        self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
 
@@ -576,9 +585,9 @@ class MultiFaceEdgeMixin(
     _AbstractFaceEdgeMixin[_P, _NFace, _NEdge], Generic[_P, _NFace, _NEdge]
 ):
     def __init__(self, name: str | None = None):
-        super().__init__(name=name)
         self._face_namespace = ConstFace(self)
         self._edge_namespace = ConstEdge(self)
+        super().__init__(name=name)
 
     def with_face(
         self,
@@ -590,10 +599,10 @@ class MultiFaceEdgeMixin(
         if color is None:
             color = self.face.color
         if not isinstance(self._face_namespace, ConstFace):
+            self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
-        self.face.color = color
-        self.face.pattern = pattern
-        self.face.alpha = alpha
+            self._face_namespace.events.connect(self.events.face.emit)
+        self.face.update(color=color, pattern=pattern, alpha=alpha)
         return self
 
     def with_edge(
@@ -607,11 +616,10 @@ class MultiFaceEdgeMixin(
         if color is None:
             color = self.face.color
         if not isinstance(self._edge_namespace, ConstEdge):
+            self._edge_namespace.events.disconnect()
             self._edge_namespace = ConstEdge(self)  # type: ignore
-        self.edge.color = color
-        self.edge.width = width
-        self.edge.style = style
-        self.edge.alpha = alpha
+            self._edge_namespace.events.connect(self.events.edge.emit)
+        self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
     def with_face_multi(
@@ -623,10 +631,10 @@ class MultiFaceEdgeMixin(
         if color is None:
             color = self.face.color
         if not isinstance(self._face_namespace, MultiFace):
+            self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
-        self.face.color = color
-        self.face.pattern = pattern
-        self.face.alpha = alpha
+            self._face_namespace.events.connect(self.events.face.emit)
+        self.face.update(color=color, pattern=pattern, alpha=alpha)
         return self
 
     def with_edge_multi(
@@ -640,11 +648,10 @@ class MultiFaceEdgeMixin(
         if color is None:
             color = self.face.color
         if not isinstance(self._edge_namespace, MultiEdge):
+            self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore
-        self.edge.color = color
-        self.edge.width = width
-        self.edge.style = style
-        self.edge.alpha = alpha
+            self._edge_namespace.events.connect(self.events.edge.emit)
+        self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
 
@@ -691,7 +698,7 @@ class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color=_void, size=_void, family=_void):
+    def update(self, *, color=_void, size=_void, family=_void):
         raise NotImplementedError
 
 
@@ -804,6 +811,12 @@ class MultiFont(FontNamespace):
 _NFont = TypeVar("_NFont", bound=FontNamespace)
 
 
+class TextMixinEvents(LayerEvents):
+    face = Signal(object)
+    edge = Signal(object)
+    font = Signal(object)
+
+
 class TextMixin(PrimitiveLayer[_lp.TextProtocol], Generic[_NFace, _NEdge, _NFont]):
     face: _NFace
     edge: _NEdge
@@ -811,11 +824,17 @@ class TextMixin(PrimitiveLayer[_lp.TextProtocol], Generic[_NFace, _NEdge, _NFont
     _edge_namespace: _NEdge
     _font_namespace: _NFont
 
+    events: TextMixinEvents
+    _events_class = TextMixinEvents
+
     def __init__(self, name: str | None = None):
-        super().__init__(name=name)
         self._face_namespace = ConstFace(self)
         self._edge_namespace = ConstEdge(self)
         self._font_namespace = ConstFont(self)
+        super().__init__(name=name)
+        self._face_namespace.events.connect(self.events.face.emit)
+        self._edge_namespace.events.connect(self.events.edge.emit)
+        self._font_namespace.events.connect(self.events.font.emit)
 
     @property
     def face(self) -> _NFace:
@@ -831,3 +850,100 @@ class TextMixin(PrimitiveLayer[_lp.TextProtocol], Generic[_NFace, _NEdge, _NFont
     def font(self) -> _NFont:
         """Namespace of the text font."""
         return self._font_namespace
+
+    def with_face(
+        self,
+        color: ColorType | None = None,
+        pattern: FacePattern | str = FacePattern.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the face properties."""
+        if color is None:
+            color = self.face.color
+        if not isinstance(self._face_namespace, ConstFace):
+            self._face_namespace.events.disconnect()
+            self._face_namespace = ConstFace(self)  # type: ignore
+            self._face_namespace.events.connect(self.events.face.emit)
+        self.face.update(color=color, pattern=pattern, alpha=alpha)
+        return self
+
+    def with_edge(
+        self,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the edge properties."""
+        if color is None:
+            color = self.face.color
+        if not isinstance(self._edge_namespace, ConstEdge):
+            self._edge_namespace.events.disconnect()
+            self._edge_namespace = ConstEdge(self)  # type: ignore
+            self._edge_namespace.events.connect(self.events.edge.emit)
+        self.edge.update(color=color, style=style, width=width, alpha=alpha)
+        return self
+
+    def with_face_multi(
+        self,
+        color: ColorType | Sequence[ColorType] | None = None,
+        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        if color is None:
+            color = self.face.color
+        if not isinstance(self._face_namespace, MultiFace):
+            self._face_namespace.events.disconnect()
+            self._face_namespace = MultiFace(self)  # type: ignore
+            self._face_namespace.events.connect(self.events.face.emit)
+        self.face.update(color=color, pattern=pattern, alpha=alpha)
+        return self
+
+    def with_edge_multi(
+        self,
+        color: ColorType | Sequence[ColorType] | None = None,
+        width: float | Sequence[float] = 1,
+        style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the edge properties."""
+        if color is None:
+            color = self.face.color
+        if not isinstance(self._edge_namespace, MultiEdge):
+            self._edge_namespace.events.disconnect()
+            self._edge_namespace = MultiEdge(self)  # type: ignore
+            self._edge_namespace.events.connect(self.events.edge.emit)
+        self.edge.update(color=color, style=style, width=width, alpha=alpha)
+        return self
+
+    def with_font(
+        self,
+        color: ColorType | None = None,
+        size: float | None = None,
+        family: str | None = None,
+    ) -> Self:
+        """Update the face properties."""
+        if color is None:
+            color = self.font.color
+        if not isinstance(self._font_namespace, ConstFace):
+            self._font_namespace.events.disconnect()
+            self._font_namespace = ConstFace(self)  # type: ignore
+            self._font_namespace.events.connect(self.events.font.emit)
+        self.font.update(color=color, size=size, family=family)
+        return self
+
+    def with_font_multi(
+        self,
+        color: ColorType | Sequence[ColorType] | None = None,
+        size: float | Sequence[float] | None = None,
+        family: str | Sequence[str] | None = None,
+    ) -> Self:
+        """Update the face properties."""
+        if color is None:
+            color = self.font.color
+        if not isinstance(self._font_namespace, MultiFace):
+            self._font_namespace.events.disconnect()
+            self._font_namespace = MultiFace(self)  # type: ignore
+            self._font_namespace.events.connect(self.events.font.emit)
+        self.font.update(color=color, size=size, family=family)
+        return self

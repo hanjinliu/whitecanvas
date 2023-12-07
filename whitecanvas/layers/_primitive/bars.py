@@ -7,9 +7,9 @@ from numpy.typing import NDArray
 from psygnal import Signal
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._primitive.text import Texts
-from whitecanvas.layers._base import LayerEvents
 from whitecanvas.layers._mixin import (
     MultiFaceEdgeMixin,
+    FaceEdgeMixinEvents,
     FaceNamespace,
     EdgeNamespace,
     ConstFace,
@@ -40,7 +40,7 @@ _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 
 
-class BarEvents(LayerEvents):
+class BarEvents(FaceEdgeMixinEvents):
     bar_width = Signal(float)
     bottom = Signal(np.ndarray)
 

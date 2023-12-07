@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 from typing import Literal, TypeVar, overload, Callable, Any, TYPE_CHECKING
-from functools import update_wrapper
 from numpy.typing import ArrayLike
-from whitecanvas.canvas import Canvas, SingleCanvas
+from whitecanvas.canvas import Canvas
 from whitecanvas import layers as _l
-from whitecanvas.core import new_canvas
 from whitecanvas.layers import _mixin
 from whitecanvas.types import (
     LineStyle,
@@ -16,7 +14,6 @@ from whitecanvas.types import (
     FacePattern,
     Orientation,
     ArrayLike1D,
-    _Void,
 )
 
 from ._current import current_canvas, current_grid
@@ -42,8 +39,14 @@ def _copy_add_method(f: _F, pref: str = "add_") -> _F:
         meth = getattr(current_canvas(), fname)
         return meth(*args, **kwargs)
 
-    update_wrapper(_inner, f)
-    _inner.__doc__ = getattr(Canvas, fname).__doc__
+    canvas_func = getattr(Canvas, fname)
+    doc = canvas_func.__doc__
+    assert type(doc) is str
+    _inner.__doc__ = doc.replace(f">>> canvas.{pref}", ">>> plt.")
+    _inner.__name__ = f.__name__
+    _inner.__qualname__ = f.__qualname__
+    _inner.__module__ = f.__module__
+    _inner.__annotations__ = canvas_func.__annotations__
     return _inner
 
 
@@ -224,7 +227,15 @@ def rug(
 
 
 @_copy_add_method
-def spans(*args, **kwargs) -> _l.Spans:
+def spans(
+    spans: ArrayLike,
+    *,
+    name: str | None = None,
+    orient: str | Orientation = Orientation.VERTICAL,
+    color: ColorType = "blue",
+    alpha: float = 0.2,
+    pattern: str | FacePattern = FacePattern.SOLID,
+) -> _l.Spans:
     ...
 
 

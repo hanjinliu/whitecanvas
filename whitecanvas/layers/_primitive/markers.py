@@ -7,9 +7,13 @@ from psygnal import Signal
 from whitecanvas.layers._primitive.text import Texts
 
 from whitecanvas.protocols import MarkersProtocol
-from whitecanvas.layers._base import LayerEvents
 from whitecanvas.layers._sizehint import xy_size_hint
-from whitecanvas.layers._mixin import MultiFaceEdgeMixin, FaceNamespace, EdgeNamespace
+from whitecanvas.layers._mixin import (
+    MultiFaceEdgeMixin,
+    FaceNamespace,
+    EdgeNamespace,
+    FaceEdgeMixinEvents,
+)
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
     LineStyle,
@@ -38,7 +42,7 @@ _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 _Size = TypeVar("_Size", float, NDArray[np.floating])
 
 
-class MarkersLayerEvents(LayerEvents):
+class MarkersLayerEvents(FaceEdgeMixinEvents):
     picked = Signal(list)
     symbol = Signal(Symbol)
     size = Signal(float)

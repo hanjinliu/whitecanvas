@@ -32,9 +32,10 @@ class Texts(PlotlyLayer):
             },
             "type": "scatter",
             "showlegend": False,
-            "angle": np.zeros(ntexts),
+            # "angle": np.zeros(ntexts),
             "visible": True,
         }
+        self._angle = np.zeros(ntexts)
 
     ##### TextProtocol #####
 
@@ -83,13 +84,13 @@ class Texts(PlotlyLayer):
         else:
             self._props["textposition"] = [a.value.replace("_", " ") for a in anc]
 
-    def _plt_get_text_rotation(self) -> float:
-        return self._props["angle"]
+    def _plt_get_text_rotation(self):
+        return self._angle
 
     def _plt_set_text_rotation(self, rotation: float):
         if np.isscalar(rotation):
             rotation = np.full(len(self._props["text"]), rotation)
-        self._props["angle"] = rotation
+        self._angle = rotation
 
     def _plt_get_text_fontfamily(self) -> list[str]:
         return self._props["textfont"]["family"]

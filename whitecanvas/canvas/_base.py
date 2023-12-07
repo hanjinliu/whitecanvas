@@ -658,6 +658,10 @@ class CanvasBase(ABC):
         """
         Add an infinitely long line to the canvas.
 
+        >>> canvas.add_infline((0, 0), 45)  # y = x
+        >>> canvas.add_infline((1, 0), 90)  # x = 1
+        >>> canvas.add_infline((0, -1), 0)  # y = -1
+
         Parameters
         ----------
         pos : (float, float), default is (0, 0)

@@ -74,6 +74,7 @@ class _TextBoundNamespace(Namespace):
 
     @property
     def color(self):
+        """Text color"""
         return self._get_object()._plt_get_color()
 
     @color.setter
@@ -82,6 +83,7 @@ class _TextBoundNamespace(Namespace):
 
     @property
     def size(self) -> float:
+        """Text font size"""
         return self._get_object()._plt_get_size()
 
     @size.setter
@@ -89,15 +91,17 @@ class _TextBoundNamespace(Namespace):
         self._get_object()._plt_set_size(size)
 
     @property
-    def fontfamily(self) -> str:
+    def family(self) -> str:
+        """Text font family."""
         return self._get_object()._plt_get_fontfamily()
 
-    @fontfamily.setter
-    def fontfamily(self, font):
+    @family.setter
+    def family(self, font):
         self._get_object()._plt_set_fontfamily(font)
 
     @property
     def visible(self) -> bool:
+        """Text visibility."""
         return self._get_object()._plt_get_visible()
 
     @visible.setter
@@ -110,7 +114,7 @@ class _TextLabelNamespace(_TextBoundNamespace):
         text = self.text
         color = self.color
         size = self.size
-        fontfamily = self.fontfamily
+        fontfamily = self.family
         name = type(self).__name__
         return f"{name}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
 
@@ -138,9 +142,9 @@ class _TicksNamespace(_TextBoundNamespace):
         pos = list(pos)
         color = self.color
         size = self.size
-        fontfamily = self.fontfamily
+        family = self.family
         name = type(self).__name__
-        return f"{name}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {fontfamily=!r})"
+        return f"{name}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {family=!r})"
 
     @property
     def pos(self) -> NDArray[np.floating]:

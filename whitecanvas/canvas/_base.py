@@ -1,5 +1,14 @@
 from __future__ import annotations
-from typing import Any, Callable, Iterable, Iterator, overload, TypeVar, TYPE_CHECKING
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Literal,
+    overload,
+    TypeVar,
+    TYPE_CHECKING,
+)
 from abc import ABC, abstractmethod
 
 from cmap import Color
@@ -78,8 +87,8 @@ class CanvasBase(ABC):
         theme = get_theme()
         self.x.color = theme.foreground_color
         self.y.color = theme.foreground_color
-        self.x.ticks.fontfamily = theme.fontfamily
-        self.y.ticks.fontfamily = theme.fontfamily
+        self.x.ticks.family = theme.fontfamily
+        self.y.ticks.family = theme.fontfamily
         self.x.ticks.color = theme.foreground_color
         self.y.ticks.color = theme.foreground_color
         self.x.ticks.size = theme.fontsize
@@ -537,15 +546,51 @@ class CanvasBase(ABC):
         range: tuple[float, float] | None = None,
         density: bool = False,
         name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Bars:
+        """
+        Add data as a histogram.
+
+        >>> canvas.add_hist(np.random.normal(size=100), bins=12)
+
+        Parameters
+        ----------
+        data : array-like
+            1D Array of data.
+        bins : int or 1D array-like, default is 10
+            Bins of the histogram. This parameter will directly be passed
+            to `np.histogram`.
+        range : (float, float), optional
+            Range in which histogram will be built. This parameter will
+            directly be passed to `np.histogram`.
+        density : bool, default is False
+            If True, heights of bars will be normalized so that the total
+            area of the histogram will be 1. This parameter will directly
+            be passed to `np.histogram`.
+        name : str, optional
+            Name of the layer.
+        orient : str or Orientation, default is Orientation.VERTICAL
+            Orientation of the bars.
+        color : color-like, optional
+            Color of the bars.
+        alpha : float, default is 1.0
+            Alpha channel of the bars.
+        pattern : str or FacePattern, default is FacePattern.SOLID
+            Pattern of the bar faces.
+
+        Returns
+        -------
+        Bars
+            The bars layer that represents the histogram.
+        """
         name = self._coerce_name("histogram", name)
         color = self._generate_colors(color)
         layer = _l.Bars.from_histogram(
             data, bins=bins, range=range, density=density, name=name, color=color,
-            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            orient=orient, alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -559,6 +604,37 @@ class CanvasBase(ABC):
         alpha: float = 0.2,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Spans:
+        """
+        Add spans that extends infinitely.
+
+        >>> canvas.add_spans([[5, 10], [15, 20]])
+
+           |////|     |////|
+           |////|     |////|
+        ───5────10────15───20─────>
+           |////|     |////|
+           |////|     |////|
+
+        Parameters
+        ----------
+        spans : (N, 2) array-like
+            Array that contains the start and end points of the spans.
+        name : str, optional
+            Name of the layer.
+        orient : str or Orientation, default is Orientation.VERTICAL
+            Orientation of the bars.
+        color : color-like, optional
+            Color of the bars.
+        alpha : float, default is 1.0
+            Alpha channel of the bars.
+        pattern : str or FacePattern, default is FacePattern.SOLID
+            Pattern of the bar faces.
+
+        Returns
+        -------
+        Spans
+            The spans layer.
+        """
         name = self._coerce_name("histogram", name)
         color = self._generate_colors(color)
         layer = _l.Spans(
@@ -576,12 +652,41 @@ class CanvasBase(ABC):
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1.0,
         antialias: bool = True,
-    ):
+    ) -> _l.InfLine:
+        """
+        Add an infinitely long line to the canvas.
+
+        Parameters
+        ----------
+        pos : (float, float), default is (0, 0)
+            One of the points this line passes.
+        angle : float, default is 0.0
+            Angle of the line in degree, defined by the counter-clockwise
+            rotation from the x axis.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        width : float, default is 1.0
+            Line width.
+        style : str or LineStyle, default is LineStyle.SOLID
+            Line style.
+        alpha : float, default is 1.0
+            Alpha channel of the line.
+        antialias : bool, default is True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        InfLine
+            The infline layer.
+        """
         name = self._coerce_name(_l.InfLine, name)
         color = self._generate_colors(color)
         layer = _l.InfLine(
-            pos, angle, name=name, color=color,
+            pos, angle, name=name, color=color, alpha=alpha,
             width=width, style=style, antialias=antialias,
             backend=self._get_backend(),
         )  # fmt: skip
@@ -591,7 +696,7 @@ class CanvasBase(ABC):
         self,
         model: Callable[Concatenate[Any, _P], Any],
         *,
-        bounds: tuple[float, float] = (-np.inf, np.inf),
+        bounds: tuple[float, float] = (-float("inf"), float("inf")),
         name: str | None = None,
         color: ColorType | None = None,
         width: float = 1.0,
@@ -609,7 +714,7 @@ class CanvasBase(ABC):
         model : callable
             The model function. The first argument must be the x coordinates. Same
             signature as `scipy.optimize.curve_fit`.
-        bounds : (float, float), default is (-np.inf, np.inf)
+        bounds : (float, float), default is (-inf, inf)
             Lower and upper bounds that the function is defined.
         name : str, optional
             Name of the layer.
@@ -640,8 +745,8 @@ class CanvasBase(ABC):
     def add_band(
         self,
         xdata: ArrayLike1D,
-        ydata0: ArrayLike1D,
-        ydata1: ArrayLike1D,
+        ylow: ArrayLike1D,
+        yhigh: ArrayLike1D,
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -649,10 +754,38 @@ class CanvasBase(ABC):
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Band:
+        """
+        Add a band (fill-between) layer to the canvas.
+
+        Parameters
+        ----------
+        xdata : array-like
+            X coordinates of the band.
+        ylow : array-like
+            Either lower or upper y coordinates of the band.
+        yhigh : array-like
+            The other y coordinates of the band.
+        name : str, optional
+            Name of the layer, by default None
+        orient : str, Orientation, default is Orientation.VERTICAL
+            Orientation of the band. If vertical, band will be filled between
+            vertical orientation.,
+        color : color-like, default is None
+            Color of the band face.,
+        alpha : float, default is 1.0
+            Alpha channel of the band face.,
+        pattern : str, FacePattern, default is FacePattern.SOLID
+            Fill pattern of the band face.,
+
+        Returns
+        -------
+        Band
+            The band layer.
+        """
         name = self._coerce_name(_l.Band, name)
         color = self._generate_colors(color)
         layer = _l.Band(
-            xdata, ydata0, ydata1, name=name, orient=orient, color=color,
+            xdata, ylow, yhigh, name=name, orient=orient, color=color,
             alpha=alpha, pattern=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -671,6 +804,40 @@ class CanvasBase(ABC):
         antialias: bool = False,
         capsize: float = 0.0,
     ) -> _l.Errorbars:
+        """
+        Add parallel lines as errorbars.
+
+        Parameters
+        ----------
+        xdata : array-like
+            X coordinates of the errorbars.
+        ylow : array-like
+            Lower bound of the errorbars.
+        yhigh : array-like
+            Upper bound of the errorbars.
+        name : str, optional
+            Name of the layer.
+        orient : str or Orientation, default is Orientation.VERTICAL
+            Orientation of the errorbars. If vertical, errorbars will be parallel
+            to the y axis.
+        color : color-like, optional
+            Color of the bars.
+        width : float, default is 1.0
+            Line width.
+        style : str or LineStyle, default is LineStyle.SOLID
+            Line style.
+        alpha : float, default is 1.0
+            Alpha channel of the line.
+        antialias : bool, default is True
+            Antialiasing of the line.
+        capsize : float, default is 0.0
+            Size of the caps of the error indicators
+
+        Returns
+        -------
+        Errorbars
+            The errorbars layer.
+        """
         name = self._coerce_name(_l.Errorbars, name)
         color = self._generate_colors(color)
         layer = _l.Errorbars(
@@ -687,15 +854,57 @@ class CanvasBase(ABC):
         low: float = 0.0,
         high: float = 1.0,
         name: str | None = None,
-        color: ColorType = "black",
-        alpha: float = 1.0,
         orient: str | Orientation = Orientation.VERTICAL,
+        color: ColorType = "black",
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
+        alpha: float = 1.0,
     ) -> _l.Rug:
+        """
+        Add input data as a rug plot.
+
+        >>> canvas.add_rug([2, 4, 5, 8, 11])
+
+          │ ││  │   │
+        ──┴─┴┴──┴───┴──> x
+          2 45  8   11
+
+        Parameters
+        ----------
+        events : array-like
+            A 1D array of events.
+        low : float, default is 0.0
+            The lower bound of the rug lines.
+        high : float, default is 1.0
+            The upper bound of the rug lines.
+        name : str, optional
+            Name of the layer.
+        orient : str or Orientation, default is Orientation.VERTICAL
+            Orientation of the errorbars. If vertical, rug lines will be parallel
+            to the y axis.
+        color : color-like, optional
+            Color of the bars.
+        width : float, default is 1.0
+            Line width.
+        style : str or LineStyle, default is LineStyle.SOLID
+            Line style.
+        alpha : float, default is 1.0
+            Alpha channel of the line.
+        antialias : bool, default is True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        Rug
+            The rug layer.
+        """
         name = self._coerce_name(_l.Errorbars, name)
         color = self._generate_colors(color)
         layer = _l.Rug(
-            events, low=low, high=high, name=name, color=color,
-            alpha=alpha, orient=orient, backend=self._get_backend(),
+            events, low=low, high=high, name=name, color=color, alpha=alpha,
+            width=width, style=style, antialias=antialias, orient=orient,
+            backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -706,11 +915,39 @@ class CanvasBase(ABC):
         bottom: float = 0.0,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        band_width: float | str = "scott",
+        band_width: float | Literal["scott", "silverman"] = "scott",
         color: ColorType | None = None,
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
-    ):
+    ) -> _l.Band:
+        """
+        Add data as a band layer representing kernel density estimation (KDE).
+
+        Parameters
+        ----------
+        data : array-like
+            1D data to calculate the KDE.
+        bottom : float, default is 0.0
+            Scalar value that define the height of the bottom line.
+        name : str, optional
+            Name of the layer, by default None
+        orient : str, Orientation, default is Orientation.VERTICAL
+            Orientation of the KDE.
+        band_width : float or str, default is "scott"
+            Band width parameter of KDE. Must be a number or a string as the
+            method to automatic determination.
+        color : color-like, default is None
+            Color of the band face.,
+        alpha : float, default is 1.0
+            Alpha channel of the band face.
+        pattern : str, FacePattern, default is FacePattern.SOLID
+            Fill pattern of the band face.
+
+        Returns
+        -------
+        _l.Band
+            The band layer representing KDE.
+        """
         from whitecanvas.utils.kde import gaussian_kde
 
         data = as_array_1d(data)

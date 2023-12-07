@@ -12,6 +12,8 @@ from whitecanvas.theme import get_theme
 
 
 class CanvasGrid:
+    _CURRENT_INSTANCE: CanvasGrid | None = None
+
     def __init__(
         self,
         heights: list[int],
@@ -36,6 +38,8 @@ class CanvasGrid:
         theme = get_theme()
         self.background_color = theme.background_color
         self.size = theme.canvas_size
+
+        self.__class__._CURRENT_INSTANCE = self
 
     @classmethod
     def uniform(

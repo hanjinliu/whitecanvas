@@ -7,7 +7,7 @@ from psygnal import Signal
 
 from whitecanvas.layers._primitive.line import MultiLine, LineLayerEvents
 from whitecanvas.backend import Backend
-from whitecanvas.types import ColorType, _Void, Orientation
+from whitecanvas.types import ColorType, _Void, Orientation, LineStyle
 from whitecanvas.utils.normalize import as_array_1d
 
 
@@ -35,12 +35,18 @@ class Rug(MultiLine):
         high: float = 1.0,
         name: str | None = None,
         color: ColorType = "black",
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
         alpha: float = 1.0,
+        antialias: bool = True,
         orient: str | Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
     ):
         events, segs, orient = _norm_input(events, low, high, orient)
-        super().__init__(segs, name=name, color=color, alpha=alpha, backend=backend)
+        super().__init__(
+            segs, name=name, color=color, alpha=alpha, width=width, style=style,
+            antialias=antialias, backend=backend
+        )  # fmt: skip
         self._orient = orient
         self._events = events
         self._low = low

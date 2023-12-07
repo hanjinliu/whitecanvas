@@ -15,8 +15,8 @@ def test_namespaces(backend: str):
     assert_color_equal(canvas.title.color, "red")
     canvas.title.size = 20
     assert canvas.title.size == 20
-    canvas.title.fontfamily = "Arial"
-    assert canvas.title.fontfamily == "Arial"
+    canvas.title.family = "Arial"
+    assert canvas.title.family == "Arial"
 
     canvas.x.label.text = "X-Label-0"
     assert canvas.x.label.text == "X-Label-0"
@@ -24,8 +24,8 @@ def test_namespaces(backend: str):
     assert_color_equal(canvas.x.label.color, "red")
     canvas.x.label.size = 20
     assert canvas.x.label.size == 20
-    canvas.x.label.fontfamily = "Arial"
-    assert canvas.x.label.fontfamily == "Arial"
+    canvas.x.label.family = "Arial"
+    assert canvas.x.label.family == "Arial"
 
     canvas.y.label.text = "Y-Label-0"
     assert canvas.y.label.text == "Y-Label-0"
@@ -33,8 +33,8 @@ def test_namespaces(backend: str):
     assert_color_equal(canvas.y.label.color, "red")
     canvas.y.label.size = 20
     assert canvas.y.label.size == 20
-    canvas.y.label.fontfamily = "Arial"
-    assert canvas.y.label.fontfamily == "Arial"
+    canvas.y.label.family = "Arial"
+    assert canvas.y.label.family == "Arial"
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_grid(backend: str):

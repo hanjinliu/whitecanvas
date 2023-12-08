@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
-from whitecanvas.layers._primitive.text import Texts
 
+from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import (
@@ -49,7 +50,9 @@ class MarkersLayerEvents(FaceEdgeMixinEvents):
 
 
 class Markers(
-    MultiFaceEdgeMixin[MarkersProtocol, _Face, _Edge], Generic[_Face, _Edge, _Size]
+    MultiFaceEdgeMixin[MarkersProtocol, _Face, _Edge],
+    DataBoundLayer[MarkersProtocol, XYData],
+    Generic[_Face, _Edge, _Size],
 ):
     events: MarkersLayerEvents
     _events_class = MarkersLayerEvents
@@ -92,16 +95,16 @@ class Markers(
         """Number of data points."""
         return self.data.x.size
 
-    @property
-    def data(self) -> XYData:
-        """Current data of the layer."""
+    def _get_layer_data(self) -> XYData:
         return XYData(*self._backend._plt_get_data())
 
-    def set_data(
-        self,
-        xdata: ArrayLike | None = None,
-        ydata: ArrayLike | None = None,
-    ):
+    def _norm_layer_data(self, data: Any) -> XYData:
+        if isinstance(data, np.ndarray):
+            if data.ndim != 2 or data.shape[1] != 2:
+                raise ValueError("Expected a (N, 2) array")
+            xdata, ydata = data[:, 0], data[:, 1]
+        else:
+            xdata, ydata = data
         x0, y0 = self.data
         if xdata is not None:
             x0 = as_array_1d(xdata)
@@ -112,10 +115,20 @@ class Markers(
                 "Expected xdata and ydata to have the same size, "
                 f"got {x0.size} and {y0.size}"
             )
+        return XYData(x0, y0)
+
+    def _set_layer_data(self, data: XYData):
+        x0, y0 = data
         self._backend._plt_set_data(x0, y0)
-        self.events.data.emit(x0, y0)
         pad_r = self.size / 400
         self._x_hint, self._y_hint = xy_size_hint(x0, y0, pad_r, pad_r)
+
+    def set_data(
+        self,
+        xdata: ArrayLike | None = None,
+        ydata: ArrayLike | None = None,
+    ):
+        self.data = XYData(xdata, ydata)
 
     @property
     def symbol(self) -> Symbol:

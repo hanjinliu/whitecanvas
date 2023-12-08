@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from cmap import Color
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 from psygnal import Signal, SignalGroup
 
 from whitecanvas import protocols
@@ -38,7 +38,7 @@ from whitecanvas.canvas import (
     _categorical as _cat,
 )
 from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.canvas._imageref import ImageRef
+from whitecanvas.canvas._dims import Dims
 from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
@@ -70,6 +70,7 @@ class CanvasBase(ABC):
     title = _ns.TitleNamespace()
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
+    dims = Dims()
     layers = _ll.LayerList()
     events: CanvasEvents
 
@@ -1041,6 +1042,7 @@ class CanvasBase(ABC):
         self,
         image: ArrayLike,
         *,
+        name: str | None = None,
         cmap: ColormapType = "gray",
         clim: tuple[float | None, float | None] | None = None,
         flip_canvas: bool = True,
@@ -1070,7 +1072,9 @@ class CanvasBase(ABC):
         Image
             The image layer.
         """
-        layer = _l.Image(image, cmap=cmap, clim=clim, backend=self._get_backend())
+        layer = _l.Image(
+            image, name=name, cmap=cmap, clim=clim, backend=self._get_backend()
+        )
         self.add_layer(layer)
         if flip_canvas and not self.y.flipped:
             self.y.flipped = True
@@ -1199,6 +1203,10 @@ class CanvasBase(ABC):
         for l in _iter_layers(layer):
             _canvas._plt_add_layer(l._backend)
             l._connect_canvas(self)
+
+        if isinstance(layer, _l.LayerStack):
+            # TODO: check if connecting LayerGroup is necessary
+            layer._connect_canvas(self)
         # autoscale
         if isinstance(layer, _l.Image):
             pad_rel = 0
@@ -1309,5 +1317,7 @@ def _iter_layers(
         yield layer
     elif isinstance(layer, _l.LayerGroup):
         yield from layer.iter_children_recursive()
+    elif isinstance(layer, _l.LayerStack):
+        yield from _iter_layers(layer._base_layer)
     else:
         raise TypeError(f"Unknown layer type: {type(layer).__name__}")

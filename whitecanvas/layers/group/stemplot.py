@@ -42,9 +42,11 @@ class StemPlot(LayerContainer):
     def bottom(self) -> NDArray[np.floating]:
         """Bottom of the stem."""
         if self.orient.is_vertical:
-            return np.array([d.y[0] for d in self.lines.data])
+            # return np.array([d.y[0] for d in self.lines.data])
+            return np.array([d[0, 1] for d in self.lines.data])
         else:
-            return np.array([d.x[0] for d in self.lines.data])
+            # return np.array([d.x[0] for d in self.lines.data])
+            return np.array([d[0, 0] for d in self.lines.data])
 
     @property
     def top(self) -> NDArray[np.floating]:

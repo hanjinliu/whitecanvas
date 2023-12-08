@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Generic, Iterator, TypeVar, TYPE_CHECKING
+from typing import Any, Generic, Iterator, TypeVar, TYPE_CHECKING
 from psygnal import Signal, SignalGroup
 import numpy as np
 from numpy.typing import NDArray
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
+_T = TypeVar("_T")
 
 
 class LayerEvents(SignalGroup):
@@ -132,6 +133,31 @@ class PrimitiveLayer(Layer, Generic[_P]):
         else:
             _y = self._y_hint
         return np.array(_x + _y, dtype=np.float64)
+
+
+class DataBoundLayer(PrimitiveLayer[_P], Generic[_P, _T]):
+    @abstractmethod
+    def _get_layer_data(self) -> _T:
+        """Get the data for this layer."""
+
+    @abstractmethod
+    def _set_layer_data(self, data: _T):
+        """Set the data for this layer."""
+
+    def _norm_layer_data(self, data: Any) -> _T:
+        """Normalize the data for this layer."""
+        return data
+
+    @property
+    def data(self) -> _T:
+        """Data for this layer."""
+        return self._get_layer_data()
+
+    @data.setter
+    def data(self, data):
+        """Set the data for this layer."""
+        self._set_layer_data(data)
+        self.events.data.emit(data)
 
 
 class LayerGroup(Layer):

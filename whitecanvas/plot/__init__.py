@@ -9,9 +9,9 @@ Plot API for whitecanvas.
 
 from whitecanvas.plot._methods import (
     line, markers, bars, band, hist, spans, infcurve, infline, errorbars,
-    kde, rug, text, cat, show,
+    kde, rug, text, cat,
 )  # fmt: skip
-from whitecanvas.plot._current import current_canvas, current_grid
+from whitecanvas.plot._canvases import current_canvas, current_grid, show, subplots
 from whitecanvas.core import new_canvas
 
 figure = new_canvas
@@ -32,6 +32,7 @@ __all__ = [
     "cat",
     "figure",
     "show",
+    "subplots",
     "current_grid",
     "current_canvas",
 ]

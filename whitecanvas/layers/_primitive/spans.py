@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar, Sequence
+from typing import TYPE_CHECKING, Any, TypeVar, Sequence, Generic
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.protocols import BarProtocol
+from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import (
     MultiFaceEdgeMixin,
     FaceNamespace,
@@ -24,7 +25,11 @@ _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 
 
-class Spans(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
+class Spans(
+    MultiFaceEdgeMixin[BarProtocol, _Face, _Edge],
+    DataBoundLayer[BarProtocol, NDArray[np.number]],
+    Generic[_Face, _Edge],
+):
     """
     Layer that represents vertical/hosizontal spans.
 
@@ -70,25 +75,28 @@ class Spans(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
         """Orientation of the spans."""
         return self._orient
 
-    @property
-    def data(self) -> NDArray[np.float_]:
+    def _get_layer_data(self) -> NDArray[np.number]:
         x0, x1, y0, y1 = self._backend._plt_get_data()
         if self.orient.is_vertical:
             return np.column_stack([x0, x1])
         else:
             return np.column_stack([y0, y1])
 
-    def set_data(self, spans: ArrayLike):
+    def _norm_layer_data(self, data: Any) -> NDArray[np.number]:
+        return _norm_data(data)
+
+    def _set_layer_data(self, data: NDArray[np.number]):
         _old_spans = self.data
-        _spans = _norm_data(spans)
         if self.orient.is_vertical:
-            xxyy = _spans[:, 0], _spans[:, 1], _old_spans[:, 2], _old_spans[:, 3]
-            self._x_hint = _spans.min(), _spans.max()
+            xxyy = data[:, 0], data[:, 1], _old_spans[:, 2], _old_spans[:, 3]
+            self._x_hint = data.min(), data.max()
         else:
-            xxyy = _old_spans[:, 0], _old_spans[:, 1], _spans[:, 0], _spans[:, 1]
-            self._y_hint = _spans.min(), _spans.max()
+            xxyy = _old_spans[:, 0], _old_spans[:, 1], data[:, 0], data[:, 1]
+            self._y_hint = data.min(), data.max()
         self._backend._plt_set_data(*xxyy)
-        self.events.data.emit(_spans)
+
+    def set_data(self, spans: ArrayLike):
+        self.data = spans
 
     @property
     def ndata(self) -> int:

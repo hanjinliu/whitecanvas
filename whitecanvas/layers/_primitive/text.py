@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Sequence, TypeVar
+from typing import Any, Sequence, TypeVar
 
 import numpy as np
 
@@ -17,6 +17,7 @@ from whitecanvas.types import (
     _Void,
     Alignment,
     XYData,
+    XYTextData,
     ArrayLike1D,
 )
 from whitecanvas.utils.normalize import normalize_xy
@@ -54,6 +55,37 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
         )
         pad = 0.0  # TODO: better padding
         self._x_hint, self._y_hint = xy_size_hint(x, y, pad, pad)
+
+    def _get_layer_data(self) -> XYTextData:
+        x, y = self._backend._plt_get_text_position()
+        t = np.array(self._backend._plt_get_text(), dtype=np.object_)
+        return XYTextData(x, y, t)
+
+    def _norm_layer_data(self, data: Any) -> XYTextData:
+        xpos, ypos, t = data
+        if xpos is None or ypos is None:
+            x0, y0 = self.pos
+            if xpos is None:
+                xpos = x0
+            if ypos is None:
+                ypos = y0
+        if t is None:
+            t = self._backend._plt_get_text()
+        elif isinstance(t, str):
+            t = [t] * self.ntexts
+        else:
+            t = [str(t0) for t0 in t]
+        xdata, ydata = normalize_xy(xpos, ypos)
+        if len(xdata) != len(t):
+            raise ValueError(
+                f"Length of x ({len(xdata)}) and y ({len(ydata)}) must be equal "
+                f"to the number of texts ({len(t)})."
+            )
+        return XYTextData(xdata, ydata, np.array(t, dtype=np.object_))
+
+    def _set_layer_data(self, data: XYTextData):
+        self._backend._plt_set_text_position((data.x, data.y))
+        self._backend._plt_set_text(data.text.tolist())
 
     @property
     def ntexts(self):

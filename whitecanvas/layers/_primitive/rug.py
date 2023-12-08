@@ -1,11 +1,17 @@
 from __future__ import annotations
+from typing import Any
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from psygnal import Signal
 
-from whitecanvas.layers._primitive.line import MultiLine, LineLayerEvents
+from whitecanvas.layers._primitive.line import (
+    MultiLine,
+    LineLayerEvents,
+    MultiLineProtocol,
+)
+from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.backend import Backend
 from whitecanvas.types import ColorType, _Void, Orientation, LineStyle
 from whitecanvas.utils.normalize import as_array_1d
@@ -16,7 +22,7 @@ class RugEvents(LineLayerEvents):
     high = Signal(float)
 
 
-class Rug(MultiLine):
+class Rug(MultiLine, DataBoundLayer[MultiLineProtocol, NDArray[np.number]]):
     """
     Rug plot (event plot) layer.
 
@@ -52,9 +58,15 @@ class Rug(MultiLine):
         self._low = low
         self._high = high
 
-    @property
-    def data(self) -> NDArray[np.number]:
+    def _get_layer_data(self) -> NDArray[np.number]:
         return self._events
+
+    def _norm_layer_data(self, data: Any) -> NDArray[np.number]:
+        return as_array_1d(data)
+
+    def _set_layer_data(self, data: NDArray[np.number]):
+        _, segs, _ = _norm_input(data, self.low, self.high, self.orient)
+        return super()._set_layer_data(segs)
 
     @property
     def low(self) -> float:
@@ -63,8 +75,7 @@ class Rug(MultiLine):
     @low.setter
     def low(self, val):
         _, segs, _ = _norm_input(self._events, val, self.high, self.orient)
-        with self.events.data.blocked():
-            super().set_data(segs)
+        super()._set_layer_data(segs)
         self._low = val
         self.events.low.emit(val)
 
@@ -75,17 +86,12 @@ class Rug(MultiLine):
     @high.setter
     def high(self, val):
         _, segs, _ = _norm_input(self._events, self.low, val, self.orient)
-        with self.events.data.blocked():
-            super().set_data(segs)
+        super()._set_layer_data(segs)
         self._high = val
         self.events.high.emit(val)
 
     def set_data(self, events: ArrayLike):
-        events, segs, orient = _norm_input(events, self.low, self.high, self.orient)
-        with self.events.data.blocked():
-            super().set_data(segs)
-        self._events = events
-        self.events.data.emit(events)
+        self.data = events
 
     @property
     def orient(self) -> Orientation:

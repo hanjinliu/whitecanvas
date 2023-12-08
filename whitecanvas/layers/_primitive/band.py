@@ -1,8 +1,10 @@
 from __future__ import annotations
+from typing import Any
 
 import numpy as np
 
 from whitecanvas.protocols import BandProtocol
+from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
@@ -10,7 +12,7 @@ from whitecanvas.types import FacePattern, ColorType, Orientation, XYYData, Arra
 from whitecanvas.utils.normalize import as_array_1d
 
 
-class Band(FaceEdgeMixin[BandProtocol]):
+class Band(FaceEdgeMixin[BandProtocol], DataBoundLayer[BandProtocol, XYYData]):
     def __init__(
         self,
         t: ArrayLike1D,
@@ -41,7 +43,11 @@ class Band(FaceEdgeMixin[BandProtocol]):
         self._band_type = "band"
 
     @property
-    def data(self) -> XYYData:
+    def orient(self) -> Orientation:
+        """Orientation of the band."""
+        return self._orient
+
+    def _get_layer_data(self) -> XYYData:
         """Current data of the layer."""
         if self._orient.is_vertical:
             x, y0, y1 = self._backend._plt_get_vertical_data()
@@ -49,18 +55,9 @@ class Band(FaceEdgeMixin[BandProtocol]):
             x, y0, y1 = self._backend._plt_get_horizontal_data()
         return XYYData(x, y0, y1)
 
-    @property
-    def orient(self) -> Orientation:
-        """Orientation of the band."""
-        return self._orient
-
-    def set_data(
-        self,
-        t: ArrayLike1D | None = None,
-        edge_low: ArrayLike1D | None = None,
-        edge_high: ArrayLike1D | None = None,
-    ):
+    def _norm_layer_data(self, data: Any) -> XYYData:
         t0, y0, y1 = self.data
+        t, edge_low, edge_high = data
         if t is not None:
             t0 = t
         if edge_low is not None:
@@ -72,12 +69,23 @@ class Band(FaceEdgeMixin[BandProtocol]):
                 "Expected data to have the same size,"
                 f"got {t0.size}, {y0.size}, {y1.size}"
             )
+        return XYYData(t0, y0, y1)
+
+    def _set_layer_data(self, data: XYYData):
+        t0, y0, y1 = data
         if self._orient.is_vertical:
             self._backend._plt_set_vertical_data(t0, y0, y1)
         else:
             self._backend._plt_set_horizontal_data(t0, y0, y1)
         self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)
-        self.events.data.emit(t0, y0, y1)
+
+    def set_data(
+        self,
+        t: ArrayLike1D | None = None,
+        edge_low: ArrayLike1D | None = None,
+        edge_high: ArrayLike1D | None = None,
+    ):
+        self.data = t, edge_low, edge_high
 
     @classmethod
     def from_kde(

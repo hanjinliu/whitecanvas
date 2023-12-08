@@ -20,9 +20,16 @@ from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
 from whitecanvas.protocols import layer_protocols as _lp
-from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
+from whitecanvas.layers._base import PrimitiveLayer, LayerEvents, DataBoundLayer
 from whitecanvas.theme import get_theme
-from whitecanvas.types import LineStyle, FacePattern, ColorType, _Void, _Void
+from whitecanvas.types import (
+    LineStyle,
+    FacePattern,
+    ColorType,
+    _Void,
+    _Void,
+    XYTextData,
+)
 from whitecanvas.utils.normalize import arr_color, as_any_1d_array, as_color_array
 
 if TYPE_CHECKING:
@@ -817,7 +824,10 @@ class TextMixinEvents(LayerEvents):
     font = Signal(object)
 
 
-class TextMixin(PrimitiveLayer[_lp.TextProtocol], Generic[_NFace, _NEdge, _NFont]):
+class TextMixin(
+    DataBoundLayer[_lp.TextProtocol, XYTextData],
+    Generic[_NFace, _NEdge, _NFont],
+):
     face: _NFace
     edge: _NEdge
     _face_namespace: _NFace

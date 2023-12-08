@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
 from psygnal import Signal
 from whitecanvas.protocols import BarProtocol
 from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import (
     MultiFaceEdgeMixin,
     FaceEdgeMixinEvents,
@@ -45,7 +46,10 @@ class BarEvents(FaceEdgeMixinEvents):
     bottom = Signal(np.ndarray)
 
 
-class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
+class Bars(
+    MultiFaceEdgeMixin[BarProtocol, _Face, _Edge],
+    DataBoundLayer[BarProtocol, XYData],
+):
     events: BarEvents
     _events_class = BarEvents
 
@@ -105,14 +109,41 @@ class Bars(MultiFaceEdgeMixin[BarProtocol, _Face, _Edge]):
             self._bar_type = "histogram-count"
         return self
 
-    @property
-    def data(self) -> XYData:
+    def _get_layer_data(self) -> XYData:
         """Current data of the layer."""
         x0, x1, y0, y1 = self._backend._plt_get_data()
         if self._orient.is_vertical:
             return XYData((x0 + x1) / 2, y1 - y0)
         else:
             return XYData((y0 + y1) / 2, x1 - x0)
+
+    def _norm_layer_data(self, data: Any) -> XYData:
+        if isinstance(data, np.ndarray):
+            if data.ndim != 2 or data.shape[1] != 2:
+                raise ValueError(
+                    "Expected data to be a 2D array of shape (N, 2), "
+                    f"got {data.shape}"
+                )
+            x, height = data[:, 0], data[:, 1]
+        else:
+            x, height = data
+        if x is not None:
+            x = as_array_1d(x)
+        else:
+            x = self.data.x
+        if height is not None:
+            height = as_array_1d(height)
+        else:
+            height = self.data.y
+        return XYData(x, height)
+
+    def _set_layer_data(self, data: XYData):
+        x, height = data
+        if self._orient.is_vertical:
+            self._backend._plt_set_data(x, height / 2, -height / 2)
+        else:
+            self._backend._plt_set_data(-height / 2, height / 2, x)
+        self._x_hint, self._y_hint = xyy_size_hint(x, height, height, self.orient)
 
     def set_data(
         self,

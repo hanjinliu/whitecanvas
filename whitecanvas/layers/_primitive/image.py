@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -8,7 +9,7 @@ from psygnal import Signal
 from whitecanvas.protocols import ImageProtocol
 from whitecanvas.types import ColormapType, _Void
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
+from whitecanvas.layers._base import PrimitiveLayer, DataBoundLayer, LayerEvents
 
 _void = _Void()
 
@@ -20,7 +21,7 @@ class ImageEvents(LayerEvents):
     scale = Signal(tuple)
 
 
-class Image(PrimitiveLayer[ImageProtocol]):
+class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
     """
     Grayscale or RGBA image layer.
 
@@ -58,16 +59,16 @@ class Image(PrimitiveLayer[ImageProtocol]):
         self.update(cmap=cmap, clim=clim, shift=shift, scale=scale)
         self._x_hint, self._y_hint = _hint_for((img.shape[1], img.shape[0]))
 
-    @property
-    def data(self) -> NDArray[np.number]:
-        """Current data of the layer."""
+    def _get_layer_data(self) -> NDArray[np.number]:
+        """Current image data of the layer."""
         return self._backend._plt_get_data()
 
-    @data.setter
-    def data(self, data: ArrayLike):
-        img = _normalize_image(data)
-        self._backend._plt_set_data(img)
-        self.events.data.emit(img)
+    def _norm_layer_data(self, data: Any) -> NDArray[np.number]:
+        return _normalize_image(data)
+
+    def _set_layer_data(self, data: NDArray[np.number]):
+        """Set the data of the layer."""
+        self._backend._plt_set_data(data)
 
     @property
     def cmap(self) -> Colormap:

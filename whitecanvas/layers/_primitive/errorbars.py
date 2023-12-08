@@ -1,11 +1,14 @@
 from __future__ import annotations
+from typing import Any
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from psygnal import Signal
+from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._primitive.line import MultiLine, LineLayerEvents
 from whitecanvas.backend import Backend
+from whitecanvas.protocols.layer_protocols import MultiLineProtocol
 from whitecanvas.types import LineStyle, ColorType, _Void, Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
 
@@ -17,7 +20,7 @@ class ErrorbarsEvents(LineLayerEvents):
     capsize = Signal(float)
 
 
-class Errorbars(MultiLine):
+class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
     """Errorbars layer (parallel lines with caps)."""
 
     events: ErrorbarsEvents
@@ -75,18 +78,13 @@ class Errorbars(MultiLine):
         """Return an Errorbars instance with no component."""
         return Errorbars([], [], [], orient=orient, backend=backend)
 
-    @property
-    def data(self) -> XYYData:
+    def _get_layer_data(self) -> XYYData:
         """Current data of the layer."""
         return self._data
 
-    def set_data(
-        self,
-        t: ArrayLike | None = None,
-        edge_low: ArrayLike | None = None,
-        edge_high: ArrayLike | None = None,
-    ):
+    def _norm_layer_data(self, data: Any) -> XYYData:
         x0, y0, y1 = self.data
+        t, edge_low, edge_high = data
         if t is not None:
             x0 = as_array_1d(t)
         if edge_low is not None:
@@ -97,14 +95,24 @@ class Errorbars(MultiLine):
             raise ValueError(
                 "Expected data to have the same size, " f"got {x0.size}, {y0.size}"
             )
+        return XYYData(x0, y0, y1)
+
+    def _set_layer_data(self, data: XYYData):
+        t, y0, y1 = data
         if self._orient.is_vertical:
-            data = _xyy_to_segments(t, y0, y1, self.capsize)
+            segs = _xyy_to_segments(t, y0, y1, self.capsize)
         else:
-            data = _yxx_to_segments(t, y0, y1, self.capsize)
-        with self.events.data.blocked():
-            super().set_data(data)
-        self._data = XYYData(x0, y0, y1)
-        self.events.data.emit(x0, y0, y1)
+            segs = _yxx_to_segments(t, y0, y1, self.capsize)
+        super()._set_layer_data(segs)
+        self._data = data
+
+    def set_data(
+        self,
+        t: ArrayLike | None = None,
+        edge_low: ArrayLike | None = None,
+        edge_high: ArrayLike | None = None,
+    ):
+        self.data = t, edge_low, edge_high
 
     @property
     def ndata(self) -> int:
@@ -163,15 +171,7 @@ def _xyy_to_segments(
     """
     starts = np.stack([x, y0], axis=1)
     ends = np.stack([x, y1], axis=1)
-    segments = [[start, end] for start, end in zip(starts, ends)]
-    if capsize > 0:
-        _c = np.array([capsize / 2, 0])
-        cap0 = [[start - _c, start + _c] for start in starts]
-        cap1 = [[end - _c, end + _c] for end in ends]
-    else:
-        cap0 = []
-        cap1 = []
-    return segments + cap0 + cap1
+    return _to_segments(starts, ends, capsize)
 
 
 def _yxx_to_segments(
@@ -182,12 +182,16 @@ def _yxx_to_segments(
 ):
     starts = np.stack([x0, y], axis=1)
     ends = np.stack([x1, y], axis=1)
-    segments = [[start, end] for start, end in zip(starts, ends)]
+    return _to_segments(starts, ends, capsize)
+
+
+def _to_segments(starts, ends, capsize: float):
+    segments = np.stack([starts, ends], axis=1)
     if capsize > 0:
-        _c = np.array([0, capsize / 2])
-        cap0 = [[start - _c, start + _c] for start in starts]
-        cap1 = [[end - _c, end + _c] for end in ends]
+        _c = np.array([capsize / 2, 0])
+        cap0 = np.stack([starts - _c, starts + _c], axis=1)
+        cap1 = np.stack([ends - _c, ends + _c], axis=1)
     else:
         cap0 = []
         cap1 = []
-    return segments + cap0 + cap1
+    return list(segments) + list(cap0) + list(cap1)

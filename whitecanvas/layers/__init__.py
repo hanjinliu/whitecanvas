@@ -1,4 +1,5 @@
 from ._base import PrimitiveLayer, Layer, LayerGroup
+from ._ndim import LayerStack
 from ._primitive import (
     Line,
     MultiLine,
@@ -18,6 +19,7 @@ __all__ = [
     "Layer",
     "PrimitiveLayer",
     "LayerGroup",
+    "LayerStack",
     "Line",
     "MultiLine",
     "Markers",

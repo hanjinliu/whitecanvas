@@ -42,6 +42,12 @@ class XYYData(NamedTuple, Generic[_D]):
         return self.y1 - self.y0
 
 
+class XYTextData(NamedTuple):
+    x: NDArray[np.floating]
+    y: NDArray[np.floating]
+    text: NDArray[np.object_]
+
+
 class Rect(NamedTuple):
     """Rectangular range."""
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,7 +8,7 @@ from psygnal import Signal
 
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol
 from whitecanvas.layers._primitive.text import Texts
-from whitecanvas.layers._base import PrimitiveLayer, LayerEvents
+from whitecanvas.layers._base import PrimitiveLayer, DataBoundLayer, LayerEvents
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 
 _void = _Void()
 _Line = TypeVar("_Line", LineProtocol, MultiLineProtocol)
+_T = TypeVar("_T")
 
 
 class LineLayerEvents(LayerEvents):
@@ -123,7 +124,7 @@ class LineMixin(PrimitiveLayer[_Line]):
         return self
 
 
-class Line(LineMixin[LineProtocol]):
+class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
     _backend_class_name = "MonoLine"
     events: LineLayerEvents
     _events_class = LineLayerEvents
@@ -149,29 +150,42 @@ class Line(LineMixin[LineProtocol]):
         )
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
 
-    @property
-    def data(self) -> XYData:
-        """Current data of the layer."""
+    def _get_layer_data(self) -> XYData:
         return XYData(*self._backend._plt_get_data())
+
+    def _norm_layer_data(self, data: Any) -> XYData:
+        if isinstance(data, np.ndarray):
+            if data.ndim != 2 or data.shape[1] != 2:
+                raise ValueError(f"Expected data to be (N, 2), got {data.shape}")
+            xdata, ydata = data[:, 0], data[:, 1]
+        else:
+            xdata, ydata = data
+        if xdata is None:
+            xdata = self.data.x
+        else:
+            xdata = as_array_1d(xdata)
+        if ydata is None:
+            ydata = self.data.y
+        else:
+            ydata = as_array_1d(ydata)
+        if xdata.size != ydata.size:
+            raise ValueError(
+                "Expected xdata and ydata to have the same size, "
+                f"got {xdata.size} and {ydata.size}"
+            )
+        return XYData(xdata, ydata)
+
+    def _set_layer_data(self, data: XYData):
+        x0, y0 = data
+        self._backend._plt_set_data(x0, y0)
+        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
 
     def set_data(
         self,
         xdata: ArrayLike1D | None = None,
         ydata: ArrayLike1D | None = None,
     ):
-        x0, y0 = self.data
-        if xdata is not None:
-            x0 = as_array_1d(xdata)
-        if ydata is not None:
-            y0 = as_array_1d(ydata)
-        if x0.size != y0.size:
-            raise ValueError(
-                "Expected xdata and ydata to have the same size, "
-                f"got {x0.size} and {y0.size}"
-            )
-        self._backend._plt_set_data(x0, y0)
-        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
-        self.events.data.emit(x0, y0)
+        self.data = xdata, ydata
 
     def with_markers(
         self,
@@ -438,7 +452,10 @@ class Line(LineMixin[LineProtocol]):
         )  # fmt: skip
 
 
-class MultiLine(LineMixin[MultiLineProtocol]):
+class MultiLine(
+    LineMixin[MultiLineProtocol],
+    DataBoundLayer[LineProtocol, "list[NDArray[np.number]]"],
+):
     def __init__(
         self,
         data: list[ArrayLike1D],
@@ -459,16 +476,15 @@ class MultiLine(LineMixin[MultiLineProtocol]):
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
 
-    @property
-    def data(self) -> list[XYData]:
+    def _get_layer_data(self) -> list[NDArray[np.number]]:
         """Current data of the layer."""
-        return [XYData(d[:, 0], d[:, 1]) for d in self._backend._plt_get_data()]
+        return self._backend._plt_get_data()
 
-    def set_data(self, data: list[ArrayLike1D]):
-        data, x_hint, y_hint = _norm_data(data)
+    def _set_layer_data(self, data: list[NDArray[np.number]]):
+        data_norm, x_hint, y_hint = _norm_data(data)
         self._backend._plt_set_data(data)
+        self._backend._plt_set_data(data_norm)
         self._x_hint, self._y_hint = x_hint, y_hint
-        self.events.data.emit(data)
 
     @property
     def nlines(self) -> int:

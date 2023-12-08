@@ -16,7 +16,7 @@ from whitecanvas.types import (
     ArrayLike1D,
 )
 
-from ._current import current_canvas, current_grid
+from ._canvases import current_canvas
 
 if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec
@@ -301,8 +301,3 @@ def stack_over(
     layer: _L,
 ) -> StackOverPlotter[Canvas, _L]:
     ...
-
-
-def show(block: bool = False):
-    """Show the current canvas."""
-    current_grid().show(block=block)

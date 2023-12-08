@@ -155,8 +155,8 @@ class ImageLayerStack(LayerStack[NDArray[np.number]]):
         else:
             stack = _norm_one(img, dim=2)
         sl = (0,) * stack.ndim
-        data = stack.slice_at(sl)
-        return cls(constructor(*data, *args, **kwargs), stack)
+        im = stack.slice_at(sl)
+        return cls(constructor(im, *args, **kwargs), stack)
 
 
 class SpansLayerStack(LayerStack[NDArray[np.number]]):
@@ -170,8 +170,8 @@ class SpansLayerStack(LayerStack[NDArray[np.number]]):
     ):
         stack = _norm_one(spans, dim=2)
         sl = (0,) * stack.ndim
-        data = stack.slice_at(sl)
-        return cls(constructor(*data, *args, **kwargs), stack)
+        spans = stack.slice_at(sl)
+        return cls(constructor(spans, *args, **kwargs), stack)
 
 
 def _norm_one(data, dim: int = 1) -> Slicable[NDArray[np.number]]:
@@ -198,7 +198,7 @@ def _norm_one(data, dim: int = 1) -> Slicable[NDArray[np.number]]:
             arr[sl] = arr1d
         return NonuniformArray(arr)
     else:
-        return GridArray(arr)
+        return GridArray(arr, dim=dim)
 
 
 class Slicable(ABC, Generic[_T]):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Sequence, SupportsIndex, TypeVar, overload
 import weakref
 import numpy as np
 from numpy.typing import NDArray
@@ -41,7 +41,7 @@ class DimAxis(ABC):
         return self._name
 
     @abstractmethod
-    def value(self) -> int:
+    def value(self) -> SupportsIndex:
         """Value of the axis."""
 
     @abstractmethod
@@ -55,7 +55,7 @@ class RangeAxis(DimAxis):
         self._size = size
         self._value = 0
 
-    def value(self) -> int:
+    def value(self) -> SupportsIndex:
         return self._value
 
     def set_value(self, value: Any):
@@ -77,7 +77,7 @@ class CategoricalAxis(DimAxis):
         self._mapper = {c: i for i, c in enumerate(categories)}
         self._value = categories[0]
 
-    def value(self) -> int:
+    def value(self) -> SupportsIndex:
         return self._mapper[self._value]
 
     def set_value(self, value: Any):
@@ -120,15 +120,6 @@ class Dims:
             raise ReferenceDeletedError("Canvas has been deleted.")
         return l
 
-    def _default_axes_names(self, ndim: int) -> list[str]:
-        names = self.names
-        n_new = ndim - len(names)
-        if n_new <= 0:
-            return names[-ndim:]
-        else:
-            new = [f"axis_{i}" for i in range(ndim, ndim + n_new)]
-            return new[::-1] + names
-
     @property
     def names(self) -> list[str]:
         """Names of the dimensions."""
@@ -152,16 +143,69 @@ class Dims:
         return default
 
     @property
-    def indices(self) -> dict[str, int]:
+    def indices(self) -> dict[str, SupportsIndex]:
         """Current indices for each dimension."""
         return {a.name: a.value() for a in self._axes}
 
-    def set_indices(self, **kwargs: Any):
+    @overload
+    def set_indices(self, arg: dict[str, SupportsIndex]):
+        ...
+
+    @overload
+    def set_indices(self, arg: Sequence[SupportsIndex]):
+        ...
+
+    @overload
+    def set_indices(self, arg: SupportsIndex):
+        ...
+
+    @overload
+    def set_indices(self, **kwargs: SupportsIndex):
+        ...
+
+    def set_indices(self, arg=None, **kwargs: Any):
+        """
+        Set current indices and update the canvas.
+
+        Either of the following forms are allowed:
+        >>> canvas.dims.set_indices(axis_0=3, axis_1=4)
+        >>> canvas.dims.set_indices({"axis_0": 3, "axis_1": 4})
+        >>> canvas.dims.set_indices([3, 4])
+        >>> canvas.dims.set_indices(1)
+        """
+        if isinstance(arg, dict):
+            if kwargs:
+                raise TypeError("Cannot specify both positional and keyword arguments.")
+            kwargs = arg
+        elif isinstance(arg, (list, tuple)):
+            names = self.names
+            if len(names) < len(arg):
+                raise ValueError(
+                    f"Number of indices ({len(arg)}) exceeds number of dimensions ({len(names)})."
+                )
+            if kwargs:
+                raise TypeError("Cannot specify both positional and keyword arguments.")
+            kwargs = {n: v for n, v in zip(names, arg)}
+        elif arg is None:
+            pass
+        elif hasattr(arg, "__index__"):
+            if kwargs:
+                raise TypeError("Cannot specify both positional and keyword arguments.")
+            kwargs = {self.names[0]: arg}
+        else:
+            raise TypeError(
+                f"Argument must be dict, list, tuple, or None but got {arg!r}."
+            )
         for k, v in kwargs.items():
             self.axis(k).set_value(v)
         self.events.indices.emit(self.indices)
 
     def in_axes(self, *names: str) -> InAxes:
+        """
+        Add multi-dimensional layers in the given axis names.
+
+        >>> canvas.dims.in_axes("time").add_line(x, [np.sin(x + x0) for x0 in [0, 1, 2]])
+        """
         n_names = len(names)
         if n_names == 0:
             raise ValueError("At least one axis name must be provided.")
@@ -181,23 +225,101 @@ class Dims:
         self,
         xdata: Any,
         ydata: Any,
-        name=None,
-        color=None,
-        width=1.0,
-        style=LineStyle.SOLID,
-        alpha=1.0,
-        antialias=True,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: str | LineStyle = LineStyle.SOLID,
+        alpha: float = 1.0,
+        antialias: bool = True,
     ):
         return InAxes(self).add_line(
+            xdata, ydata, name=name, color=color, width=width,
+            style=style, alpha=alpha, antialias=antialias,
+        )  # fmt: skip
+
+    def add_band(
+        self,
+        xdata: Any,
+        ylow: Any,
+        yhigh: Any,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        pattern: str | FacePattern = FacePattern.SOLID,
+    ):
+        return InAxes(self).add_band(
             xdata,
-            ydata,
+            ylow,
+            yhigh,
             name=name,
+            color=color,
+            alpha=alpha,
+            pattern=pattern,
+        )
+
+    def add_errorbars(
+        self,
+        xdata: Any,
+        ylow: Any,
+        yhigh: Any,
+        *,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        color: ColorType = "blue",
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = False,
+        capsize: float = 0.0,
+    ):
+        return InAxes(self).add_errorbars(
+            xdata,
+            ylow,
+            yhigh,
+            name=name,
+            orient=orient,
             color=color,
             width=width,
             style=style,
-            alpha=alpha,
             antialias=antialias,
+            capsize=capsize,
         )
+
+    def add_rug(
+        self,
+        events: Any,
+        *,
+        low: float = 0.0,
+        high: float = 1.0,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        color: ColorType = "black",
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
+        alpha: float = 1.0,
+    ):
+        return InAxes(self).add_rug(
+            events, low=low, high=high, name=name, orient=orient, color=color,
+            width=width, style=style, antialias=antialias, alpha=alpha
+        )  # fmt: skip
+
+    def add_image(
+        self,
+        image: Any,
+        *,
+        name: str | None = None,
+        cmap: ColormapType = "gray",
+        clim: tuple[float | None, float | None] | None = None,
+        rgb: bool = False,
+        flip_canvas: bool = True,
+        lock_aspect: bool = True,
+    ):
+        return InAxes(self).add_image(
+            image, name=name, cmap=cmap, clim=clim, rgb=rgb,
+            flip_canvas=flip_canvas, lock_aspect=lock_aspect,
+        )  # fmt: skip
 
 
 class InAxes:
@@ -220,21 +342,28 @@ class InAxes:
         alpha: float = 1.0,
         antialias: bool = True,
     ):
+        """
+        Add multi-dimensional line layer.
+
+        Parameters
+        ----------
+        xdata : Any
+            X data of multi-dimensional structure.
+        ydata : Any
+            Y data of multi-dimensional structure.
+
+        Returns
+        -------
+        XYLayerStack
+            Layer stack of a line layer.
+        """
         canvas = self._get_canvas()
         name = canvas._coerce_name(_l.Line, name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYLayerStack.from_layer_class(
-            _l.Line,
-            xdata,
-            ydata,
-            name=name,
-            color=color,
-            width=width,
-            style=style,
-            alpha=alpha,
-            antialias=antialias,
-            backend=canvas._get_backend(),
-        )
+            _l.Line, xdata, ydata, name=name, color=color, width=width, style=style,
+            alpha=alpha, antialias=antialias, backend=canvas._get_backend(),
+        )  # fmt: skip
         return self._add_layer(stack)
 
     def add_band(
@@ -248,20 +377,30 @@ class InAxes:
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _ndl.XYYLayerStack:
+        """
+        Add multi-dimensional band layer.
+
+        Parameters
+        ----------
+        xdata : Any
+            X data of multi-dimensional structure.
+        ylow : Any
+            Lower y data of multi-dimensional structure.
+        yhigh : Any
+            Higher y data of multi-dimensional structure.
+
+        Returns
+        -------
+        XYYLayerStack
+            Layer stack of a band layer.
+        """
         canvas = self._get_canvas()
         name = canvas._coerce_name(_l.Band, name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYYLayerStack.from_layer_class(
-            _l.Band,
-            xdata,
-            ylow,
-            yhigh,
-            name=name,
-            color=color,
-            pattern=pattern,
-            alpha=alpha,
-            backend=canvas._get_backend(),
-        )
+            _l.Band, xdata, ylow, yhigh, name=name, color=color, pattern=pattern,
+            alpha=alpha, backend=canvas._get_backend(),
+        )  # fmt: skip
         return self._add_layer(stack)
 
     def add_errorbars(
@@ -278,23 +417,31 @@ class InAxes:
         antialias: bool = False,
         capsize: float = 0.0,
     ) -> _ndl.XYYLayerStack:
+        """
+        Add multi-dimensional errorbars layer.
+
+        Parameters
+        ----------
+        xdata : Any
+            X data of multi-dimensional structure.
+        ylow : Any
+            Lower y data of multi-dimensional structure.
+        yhigh : Any
+            Higher y data of multi-dimensional structure.
+
+        Returns
+        -------
+        XYYLayerStack
+            Layer stack of an errorbars layer.
+        """
         canvas = self._get_canvas()
         name = canvas._coerce_name(_l.Errorbars, name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYYLayerStack.from_layer_class(
-            _l.Errorbars,
-            xdata,
-            ylow,
-            yhigh,
-            name=name,
-            orient=orient,
-            color=color,
-            width=width,
-            style=style,
-            antialias=antialias,
-            capsize=capsize,
+            _l.Errorbars, xdata, ylow, yhigh, name=name, orient=orient, color=color,
+            width=width, style=style, antialias=antialias, capsize=capsize,
             backend=canvas._get_backend(),
-        )
+        )  # fmt: skip
         return self._add_layer(stack)
 
     def add_rug(
@@ -311,22 +458,27 @@ class InAxes:
         antialias: bool = True,
         alpha: float = 1.0,
     ) -> _ndl.YLayerStack:
+        """
+        Add multi-dimensional rug layer.
+
+        Parameters
+        ----------
+        events : Any
+            Multi-dimensional event data.
+
+        Returns
+        -------
+        YLayerStack
+            Layer stack of a rug layer.
+        """
         canvas = self._get_canvas()
         name = canvas._coerce_name(_l.Rug, name)
         color = canvas._generate_colors(color)
         stack = _ndl.YLayerStack.from_layer_class(
-            _l.Rug,
-            events,
-            low=low,
-            high=high,
-            name=name,
-            orient=orient,
-            color=color,
-            width=width,
-            style=style,
-            antialias=antialias,
-            backend=canvas._get_backend(),
-        )
+            _l.Rug, events, low=low, high=high, name=name, orient=orient,
+            color=color,  width=width,  style=style, antialias=antialias,
+            alpha=alpha, backend=canvas._get_backend(),
+        )  # fmt: skip
         return self._add_layer(stack)
 
     def add_image(
@@ -340,17 +492,28 @@ class InAxes:
         flip_canvas: bool = True,
         lock_aspect: bool = True,
     ) -> _ndl.ImageLayerStack:
+        """
+        Add multi-dimensional image layer.
+
+        Parameters
+        ----------
+        image : Any
+            Image stack of multi-dimensional structure.
+        rgb : bool, default is False
+            If input image is an RGB(A) image of shape (..., 3) or (..., 4),
+            then set this to True to display the image as RGB(A).
+
+        Returns
+        -------
+        ImageLayerStack
+            Layer stack of an image layer.
+        """
         canvas = self._get_canvas()
         name = canvas._coerce_name(_l.Image, name)
         stack = _ndl.ImageLayerStack.from_layer_class(
-            _l.Image,
-            image,
-            name=name,
-            cmap=cmap,
-            clim=clim,
-            rgb=rgb,
+            _l.Image, image, name=name, cmap=cmap, clim=clim, rgb=rgb,
             backend=canvas._get_backend(),
-        )
+        )  # fmt: skip
         if self._axis_names is not None:
             stack._with_axis_names(self._axis_names)
         self._add_layer(stack)
@@ -377,3 +540,9 @@ class InAxes:
                     raise NotImplementedError
         self._dims._axes.extend(new_axes)
         return canvas.add_layer(stack)
+
+
+for meth in dir(InAxes):
+    if meth.startswith("add_"):
+        doc = getattr(InAxes, meth).__doc__
+        getattr(Dims, meth).__doc__ = doc

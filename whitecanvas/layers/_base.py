@@ -73,12 +73,12 @@ class Layer(ABC):
     def _connect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is added to a canvas."""
         self.events._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
-        self.events.connect(canvas._canvas()._plt_draw, unique=True)
+        self.events.connect(canvas._draw_canvas, unique=True)
 
     def _disconnect_canvas(self, canvas: Canvas):
         """If needed, do something when layer is removed from a canvas."""
         self.events._layer_grouped.disconnect(canvas._cb_layer_grouped)
-        self.events.disconnect(canvas._canvas()._plt_draw)
+        self.events.disconnect(canvas._draw_canvas)
 
     @abstractmethod
     def bbox_hint(self) -> NDArray[np.float64]:

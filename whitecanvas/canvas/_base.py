@@ -58,6 +58,7 @@ _void = _Void()
 
 class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
+    drawn = Signal()
     mouse_clicked = MouseSignal(object)
     mouse_moved = GeneratorSignal()
     mouse_double_clicked = MouseSignal(object)
@@ -99,7 +100,7 @@ class CanvasBase(ABC):
         self.layers.events.inserted.connect(self._cb_inserted, unique=True)
         self.layers.events.removed.connect(self._cb_removed, unique=True)
         self.layers.events.reordered.connect(self._cb_reordered, unique=True)
-        self.layers.events.connect(self._canvas()._plt_draw, unique=True)
+        self.layers.events.connect(self._draw_canvas, unique=True)
 
         canvas = self._canvas()
         canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
@@ -128,6 +129,10 @@ class CanvasBase(ABC):
     @abstractmethod
     def _canvas(self) -> protocols.CanvasProtocol:
         """Return the canvas object."""
+
+    def _draw_canvas(self):
+        self._canvas()._plt_draw()
+        self.events.drawn.emit()
 
     @property
     def native(self) -> Any:

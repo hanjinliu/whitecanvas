@@ -4,6 +4,8 @@ from typing import Any, Iterator
 from typing_extensions import override
 import numpy as np
 from numpy.typing import NDArray
+
+from psygnal import Signal, SignalGroup
 from whitecanvas import protocols
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
@@ -11,8 +13,13 @@ from whitecanvas.utils.normalize import arr_color
 from whitecanvas.theme import get_theme
 
 
+class GridEvents(SignalGroup):
+    drawn = Signal()
+
+
 class CanvasGrid:
     _CURRENT_INSTANCE: CanvasGrid | None = None
+    events: GridEvents
 
     def __init__(
         self,
@@ -38,7 +45,7 @@ class CanvasGrid:
         theme = get_theme()
         self.background_color = theme.background_color
         self.size = theme.canvas_size
-
+        self.events = GridEvents()
         self.__class__._CURRENT_INSTANCE = self
 
     @classmethod
@@ -162,6 +169,7 @@ class CanvasGrid:
             canvas.x.events.lim.connect(self._align_xlims, unique=True)
         if self.y_linked:
             canvas.y.events.lim.connect(self._align_ylims, unique=True)
+        canvas.events.drawn.connect(self.events.drawn, unique=True)
         return canvas
 
     def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:

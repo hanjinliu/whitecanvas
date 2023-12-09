@@ -18,7 +18,7 @@ class _strEnum(Enum):
         return hash(self.value)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}.{self.name}"
+        return f"{self.__class__.__name__}.{self.name}<{self.value!r}>"
 
 
 class LineStyle(_strEnum):

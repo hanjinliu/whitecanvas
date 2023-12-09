@@ -170,6 +170,16 @@ class Canvas:
 
         self._axes.figure.canvas.mpl_connect("button_press_event", _cb)
 
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
+        def _cb(ev: mplMouseEvent):
+            if ev.inaxes is not self._axes or ev.dblclick:
+                return
+            callback(self._translate_mouse_event(ev, MouseEventType.RELEASE))
+
+        self._axes.figure.canvas.mpl_connect("button_release_event", _cb)
+
     def _plt_draw(self):
         if fig := self._axes.get_figure():
             fig.canvas.draw_idle()

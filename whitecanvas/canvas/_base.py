@@ -44,7 +44,7 @@ from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.theme import get_theme
-from whitecanvas._signal import MouseSignal, GeneratorSignal
+from whitecanvas._signal import MouseSignal, MouseMoveSignal
 
 if TYPE_CHECKING:
     from typing_extensions import Self, Concatenate, ParamSpec
@@ -60,7 +60,7 @@ class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
     drawn = Signal()
     mouse_clicked = MouseSignal(object)
-    mouse_moved = GeneratorSignal()
+    mouse_moved = MouseMoveSignal()
     mouse_double_clicked = MouseSignal(object)
 
 
@@ -117,6 +117,7 @@ class CanvasBase(ABC):
         canvas._plt_connect_mouse_click(self.events.mouse_clicked.emit)
         canvas._plt_connect_mouse_click(self.events.mouse_moved.emit)
         canvas._plt_connect_mouse_drag(self.events.mouse_moved.emit)
+        canvas._plt_connect_mouse_release(self.events.mouse_moved.emit)
         canvas._plt_connect_mouse_double_click(self.events.mouse_double_clicked.emit)
         canvas._plt_connect_mouse_double_click(self.events.mouse_moved.emit)
 
@@ -127,6 +128,18 @@ class CanvasBase(ABC):
     def _emit_ylim_changed(self, lim):
         self.y.events.lim.emit(lim)
         self.events.lims.emit(Rect(*self.x.lim, *lim))
+
+    def _emit_mouse_moved(self, ev):
+        """Emit mouse moved event with autoscaling blocked"""
+        _was_enabled = self._autoscale_enabled
+        # If new layers are added during the mouse move event, the canvas
+        # should not be autoscaled, otherwise unexpected values will be
+        # passed to the callback functions.
+        self._autoscale_enabled = False
+        try:
+            self.events.mouse_moved.emit(ev)
+        finally:
+            self._autoscale_enabled = _was_enabled
 
     @abstractmethod
     def _get_backend(self) -> Backend:
@@ -214,6 +227,7 @@ class CanvasBase(ABC):
 
     def install_second_y(
         self,
+        *,
         palette: ColormapType | None = None,
     ) -> Canvas:
         """Create a twin canvas that share one of the axis."""
@@ -653,7 +667,7 @@ class CanvasBase(ABC):
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType = "blue",
-        alpha: float = 0.2,
+        alpha: float = 0.4,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _l.Spans:
         """
@@ -677,7 +691,7 @@ class CanvasBase(ABC):
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
-        alpha : float, default is 1.0
+        alpha : float, default is 0.4
             Alpha channel of the bars.
         pattern : str or FacePattern, default is FacePattern.SOLID
             Pattern of the bar faces.
@@ -1230,6 +1244,7 @@ class CanvasBase(ABC):
         return name
 
     def _autoscale_for_layer(self, layer: _l.Layer, pad_rel: float = 0.025):
+        """This function will be called when a layer is inserted to the canvas."""
         if not self._autoscale_enabled:
             return
         xmin, xmax, ymin, ymax = layer.bbox_hint()

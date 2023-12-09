@@ -11,8 +11,9 @@ from pyqtgraph.GraphicsScene.mouseEvents import (
 import numpy as np
 
 from whitecanvas import protocols
-from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent, Rect
+from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
+from ._qt_utils import from_qt_modifiers, from_qt_button
 from ._labels import Title, AxisLabel, Axis, Ticks
 
 
@@ -165,17 +166,18 @@ class Canvas:
             if len(btns) == 0:
                 button = MouseButton.NONE
             else:
-                button = _QT_BUTTON_MAP.get(btns[0], MouseButton.NONE)
+                button = from_qt_button(btns[0])
             if len(evs) == 0:
                 modifiers = ()
             else:
-                modifiers = _from_qt_modifiers(evs[0].modifiers())
-            MouseEvent(
+                modifiers = from_qt_modifiers(evs[0].modifiers())
+            mev = MouseEvent(
                 button=button,
                 modifiers=modifiers,
                 pos=(qpoint.x(), qpoint.y()),
                 type=MouseEventType.MOVE,
             )
+            callback(mev)
 
         self._get_scene().sigMouseMoved.connect(_cb)
 
@@ -186,6 +188,14 @@ class Canvas:
             if not ev.double():
                 return
             callback(self._translate_mouse_event(ev, MouseEventType.DOUBLE_CLICK))
+
+        self._get_scene().sigMouseClicked.connect(_cb)
+
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
+        def _cb(ev: pgMouseClickEvent):
+            callback(self._translate_mouse_event(ev, MouseEventType.RELEASE))
 
         self._get_scene().sigMouseClicked.connect(_cb)
 
@@ -213,61 +223,14 @@ class Canvas:
         ev.currentItem = self._viewbox().childGroup  # as fiducial
         qpoint = cast(QtCore.QPointF, ev.pos())
 
-        modifiers = _from_qt_modifiers(ev.modifiers())
+        modifiers = from_qt_modifiers(ev.modifiers())
 
         return MouseEvent(
-            button=_QT_BUTTON_MAP.get(ev.button(), MouseButton.NONE),
+            button=from_qt_button(ev.button()),
             modifiers=modifiers,
             pos=(qpoint.x(), qpoint.y()),
             type=typ,
         )
-
-
-def _from_qt_modifiers(
-    qt_modifiers: QtCore.Qt.KeyboardModifier,
-) -> tuple[Modifier, ...]:
-    if (modifiers := _QT_MODIFIERS_MAP.get(qt_modifiers, None)) is None:
-        # NOTE: some OS have default modifiers
-        _lst = []
-        if QtCore.Qt.KeyboardModifier.ShiftModifier & qt_modifiers:
-            _lst.append(Modifier.SHIFT)
-        if QtCore.Qt.KeyboardModifier.ControlModifier & qt_modifiers:
-            _lst.append(Modifier.CTRL)
-        if QtCore.Qt.KeyboardModifier.AltModifier & qt_modifiers:
-            _lst.append(Modifier.ALT)
-        if QtCore.Qt.KeyboardModifier.MetaModifier & qt_modifiers:
-            _lst.append(Modifier.META)
-        modifiers = tuple(_lst)
-        _QT_MODIFIERS_MAP[qt_modifiers] = modifiers
-    return modifiers
-
-
-_QT_MODIFIERS_MAP = {
-    QtCore.Qt.KeyboardModifier.NoModifier: (),
-    QtCore.Qt.KeyboardModifier.ShiftModifier: (Modifier.SHIFT,),
-    QtCore.Qt.KeyboardModifier.ControlModifier: (Modifier.CTRL,),
-    QtCore.Qt.KeyboardModifier.AltModifier: (Modifier.ALT,),
-    QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.META,),
-    QtCore.Qt.KeyboardModifier.ShiftModifier
-    | QtCore.Qt.KeyboardModifier.ControlModifier: (Modifier.SHIFT, Modifier.CTRL),
-    QtCore.Qt.KeyboardModifier.ShiftModifier
-    | QtCore.Qt.KeyboardModifier.AltModifier: (Modifier.SHIFT, Modifier.ALT),
-    QtCore.Qt.KeyboardModifier.ShiftModifier
-    | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.SHIFT, Modifier.META),
-    QtCore.Qt.KeyboardModifier.ControlModifier
-    | QtCore.Qt.KeyboardModifier.AltModifier: (Modifier.CTRL, Modifier.ALT),
-    QtCore.Qt.KeyboardModifier.ControlModifier
-    | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.CTRL, Modifier.META),
-    QtCore.Qt.KeyboardModifier.AltModifier
-    | QtCore.Qt.KeyboardModifier.MetaModifier: (Modifier.ALT, Modifier.META),
-}
-_QT_BUTTON_MAP = {
-    QtCore.Qt.MouseButton.LeftButton: MouseButton.LEFT,
-    QtCore.Qt.MouseButton.RightButton: MouseButton.RIGHT,
-    QtCore.Qt.MouseButton.MiddleButton: MouseButton.MIDDLE,
-    QtCore.Qt.MouseButton.BackButton: MouseButton.BACK,
-    QtCore.Qt.MouseButton.ForwardButton: MouseButton.FORWARD,
-}
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
@@ -278,7 +241,7 @@ class CanvasGrid:
         elif app in ("default", "qt"):
             from pyqtgraph import GraphicsLayoutWidget
         else:
-            raise ValueError(f"pyqtgraph does not support {app!r}. Must be ")
+            raise ValueError(f"pyqtgraph does not support {app!r}")
         self._layoutwidget = GraphicsLayoutWidget()
         self._heights = heights  # TODO: not used
         self._widths = widths

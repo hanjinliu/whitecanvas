@@ -52,14 +52,8 @@ class Canvas:
         self._mouse_button: MouseButton = MouseButton.NONE
         self._second_y = second_y
 
-        # connect default mouse events
-        plot.on_event(bk_events.Press, lambda event: self._set_mouse_down(event))
-        plot.on_event(
-            bk_events.PressUp, lambda event: self._set_mouse_down(MouseButton.NONE)
-        )
-
     def _set_mouse_down(self, event):
-        self._mouse_button = MouseButton.LEFT
+        self._mouse_button = event
 
     def _get_xaxis(self):
         return self._plot.xaxis
@@ -143,7 +137,8 @@ class Canvas:
     def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
 
-        def _cb(event: bk_events.Tap):
+        def _cb(event: bk_events.Press):
+            self._set_mouse_down(MouseButton.LEFT)
             ev = MouseEvent(
                 button=MouseButton.LEFT,
                 modifiers=_translate_modifiers(event.modifiers),
@@ -153,6 +148,7 @@ class Canvas:
             callback(ev)
 
         self._plot.on_event(bk_events.Tap, _cb)
+        self._plot.on_event(bk_events.Press, _cb)
 
     def _plt_connect_mouse_drag(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
@@ -181,6 +177,23 @@ class Canvas:
             callback(ev)
 
         self._plot.on_event(bk_events.DoubleTap, _cb)
+
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
+        def _cb(event: bk_events.PressUp):
+            ev = MouseEvent(
+                button=MouseButton.LEFT,
+                modifiers=_translate_modifiers(event.modifiers),
+                pos=(event.x, event.y),
+                type=MouseEventType.RELEASE,
+            )
+            callback(ev)
+            self._set_mouse_down(MouseButton.NONE)
+
+        self._plot.on_event(bk_events.PressUp, _cb)
+        self._plot.on_event(bk_events.Tap, _cb)
+        self._plot.on_event(bk_events.PanEnd, _cb)
 
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]

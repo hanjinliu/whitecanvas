@@ -64,10 +64,13 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
         """Connect callback to clicked event"""
 
     def _plt_connect_mouse_drag(self, callback: Callable[[MouseEvent], None]):
-        """Connect callback to clicked event"""
+        """Connect callback to drag event"""
 
     def _plt_connect_mouse_double_click(self, callback: Callable[[MouseEvent], None]):
-        """Connect callback to clicked event"""
+        """Connect callback to double-clicked event"""
+
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to release event"""
 
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]

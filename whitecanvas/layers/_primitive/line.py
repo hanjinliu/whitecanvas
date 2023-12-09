@@ -160,14 +160,14 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
             xdata, ydata = data[:, 0], data[:, 1]
         else:
             xdata, ydata = data
-        if xdata is None:
-            xdata = self.data.x
-        else:
-            xdata = as_array_1d(xdata)
-        if ydata is None:
-            ydata = self.data.y
-        else:
-            ydata = as_array_1d(ydata)
+            if xdata is None:
+                xdata = self.data.x
+            else:
+                xdata = as_array_1d(xdata)
+            if ydata is None:
+                ydata = self.data.y
+            else:
+                ydata = as_array_1d(ydata)
         if xdata.size != ydata.size:
             raise ValueError(
                 "Expected xdata and ydata to have the same size, "
@@ -195,6 +195,30 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         alpha: float = 1.0,
         pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.Plot:
+        """
+        Add markers at each data point.
+
+        >>> canvas.add_line(x, y).with_markers(color="yellow")
+
+        Parameters
+        ----------
+        symbol : str or Symbol, default is Symbol.CIRCLE
+            Marker symbols.
+        size : float, optional
+            Marker size, by default 10
+        color : color-like, optional
+            Marker face colors. To set edge colors, use `with_edge` method.
+            Set to the line color by default.
+        alpha : float, default is 1.0
+            The alpha channel.
+        pattern : str or FacePattern, default is FacePattern.SOLID
+            The marker face pattern.
+
+        Returns
+        -------
+        Plot
+            The plot layer.
+        """
         from whitecanvas.layers.group import Plot
         from whitecanvas.layers._primitive import Markers
 

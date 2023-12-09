@@ -174,7 +174,7 @@ class DataBoundLayer(PrimitiveLayer[_P], Generic[_P, _T]):
     @data.setter
     def data(self, data):
         """Set the data for this layer."""
-        self._set_layer_data(data)
+        self._set_layer_data(self._norm_layer_data(data))
         self.events.data.emit(data)
 
 

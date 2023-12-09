@@ -140,6 +140,9 @@ class Canvas:
         """Connect callback to double-clicked event"""
         # TODO
 
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
     def _plt_draw(self):
         pass
 

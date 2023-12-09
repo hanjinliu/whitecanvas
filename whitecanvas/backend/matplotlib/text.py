@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-import matplotlib.pyplot as plt
 from matplotlib.text import Text as mplText
 from matplotlib.artist import Artist
 
@@ -12,6 +11,7 @@ from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.utils.normalize import as_color_array
 
 
+@check_protocol(TextProtocol)
 class Texts(Artist, MplLayer):
     def __init__(
         self, x: NDArray[np.floating], y: NDArray[np.floating], text: list[str]
@@ -26,6 +26,7 @@ class Texts(Artist, MplLayer):
                     color=np.array([0, 0, 0, 1], dtype=np.float32),
                 )  # fmt: skip
             )
+        self._remove_method = _remove_method
 
     def draw(self, renderer):
         for child in self.get_children():
@@ -249,3 +250,8 @@ _HORIZONTAL_ALIGNMENTS_INV = {v: k for k, v in _HORIZONTAL_ALIGNMENTS.items()}
 
 _ALIGNMENTS: dict[tuple[str, str], Alignment] = {}
 _ALIGNMENTS_INV: dict[Alignment, tuple[str, str]] = {}
+
+
+def _remove_method(this: Texts):
+    for child in this.get_children():
+        child.remove()

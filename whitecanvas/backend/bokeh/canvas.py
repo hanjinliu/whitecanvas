@@ -28,9 +28,16 @@ def _prep_plot(width=400, height=300):
     return plot
 
 
+SECOND_Y = "second-y"
+
+
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
-    def __init__(self, plot: bk_models.Plot | None = None):
+    def __init__(
+        self,
+        plot: bk_models.Plot | None = None,
+        second_y: bool = False,
+    ):
         if plot is None:
             plot = _prep_plot()
         assert isinstance(plot, bk_models.Plot)
@@ -43,6 +50,7 @@ class Canvas:
         self._xticks = XTicks(self)
         self._yticks = YTicks(self)
         self._mouse_button: MouseButton = MouseButton.NONE
+        self._second_y = second_y
 
         # connect default mouse events
         plot.on_event(bk_events.Press, lambda event: self._set_mouse_down(event))
@@ -52,6 +60,22 @@ class Canvas:
 
     def _set_mouse_down(self, event):
         self._mouse_button = MouseButton.LEFT
+
+    def _get_xaxis(self):
+        return self._plot.xaxis
+
+    def _get_yaxis(self):
+        if not self._second_y:
+            return self._plot.yaxis
+        return self._plot.yaxis[1]
+
+    def _get_xrange(self):
+        return self._plot.x_range
+
+    def _get_yrange(self):
+        if not self._second_y:
+            return self._plot.y_range
+        return self._plot.extra_y_ranges[SECOND_Y]
 
     def _plt_get_native(self):
         return self._plot
@@ -94,7 +118,10 @@ class Canvas:
         self._plot.aspect_ratio = ratio
 
     def _plt_add_layer(self, layer: BokehLayer):
-        self._plot.add_glyph(layer._data, layer._model)
+        if self._second_y:
+            self._plot.add_glyph(layer._data, layer._model, y_range_name=SECOND_Y)
+        else:
+            self._plot.add_glyph(layer._data, layer._model)
 
     def _plt_remove_layer(self, layer: BokehLayer):
         """Remove layer from the canvas"""
@@ -169,6 +196,16 @@ class Canvas:
 
     def _plt_draw(self):
         pass
+
+    def _plt_twinx(self):
+        self._plot.add_layout(
+            bk_models.LinearAxis(
+                y_range_name=SECOND_Y,
+            ),
+            "right",
+        )
+        self._plot.extra_y_ranges = {SECOND_Y: bk_models.DataRange1d()}
+        return Canvas(self._plot, second_y=True)
 
 
 def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, ...]:

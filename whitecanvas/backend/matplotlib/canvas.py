@@ -17,7 +17,7 @@ from .text import Texts as whitecanvasText
 from .image import Image as whitecanvasImage
 from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
 from whitecanvas import protocols
-from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
+from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType, Rect
 from whitecanvas.backend.matplotlib._base import MplLayer
 
 
@@ -125,6 +125,20 @@ class Canvas:
     def _plt_set_visible(self, visible: bool):
         """Set visibility of canvas"""
         self._axes.set_visible(visible)
+
+    def _plt_twinx(self) -> Canvas:
+        axnew = self._axes.twinx()
+        return Canvas(axnew)
+
+    def _plt_twiny(self) -> Canvas:
+        axnew = self._axes.twiny()
+        return Canvas(axnew)
+
+    def _plt_inset(self, rect: Rect) -> Canvas:
+        axnew = self._axes.inset_axes(
+            (rect.left, rect.bottom, rect.width, rect.height), zorder=1000
+        )
+        return Canvas(axnew)
 
     def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""

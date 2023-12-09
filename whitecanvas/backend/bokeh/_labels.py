@@ -55,12 +55,18 @@ class Title(_CanvasComponent):
 
 class X:
     def _plt_get_axis(self) -> BokehAxis:
-        return self._plot.xaxis
+        return self._canvas()._get_xaxis()
+
+    def _plt_get_range(self) -> DataRange1d:
+        return self._canvas()._get_xrange()
 
 
 class Y:
     def _plt_get_axis(self) -> BokehAxis:
-        return self._plot.yaxis
+        return self._canvas()._get_yaxis()
+
+    def _plt_get_range(self) -> DataRange1d:
+        return self._canvas()._get_yrange()
 
 
 class Axis(_CanvasComponent):
@@ -71,10 +77,10 @@ class Axis(_CanvasComponent):
         raise NotImplementedError
 
     def _plt_get_visible(self) -> bool:
-        return self._plot.xaxis.visible
+        return self._plt_get_axis().visible
 
     def _plt_set_visible(self, visible: bool):
-        self._plot.xaxis.visible = visible
+        self._plt_get_axis().visible = visible
 
     def _plt_get_color(self):
         return np.array(Color(self._plt_get_axis().axis_label_text_color).rgba)
@@ -184,12 +190,12 @@ class XAxis(X, Axis):
         fig.x_range.flipped = not fig.x_range.flipped
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        limits: DataRange1d = self._canvas()._plot.x_range
-        return limits.start, limits.end
+        _range = self._plt_get_range()
+        return _range.start, _range.end
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        x_range: DataRange1d = self._canvas()._plot.x_range
-        x_range.start, x_range.end = limits
+        _range = self._plt_get_range()
+        _range.start, _range.end = limits
 
 
 class YAxis(Y, Axis):
@@ -205,11 +211,11 @@ class YAxis(Y, Axis):
         fig.y_range.flipped = not fig.y_range.flipped
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        limits: DataRange1d = self._canvas()._plot.y_range
+        limits = self._plt_get_range()
         return limits.start, limits.end
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        x_range: DataRange1d = self._canvas()._plot.y_range
+        x_range = self._plt_get_range()
         x_range.start, x_range.end = limits
 
 

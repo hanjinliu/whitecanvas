@@ -72,6 +72,7 @@ class CanvasBase(ABC):
     y = _ns.YAxisNamespace()
     dims = Dims()
     layers = _ll.LayerList()
+    overlays = _ll.LayerList()
     events: CanvasEvents
 
     def __init__(self, palette: ColormapType | None = None):
@@ -95,13 +96,17 @@ class CanvasBase(ABC):
         self.y.ticks.color = theme.foreground_color
         self.x.ticks.size = theme.fontsize
         self.y.ticks.size = theme.fontsize
-        self.background_color = theme.background_color
+        # self.background_color = theme.background_color
 
         # connect layer events
         self.layers.events.inserted.connect(self._cb_inserted, unique=True)
         self.layers.events.removed.connect(self._cb_removed, unique=True)
         self.layers.events.reordered.connect(self._cb_reordered, unique=True)
         self.layers.events.connect(self._draw_canvas, unique=True)
+
+        self.overlays.events.inserted.connect(self._cb_inserted_overlay, unique=True)
+        self.overlays.events.removed.connect(self._cb_removed, unique=True)
+        self.overlays.events.connect(self._draw_canvas, unique=True)
 
         canvas = self._canvas()
         canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
@@ -206,6 +211,39 @@ class CanvasBase(ABC):
         self.x.lim = xmin, xmax
         self.y.lim = ymin, ymax
         return xmin, xmax, ymin, ymax
+
+    def install_second_y(
+        self,
+        palette: ColormapType | None = None,
+    ) -> Canvas:
+        """Create a twin canvas that share one of the axis."""
+        try:
+            new = self._canvas()._plt_twinx()
+        except AttributeError:
+            raise NotImplementedError(
+                f"Backend {self._get_backend()} does not support `install_second_y`."
+            )
+        canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
+        canvas._init_canvas()
+        return canvas
+
+    def install_inset(
+        self,
+        rect: Rect | tuple[float, float, float, float],
+        *,
+        palette: ColormapType | None = None,
+    ) -> Canvas:
+        if not isinstance(rect, Rect):
+            rect = Rect(*rect)
+        try:
+            new = self._canvas()._plt_inset(rect)
+        except AttributeError:
+            raise NotImplementedError(
+                f"Backend {self._get_backend()} does not support `install_inset`"
+            )
+        canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
+        canvas._init_canvas()
+        return canvas
 
     @property
     def visible(self):
@@ -982,6 +1020,7 @@ class CanvasBase(ABC):
         )
         return self.add_layer(layer)
 
+    @overload
     def add_text(
         self,
         x: ArrayLike1D,
@@ -994,6 +1033,35 @@ class CanvasBase(ABC):
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         family: str | None = None,
     ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
+        ...
+
+    @overload
+    def add_text(
+        self,
+        x: float,
+        y: float,
+        string: str,
+        *,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        family: str | None = None,
+    ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
+        ...
+
+    def add_text(
+        self,
+        x,
+        y,
+        string,
+        *,
+        color="black",
+        size=12,
+        rotation=0.0,
+        anchor=Alignment.BOTTOM_LEFT,
+        family=None,
+    ):
         """
         Add a text layer to the canvas.
 
@@ -1026,6 +1094,12 @@ class CanvasBase(ABC):
         Text
             The text layer.
         """
+        if (
+            isinstance(x, (int, float, np.number))
+            and isinstance(y, (int, float, np.number))
+            and isinstance(string, str)
+        ):
+            x, y, string = [x], [y], [string]
         x_, y_ = normalize_xy(x, y)
         if isinstance(string, str):
             string = [string] * x_.size
@@ -1197,8 +1271,7 @@ class CanvasBase(ABC):
             # this happens when the grouped layer is inserted
             layer._connect_canvas(self)
             return
-        if idx < 0:
-            idx = len(self.layers) + idx
+
         _canvas = self._canvas()
         for l in _iter_layers(layer):
             _canvas._plt_add_layer(l._backend)
@@ -1213,6 +1286,19 @@ class CanvasBase(ABC):
         else:
             pad_rel = 0.025
         self._autoscale_for_layer(layer, pad_rel=pad_rel)
+
+    def _cb_inserted_overlay(self, idx: int, layer: _l.Layer):
+        _canvas = self._canvas()
+        fn = self._get_backend().get("as_overlay")
+        for l in _iter_layers(layer):
+            _canvas._plt_add_layer(l._backend)
+            fn(l._backend, _canvas)
+            l._connect_canvas(self)
+
+        if isinstance(layer, _l.LayerStack):
+            # TODO: check if connecting LayerGroup is necessary
+            fn(l._backend, _canvas)
+            layer._connect_canvas(self)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):
         if self._is_grouping:

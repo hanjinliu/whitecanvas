@@ -33,11 +33,12 @@ class Spans(
     """
     Layer that represents vertical/hosizontal spans.
 
-       |///|      |///////////|
-       |///|      |///////////|
-    ──────────────────────────────>
-       |///|      |///////////|
-       |///|      |///////////|
+    Attributes
+    ----------
+    face : :class:`~whitecanvas.layers._mixin.FaceNamespace`
+        Face properties of the spans.
+    edge : :class:`~whitecanvas.layers._mixin.EdgeNamespace`
+        Edge properties of the spans.
     """
 
     _backend_class_name = "Bars"

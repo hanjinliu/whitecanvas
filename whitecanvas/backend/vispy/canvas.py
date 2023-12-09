@@ -16,6 +16,7 @@ from ._label import TextLabel, Axis, Ticks
 if TYPE_CHECKING:
     from vispy.scene import Grid
     from vispy.scene.subscene import SubScene
+    from vispy.visuals import Visual
     from vispy.app.canvas import MouseEvent as vispyMouseEvent
 
 
@@ -268,6 +269,11 @@ class SceneCanvasExt(SceneCanvas):
 
             for callback in canvas._mouse_double_click_callbacks:
                 callback(ev)
+
+
+def as_overlay(layer: Visual, canvas: Canvas):
+    layer.parent = canvas._outer_viewbox.scene
+    layer.order = 10000
 
 
 _VISPY_KEY_MAP = {

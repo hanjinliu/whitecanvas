@@ -50,6 +50,17 @@ class Bars(
     MultiFaceEdgeMixin[BarProtocol, _Face, _Edge],
     DataBoundLayer[BarProtocol, XYData],
 ):
+    """
+    Layer that represents vertical/hosizontal bars.
+
+    Attributes
+    ----------
+    face : :class:`~whitecanvas.layers._mixin.FaceNamespace`
+        Face properties of the bars.
+    edge : :class:`~whitecanvas.layers._mixin.EdgeNamespace`
+        Edge properties of the bars.
+    """
+
     events: BarEvents
     _events_class = BarEvents
 
@@ -173,6 +184,7 @@ class Bars(
 
     @property
     def bottom(self) -> NDArray[np.floating]:
+        """The bottom values of the bars."""
         x0, _, y0, _ = self._backend._plt_get_data()
         if self._orient.is_vertical:
             return y0
@@ -185,6 +197,7 @@ class Bars(
 
     @property
     def top(self) -> NDArray[np.floating]:
+        """The top values of the bars."""
         _, x1, _, y1 = self._backend._plt_get_data()
         if self._orient.is_vertical:
             return y1

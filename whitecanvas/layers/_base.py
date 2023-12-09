@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Any, Generic, Iterator, TypeVar, TYPE_CHECKING
+import weakref
 from psygnal import Signal, SignalGroup
 import numpy as np
 from numpy.typing import NDArray
@@ -9,7 +10,8 @@ from whitecanvas.protocols import BaseProtocol
 from whitecanvas.backend import Backend
 
 if TYPE_CHECKING:
-    from whitecanvas.canvas import Canvas
+    from whitecanvas.canvas import CanvasBase
+    from typing_extensions import Self
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
@@ -32,6 +34,7 @@ class Layer(ABC):
         self._name = name if name is not None else self.__class__.__name__
         self._x_hint = self._y_hint = None
         self._is_grouped = False
+        self._canvas_ref = lambda: None
 
     @abstractproperty
     def visible(self) -> bool:
@@ -71,19 +74,34 @@ class Layer(ABC):
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
 
-    def _connect_canvas(self, canvas: Canvas):
+    def _connect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is added to a canvas."""
         self.events._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
         self.events.connect(canvas._draw_canvas, unique=True)
+        self._canvas_ref = weakref.ref(canvas)
 
-    def _disconnect_canvas(self, canvas: Canvas):
+    def _disconnect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is removed from a canvas."""
         self.events._layer_grouped.disconnect(canvas._cb_layer_grouped)
         self.events.disconnect(canvas._draw_canvas)
+        self._canvas_ref = lambda: None
+
+    def _canvas(self) -> CanvasBase:
+        canvas = self._canvas_ref()
+        if canvas is None:
+            raise ValueError(f"Layer is not in any canvas.")
+        return canvas
 
     @abstractmethod
     def bbox_hint(self) -> NDArray[np.float64]:
         """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
+
+    def as_overlay(self) -> Self:
+        """Move this layer to the overlay level."""
+        canvas = self._canvas()
+        canvas.layers.remove(self)
+        canvas.overlays.append(self)
+        return self
 
 
 class PrimitiveLayer(Layer, Generic[_P]):

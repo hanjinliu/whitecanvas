@@ -63,7 +63,8 @@ class Texts(visuals.Compound):
     def _plt_get_text_position(
         self,
     ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
-        return tuple(np.array(t.pos[0, 1:]) for t in self.subvisuals)
+        pos = np.stack([np.array(t.pos[0, 1:]) for t in self.subvisuals], axis=0)
+        return pos[:, 0], pos[:, 1]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]

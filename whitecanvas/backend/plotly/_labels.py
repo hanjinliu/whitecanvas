@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from whitecanvas.utils.normalize import rgba_str_color
 from whitecanvas.types import LineStyle
+from ._base import Location
 
 if TYPE_CHECKING:
     from .canvas import Canvas
@@ -76,7 +77,8 @@ class AxisLabel(_SupportsTitle):
         self._axis = axis
 
     def _get_title(self):
-        return self._canvas()._fig.layout[self._axis + "axis"].title
+        layout = self._canvas()._subplot_layout()
+        return getattr(layout, self._axis).title
 
 
 class Axis(_CanvasComponent):
@@ -84,8 +86,12 @@ class Axis(_CanvasComponent):
         super().__init__(canvas)
         self._axis = axis
 
+    @property
+    def name(self) -> str:
+        return self._axis
+
     def _plt_get_axis(self):
-        return self._canvas()._fig.layout[self._axis + "axis"]
+        return getattr(self._canvas()._subplot_layout(), self._axis)
 
     def _plt_get_limits(self) -> tuple[float, float]:
         lim = self._plt_get_axis().range
@@ -123,7 +129,8 @@ class Ticks(_CanvasComponent):
         self._visible = True
 
     def _plt_get_axis(self):
-        return self._canvas()._fig.layout[self._axis + "axis"]
+        layout = self._canvas()._subplot_layout()
+        return getattr(layout, self._axis)
 
     def _plt_get_text(self) -> tuple[list[float], list[str]]:
         return (

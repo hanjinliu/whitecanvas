@@ -11,27 +11,33 @@ from pyqtgraph.GraphicsScene.mouseEvents import (
 import numpy as np
 
 from whitecanvas import protocols
-from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent
+from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent, Rect
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from ._labels import Title, AxisLabel, Axis, Ticks
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
-    def __init__(self, item: pg.PlotItem | None = None):
+    def __init__(
+        self,
+        item: pg.PlotItem | None = None,
+        *,
+        xaxis: str = "bottom",
+        yaxis: str = "left",
+    ):
         # prepare widget
         if item is None:
             viewbox = pg.ViewBox()
             item = pg.PlotItem(viewBox=viewbox)
         item.vb.disableAutoRange()  # auto range is done in the whitecanvas side
         self._plot_item = item
-        self._xaxis = Axis(self, axis="bottom")
-        self._yaxis = Axis(self, axis="left")
-        self._xticks = Ticks(self, axis="bottom")
-        self._yticks = Ticks(self, axis="left")
+        self._xaxis = Axis(self, axis=xaxis)
+        self._yaxis = Axis(self, axis=yaxis)
+        self._xticks = Ticks(self, axis=xaxis)
+        self._yticks = Ticks(self, axis=yaxis)
         self._title = Title(self)
-        self._xlabel = AxisLabel(self, axis="bottom")
-        self._ylabel = AxisLabel(self, axis="left")
+        self._xlabel = AxisLabel(self, axis=xaxis)
+        self._ylabel = AxisLabel(self, axis=yaxis)
         self._last_event: MouseEvent = None
 
     def _plt_get_native(self):
@@ -93,6 +99,48 @@ class Canvas:
     def _plt_set_visible(self, visible: bool):
         """Set visibility of canvas"""
         self._plot_item.setVisible(visible)
+
+    def _plt_twinx(self) -> Canvas:
+        """Create a twinx canvas"""
+        plotitem = self._plot_item
+        vb1 = plotitem.vb
+        vb2 = pg.ViewBox()
+        canvas = Canvas(pg.PlotItem(viewBox=vb2), yaxis="right")
+
+        self._get_scene().addItem(vb2)
+        plotitem.getAxis("right").linkToView(vb2)
+        vb2.setXLink(plotitem)
+
+        def _update_views():
+            vb2.setGeometry(vb1.sceneBoundingRect())
+            vb2.linkedViewChanged(vb1, vb2.XAxis)
+
+        _update_views()
+        vb1.sigResized.connect(_update_views)
+
+        return canvas
+
+    def _plt_twiny(self) -> Canvas:
+        plotitem = self._plot_item
+        vb1 = plotitem.vb
+        vb2 = pg.ViewBox()
+        canvas = Canvas(pg.PlotItem(viewBox=vb2), xaxis="top")
+
+        self._get_scene().addItem(vb2)
+        plotitem.getAxis("bottom").linkToView(vb2)
+        vb2.setYLink(plotitem)
+
+        def _update_views():
+            vb2.setGeometry(vb1.sceneBoundingRect())
+            vb2.linkedViewChanged(vb1, vb2.YAxis)
+
+        _update_views()
+        vb1.sigResized.connect(_update_views)
+
+        return canvas
+
+    # def _plt_inset(self, rect: Rect) -> Canvas:
+    #     ...
 
     def _get_scene(self) -> pg.GraphicsScene:
         return self._plot_item.scene()

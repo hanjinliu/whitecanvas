@@ -7,7 +7,6 @@ from qtpy.QtCore import Signal
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene.mouseEvents import (
     MouseClickEvent as pgMouseClickEvent,
-    MouseDragEvent as pgMouseDragEvent,
     HoverEvent as pgHoverEvent,
 )
 import numpy as np

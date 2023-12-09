@@ -24,7 +24,9 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         ydata1: np.ndarray,
         orient: Orientation,
     ):
-        self._data = bk_models.ColumnDataSource(data=dict(t=t, y0=ydata0, y1=ydata1))
+        self._data = bk_models.ColumnDataSource(
+            data=dict(t=t, y0=ydata0, y1=ydata1, hovertexts=np.array([""] * len(t)))
+        )
         if orient.is_vertical:
             self._model = bk_models.VArea(x="t", y1="y0", y2="y1")
         else:

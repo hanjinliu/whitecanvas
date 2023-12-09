@@ -22,6 +22,7 @@ class Bars(HeteroLayer[bk_models.Quad]):
                 width=np.zeros(ndata),
                 pattern=[" "] * ndata,
                 style=["solid"] * ndata,
+                hovertexts=np.array([""] * len(xlow)),
             )
         )
         self._model = bk_models.Quad(

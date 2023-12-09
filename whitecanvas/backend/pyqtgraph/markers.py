@@ -41,8 +41,29 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
     def _plt_get_data(self):
         return self.getData()
 
-    def _plt_set_data(self, xdata, ydata):
-        self.setData(xdata, ydata)
+    def _plt_set_data(self, xdata: np.ndarray, ydata: np.ndarray):
+        pens = self._get_pen()
+        brushes = self._get_brush()
+        ndata = xdata.size
+        if ndata <= len(brushes):
+            self.setData(
+                xdata,
+                ydata,
+                pen=pens[:ndata],
+                brush=brushes[:ndata],
+                size=self.data["size"][:ndata],
+            )
+        else:
+            new_pen = [QtGui.QPen(pens[-1])] * (ndata - len(pens))
+            new_brush = [QtGui.QBrush(brushes[-1])] * (ndata - len(brushes))
+            new_size = np.full(ndata - len(self.data["size"]), self.data["size"][-1])
+            self.setData(
+                xdata,
+                ydata,
+                pen=np.concatenate([pens, new_pen]),
+                brush=np.concatenate([brushes, new_brush]),
+                size=np.concatenate([self.data["size"], new_size]),
+            )
 
     ##### HasSymbol protocol #####
     def _plt_get_symbol(self) -> Symbol:

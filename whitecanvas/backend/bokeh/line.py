@@ -14,7 +14,9 @@ from ._base import BokehLayer, to_bokeh_line_style, from_bokeh_line_style
 @check_protocol(LineProtocol)
 class MonoLine(BokehLayer[bk_models.Line]):
     def __init__(self, xdata, ydata):
-        self._data = bk_models.ColumnDataSource(data=dict(x=xdata, y=ydata))
+        self._data = bk_models.ColumnDataSource(
+            data=dict(x=xdata, y=ydata, hovertexts=np.array([""] * len(xdata)))
+        )
         self._model = bk_models.Line(x="x", y="y", line_join="round", line_cap="round")
         self._line_style = LineStyle.SOLID
         self._visible = True

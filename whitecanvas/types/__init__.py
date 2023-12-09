@@ -8,6 +8,7 @@ from ._enums import (
     MouseEventType,
     Alignment,
     Orientation,
+    Origin,
 )
 from ._mouse import MouseEvent
 from ._tuples import XYData, XYYData, XYTextData, Rect
@@ -20,6 +21,7 @@ __all__ = [
     "Symbol",
     "FacePattern",
     "Orientation",
+    "Origin",
     "Modifier",
     "MouseButton",
     "MouseEvent",

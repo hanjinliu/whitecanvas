@@ -165,3 +165,19 @@ class Orientation(_strEnum):
     @property
     def is_vertical(self):
         return self is Orientation.VERTICAL
+
+
+class Origin(_strEnum):
+    """
+    Enum that define the center of image.
+
+    1-----+  0: corner
+    |     |  1: edge
+    |  0  |  2: center (center of image)
+    |     |
+    +-----+
+    """
+
+    CORNER = "corner"
+    EDGE = "edge"
+    CENTER = "center"

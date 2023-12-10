@@ -31,11 +31,14 @@ class LayerStack(Layer, Generic[_T]):
         self._data_stack = data
         if axis_names is None:
             axis_names = [f"axis_{i}" for i in reversed(range(data.ndim))]
+        else:
+            axis_names = list(axis_names)
         self._axis_names = axis_names
         super().__init__(base_layer.name)
 
     @property
     def visible(self) -> bool:
+        """Whether the layer is visible."""
         return self._base_layer.visible
 
     @visible.setter
@@ -44,6 +47,7 @@ class LayerStack(Layer, Generic[_T]):
 
     @property
     def name(self) -> str:
+        """Name of the layer."""
         return self._base_layer.name
 
     @name.setter
@@ -56,11 +60,14 @@ class LayerStack(Layer, Generic[_T]):
 
     @property
     def axis_names(self) -> list[str]:
+        """List of axis names."""
         return self._axis_names.copy()
 
     def _update_layer_data(self, index: dict[str, int]) -> None:
         sl = tuple(index[a] for a in self._axis_names)
-        self._base_layer._set_layer_data(self._get_slice(sl))
+        data = self._get_slice(sl)
+        self._base_layer._set_layer_data(data)
+        self._base_layer.events.data.emit(data)
 
     def _get_slice(self, index) -> _T:
         return self._base_layer._norm_layer_data(self._data_stack.slice_at(index))
@@ -80,7 +87,7 @@ class LayerStack(Layer, Generic[_T]):
                 f"Got {stack.ndim}D dataset but {len(axis_names)} axes names "
                 "were given."
             )
-        self._axis_names = axis_names
+        self._axis_names = list(axis_names)
 
 
 class YLayerStack(LayerStack[NDArray[np.number]]):
@@ -139,6 +146,27 @@ class XYYLayerStack(LayerStack[XYYData]):
         return cls(constructor(*data, *args, **kwargs), stack)
 
 
+class TextLayerStack(LayerStack[XYTextData]):
+    @classmethod
+    def from_layer_class(
+        cls,
+        constructor: Callable[Concatenate[Any, Any, _P], DataBoundLayer[XYTextData]],
+        x: Any,
+        y: Any,
+        text: Any,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ):
+        """Create a layer stack from the given layer constructor and data."""
+        xdata = _norm_one(x)
+        ydata = _norm_one(y)
+        textdata = _norm_one(text, dtype=np.str_)
+        stack = StackedArray([xdata, ydata, textdata])
+        sl = (0,) * stack.ndim
+        data = stack.slice_at(sl)
+        return cls(constructor(*data, *args, **kwargs), stack)
+
+
 class ImageLayerStack(LayerStack[NDArray[np.number]]):
     @classmethod
     def from_layer_class(
@@ -174,27 +202,23 @@ class SpansLayerStack(LayerStack[NDArray[np.number]]):
         return cls(constructor(spans, *args, **kwargs), stack)
 
 
-def _norm_one(data, dim: int = 1) -> Slicable[NDArray[np.number]]:
+def _norm_one(data, dim: int = 1, dtype=np.float32) -> Slicable[NDArray[np.number]]:
     try:
-        arr = np.asarray(data)
+        arr = np.asarray(data, dtype=dtype)
     except ValueError:
         arr = np.asarray(data, dtype=np.object_)
 
     if arr.ndim == dim:
-        if arr.dtype.kind not in "iuf":
-            raise ValueError("xdata must be numerical.")
         return ConstArray(arr)
     if arr.dtype == np.object_:
         # convert all the elements to 1D array
         for sl in zip(*[range(s) for s in arr.shape]):
-            arr1d = np.asarray(arr[sl])
+            arr1d = np.asarray(arr[sl], dtype=dtype)
             if arr1d.ndim != dim:
                 raise ValueError(
                     f"Data at index {sl} has {arr1d.ndim} dimensions but "
                     f"{dim} is required."
                 )
-            if arr1d.dtype.kind not in "iuf":
-                raise ValueError(f"Data at index {sl} is not numerical.")
             arr[sl] = arr1d
         return NonuniformArray(arr)
     else:

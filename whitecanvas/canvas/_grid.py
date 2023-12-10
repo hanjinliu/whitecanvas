@@ -118,7 +118,9 @@ class CanvasGrid:
 
     def __repr__(self) -> str:
         cname = type(self).__name__
-        return f"<{cname} {self._heights} x {self._widths}>"
+        w, h = self._size
+        hex_id = hex(id(self))
+        return f"<{cname} ({w:.1f} x {h:.1f}) at {hex_id}>"
 
     def __getitem__(self, key: tuple[int, int]) -> Canvas:
         canvas = self._canvas_array[key]
@@ -169,7 +171,7 @@ class CanvasGrid:
             canvas.x.events.lim.connect(self._align_xlims, unique=True)
         if self.y_linked:
             canvas.y.events.lim.connect(self._align_ylims, unique=True)
-        canvas.events.drawn.connect(self.events.drawn, unique=True)
+        canvas.events.drawn.connect(self.events.drawn.emit, unique=True)
         return canvas
 
     def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
@@ -201,6 +203,8 @@ class CanvasGrid:
             view(self, self._backend.app)
 
         if block:
+            # TODO: automatically block the event loop or enable ipython
+            # GUI mode if needed.
             app.run_app()
 
     @property
@@ -218,6 +222,7 @@ class CanvasGrid:
 
     @property
     def size(self) -> tuple[float, float]:
+        """Size in width x height."""
         return self._size
 
     @size.setter
@@ -329,6 +334,12 @@ class SingleCanvas(CanvasBase):
             raise ValueError("Grid must have only one canvas")
         self._main_canvas = canvas
         super().__init__(palette=self._main_canvas._color_palette)
+
+        # NOTE: events, dims etc are not shared between the main canvas and the
+        # SingleCanvas instance. To avoid confusion, the first and the only canvas
+        # should be replaces with the SingleCanvas instance.
+        grid._canvas_array[0, 0] = self
+        self.events.drawn.connect(self._main_canvas.events.drawn.emit, unique=True)
 
     def _get_backend(self) -> Backend:
         """Return the backend."""

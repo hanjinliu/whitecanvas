@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import sys
 from abc import ABC
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Hashable,
     Iterator,
     Literal,
     Sequence,
@@ -29,14 +27,15 @@ from whitecanvas.types import (
     Orientation,
 )
 from whitecanvas.canvas._palette import ColorPalette
-
+from whitecanvas.canvas._categorical._groupby import GroupBy, GroupByTask
+from whitecanvas.canvas._categorical._plans import OffsetPlan, ColorPlan, HatchPlan
 from whitecanvas._exceptions import ReferenceDeletedError
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeGuard, Self
-    from ._base import CanvasBase
-    import pandas as pd
-    import polars as pl
+    from typing_extensions import Self
+    from whitecanvas.canvas._base import CanvasBase
+
+    _CatColumnNames = tuple[str, ...]
 
 _C = TypeVar("_C", bound="CanvasBase")
 _T = TypeVar("_T")
@@ -46,10 +45,11 @@ class CategorizedStruct(ABC, Generic[_C, _T]):
     def __init__(
         self,
         canvas: _C,
-        obj: dict[str, dict[str, _T]],
+        obj: GroupByTask,
     ):
         self._canvas_ref = weakref.ref(canvas)
-        self._obj = obj
+        self._task = obj
+        self._groupby_cache = None
 
     def _canvas(self) -> _C:
         canvas = self._canvas_ref()
@@ -57,31 +57,36 @@ class CategorizedStruct(ABC, Generic[_C, _T]):
             raise ReferenceDeletedError("Canvas has been deleted.")
         return canvas
 
+    def _groupby_object(self) -> GroupBy:
+        if self._groupby_cache is None:
+            raise RuntimeError("Groupby object is not computed yet.")
+        return self._groupby_cache
+
     @property
     def n_categories(self) -> int:
         """Number of categories."""
-        return len(self._obj)
+        return len(self._groupby_object())
 
     @property
-    def categories(self) -> list[Any]:
+    def categories(self) -> list[tuple]:
         """List of categories."""
-        return list(self._obj.keys())
+        return list(self._groupby_object().keys())
 
-    def _generate_colors(self, color) -> list[Color]:
-        if color is not None:
-            return color
-        return self._canvas()._color_palette.nextn(self.n_categories, update=False)
+    # def _generate_colors(self, color) -> list[Color]:
+    #     if color is not None:
+    #         return color
+    #     return self._canvas()._color_palette.nextn(self.n_categories, update=False)
 
-    def _generate_x(self) -> NDArray[np.floating]:
-        x = np.arange(self.n_categories, dtype=np.float64)
-        return x + self._offsets
+    # def _generate_x(self) -> NDArray[np.floating]:
+    #     x = np.arange(self.n_categories, dtype=np.float64)
+    #     return x + self._offsets
 
     def _get_backend(self):
         return self._canvas()._get_backend()
 
     def _default_y_label(self) -> str:
         try:
-            v = next(iter(self._obj.values()))
+            v = next(iter(self._groupby_object().values()))
             y = next(iter(v.keys()))
         except StopIteration:
             y = "value"
@@ -94,7 +99,7 @@ class CategorizedStruct(ABC, Generic[_C, _T]):
         descending: bool = False,
     ) -> Self:
         """Sort categories by name."""
-        names = sorted(self._obj.keys(), reverse=descending, key=rule)
+        names = sorted(self._groupby_object().keys(), reverse=descending, key=rule)
         return self.select(names)
 
     def filter(
@@ -102,71 +107,127 @@ class CategorizedStruct(ABC, Generic[_C, _T]):
         rule: Callable[[str], bool],
     ) -> Self:
         """Filter categories by name."""
-        names = [n for n in self._obj.keys() if rule(n)]
+        names = [n for n in self._groupby_object().keys() if rule(n)]
         return self.select(names)
 
     def keys(self) -> Iterator[str]:
         """Iterate over categories."""
-        return self._obj.keys()
+        return self._groupby_object().keys()
 
     def values(self) -> Iterator[dict[str, _T]]:
         """Iterate over data."""
-        return self._obj.values()
+        return self._groupby_object().values()
 
     def items(self) -> Iterator[tuple[str, dict[str, _T]]]:
         """Iterate over (category, data) pairs."""
-        return self._obj.items()
+        return self._groupby_object().items()
 
 
 class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
     def __init__(
         self,
         canvas: _C,
-        data: Any,
-        by: str | None = None,  # TODO: support multiple columns
+        obj: GroupByTask,
+        offset_by: OffsetPlan,
+        color_by: ColorPlan,
+        hatch_by: HatchPlan,
         *,
         orient: Orientation = Orientation.VERTICAL,
-        offsets=None,
-        palette: ColormapType | None = None,
         update_label: bool = False,
-        unsafe: bool = False,
     ):
-        if unsafe:
-            _color_palette = palette
-            obj = data
-            ncats = len(obj)
-        else:
-            if palette is None:
-                _color_palette = canvas._color_palette.copy()
-            else:
-                _color_palette = ColorPalette(palette)
-            obj = _norm_input(data, by)
-            ncats = len(obj)
-        if offsets is None:
-            offsets = np.zeros(ncats)
-        elif isinstance(offsets, (int, float, np.number)):
-            offsets = np.full(ncats, offsets)
-        else:
-            offsets = np.asarray(offsets)
-            if offsets.shape != (ncats,):
-                raise ValueError("Shape of offset is wrong")
         super().__init__(canvas, obj)
-        self._offsets = offsets
+        self._offset_by = offset_by
+        self._color_by = color_by
+        self._hatch_by = hatch_by
         self._orient = orient
-        self._color_palette = _color_palette
         self._update_label = update_label
 
-    def with_offset(self, offset: float) -> CategorizedDataPlotter[_C]:
-        """Update offset of the plotter."""
+    @classmethod
+    def from_canvas(
+        cls,
+        canvas: _C,
+        data: Any,
+        offset: _CatColumnNames = (),
+        color: _CatColumnNames = (),
+        hatch: _CatColumnNames = (),
+        orient: Orientation = Orientation.VERTICAL,
+        update_label: bool = False,
+    ):
+        # group, color and hatch may have duplicates
+        by: list[str] = []
+        for b in offset + color + hatch:
+            if not isinstance(b, str):
+                raise TypeError(f"{b!r} is not a string.")
+            if b not in by:
+                by.append(b)
+        obj = GroupByTask(data, tuple(by))
+        cat_plan = OffsetPlan.default(offset)
+        col_plan = ColorPlan(color, canvas._color_palette.copy())
+        hat_plan = HatchPlan.default(hatch)
+        return cls(
+            canvas,
+            obj,
+            cat_plan,
+            col_plan,
+            hat_plan,
+            orient=orient,
+            update_label=update_label,
+        )
+
+    def color_by(self, *by: str, dodge: bool = False) -> CategorizedDataPlotter[_C]:
+        """Update color plan."""
+        if dodge:
+            offset_by = self._offset_by.more_by(*by)
+        else:
+            offset_by = self._offset_by
         return CategorizedDataPlotter(
             self._canvas(),
-            self._obj,
-            offsets=offset,
+            self._task.more_by(by),
+            offset_by=offset_by,
+            color_by=self._color_by.more_by(by),
+            hatch_by=self._hatch_by,
             orient=self._orient,
-            palette=self._color_palette,
             update_label=self._update_label,
-            unsafe=True,
         )
+
+    def hatch_by(self, *by: str, dodge: bool = False) -> CategorizedDataPlotter[_C]:
+        """Update hatch plan."""
+        if dodge:
+            offset_by = self._offset_by.more_by(*by)
+        else:
+            offset_by = self._offset_by
+        return CategorizedDataPlotter(
+            self._canvas(),
+            self._task.more_by(by),
+            offset_by=offset_by,
+            color_by=self._color_by,
+            hatch_by=self._hatch_by.more_by(by),
+            orient=self._orient,
+            update_label=self._update_label,
+        )
+
+    def select(self, **kwargs: list[Any]) -> CategorizedDataPlotter[_C]:
+        task = self._task.with_selections(kwargs)
+        return CategorizedDataPlotter(
+            self._canvas(),
+            task,
+            offset_by=self._offset_by,
+            color_by=self._color_by,
+            hatch_by=self._hatch_by,
+            orient=self._orient,
+            update_label=self._update_label,
+        )
+
+    # def with_offset(self, offsets: float | Sequence[float]) -> CategorizedDataPlotter[_C]:
+    #     """Update offset of the plotter."""
+    #     return CategorizedDataPlotter(
+    #         self._canvas(),
+    #         self._task,
+    #         offset_by=self._offset_by.with_offsets(offsets),
+    #         color_by=self._color_by,
+    #         orient=self._orient,
+    #         update_label=self._update_label,
+    #     )
 
     #####################################################################################
     ######   Aggregators   ##############################################################
@@ -239,23 +300,20 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         *,
         name: str | None = None,
         extent: float = 0.3,
-        color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
         symbol: str | Symbol = Symbol.CIRCLE,
         size: float = 10,
         seed: int | None = 0,
-        pattern: str | FacePattern = FacePattern.SOLID,
     ) -> _lg.MarkerCollection:
         canvas = self._canvas()
         name = canvas._coerce_name("stripplot", name)
-        color = self._generate_colors(color)
-        data = self._generate_y(y)
+        data, x, color, hatch = self._generate_inputs(y)
         group = _lg.MarkerCollection.build_strip(
-            self._generate_x(), data, name=name, orient=self._orient,
+            x, data, name=name, orient=self._orient,
             extent=extent, seed=seed, symbol=symbol, size=size,
-            color=color, alpha=alpha, pattern=pattern, backend=self._get_backend()
+            color=color, alpha=alpha, pattern=hatch, backend=self._get_backend()
         )  # fmt: skip
-        self._relabel_axis(y)
+        self._relabel_axis(x, y)
         return canvas.add_layer(group)
 
     def add_swarmplot(
@@ -349,7 +407,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
                 raise ValueError("Empty data.")
             return len(d[key])
 
-        counts = [_len(v) for v in self._obj.values()]
+        counts = [_len(v) for v in self._task.values()]
         layer = _l.Bars(
             self._generate_x(),
             counts,
@@ -376,6 +434,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         return self._canvas()._color_palette.nextn(self.n_categories, update=False)
 
     def _generate_x(self) -> NDArray[np.floating]:
+        self._offset_by.generate()
         x = np.arange(self.n_categories, dtype=np.float64)
         return x + self._offsets
 
@@ -396,9 +455,9 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         elif len(names) == 1 and isinstance(names[0], list):
             names = names[0]
         try:
-            obj = {name: self._obj[name] for name in names}
+            obj = {name: self._task[name] for name in names}
         except KeyError:
-            not_found = [n for n in names if n not in self._obj]
+            not_found = [n for n in names if n not in self._task]
             raise ValueError(f"Categories not found: {not_found!r}.") from None
         # reorder offsets
         offsets = np.asarray(
@@ -414,28 +473,35 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             unsafe=True,
         )
 
-    def _relabel_axis(self, y):
+    def _relabel_axis(self, offset: list[float], y: str):
         canvas = self._canvas()
-        tick_pos = np.arange(len(self.categories))
-        tick_labels = self.categories
+        tick_labels = [", ".join(map(str, x)) for x in self.categories]
         if self._orient.is_vertical:
-            canvas.x.ticks.set_labels(tick_pos, tick_labels)
+            canvas.x.ticks.set_labels(offset, tick_labels)
         else:
-            canvas.y.ticks.set_labels(tick_pos, tick_labels)
+            canvas.y.ticks.set_labels(offset, tick_labels)
 
         if not self._update_label:
             return
         if y is None:
             y = self._default_y_label()
         if self._orient.is_vertical:
+            canvas.x.label.text = "/".join(self._task.by)
             canvas.y.label.text = str(y)
         else:
             canvas.x.label.text = str(y)
+            canvas.y.label.text = "/".join(self._task.by)
 
-    def _generate_y(self, y):
+    def _generate_inputs(self, y: str | None):
         if y is None:
             y = self._default_y_label()
-        return [v[y] for v in self._obj.values()]
+        gb = self._task.as_groupby()
+        self._groupby_cache = gb
+        values = [v[y] for v in gb.values()]
+        offsets = gb.get_offsets(self._offset_by)
+        colors = gb.get_colors(self._color_by)
+        hatch = gb.get_hatches(self._hatch_by)
+        return values, offsets, colors, hatch
 
 
 class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
@@ -552,9 +618,9 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         elif len(names) == 1 and isinstance(names[0], list):
             names = names[0]
         try:
-            obj = {name: self._obj[name] for name in names}
+            obj = {name: self._task[name] for name in names}
         except KeyError:
-            not_found = [n for n in names if n not in self._obj]
+            not_found = [n for n in names if n not in self._task]
             raise ValueError(f"Categories not found: {not_found!r}.") from None
         # reorder offsets
         offsets = np.asarray(
@@ -589,7 +655,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
                 _color_palette = canvas._color_palette.copy()
             else:
                 _color_palette = ColorPalette(palette)
-            obj = _norm_input(data, by)
+            obj = GroupBy(data, by)
         super().__init__(canvas, obj)
         self._orient = orient
         self._color_palette = _color_palette
@@ -610,8 +676,8 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         canvas = self._canvas()
         name = canvas._coerce_name("markers", name)
         color = self._generate_colors(color)
-        xdatas = [v[x] for v in self._obj.values()]
-        ydatas = [v[y] for v in self._obj.values()]
+        xdatas = [v[x] for v in self._task.values()]
+        ydatas = [v[y] for v in self._task.values()]
         layers: list[_l.Markers] = []
         for xdata, ydata, c, cat in zip(xdatas, ydatas, color, self.categories):
             layer = _l.Markers(
@@ -639,8 +705,8 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         canvas = self._canvas()
         name = canvas._coerce_name("line", name)
         color = self._generate_colors(color)
-        xdatas = [v[x] for v in self._obj.values()]
-        ydatas = [v[y] for v in self._obj.values()]
+        xdatas = [v[x] for v in self._task.values()]
+        ydatas = [v[y] for v in self._task.values()]
         layers: list[_l.Line] = []
         for xdata, ydata, c, cat in zip(xdatas, ydatas, color, self.categories):
             layer = _l.Line(
@@ -728,7 +794,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
     def _generate_y(self, y):
         if y is None:
             y = self._default_y_label()
-        return [v[y] for v in self._obj.values()]
+        return [v[y] for v in self._task.values()]
 
     def select(self, *names) -> ColorizedPlotter[_C]:
         """Select categories by name."""
@@ -737,9 +803,9 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         elif len(names) == 1 and isinstance(names[0], list):
             names = names[0]
         try:
-            obj = {name: self._obj[name] for name in names}
+            obj = {name: self._task[name] for name in names}
         except KeyError:
-            not_found = [n for n in names if n not in self._obj]
+            not_found = [n for n in names if n not in self._task]
             raise ValueError(f"Categories not found: {not_found!r}.") from None
         return ColorizedPlotter(
             self._canvas(),
@@ -758,67 +824,6 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
             x, y = y, x
         canvas.x.label.text = str(x)
         canvas.y.label.text = str(y)
-
-
-def _is_pandas_dataframe(df) -> TypeGuard[pd.DataFrame]:
-    typ = type(df)
-    if (
-        typ.__name__ != "DataFrame"
-        or "pandas" not in sys.modules
-        or typ.__module__.split(".")[0] != "pandas"
-    ):
-        return False
-    import pandas as pd
-
-    return isinstance(df, pd.DataFrame)
-
-
-def _is_polars_dataframe(df) -> TypeGuard[pl.DataFrame]:
-    typ = type(df)
-    if (
-        typ.__name__ != "DataFrame"
-        or "polars" not in sys.modules
-        or typ.__module__.split(".")[0] != "polars"
-    ):
-        return False
-    import polars as pl
-
-    return isinstance(df, pl.DataFrame)
-
-
-def _norm_input(data: Any, by: Any | None):
-    nested = by is not None
-    if isinstance(data, dict):
-        if nested:
-            array_dict: dict[str, NDArray[np.number]] = {}
-            lengths: set[int] = set()
-            for k, v in data.items():
-                arr = np.asarray(v)
-                array_dict[k] = arr
-                lengths.add(arr.size)
-            if len(lengths) > 1:
-                raise ValueError(f"Length of array data not consistent: {lengths}.")
-            uniques = np.unique(array_dict[by])
-            obj: dict[Hashable, dict[str, NDArray[np.number]]] = {}
-            for unique_val in uniques:
-                sl = array_dict[by] == unique_val
-                dict_filt = {k: v[sl] for k, v in array_dict.items()}
-                obj[unique_val] = dict_filt
-        else:
-            obj = {k: {"value": np.asarray(v)} for k, v in data.items()}
-    elif _is_pandas_dataframe(data):
-        if nested:
-            obj = {cat: val for cat, val in data.groupby(by)}
-        else:
-            obj = {c: data[[c]] for c in data.columns}
-    elif _is_polars_dataframe(data):
-        if nested:
-            obj = {cat: val for cat, val in data.group_by(by, maintain_order=True)}
-        else:
-            obj = {c: data.select(c) for c in data.columns}
-    else:
-        raise TypeError(f"{type(data)} cannot be categorized.")
-    return obj
 
 
 def _aggregate(

@@ -304,10 +304,8 @@ class CanvasBase(ABC):
     def cat(
         self,
         data: Any,
-        by: str | None = None,
-        *,
+        *by: str,
         orient: str | Orientation = Orientation.VERTICAL,
-        offsets: float | ArrayLike1D | None = None,
         palette: ColormapType | None = None,
         update_labels: bool = True,
     ) -> _cat.CategorizedDataPlotter[Self]:
@@ -343,15 +341,9 @@ class CanvasBase(ABC):
             Plotter object.
         """
         orient = Orientation.parse(orient)
-        plotter = _cat.CategorizedDataPlotter(
-            self, data, by=by, orient=orient, offsets=offsets,
-            update_label=update_labels, palette=palette
+        plotter = _cat.CategorizedDataPlotter.from_canvas(
+            self, data, offset=by, orient=orient, update_label=update_labels
         )  # fmt: skip
-        if update_labels:
-            if orient.is_vertical:
-                self.x.label.text = by
-            else:
-                self.y.label.text = by
         return plotter
 
     def colorize(

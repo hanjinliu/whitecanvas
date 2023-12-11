@@ -9,7 +9,7 @@ from whitecanvas.types import ColorType, FacePattern, Symbol, LineStyle, Orienta
 from whitecanvas.layers._primitive import Markers
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._cat_utils import check_array_input
-from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
 
 
 class MarkerCollection(LayerContainer):
@@ -56,7 +56,7 @@ class MarkerCollection(LayerContainer):
         size: float = 10,
         color: ColorType | Sequence[ColorType] = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        pattern: FacePattern | list[FacePattern] = FacePattern.SOLID,
         backend: str | Backend | None = None,
     ):
         x, data = check_array_input(x, data)
@@ -64,7 +64,8 @@ class MarkerCollection(LayerContainer):
         ori = Orientation.parse(orient)
         layers: list[Markers] = []
         color = as_color_array(color, len(x))
-        for ith, (x0, values, color) in enumerate(zip(x, data, color)):
+        hatch = as_any_1d_array(pattern, len(x))
+        for ith, (x0, values, c, h) in enumerate(zip(x, data, color, hatch)):
             offsets = rng.uniform(-extent / 2, extent / 2, size=len(values))
             if ori.is_vertical:
                 _x = np.full_like(values, x0) + offsets
@@ -73,8 +74,8 @@ class MarkerCollection(LayerContainer):
                 _x = values
                 _y = np.full_like(values, x0) + offsets
             markers = Markers(
-                _x, _y, name=f"markers_{ith}", symbol=symbol, size=size, color=color,
-                alpha=alpha, pattern=pattern, backend=backend
+                _x, _y, name=f"markers_{ith}", symbol=symbol, size=size, color=c,
+                alpha=alpha, pattern=h, backend=backend
             )  # fmt: skip
             layers.append(markers)
 

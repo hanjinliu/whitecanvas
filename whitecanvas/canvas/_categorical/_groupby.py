@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 
 from whitecanvas.types import FacePattern
 from ._plans import OffsetPlan, ColorPlan, HatchPlan
+from ._utils import unique, unique_product
 
 if TYPE_CHECKING:
     from typing_extensions import TypeGuard
@@ -38,7 +39,7 @@ class GroupBy(Mapping[tuple[str, ...], dict[str, NDArray[np.number]]]):
         sorted. e.g. {"a": [1, 1, 2, 2], "b": [1, 2, 1, 2]} for by=("a", "b").
         """
         nested = len(by) > 0
-        by = [b._title for b in by]  # TODO: consider labels
+        bylist = [b._title for b in by]  # TODO: consider labels
         if isinstance(data, dict):
             if nested:
                 ar_dict: dict[str, NDArray[np.number]] = {}
@@ -49,40 +50,39 @@ class GroupBy(Mapping[tuple[str, ...], dict[str, NDArray[np.number]]]):
                     lengths.add(arr.size)
                 if len(lengths) > 1:
                     raise ValueError(f"Length of array data not consistent: {lengths}.")
-                uniques = np.unique(np.column_stack([ar_dict[b] for b in by]), axis=0)
+                each_uniques = [unique(ar_dict[b]) for b in bylist]
+                full = unique_product(each_uniques)
                 obj: dict[tuple[str, ...], dict[str, NDArray[np.number]]] = {}
-                for unique_val in uniques:
+                for unique_val in full:
                     sl = np.all(
                         np.column_stack(
-                            [ar_dict[b] == v for b, v in zip(by, unique_val)]
+                            [ar_dict[b] == v for b, v in zip(bylist, unique_val)]
                         ),
                         axis=1,
                     )
-                    dict_filt = {k: v[sl] for k, v in ar_dict.items()}
-                    obj[tuple(unique_val)] = dict_filt
+                    if np.any(sl):
+                        dict_filt = {k: v[sl] for k, v in ar_dict.items()}
+                        obj[tuple(unique_val)] = dict_filt
             else:
                 obj = {(k,): {"value": np.asarray(v)} for k, v in data.items()}
                 uniques = np.array(list(data.keys())).reshape(-1, 1)
-            uniques = np.sort(uniques, axis=0)
         elif _is_pandas_dataframe(data):
             # NOTE: pandas groupby sorts the keys
             if nested:
-                obj = {cat: val for cat, val in data.groupby(by)}
+                obj = {cat: val for cat, val in data.groupby(bylist)}
                 uniques = np.array(list(obj.keys()))
             else:
                 obj = {(c,): data[[c]] for c in data.columns}
                 uniques = np.array(list(data.columns)).reshape(-1, 1)
         elif _is_polars_dataframe(data):
             if nested:
-                obj = {cat: val for cat, val in data.group_by(by)}
-                uniques = np.array(list(obj.keys()))
+                return cls.parse({c.name: c for c in data.iter_columns()}, by)
             else:
                 obj = {(c,): data.select(c) for c in data.columns}
                 uniques = np.array(list(data.columns)).reshape(-1, 1)
-            uniques = np.sort(uniques, axis=0)
         else:
             raise TypeError(f"{type(data)} cannot be categorized.")
-        return GroupBy(obj, by, uniques)
+        return GroupBy(obj, bylist, uniques)
 
     @property
     def by(self) -> list[str]:

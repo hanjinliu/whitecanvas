@@ -34,7 +34,7 @@ def test_offset_subset(arr, expected, policy):
     [
         ([[1, 1], [1, 2], [1, 3], [2, 1]], [0, 1, 2, 3], [_p.NoMarginPolicy(), _p.NoMarginPolicy()]),
         ([[1, 1], [1, 2], [1, 3], [2, 3]], [0, 1, 2, 5], [_p.NoMarginPolicy(), _p.NoMarginPolicy()]),
-        ([[1, 1], [1, 2], [2, 1], [2, 2]], [0, 1, 2.3, 3.3], [_p.NoMarginPolicy(), _p.ConstMarginPolicy(0.3)]),
+        ([[1, 1], [1, 2], [2, 1], [2, 2]], [0, 1, 2.3, 3.3], [_p.ConstMarginPolicy(0.3), _p.NoMarginPolicy()]),
     ]
 )  # fmt: skip
 def test_offset_multilevel(arr, expected, policy):

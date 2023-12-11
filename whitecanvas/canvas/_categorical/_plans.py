@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractclassmethod, abstractmethod
 from typing import Any, Sequence, TYPE_CHECKING, TypeVar
-from itertools import product
+import itertools
 from cmap import Color
 import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.types import FacePattern
 from whitecanvas.canvas._palette import ColorPalette
+from ._utils import unique, unique_product
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -141,33 +142,32 @@ class OffsetPlan(Plan):
 
         """
         indices = [by_all.index(b) for b in self.by]
-        filt = _filter_unique(values, indices)
         ncols = len(indices)
-        each_uniques = [_unique_ordered(filt[:, i]) for i in range(ncols)]
         out_lookup = {}
         if blank:
             # make a full mesh where all combinations are included
-            _mesh = np.meshgrid(*[each_uniques[i] for i in range(ncols)])
-            full = np.stack(_mesh, axis=-1).reshape(-1, ncols)
-            # existing = set(tuple(row) for row in arr)  # make a set to speed up
+            each_uniques = [unique(values[:, i]) for i in indices]
+            full = unique_product(each_uniques)
             last_row = None
             last_x = np.zeros(ncols, dtype=np.float32)
+            # intervals will be like:
+            # each_uniques --> intervals
+            # [[1, 2], [4, 5, 6]] --> [3, 1]
+            # [[1, 2], [4, 5, 6], [7, 8]] --> [6, 2, 1]
+            intervals = _to_intervals(each_uniques)
             for row in full:
                 if last_row is None:
                     last_row = row
                     x = 0
                 else:
-                    i: int = np.where(row != last_row)[0][0]
+                    i = np.where(row != last_row)[0][0]
                     x0 = last_x[i]
-                    if i + 1 < ncols:
-                        interval = each_uniques[i + 1].size
-                    else:
-                        interval = 1
-                    x = x0 + self._offsets[i].get(interval)
-                    last_x[i] = x
+                    x = x0 + self._offsets[i].get(intervals[i])
+                    last_x[i:] = x
                 out_lookup[tuple(row)] = x
                 last_row = row
         else:
+            filt = _filter_unique(values, indices)
             x = 0.0
             last_row = None
             last_x = np.zeros(ncols, dtype=np.float32)
@@ -256,10 +256,9 @@ class HatchPlan(Plan):
 
 
 def _filter_unique(values, indices: list[int]) -> np.ndarray:
-    return _unique_ordered(values[:, indices])
+    return unique(values[:, indices])
 
 
-def _unique_ordered(arr: np.ndarray) -> np.ndarray:
-    """Return unique in the order of appearance."""
-    _, idx = np.unique(arr, axis=0, return_index=True)
-    return arr[np.sort(idx)]
+def _to_intervals(each_uniques: list[np.ndarray]):
+    each_size = [un.size for un in each_uniques] + [1]
+    return np.cumprod(each_size[1:][::-1])[::-1]

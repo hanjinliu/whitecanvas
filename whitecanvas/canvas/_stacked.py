@@ -60,7 +60,7 @@ class StackOverPlotter(Generic[_C, _L]):
                 color=color,
                 alpha=alpha,
                 name=name,
-                pattern=pattern,
+                hatch=pattern,
                 bar_width=layer.bar_width,
                 backend=layer._backend_name,
             )
@@ -141,7 +141,7 @@ class StackOverPlotter(Generic[_C, _L]):
         )
         new_layer = Bars(
             centers, counts, bottom=layer.top, bar_width=dx * 2, name=name,
-            color=color, alpha=alpha, orient=layer.orient, pattern=pattern,
+            color=color, alpha=alpha, orient=layer.orient, hatch=pattern,
             backend=layer._backend_name,
         )  # fmt: skip
         new_layer._bar_type = layer._bar_type

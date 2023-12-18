@@ -5,6 +5,7 @@ from typing import (
     Iterable,
     Iterator,
     Literal,
+    Union,
     overload,
     TypeVar,
     TYPE_CHECKING,
@@ -35,7 +36,7 @@ from whitecanvas.types import (
 from whitecanvas.canvas import (
     _namespaces as _ns,
     layerlist as _ll,
-    _categorical as _cat,
+    dataframe as _df,
 )
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._dims import Dims
@@ -54,6 +55,8 @@ if TYPE_CHECKING:
 _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
 _void = _Void()
+
+nStrings = Union[str, Iterable[str]]
 
 
 class CanvasEvents(SignalGroup):
@@ -301,65 +304,44 @@ class CanvasBase(ABC):
             self.y.label.color = color
         return self
 
-    def cat(
-        self,
-        data: Any,
-        *by: str,
-        orient: str | Orientation = Orientation.VERTICAL,
-        palette: ColormapType | None = None,
-        update_labels: bool = True,
-    ) -> _cat.CategorizedDataPlotter[Self]:
+    def cat(self, data, update_labels: bool = True) -> _df.DataFramePlotter:
         """
         Categorize input data for plotting.
 
         This method provides categorical plotting methods for the input data.
         Methods are very similar to `seaborn` and `plotly.express`.
 
-        >>> df = sns.load_dataset("iris")
-        >>> canvas.cat(df, by="species").to_violinplot(y="sepal_width)
-        >>> canvas.cat(df, by="species").mean().to_line(y="sepal_width)
-
         Parameters
         ----------
         data : tabular data
             Any categorizable data. Currently, dict, pandas.DataFrame, and
             polars.DataFrame are supported.
-        by : str, optional
-            Which column to use for grouping.
-        orient : str or Orientation, default is Orientation.VERTICAL
-            Orientation of the plot.
-        offsets : scalar or sequence, optional
-            Offset for each category. If scalar, the same offset is used for all.
-        palette : ColormapType, optional
-            Color palette used for plotting the categories.
+
         update_labels : bool, default is True
             If True, update the x/y labels to the corresponding names.
 
         Returns
         -------
-        CategorizedDataPlotter
+        CategorizedPlot
             Plotter object.
         """
-        orient = Orientation.parse(orient)
-        plotter = _cat.CategorizedDataPlotter.from_canvas(
-            self, data, offset=by, orient=orient, update_label=update_labels
-        )  # fmt: skip
+        plotter = _df.DataFramePlotter(self, data, update_label=update_labels)
         return plotter
 
-    def colorize(
-        self,
-        data: Any,
-        by: str | None = None,
-        *,
-        update_labels: bool = True,
-        palette: ColormapType | None = None,
-    ) -> _cat.ColorizedPlotter[Self]:
-        if palette is None:
-            palette = self._color_palette
-        plotter = _cat.ColorizedPlotter(
-            self, data, by, palette=palette, update_label=update_labels
-        )
-        return plotter
+    # def colorize(
+    #     self,
+    #     data: Any,
+    #     by: str | None = None,
+    #     *,
+    #     update_labels: bool = True,
+    #     palette: ColormapType | None = None,
+    # ) -> _cat.ColorizedPlotter[Self]:
+    #     if palette is None:
+    #         palette = self._color_palette
+    #     plotter = _cat.ColorizedPlotter(
+    #         self, data, by, palette=palette, update_label=update_labels
+    #     )
+    #     return plotter
 
     def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
         """
@@ -521,7 +503,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, color=color,
-            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            alpha=alpha, hatch=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -592,7 +574,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Bars(
             center, height, bottom, bar_width=extent, name=name, orient=orient,
-            color=color, alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            color=color, alpha=alpha, hatch=pattern, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -1284,7 +1266,7 @@ class CanvasBase(ABC):
             _canvas._plt_add_layer(l._backend)
             l._connect_canvas(self)
 
-        if isinstance(layer, _l.LayerStack):
+        if isinstance(layer, _l.LayerWrapper):
             # TODO: check if connecting LayerGroup is necessary
             layer._connect_canvas(self)
         # autoscale
@@ -1302,7 +1284,7 @@ class CanvasBase(ABC):
             fn(l._backend, _canvas)
             l._connect_canvas(self)
 
-        if isinstance(layer, _l.LayerStack):
+        if isinstance(layer, _l.LayerWrapper):
             # TODO: check if connecting LayerGroup is necessary
             fn(l._backend, _canvas)
             layer._connect_canvas(self)
@@ -1410,7 +1392,7 @@ def _iter_layers(
         yield layer
     elif isinstance(layer, _l.LayerGroup):
         yield from layer.iter_children_recursive()
-    elif isinstance(layer, _l.LayerStack):
+    elif isinstance(layer, _l.LayerWrapper):
         yield from _iter_layers(layer._base_layer)
     else:
         raise TypeError(f"Unknown layer type: {type(layer).__name__}")

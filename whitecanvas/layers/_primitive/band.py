@@ -12,7 +12,7 @@ from whitecanvas.types import FacePattern, ColorType, Orientation, XYYData, Arra
 from whitecanvas.utils.normalize import as_array_1d
 
 
-class Band(FaceEdgeMixin[BandProtocol], DataBoundLayer[BandProtocol, XYYData]):
+class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
     def __init__(
         self,
         t: ArrayLike1D,
@@ -26,6 +26,7 @@ class Band(FaceEdgeMixin[BandProtocol], DataBoundLayer[BandProtocol, XYYData]):
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
+        FaceEdgeMixin.__init__(self)
         ori = Orientation.parse(orient)
         x = as_array_1d(t)
         y0 = as_array_1d(edge_low)

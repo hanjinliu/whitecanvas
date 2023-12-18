@@ -1,22 +1,24 @@
 from __future__ import annotations
 
-from typing import Iterable, Iterator, TYPE_CHECKING, Sequence
+from typing import Iterable, Iterator, TYPE_CHECKING, Sequence, MutableSequence, TypeVar
 from psygnal import Signal
-from whitecanvas.layers._base import Layer, LayerGroup, LayerEvents
+from whitecanvas.layers._base import Layer, LayerGroup, LayerEvents, PrimitiveLayer
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
 
+_L = TypeVar("_L", bound=PrimitiveLayer)
 
-class ListLayerEvents(LayerEvents):
+
+class LayerContainerEvents(LayerEvents):
     reordered = Signal(list)
 
 
 class LayerContainer(LayerGroup):
     """Layer group that stores children in a list."""
 
-    events: ListLayerEvents
-    _events_class = ListLayerEvents
+    events: LayerContainerEvents
+    _events_class = LayerContainerEvents
 
     def __init__(self, children: Iterable[Layer], name: str | None = None):
         super().__init__(name=name)
@@ -77,6 +79,42 @@ class LayerTuple(LayerContainer, Sequence[Layer]):
     def __repr__(self) -> str:
         cname = type(self).__name__
         return f"{cname}{tuple(self.iter_children())!r}"
+
+
+class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
+    _children: list[_L]
+
+    def __getitem__(self, n: int) -> _L:
+        """The n-th markers layer."""
+        if not hasattr(n, "__index__"):
+            raise TypeError(f"Index must be an integer, not {type(n)}")
+        return self._children[n]
+
+    def __setitem__(self, n: int, layer: _L):
+        raise NotImplementedError("Cannot set item in a LayerCollection")
+
+    def __delitem__(self, n: int):
+        """Delete the n-th layer."""
+        if not hasattr(n, "__index__"):
+            raise TypeError(f"Index must be an integer, not {type(n)}")
+        line = self._children.pop(n)
+        _canvas = self._canvas()
+        _canvas._canvas()._plt_remove_layer(line._backend)
+        line._disconnect_canvas(_canvas)
+        return None
+
+    def __iter__(self) -> Iterator[_L]:
+        return iter(self._children)
+
+    def __len__(self):
+        return len(self._children)
+
+    def insert(self, n: int, layer: _L):
+        _canvas = self._canvas()
+        _canvas._canvas()._plt_add_layer(layer._backend)
+        layer._connect_canvas(_canvas)
+        self._children.append(layer)
+        return None
 
 
 def _check_layer(l) -> Layer:

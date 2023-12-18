@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from cmap import Color
@@ -67,7 +68,7 @@ def rgba_str_color(color) -> str:
     return Color(color).rgba_string
 
 
-def as_any_1d_array(x: float, size: int, dtype=None) -> np.ndarray:
+def as_any_1d_array(x: Any, size: int, dtype=None) -> np.ndarray:
     if np.isscalar(x) or isinstance(x, Enum):
         out = np.full((size,), x, dtype=dtype)
     else:

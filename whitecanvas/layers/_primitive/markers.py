@@ -50,12 +50,17 @@ class MarkersLayerEvents(FaceEdgeMixinEvents):
 
 
 class Markers(
-    MultiFaceEdgeMixin[MarkersProtocol, _Face, _Edge],
     DataBoundLayer[MarkersProtocol, XYData],
+    MultiFaceEdgeMixin[_Face, _Edge],
     Generic[_Face, _Edge, _Size],
 ):
     events: MarkersLayerEvents
     _events_class = MarkersLayerEvents
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args, **kwargs) -> Markers[ConstFace, ConstEdge, float]:
+            ...
 
     def __init__(
         self,
@@ -64,20 +69,23 @@ class Markers(
         *,
         name: str | None = None,
         symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 15.0,
+        size: float = 12.0,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
+        MultiFaceEdgeMixin.__init__(self)
         xdata, ydata = normalize_xy(xdata, ydata)
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.update(symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha)
+        self.update(symbol=symbol, size=size, color=color, pattern=hatch, alpha=alpha)
         self._size_is_array = False
         self.edge.color = color
-        if not self.symbol.has_face():
-            self.edge.update(width=1.0, color=color)
+        if self.symbol.has_face():
+            self.edge.update(width=1.0, color="black")
+        else:
+            self.edge.update(width=2.0, color=color)
         pad_r = size / 400
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
 
@@ -89,6 +97,50 @@ class Markers(
     ) -> Markers[ConstFace, ConstEdge, float]:
         """Return an empty markers layer."""
         return cls([], [], backend=backend)
+
+    @classmethod
+    def maybe_multi(
+        cls,
+        xdata: ArrayLike,
+        ydata: ArrayLike,
+        *,
+        name: str | None = None,
+        symbol: Symbol | str = Symbol.CIRCLE,
+        size: float = 15.0,
+        color: ColorType | Sequence[ColorType] | None = None,
+        width: float | Sequence[float] | None = None,
+        style: str | LineStyle | Sequence[str | LineStyle] | None = None,
+        hatch: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        alpha: float = 1.0,
+        backend: Backend | str | None = None,
+    ) -> Markers[ConstFace | MultiFace, ConstEdge | MultiEdge, NDArray[np.float32]]:
+        """
+        Return a markers layer with multi-face properties if the properties are
+        sequences, otherwise return a markers layer with constant-face
+        properties.
+        """
+        color = np.asarray(color)
+        _is_multi_color = color.ndim == 2 or (color.ndim == 1 and color.dtype == object)
+        _is_multi_face = hasattr(hatch, "__iter__")
+        _is_multi_size = hasattr(size, "__iter__")
+        _is_multi_edge = hasattr(width, "__iter__") or hasattr(style, "__iter__")
+
+        if _is_multi_color or _is_multi_face:
+            self = cls(xdata, ydata, symbol=symbol, backend=backend).with_face_multi(
+                color=color, hatch=hatch, alpha=alpha
+            )
+        else:
+            self = cls(
+                xdata, ydata, backend=backend, name=name, symbol=symbol, color=color,
+                hatch=hatch, alpha=alpha
+            )  # fmt: skip
+        if _is_multi_size:
+            self = self.with_size_multi(size)
+        else:
+            self.size = size
+        if _is_multi_edge:
+            self = self.with_edge_multi(width=width, style=style)
+        return self
 
     @property
     def ndata(self) -> int:
@@ -493,7 +545,7 @@ class Markers(
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: FacePattern | str = FacePattern.SOLID,
         alpha: float = 1.0,
     ) -> Markers[ConstFace, _Edge, _Size]:
         """
@@ -525,7 +577,7 @@ class Markers(
         Markers
             The updated markers layer.
         """
-        super().with_face(color, pattern, alpha)
+        super().with_face(color, hatch, alpha)
         if not self.symbol.has_face():
             width = self.edge.width
             if isinstance(width, (float, int, np.number)):
@@ -537,7 +589,7 @@ class Markers(
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
         alpha: float = 1,
     ) -> Markers[MultiFace, _Edge, _Size]:
         """
@@ -562,7 +614,7 @@ class Markers(
         Markers
             The updated markers layer.
         """
-        super().with_face_multi(color, pattern, alpha)
+        super().with_face_multi(color, hatch, alpha)
         if not self.symbol.has_face():
             width = self.edge.width
             if isinstance(width, (float, int, np.number)):

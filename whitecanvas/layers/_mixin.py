@@ -34,8 +34,8 @@ from whitecanvas.utils.normalize import arr_color, as_any_1d_array, as_color_arr
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+    from whitecanvas.layers.group._collections import LayerCollectionBase
 
-_P = TypeVar("_P", bound=_lp.BaseProtocol)
 _L = TypeVar("_L", bound=PrimitiveLayer)
 _void = _Void()
 
@@ -532,7 +532,7 @@ class FaceEdgeMixinEvents(LayerEvents):
     edge = Signal(object)
 
 
-class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
+class _AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
     face: _NFace
     edge: _NEdge
     _face_namespace: _NFace
@@ -540,8 +540,7 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
     events: FaceEdgeMixinEvents
     _events_class = FaceEdgeMixinEvents
 
-    def __init__(self, name: str | None = None):
-        super().__init__(name=name)
+    def __init__(self):
         self._face_namespace.events.connect(self.events.face.emit)
         self._edge_namespace.events.connect(self.events.edge.emit)
 
@@ -556,11 +555,10 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
         return self._edge_namespace
 
 
-class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P]):
-    def __init__(self, name: str | None = None):
+class FaceEdgeMixin(_AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
+    def __init__(self):
         self._face_namespace = MonoFace(self)
         self._edge_namespace = MonoEdge(self)
-        super().__init__(name=name)
 
     def with_face(
         self,
@@ -588,13 +586,12 @@ class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P])
         return self
 
 
-class MultiFaceEdgeMixin(
-    _AbstractFaceEdgeMixin[_P, _NFace, _NEdge], Generic[_P, _NFace, _NEdge]
-):
-    def __init__(self, name: str | None = None):
+class MultiFaceEdgeMixin(_AbstractFaceEdgeMixin[_NFace, _NEdge]):
+    """Mixin for layers with multiple faces and edges."""
+
+    def __init__(self):
         self._face_namespace = ConstFace(self)
         self._edge_namespace = ConstEdge(self)
-        super().__init__(name=name)
 
     def with_face(
         self,
@@ -660,6 +657,166 @@ class MultiFaceEdgeMixin(
             self._edge_namespace.events.connect(self.events.edge.emit)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
+
+
+class CollectionFace(FaceNamespace):
+    _layer: LayerCollectionBase
+
+    def _iter_children(self) -> Iterator[FaceEdgeMixin]:
+        yield from iter(self._layer)
+
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Face color of the bar."""
+        cols = [layer.face.color for layer in self._iter_children()]
+        return np.stack(cols, axis=0)
+
+    @color.setter
+    def color(self, color):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        col = as_color_array(color, ndata)
+        for layer, c in zip(layers, col):
+            layer.face.color = c
+        self.events.color.emit(col)
+
+    @property
+    def pattern(self) -> EnumArray[FacePattern]:
+        """Face fill pattern of the bars."""
+        patterns = [layer.face.pattern for layer in self._iter_children()]
+        return np.array(patterns, dtype=object)
+
+    @pattern.setter
+    def pattern(self, pattern: str | FacePattern | Iterable[str | FacePattern]):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        patterns = as_any_1d_array(pattern, ndata, dtype=object)
+        for layer, ptn in zip(layers, patterns):
+            layer.face.pattern = ptn
+        self.events.pattern.emit(pattern)
+
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        pattern: FacePattern | str | _Void = _void,
+        alpha: float | _Void = _void,
+    ) -> _L:
+        """
+        Update the face properties.
+
+        Parameters
+        ----------
+        color : ColorType, optional
+            Color of the face.
+        pattern : FacePattern, optional
+            Fill pattern of the face.
+        alpha : float, optional
+            Alpha value of the face.
+        """
+        if color is not _void:
+            self.color = color
+        if pattern is not _void:
+            self.pattern = pattern
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer
+
+
+class CollectionEdge(EdgeNamespace):
+    _layer: LayerCollectionBase
+
+    def _iter_children(self) -> Iterator[FaceEdgeMixin]:
+        yield from iter(self._layer)
+
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Face color of the bar."""
+        cols = [layer.edge.color for layer in self._iter_children()]
+        return np.stack(cols, axis=0)
+
+    @color.setter
+    def color(self, color):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        col = as_color_array(color, ndata)
+        for layer, c in zip(layers, col):
+            layer.edge.color = c
+        self.events.color.emit(col)
+
+    @property
+    def width(self) -> NDArray[np.float32]:
+        """Edge widths."""
+        widths = [layer.edge.width for layer in self._iter_children()]
+        return np.array(widths, dtype=np.float32)
+
+    @width.setter
+    def width(self, width: float | Iterable[float]):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        widths = as_any_1d_array(width, ndata, dtype=np.float32)
+        for layer, w in zip(layers, widths):
+            layer.edge.width = w
+        self.events.width.emit(width)
+
+    @property
+    def style(self) -> EnumArray[LineStyle]:
+        """Edge styles."""
+        styles = [layer.edge.style for layer in self._iter_children()]
+        return np.array(styles, dtype=object)
+
+    @style.setter
+    def style(self, style: str | LineStyle | Iterable[str | LineStyle]):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        styles = as_any_1d_array(style)
+        for layer, ls in zip(layers, styles):
+            layer.edge.style = ls
+        self.events.style.emit(style)
+
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        style: LineStyle | str | _Void = _void,
+        width: float | _Void = _void,
+        alpha: float | _Void = _void,
+    ):
+        if color is not _void:
+            self.color = color
+        if style is not _void:
+            self.style = style
+        if width is not _void:
+            self.width = width
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer
+
+
+class CollectionFaceEdgeMixin(_AbstractFaceEdgeMixin[CollectionFace, CollectionEdge]):
+    def __init__(self):
+        self._face_namespace = CollectionFace(self)
+        self._edge_namespace = CollectionEdge(self)
 
 
 # just for typing

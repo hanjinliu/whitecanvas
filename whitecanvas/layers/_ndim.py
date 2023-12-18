@@ -8,10 +8,9 @@ from typing_extensions import ParamSpec, Concatenate
 
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.layers._base import DataBoundLayer, Layer
+from whitecanvas.layers._base import DataBoundLayer, LayerWrapper
 from whitecanvas.layers import _primitive
 from whitecanvas.types import XYData, XYYData, XYTextData
-from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
@@ -20,43 +19,21 @@ _T = TypeVar("_T")
 _P = ParamSpec("_P")
 
 
-class LayerStack(Layer, Generic[_T]):
+# TODO: Generic type wrong.
+class LayerStack(LayerWrapper["DataBoundLayer[_T]"], Generic[_T]):
     def __init__(
         self,
         base_layer: DataBoundLayer[_T],
         data: Slicable[_T],
         axis_names: list[str] | None = None,
     ):
-        self._base_layer = base_layer
+        super().__init__(base_layer)
         self._data_stack = data
         if axis_names is None:
             axis_names = [f"axis_{i}" for i in reversed(range(data.ndim))]
         else:
             axis_names = list(axis_names)
         self._axis_names = axis_names
-        super().__init__(base_layer.name)
-
-    @property
-    def visible(self) -> bool:
-        """Whether the layer is visible."""
-        return self._base_layer.visible
-
-    @visible.setter
-    def visible(self, visible: bool):
-        self._base_layer.visible = visible
-
-    @property
-    def name(self) -> str:
-        """Name of the layer."""
-        return self._base_layer.name
-
-    @name.setter
-    def name(self, name: str):
-        self._base_layer.name = name
-
-    def bbox_hint(self) -> NDArray[np.floating]:
-        """Return the bounding box hint using the base layer."""
-        return self._base_layer.bbox_hint()
 
     @property
     def axis_names(self) -> list[str]:
@@ -277,6 +254,15 @@ class NonuniformArray(Slicable[_T]):
     @property
     def shape(self):
         return self._obj.shape
+
+
+# TODO: multidimensional stripplot etc.
+class TableArray(Slicable[NDArray[np.number]]):
+    def __init__(self, obj: dict[Any, dict[str, NDArray[np.number]]]):
+        self._obj = obj
+
+    def slice_at(self, index: tuple[int, ...]):
+        ...
 
 
 class StackedArray(Slicable[_T]):

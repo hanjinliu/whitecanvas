@@ -195,6 +195,8 @@ class LayerGroup(Layer):
         for child in self.iter_children():
             if isinstance(child, LayerGroup):
                 yield from child.iter_children_recursive()
+            elif isinstance(child, LayerWrapper):
+                yield child._base_layer
             else:
                 yield child
 
@@ -242,3 +244,42 @@ class LayerGroup(Layer):
         ymin = np.nan if allnan[2] else np.nanmin(ar[2, :])
         ymax = np.nan if allnan[3] else np.nanmax(ar[3, :])
         return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
+
+
+class LayerWrapper(Layer, Generic[_L]):
+    def __init__(
+        self,
+        base_layer: _L,
+    ):
+        self._base_layer = base_layer
+        super().__init__(base_layer.name)
+
+    @property
+    def visible(self) -> bool:
+        """Whether the layer is visible."""
+        return self._base_layer.visible
+
+    @visible.setter
+    def visible(self, visible: bool):
+        self._base_layer.visible = visible
+
+    @property
+    def name(self) -> str:
+        """Name of the layer."""
+        return self._base_layer.name
+
+    @name.setter
+    def name(self, name: str):
+        self._base_layer.name = name
+
+    def bbox_hint(self) -> NDArray[np.floating]:
+        """Return the bounding box hint using the base layer."""
+        return self._base_layer.bbox_hint()
+
+    def _connect_canvas(self, canvas: CanvasBase):
+        self._base_layer._connect_canvas(canvas)
+        return super()._connect_canvas(canvas)
+
+    def _disconnect_canvas(self, canvas: CanvasBase):
+        self._base_layer._disconnect_canvas(canvas)
+        return super()._disconnect_canvas(canvas)

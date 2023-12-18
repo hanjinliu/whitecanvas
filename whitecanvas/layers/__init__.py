@@ -1,4 +1,4 @@
-from ._base import PrimitiveLayer, Layer, LayerGroup
+from ._base import PrimitiveLayer, Layer, LayerGroup, LayerWrapper
 from ._ndim import LayerStack
 from ._primitive import (
     Line,
@@ -19,6 +19,7 @@ __all__ = [
     "Layer",
     "PrimitiveLayer",
     "LayerGroup",
+    "LayerWrapper",
     "LayerStack",
     "Line",
     "MultiLine",

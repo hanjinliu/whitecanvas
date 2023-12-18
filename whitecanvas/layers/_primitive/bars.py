@@ -47,8 +47,8 @@ class BarEvents(FaceEdgeMixinEvents):
 
 
 class Bars(
-    MultiFaceEdgeMixin[BarProtocol, _Face, _Edge],
     DataBoundLayer[BarProtocol, XYData],
+    MultiFaceEdgeMixin[_Face, _Edge],
 ):
     """
     Layer that represents vertical/hosizontal bars.
@@ -75,16 +75,17 @@ class Bars(
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
+        MultiFaceEdgeMixin.__init__(self)
         ori = Orientation.parse(orient)
         xxyy, xhint, yhint = _norm_bar_inputs(x, height, bottom, ori, bar_width)
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._bar_width = bar_width
         self._orient = ori
-        self.face.update(color=color, alpha=alpha, pattern=pattern)
+        self.face.update(color=color, alpha=alpha, pattern=hatch)
         self._x_hint, self._y_hint = xhint, yhint
         self._bar_type = "bars"
 
@@ -112,7 +113,7 @@ class Bars(
             bar_width = edges[1] - edges[0]
         self = Bars(
             centers, counts, bar_width=bar_width, name=name, color=color, alpha=alpha,
-            orient=orient, pattern=pattern, backend=backend,
+            orient=orient, hatch=pattern, backend=backend,
         )  # fmt: skip
         if density:
             self._bar_type = "histogram-density"

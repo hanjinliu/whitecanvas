@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Iterator, Sequence
+from typing import TYPE_CHECKING, Any, Iterator, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -25,8 +25,10 @@ class MarkerCollection(LayerContainer):
         self._extent = extent
         self._orient = Orientation.parse(orient)
 
-    def nth(self, n: int) -> Markers:
+    def __getitem__(self, n: int) -> Markers:
         """The n-th markers layer."""
+        if not hasattr(n, "__index__"):
+            raise TypeError(f"Index must be an integer, not {type(n)}")
         return self._children[n]
 
     def with_edge(
@@ -52,20 +54,15 @@ class MarkerCollection(LayerContainer):
         orient: str | Orientation = Orientation.VERTICAL,
         extent: float = 0.3,
         seed: int | None = 0,
-        symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 10,
-        color: ColorType | Sequence[ColorType] = "blue",
-        alpha: float = 1.0,
-        pattern: FacePattern | list[FacePattern] = FacePattern.SOLID,
+        marker_args: list[dict[str, Any]] = {},
         backend: str | Backend | None = None,
     ):
         x, data = check_array_input(x, data)
         rng = np.random.default_rng(seed)
         ori = Orientation.parse(orient)
         layers: list[Markers] = []
-        color = as_color_array(color, len(x))
-        hatch = as_any_1d_array(pattern, len(x))
-        for ith, (x0, values, c, h) in enumerate(zip(x, data, color, hatch)):
+
+        for ith, (x0, values, arg) in enumerate(zip(x, data, marker_args)):
             offsets = rng.uniform(-extent / 2, extent / 2, size=len(values))
             if ori.is_vertical:
                 _x = np.full_like(values, x0) + offsets
@@ -73,10 +70,11 @@ class MarkerCollection(LayerContainer):
             else:
                 _x = values
                 _y = np.full_like(values, x0) + offsets
-            markers = Markers(
-                _x, _y, name=f"markers_{ith}", symbol=symbol, size=size, color=c,
-                alpha=alpha, pattern=h, backend=backend
-            )  # fmt: skip
+            if suffix := arg.pop("suffix", None):
+                name = f"{name}_{suffix}"
+            else:
+                name = f"{name}_{ith}"
+            markers = Markers.maybe_multi(_x, _y, name=name, **arg, backend=backend)
             layers.append(markers)
 
         return cls(layers, name=name, extent=extent, orient=ori)
@@ -95,7 +93,7 @@ class MarkerCollection(LayerContainer):
         sort: bool = False,
         color: ColorType | Sequence[ColorType] = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | FacePattern = FacePattern.SOLID,
         backend: str | Backend | None = None,
     ):
         x, data = check_array_input(x, data)
@@ -133,17 +131,10 @@ class MarkerCollection(LayerContainer):
                 _y = np.full_like(values, x0) + offsets
             if not sort:
                 ...
-            markers = Markers(
-                _x,
-                _y,
-                name=f"markers_{ith}",
-                symbol=symbol,
-                size=size,
-                color=color,
-                alpha=alpha,
-                pattern=pattern,
-                backend=backend,
-            )
+            markers = Markers.maybe_multi(
+                _x, _y, name=f"markers_{ith}", symbol=symbol, size=size,
+                color=color, alpha=alpha, hatch=hatch, backend=backend,
+            )  # fmt: skip
             layers.append(markers)
         return cls(layers, name=name, extent=extent, orient=ori)
 

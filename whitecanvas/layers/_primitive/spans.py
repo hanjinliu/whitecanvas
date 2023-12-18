@@ -26,8 +26,8 @@ _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 
 
 class Spans(
-    MultiFaceEdgeMixin[BarProtocol, _Face, _Edge],
     DataBoundLayer[BarProtocol, NDArray[np.number]],
+    MultiFaceEdgeMixin[_Face, _Edge],
     Generic[_Face, _Edge],
 ):
     """
@@ -54,6 +54,7 @@ class Spans(
         pattern: str | FacePattern = FacePattern.SOLID,
         backend: Backend | str | None = None,
     ):
+        MultiFaceEdgeMixin.__init__(self)
         _spans = self._norm_layer_data(spans)
         ori = Orientation.parse(orient)
         nspans = _spans.shape[0]

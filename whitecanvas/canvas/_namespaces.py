@@ -171,7 +171,7 @@ class _TicksNamespace(_TextBoundNamespace):
         _pos = list(pos)
         # test sorted
         if len(_pos) > 0 and np.any(np.diff(_pos) <= 0):
-            raise ValueError("pos must be strictly increasing.")
+            raise ValueError(f"pos must be strictly increasing, got {pos}.")
         if labels is not None:
             _labels = [str(l) for l in labels]
         else:

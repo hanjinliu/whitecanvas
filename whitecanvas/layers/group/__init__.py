@@ -2,8 +2,9 @@ from .line_markers import Plot
 from .line_band import LineBand
 from .labeled import LabeledLine, LabeledMarkers, LabeledBars, LabeledPlot
 from .textinfo import BracketText, Panel
-from .violinplot import ViolinPlot
+from .band_collection import ViolinPlot
 from .marker_collection import MarkerCollection
+from .line_collection import LineCollection
 from .boxplot import BoxPlot
 from .graph import Graph
 from .stemplot import StemPlot
@@ -20,6 +21,7 @@ __all__ = [
     "LabeledPlot",
     "ViolinPlot",
     "MarkerCollection",
+    "LineCollection",
     "BoxPlot",
     "Graph",
     "StemPlot",

@@ -227,7 +227,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
 
         markers = Markers(
             *self.data, symbol=symbol, size=size, color=color, alpha=alpha,
-            pattern=pattern, backend=self._backend_name,
+            hatch=pattern, backend=self._backend_name,
         )  # fmt: skip
         return Plot(self, markers, name=self.name)
 

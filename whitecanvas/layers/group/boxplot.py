@@ -67,11 +67,11 @@ class BoxPlot(LayerContainer):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        box_width: float = 0.3,
+        extent: float = 0.3,
         capsize: float = 0.15,
         color: ColorType | list[ColorType] = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | FacePattern = FacePattern.SOLID,
         backend: str | Backend | None = None,
     ):
         x, data = check_array_input(x, data)
@@ -83,16 +83,16 @@ class BoxPlot(LayerContainer):
         agg_arr = np.stack(agg_values, axis=1)
         box = Bars(
             x, agg_arr[3] - agg_arr[1], agg_arr[1], name=name, orient=ori,
-            bar_width=box_width, backend=backend,
+            bar_width=extent, backend=backend,
         ).with_face_multi(
-            pattern=pattern, color=color, alpha=alpha,
+            pattern=hatch, color=color, alpha=alpha,
         ).with_edge(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], capsize
             )
             medsegs = [
-                [(x0 - box_width / 2, y0), (x0 + box_width / 2, y0)]
+                [(x0 - extent / 2, y0), (x0 + extent / 2, y0)]
                 for x0, y0 in zip(x, agg_arr[2])
             ]
         else:
@@ -100,7 +100,7 @@ class BoxPlot(LayerContainer):
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], capsize
             )
             medsegs = [
-                [(x0, y0 - box_width / 2), (x0, y0 + box_width / 2)]
+                [(x0, y0 - extent / 2), (x0, y0 + extent / 2)]
                 for x0, y0 in zip(x, agg_arr[2])
             ]
         whiskers = MultiLine(

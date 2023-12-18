@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Iterator
 
 from cmap import Color, Colormap
 
@@ -25,9 +26,13 @@ class ColorPalette:
         self._pos: list[float] = pos
         self._n_generated = 0
 
+    @property
+    def ncolors(self) -> int:
+        return len(self._pos)
+
     def next(self, update: bool = True) -> Color:
         """Generate the next color."""
-        pos = self._pos[self._n_generated % len(self._pos)]
+        pos = self._pos[self._n_generated % self.ncolors]
         if update:
             self._n_generated += 1
         return self._cmap(pos)
@@ -47,3 +52,6 @@ class ColorPalette:
     def copy(self) -> ColorPalette:
         """Make a copy of the palette."""
         return ColorPalette(self._cmap)
+
+    def __iter__(self) -> Iterator[Color]:
+        yield from iter(self.nextn(self.ncolors, update=False))

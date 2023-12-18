@@ -18,7 +18,7 @@ from whitecanvas.types import (
     Symbol,
     ColorType,
     ColormapType,
-    FacePattern,
+    Hatch,
     Orientation,
 )
 from whitecanvas.canvas._palette import ColorPalette

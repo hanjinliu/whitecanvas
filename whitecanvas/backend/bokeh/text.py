@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Alignment, FacePattern, LineStyle
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
 
 import bokeh.models as bk_models
@@ -142,13 +142,13 @@ class Texts(BokehLayer[bk_models.Text]):
         color = as_color_array(color, len(self._data.data["text"]))
         self._data.data["background_fill_color"] = [hex_color(c) for c in color]
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_pattern(self) -> list[Hatch]:
         return [
             from_bokeh_hatch(h) for h in self._data.data["background_hatch_pattern"]
         ]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
-        if isinstance(pattern, FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+        if isinstance(pattern, Hatch):
             pattern = [pattern] * len(self._data.data["text"])
         self._data.data["background_hatch_pattern"] = [
             to_bokeh_hatch(p) for p in pattern

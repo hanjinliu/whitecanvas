@@ -2,7 +2,7 @@ from ._alias import ColorType, ColormapType, ArrayLike1D, _Void
 from ._enums import (
     LineStyle,
     Symbol,
-    FacePattern,
+    Hatch,
     Modifier,
     MouseButton,
     MouseEventType,
@@ -19,7 +19,7 @@ __all__ = [
     "ArrayLike1D",
     "LineStyle",
     "Symbol",
-    "FacePattern",
+    "Hatch",
     "Orientation",
     "Origin",
     "Modifier",

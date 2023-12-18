@@ -6,7 +6,7 @@ from cmap import Color
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import FacePattern
+from whitecanvas.types import Hatch
 from ._plans import OffsetPlan, ColorPlan, HatchPlan
 from ._utils import unique, unique_product
 
@@ -111,7 +111,7 @@ class GroupBy(Mapping[tuple[str, ...], dict[str, NDArray[np.number]]]):
     def get_colors(self, plan: ColorPlan) -> list[Color]:
         return plan.generate(self._labels, self._by)
 
-    def get_hatches(self, plan: HatchPlan) -> list[FacePattern]:
+    def get_hatches(self, plan: HatchPlan) -> list[Hatch]:
         return plan.generate(self._labels, self._by)
 
 

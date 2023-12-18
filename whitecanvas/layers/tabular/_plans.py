@@ -6,7 +6,7 @@ import itertools
 from cmap import Color
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.types import FacePattern, LineStyle, Symbol
+from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.canvas._palette import ColorPalette
 from ._utils import unique, unique_product
 
@@ -158,7 +158,7 @@ class OffsetPlan(CategoricalPlan[float]):
                 last_row = row
                 x = 0
             else:
-                i = np.where(row != last_row)[0][0]
+                i = int(np.where(row != last_row)[0][0])
                 x0 = last_x[i]
                 x = x0 + self._offsets[i].get(intervals[i])
                 last_x[i:] = x
@@ -228,9 +228,9 @@ class CyclicPlan(CategoricalPlan[_V]):
         return cls((), cls._default_values())
 
     def update(self, *by: str, values: list[Any] | None = None) -> Self:
-        """Add more offsets."""
-        _by = self._by + tuple(b for b in by if b not in self._by)
+        """Return an updated plan."""
         cls = type(self)
+        _by = tuple(by)
         if values is None:
             values = self.values
         else:
@@ -394,23 +394,23 @@ class StylePlan(CyclicPlan[LineStyle]):
         return ColorPlan(self._by, choices)
 
 
-class HatchPlan(CyclicPlan[FacePattern]):
+class HatchPlan(CyclicPlan[Hatch]):
     @classmethod
-    def _default_values(cls) -> list[FacePattern]:
+    def _default_values(cls) -> list[Hatch]:
         return [
-            FacePattern.SOLID,
-            FacePattern.DIAGONAL_BACK,
-            FacePattern.HORIZONTAL,
-            FacePattern.CROSS,
-            FacePattern.VERTICAL,
-            FacePattern.DIAGONAL_CROSS,
-            FacePattern.DOTS,
-            FacePattern.DIAGONAL_FORWARD,
+            Hatch.SOLID,
+            Hatch.DIAGONAL_BACK,
+            Hatch.HORIZONTAL,
+            Hatch.CROSS,
+            Hatch.VERTICAL,
+            Hatch.DIAGONAL_CROSS,
+            Hatch.DOTS,
+            Hatch.DIAGONAL_FORWARD,
         ]
 
     @classmethod
-    def _norm_value(cls, v: Any) -> FacePattern:
-        return FacePattern(v)
+    def _norm_value(cls, v: Any) -> Hatch:
+        return Hatch(v)
 
 
 class SymbolPlan(CyclicPlan[Symbol]):

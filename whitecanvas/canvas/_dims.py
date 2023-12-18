@@ -6,7 +6,7 @@ import weakref
 from psygnal import Signal, SignalGroup
 from whitecanvas.types import (
     LineStyle,
-    FacePattern,
+    Hatch,
     ColorType,
     Orientation,
     ColormapType,
@@ -197,7 +197,7 @@ class Dims:
         name: str | None = None,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ):
         return InAxes(self).add_band(
             xdata,
@@ -206,7 +206,7 @@ class Dims:
             name=name,
             color=color,
             alpha=alpha,
-            pattern=pattern,
+            hatch=hatch,
         )
 
     def add_errorbars(
@@ -343,7 +343,7 @@ class InAxes:
         name: str | None = None,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _ndl.XYYLayerStack:
         """
         Add multi-dimensional band layer.
@@ -366,7 +366,7 @@ class InAxes:
         name = canvas._coerce_name(_l.Band, name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYYLayerStack.from_layer_class(
-            _l.Band, xdata, ylow, yhigh, name=name, color=color, pattern=pattern,
+            _l.Band, xdata, ylow, yhigh, name=name, color=color, hatch=hatch,
             alpha=alpha, backend=canvas._get_backend(),
         )  # fmt: skip
         return self._add_layer(stack)

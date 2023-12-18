@@ -15,7 +15,7 @@ from whitecanvas.layers._mixin import (
     MultiFace,
     MultiEdge,
 )
-from whitecanvas.types import ColorType, FacePattern, Orientation, LineStyle, Rect
+from whitecanvas.types import ColorType, Hatch, Orientation, LineStyle, Rect
 from whitecanvas.backend import Backend
 
 if TYPE_CHECKING:
@@ -51,7 +51,7 @@ class Spans(
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
         MultiFaceEdgeMixin.__init__(self)
@@ -69,7 +69,7 @@ class Spans(
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._orient = ori
-        self.face.update(color=color, alpha=alpha, pattern=pattern)
+        self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xhint, yhint
         self._low_lim = -1e10
         self._high_lim = 1e10
@@ -147,18 +147,18 @@ class Spans(
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Spans[ConstFace, _Edge]:
-        return super().with_face(color, pattern, alpha)
+        return super().with_face(color, hatch, alpha)
 
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Spans[MultiFace, _Edge]:
-        return super().with_face_multi(color, pattern, alpha)
+        return super().with_face_multi(color, hatch, alpha)
 
     def with_edge(
         self,

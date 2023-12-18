@@ -1,4 +1,5 @@
 from __future__ import annotations
+import warnings
 import weakref
 from typing import TYPE_CHECKING
 
@@ -13,7 +14,7 @@ import matplotlib.transforms as mtransforms
 from psygnal import throttled
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, FacePattern, LineStyle
+from whitecanvas.types import Symbol, Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
 
 if TYPE_CHECKING:
@@ -78,13 +79,17 @@ class Markers(PathCollection, MplLayer):
         color = as_color_array(color, len(self.get_offsets()))
         self.set_facecolor(color)
 
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return [FacePattern(self.get_hatch() or "")] * len(self.get_offsets())
+    def _plt_get_face_pattern(self) -> Hatch:
+        return [Hatch(self.get_hatch() or "")] * len(self.get_offsets())
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
-        if not isinstance(pattern, FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+        if not isinstance(pattern, Hatch):
+            warnings.warn(
+                "matplotlib markers do not support multiple hatch patterns.",
+                UserWarning,
+            )
             pattern = pattern[0]
-        if pattern is FacePattern.SOLID:
+        if pattern is Hatch.SOLID:
             ptn = None
         else:
             ptn = pattern.value

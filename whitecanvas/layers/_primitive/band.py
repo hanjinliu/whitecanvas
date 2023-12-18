@@ -8,7 +8,7 @@ from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
-from whitecanvas.types import FacePattern, ColorType, Orientation, XYYData, ArrayLike1D
+from whitecanvas.types import Hatch, ColorType, Orientation, XYYData, ArrayLike1D
 from whitecanvas.utils.normalize import as_array_1d
 
 
@@ -23,7 +23,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
         FaceEdgeMixin.__init__(self)
@@ -39,7 +39,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         super().__init__(name=name if name is not None else "Band")
         self._backend = self._create_backend(Backend(backend), x, y0, y1, ori)
         self._orient = ori
-        self.face.update(color=color, alpha=alpha, pattern=pattern)
+        self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xyy_size_hint(x, y0, y1, ori)
         self._band_type = "band"
 
@@ -98,7 +98,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         band_width: float | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         orient: str | Orientation = Orientation.VERTICAL,
         backend: Backend | str | None = None,
     ):
@@ -114,7 +114,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         y0 = np.full_like(y1, bottom)
         self = cls(
             x, y0, y1, name=name, orient=orient, color=color, alpha=alpha,
-            pattern=pattern, backend=backend,
+            hatch=hatch, backend=backend,
         )  # fmt: skip
         self._band_type = "kde"
         return self

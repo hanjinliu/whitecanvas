@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 
 from vispy.scene import visuals
 
-from whitecanvas.types import Alignment, FacePattern, LineStyle
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.utils.normalize import as_color_array
 

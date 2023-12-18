@@ -23,7 +23,7 @@ from whitecanvas.types import (
     Symbol,
     ColorType,
     ColormapType,
-    FacePattern,
+    Hatch,
     Orientation,
 )
 from whitecanvas.canvas._palette import ColorPalette
@@ -327,7 +327,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         symbol: str | Symbol = Symbol.CIRCLE,
         size: float = 10,
         sort: bool = False,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        pattern: str | Hatch = Hatch.SOLID,
     ) -> _lg.MarkerCollection:
         canvas = self._canvas()
         name = canvas._coerce_name("swarmplot", name)
@@ -350,7 +350,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         capsize: float = 0.15,
         color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        pattern: str | Hatch = Hatch.SOLID,
     ) -> _lg.BoxPlot:
         canvas = self._canvas()
         name = canvas._coerce_name("boxplot", name)
@@ -374,7 +374,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         band_width: float | str = "scott",
         color: ColorType | Sequence[ColorType] | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        pattern: str | Hatch = Hatch.SOLID,
     ) -> _lg.ViolinPlot:
         canvas = self._canvas()
         name = canvas._coerce_name("violinplot", name)
@@ -395,7 +395,7 @@ class CategorizedDataPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         extent: float = 0.8,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        pattern: str | Hatch = Hatch.SOLID,
     ) -> _l.Bars:
         canvas = self._canvas()
         name = canvas._coerce_name("count", name)
@@ -561,7 +561,7 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         alpha=1.0,
         size=10,
         symbol=Symbol.CIRCLE,
-        pattern=FacePattern.SOLID,
+        pattern=Hatch.SOLID,
     ) -> _l.Markers:
         canvas = self._canvas()
         name = canvas._coerce_name("markers", name)
@@ -586,7 +586,7 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
         extent=0.8,
         color=None,
         alpha=1.0,
-        pattern=FacePattern.SOLID,
+        pattern=Hatch.SOLID,
     ) -> _l.Bars:
         canvas = self._canvas()
         name = canvas._coerce_name(_l.Bars, name)
@@ -597,7 +597,7 @@ class CategorizedAggDataPlotter(CategorizedStruct[_C, "Aggregator[Any]"]):
             self._generate_x(), data, name=name, orient=self._orient,
             bar_width=extent, backend=self._get_backend()
         ).with_face_multi(
-            color=color, alpha=alpha, pattern=pattern
+            color=color, alpha=alpha, hatch=pattern
         )  # fmt: skip
         return canvas.add_layer(layer)
 
@@ -671,7 +671,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         alpha: float = 1.0,
         symbol: str | Symbol = Symbol.CIRCLE,
         size: float = 10,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        pattern: str | Hatch = Hatch.SOLID,
     ) -> list[_l.Markers]:
         canvas = self._canvas()
         name = canvas._coerce_name("markers", name)
@@ -729,7 +729,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
         range: tuple[float, float] | None = None,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        pattern: str | Hatch = Hatch.SOLID,
     ) -> list[_l.Bars]:
         canvas = self._canvas()
         name = canvas._coerce_name("histogram", name)
@@ -751,7 +751,7 @@ class ColorizedPlotter(CategorizedStruct[_C, NDArray[np.number]]):
                 orient=self._orient,
                 color=c,
                 alpha=alpha,
-                pattern=pattern,
+                hatch=pattern,
                 backend=self._get_backend(),
             )
             layers.append(layer)

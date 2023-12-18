@@ -27,7 +27,7 @@ from whitecanvas.types import (
     ColorType,
     Alignment,
     ColormapType,
-    FacePattern,
+    Hatch,
     Orientation,
     ArrayLike1D,
     Rect,
@@ -449,7 +449,7 @@ class CanvasBase(ABC):
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
 
@@ -458,7 +458,7 @@ class CanvasBase(ABC):
         self, ydata: ArrayLike1D, *,
         name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
 
@@ -470,7 +470,7 @@ class CanvasBase(ABC):
         size=12,
         color=None,
         alpha=1.0,
-        pattern=FacePattern.SOLID,
+        hatch=Hatch.SOLID,
     ):
         """
         Add markers (scatter plot).
@@ -490,7 +490,7 @@ class CanvasBase(ABC):
             Color of the marker faces.
         alpha : float, default is 1.0
             Alpha channel of the marker faces.
-        pattern : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default is FacePattern.SOLID
             Pattern of the marker faces.
 
         Returns
@@ -503,7 +503,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, color=color,
-            alpha=alpha, hatch=pattern, backend=self._get_backend(),
+            alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -512,7 +512,7 @@ class CanvasBase(ABC):
         self, center: ArrayLike1D, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
         name=None, orient: str | Orientation = Orientation.VERTICAL,
         extent: float = 0.8, color: ColorType | None = None,
-        alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
+        alpha: float = 1.0, hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
@@ -521,7 +521,7 @@ class CanvasBase(ABC):
         self, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
         name=None, orient: str | Orientation = Orientation.VERTICAL,
         extent: float = 0.8, color: ColorType | None = None,
-        alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
+        alpha: float = 1.0, hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
@@ -534,7 +534,7 @@ class CanvasBase(ABC):
         extent=0.8,
         color=None,
         alpha=1.0,
-        pattern=FacePattern.SOLID,
+        hatch=Hatch.SOLID,
     ):
         """
         Add a bar plot.
@@ -557,7 +557,7 @@ class CanvasBase(ABC):
             Color of the bars.
         alpha : float, default is 1.0
             Alpha channel of the bars.
-        pattern : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default is FacePattern.SOLID
             Pattern of the bar faces.
 
         Returns
@@ -574,7 +574,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Bars(
             center, height, bottom, bar_width=extent, name=name, orient=orient,
-            color=color, alpha=alpha, hatch=pattern, backend=self._get_backend(),
+            color=color, alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -589,7 +589,7 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Bars:
         """
         Add data as a histogram.
@@ -618,7 +618,7 @@ class CanvasBase(ABC):
             Color of the bars.
         alpha : float, default is 1.0
             Alpha channel of the bars.
-        pattern : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default is FacePattern.SOLID
             Pattern of the bar faces.
 
         Returns
@@ -630,7 +630,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Bars.from_histogram(
             data, bins=bins, range=range, density=density, name=name, color=color,
-            orient=orient, alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            orient=orient, alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -642,7 +642,7 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType = "blue",
         alpha: float = 0.4,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Spans:
         """
         Add spans that extends infinitely.
@@ -667,7 +667,7 @@ class CanvasBase(ABC):
             Color of the bars.
         alpha : float, default is 0.4
             Alpha channel of the bars.
-        pattern : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default is FacePattern.SOLID
             Pattern of the bar faces.
 
         Returns
@@ -679,7 +679,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Spans(
             spans, name=name, orient=orient, color=color, alpha=alpha,
-            pattern=pattern, backend=self._get_backend(),
+            hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -796,7 +796,7 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Band:
         """
         Add a band (fill-between) layer to the canvas.
@@ -817,9 +817,9 @@ class CanvasBase(ABC):
         color : color-like, default is None
             Color of the band face.,
         alpha : float, default is 1.0
-            Alpha channel of the band face.,
-        pattern : str, FacePattern, default is FacePattern.SOLID
-            Fill pattern of the band face.,
+            Alpha channel of the band face.
+        hatch : str, FacePattern, default is FacePattern.SOLID
+            Hatch of the band face.
 
         Returns
         -------
@@ -830,7 +830,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Band(
             xdata, ylow, yhigh, name=name, orient=orient, color=color,
-            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -962,7 +962,7 @@ class CanvasBase(ABC):
         band_width: float | Literal["scott", "silverman"] = "scott",
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Band:
         """
         Add data as a band layer representing kernel density estimation (KDE).
@@ -984,8 +984,8 @@ class CanvasBase(ABC):
             Color of the band face.,
         alpha : float, default is 1.0
             Alpha channel of the band face.
-        pattern : str, FacePattern, default is FacePattern.SOLID
-            Fill pattern of the band face.
+        hatch : str, FacePattern, default is FacePattern.SOLID
+            Hatch of the band face.
 
         Returns
         -------
@@ -1003,7 +1003,7 @@ class CanvasBase(ABC):
             orient=orient,
             color=color,
             alpha=alpha,
-            pattern=pattern,
+            hatch=hatch,
             backend=self._get_backend(),
         )
         return self.add_layer(layer)

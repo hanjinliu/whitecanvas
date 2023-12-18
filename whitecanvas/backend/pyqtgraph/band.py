@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from qtpy import QtGui
 import pyqtgraph as pg
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import LineStyle, FacePattern, Orientation
+from whitecanvas.types import LineStyle, Hatch, Orientation
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from ._qt_utils import (
     array_to_qcolor,
@@ -66,10 +66,10 @@ class Band(pg.FillBetweenItem, PyQtLayer):
         brush.setColor(array_to_qcolor(color))
         self.setBrush(brush)
 
-    def _plt_get_face_pattern(self) -> FacePattern:
+    def _plt_get_face_pattern(self) -> Hatch:
         return from_qt_brush_style(self._get_brush().style())
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch):
         brush = self._get_brush()
         brush.setStyle(to_qt_brush_style(pattern))
         self.setBrush(brush)

@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from qtpy import QtGui
 import pyqtgraph as pg
 
-from whitecanvas.types import Alignment, FacePattern, LineStyle
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from whitecanvas.utils.normalize import as_color_array
@@ -117,11 +117,11 @@ class Texts(pg.ItemGroup, PyQtLayer):
             brush.setColor(array_to_qcolor(color0))
             t.fill = brush
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_pattern(self) -> list[Hatch]:
         return [from_qt_brush_style(s._get_brush().style()) for s in self.childItems()]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
-        if isinstance(pattern, FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+        if isinstance(pattern, Hatch):
             pattern = [pattern] * self._plt_get_ndata()
         for t, pattern0 in zip(self.childItems(), pattern):
             brush = t._get_brush()

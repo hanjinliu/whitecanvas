@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import ColorType, FacePattern, LineStyle, Orientation
+from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation
 from whitecanvas.layers._primitive import Bars, MultiLine
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -71,7 +71,7 @@ class BoxPlot(LayerContainer):
         capsize: float = 0.15,
         color: ColorType | list[ColorType] = "blue",
         alpha: float = 1.0,
-        hatch: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: str | Backend | None = None,
     ):
         x, data = check_array_input(x, data)
@@ -85,7 +85,7 @@ class BoxPlot(LayerContainer):
             x, agg_arr[3] - agg_arr[1], agg_arr[1], name=name, orient=ori,
             bar_width=extent, backend=backend,
         ).with_face_multi(
-            pattern=hatch, color=color, alpha=alpha,
+            hatch=hatch, color=color, alpha=alpha,
         ).with_edge(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(
@@ -122,10 +122,10 @@ class BoxPlot(LayerContainer):
         self,
         color: ColorType | list[ColorType],
         alpha: float | list[float] = 1.0,
-        pattern: str | FacePattern | list[FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | list[Hatch] = Hatch.SOLID,
     ) -> BoxPlot:
         """Add face to the strip plot."""
-        self.boxes.with_face(color=color, alpha=alpha, pattern=pattern)
+        self.boxes.with_face(color=color, alpha=alpha, hatch=hatch)
         return self
 
     def with_edge(

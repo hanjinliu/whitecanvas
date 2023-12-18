@@ -20,7 +20,7 @@ from whitecanvas.types import (
     LineStyle,
     Symbol,
     ColorType,
-    FacePattern,
+    Hatch,
     _Void,
     Alignment,
     Orientation,
@@ -41,6 +41,7 @@ _void = _Void()
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 _Size = TypeVar("_Size", float, NDArray[np.floating])
+_Symbol = TypeVar("_Symbol", Symbol, "list[Symbol]")
 
 
 class MarkersLayerEvents(FaceEdgeMixinEvents):
@@ -72,14 +73,14 @@ class Markers(
         size: float = 12.0,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        hatch: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
         MultiFaceEdgeMixin.__init__(self)
         xdata, ydata = normalize_xy(xdata, ydata)
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.update(symbol=symbol, size=size, color=color, pattern=hatch, alpha=alpha)
+        self.update(symbol=symbol, size=size, color=color, hatch=hatch, alpha=alpha)
         self._size_is_array = False
         self.edge.color = color
         if self.symbol.has_face():
@@ -110,7 +111,7 @@ class Markers(
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] | None = None,
         style: str | LineStyle | Sequence[str | LineStyle] | None = None,
-        hatch: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1.0,
         backend: Backend | str | None = None,
     ) -> Markers[ConstFace | MultiFace, ConstEdge | MultiEdge, NDArray[np.float32]]:
@@ -226,7 +227,7 @@ class Markers(
         size: float | _Void = _void,
         color: ColorType | _Void = _void,
         alpha: float | _Void = _void,
-        pattern: str | FacePattern | _Void = _void,
+        hatch: str | Hatch | _Void = _void,
     ) -> Markers[_Face, _Edge, _Size]:
         """Update the properties of the markers."""
         if symbol is not _void:
@@ -235,8 +236,8 @@ class Markers(
             self.size = size
         if color is not _void:
             self.face.color = color
-        if pattern is not _void:
-            self.face.pattern = pattern
+        if hatch is not _void:
+            self.face.hatch = hatch
         if alpha is not _void:
             self.face.alpha = alpha
         return self
@@ -544,8 +545,9 @@ class Markers(
 
     def with_face(
         self,
+        *,
         color: ColorType | None = None,
-        hatch: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1.0,
     ) -> Markers[ConstFace, _Edge, _Size]:
         """
@@ -567,8 +569,8 @@ class Markers(
         ----------
         color : color-like, optional
             Color of the marker faces.
-        pattern : str or FacePattern, optional
-            Pattern (hatch) of the faces.
+        hatch : str or FacePattern, optional
+            Hatch pattern of the faces.
         alpha : float, optional
             Alpha channel of the faces.
 
@@ -588,8 +590,9 @@ class Markers(
 
     def with_face_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
-        hatch: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Markers[MultiFace, _Edge, _Size]:
         """
@@ -604,7 +607,7 @@ class Markers(
         ----------
         color : color-like or sequence of color-like, optional
             Color(s) of the marker faces.
-        pattern : str or FacePattern or sequence of it, optional
+        hatch : str or Hatch or sequence of it, optional
             Pattern(s) of the faces.
         alpha : float or sequence of float, optional
             Alpha channel(s) of the faces.
@@ -625,6 +628,7 @@ class Markers(
 
     def with_edge(
         self,
+        *,
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -634,6 +638,7 @@ class Markers(
 
     def with_edge_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1.0,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,

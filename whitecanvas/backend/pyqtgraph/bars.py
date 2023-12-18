@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 from qtpy import QtGui
 import pyqtgraph as pg
 from whitecanvas.protocols import BarProtocol, check_protocol
-from whitecanvas.types import LineStyle, FacePattern
+from whitecanvas.types import LineStyle, Hatch
 from whitecanvas.utils.normalize import as_color_array
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from ._qt_utils import (
@@ -54,12 +54,12 @@ class Bars(pg.BarGraphItem, PyQtLayer):
             brush.setColor(array_to_qcolor(c))
         self.setOpts(brushes=brushes)
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_pattern(self) -> list[Hatch]:
         return [from_qt_brush_style(brush.style()) for brush in self._get_brushes()]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
         brushes = self._get_brushes()
-        if isinstance(pattern, FacePattern):
+        if isinstance(pattern, Hatch):
             ptn = to_qt_brush_style(pattern)
             for brush in brushes:
                 brush.setStyle(ptn)

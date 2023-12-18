@@ -2,7 +2,7 @@ from typing import Any, Callable, Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 from cmap import Colormap
-from whitecanvas.types import LineStyle, Symbol, FacePattern, Orientation, Alignment
+from whitecanvas.types import LineStyle, Symbol, Hatch, Orientation, Alignment
 
 Array1D = NDArray[np.number]
 
@@ -76,10 +76,10 @@ class HasFaces(Protocol):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         """Set the face color."""
 
-    def _plt_get_face_pattern(self) -> FacePattern:
+    def _plt_get_face_pattern(self) -> Hatch:
         """Return the face pattern."""
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch):
         """Set the face pattern."""
 
 
@@ -91,10 +91,10 @@ class HasMultiFaces(Protocol):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         """Set the face color."""
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_pattern(self) -> list[Hatch]:
         """Return the face pattern."""
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
         """Set the face pattern."""
 
 

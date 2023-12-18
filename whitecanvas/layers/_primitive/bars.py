@@ -21,7 +21,7 @@ from whitecanvas.layers._mixin import (
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.backend import Backend
 from whitecanvas.types import (
-    FacePattern,
+    Hatch,
     ColorType,
     _Void,
     Alignment,
@@ -75,7 +75,7 @@ class Bars(
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        hatch: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
         MultiFaceEdgeMixin.__init__(self)
@@ -85,7 +85,7 @@ class Bars(
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._bar_width = bar_width
         self._orient = ori
-        self.face.update(color=color, alpha=alpha, pattern=hatch)
+        self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xhint, yhint
         self._bar_type = "bars"
 
@@ -102,7 +102,7 @@ class Bars(
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
         """Construct a bar plot from a histogram."""
@@ -113,7 +113,7 @@ class Bars(
             bar_width = edges[1] - edges[0]
         self = Bars(
             centers, counts, bar_width=bar_width, name=name, color=color, alpha=alpha,
-            orient=orient, hatch=pattern, backend=backend,
+            orient=orient, hatch=hatch, backend=backend,
         )  # fmt: skip
         if density:
             self._bar_type = "histogram-density"
@@ -376,18 +376,18 @@ class Bars(
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Bars[ConstFace, _Edge]:
-        return super().with_face(color, pattern, alpha)
+        return super().with_face(color, hatch, alpha)
 
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Bars[MultiFace, _Edge]:
-        return super().with_face_multi(color, pattern, alpha)
+        return super().with_face_multi(color, hatch, alpha)
 
     def with_edge(
         self,

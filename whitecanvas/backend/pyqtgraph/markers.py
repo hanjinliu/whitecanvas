@@ -6,7 +6,7 @@ import pyqtgraph as pg
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, LineStyle, FacePattern
+from whitecanvas.types import Symbol, LineStyle, Hatch
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from whitecanvas.utils.normalize import as_color_array
 from ._qt_utils import (
@@ -97,12 +97,12 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
             brush.setColor(array_to_qcolor(c))
         self.setBrush(brushes)
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_pattern(self) -> list[Hatch]:
         return [from_qt_brush_style(brush.style()) for brush in self._get_brush()]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
         brushes = self._get_brush()
-        if isinstance(pattern, FacePattern):
+        if isinstance(pattern, Hatch):
             ptn = to_qt_brush_style(pattern)
             for brush in brushes:
                 brush.setStyle(ptn)

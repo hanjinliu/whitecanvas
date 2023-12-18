@@ -42,9 +42,9 @@ def test_markers(backend: str):
     layer.face.alpha
     layer.face.color = [1.0, 0.0, 0.0, 1.0]
     assert_color_equal(layer.face.color, "red")
-    layer.face.pattern
-    layer.face.pattern = "/"
-    assert layer.face.pattern == "/"
+    layer.face.hatch
+    layer.face.hatch = "/"
+    assert layer.face.hatch == "/"
 
     layer.edge.color
     layer.edge.alpha
@@ -83,9 +83,9 @@ def test_bars(backend: str):
     layer.face.alpha
     layer.face.color = [1.0, 0.0, 0.0, 1.0]
     assert_color_equal(layer.face.color, "red")
-    layer.face.pattern
-    layer.face.pattern = "/"
-    assert layer.face.pattern == "/"
+    layer.face.hatch
+    layer.face.hatch = "/"
+    assert layer.face.hatch == "/"
 
     layer.edge.color
     layer.edge.alpha
@@ -128,9 +128,9 @@ def test_band(backend: str):
     layer.face.color
     layer.face.color = [1.0, 0.0, 0.0, 1.0]
     assert_color_equal(layer.face.color, "red")
-    layer.face.pattern
-    layer.face.pattern = "/"
-    assert layer.face.pattern == "/"
+    layer.face.hatch
+    layer.face.hatch = "/"
+    assert layer.face.hatch == "/"
 
     layer.edge.color
     layer.edge.color = [0.0, 0.0, 1.0, 1.0]
@@ -194,8 +194,8 @@ def test_texts(backend: str):
     assert layer.string == list("ABCDEFGHIJ")
     layer.face.color
     layer.face.color = "green"
-    layer.face.pattern
-    layer.face.pattern = "/"
+    layer.face.hatch
+    layer.face.hatch = "/"
     layer.face.alpha
     layer.face.alpha = 0.6
 

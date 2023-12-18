@@ -28,7 +28,7 @@ class LineStyle(_strEnum):
     DOT = ":"
 
 
-class FacePattern(_strEnum):
+class Hatch(_strEnum):
     SOLID = ""
     HORIZONTAL = "-"
     VERTICAL = "|"

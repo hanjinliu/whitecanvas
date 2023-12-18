@@ -8,7 +8,7 @@ from psygnal import Signal
 
 from whitecanvas.backend import Backend
 from whitecanvas.protocols import BaseProtocol
-from whitecanvas.types import XYYData, Orientation, LineStyle, ColorType, FacePattern
+from whitecanvas.types import XYYData, Orientation, LineStyle, ColorType, Hatch
 from whitecanvas.layers._primitive import Band
 from whitecanvas.layers._mixin import CollectionFaceEdgeMixin
 from whitecanvas.layers.group._collections import (

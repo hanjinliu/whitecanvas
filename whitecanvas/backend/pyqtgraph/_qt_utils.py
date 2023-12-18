@@ -3,7 +3,7 @@ from qtpy.QtCore import Qt
 from pyqtgraph.graphicsItems.ScatterPlotItem import Symbols
 import numpy as np
 
-from whitecanvas.types import LineStyle, Symbol, FacePattern, MouseButton, Modifier
+from whitecanvas.types import LineStyle, Symbol, Hatch, MouseButton, Modifier
 
 
 def array_to_qcolor(arr: np.ndarray) -> QtGui.QColor:
@@ -56,17 +56,17 @@ _SYMBOL = {
 _SYMBOL_INV = {v: k for k, v in _SYMBOL.items()}
 
 _PAINT_STYLE = {
-    FacePattern.SOLID: Qt.BrushStyle.SolidPattern,
-    FacePattern.HORIZONTAL: Qt.BrushStyle.HorPattern,
-    FacePattern.VERTICAL: Qt.BrushStyle.VerPattern,
-    FacePattern.CROSS: Qt.BrushStyle.CrossPattern,
-    FacePattern.DIAGONAL_BACK: Qt.BrushStyle.BDiagPattern,
-    FacePattern.DIAGONAL_FORWARD: Qt.BrushStyle.FDiagPattern,
-    FacePattern.DIAGONAL_CROSS: Qt.BrushStyle.DiagCrossPattern,
+    Hatch.SOLID: Qt.BrushStyle.SolidPattern,
+    Hatch.HORIZONTAL: Qt.BrushStyle.HorPattern,
+    Hatch.VERTICAL: Qt.BrushStyle.VerPattern,
+    Hatch.CROSS: Qt.BrushStyle.CrossPattern,
+    Hatch.DIAGONAL_BACK: Qt.BrushStyle.BDiagPattern,
+    Hatch.DIAGONAL_FORWARD: Qt.BrushStyle.FDiagPattern,
+    Hatch.DIAGONAL_CROSS: Qt.BrushStyle.DiagCrossPattern,
 }
 
 _PAINT_STYLE_INV = {v: k for k, v in _PAINT_STYLE.items()}
-_PAINT_STYLE_INV[Qt.BrushStyle.NoBrush] = FacePattern.SOLID
+_PAINT_STYLE_INV[Qt.BrushStyle.NoBrush] = Hatch.SOLID
 
 _QT_MODIFIERS_MAP = {
     Qt.KeyboardModifier.NoModifier: (),
@@ -137,10 +137,10 @@ def to_qt_symbol(symbol: Symbol) -> str:
     return _SYMBOL.get(symbol, symbol.value)
 
 
-def from_qt_brush_style(hatch: Qt.BrushStyle) -> FacePattern:
+def from_qt_brush_style(hatch: Qt.BrushStyle) -> Hatch:
     return _PAINT_STYLE_INV[hatch]
 
 
-def to_qt_brush_style(hatch: FacePattern) -> Qt.BrushStyle:
+def to_qt_brush_style(hatch: Hatch) -> Qt.BrushStyle:
     # BUG: pyqtgraph does not support setting brush style correctly
     return _PAINT_STYLE[hatch]

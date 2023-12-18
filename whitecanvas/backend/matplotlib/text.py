@@ -6,7 +6,7 @@ from matplotlib.text import Text as mplText
 from matplotlib.artist import Artist
 
 from whitecanvas.backend.matplotlib._base import MplLayer
-from whitecanvas.types import Alignment, FacePattern, LineStyle
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.utils.normalize import as_color_array
 
@@ -155,24 +155,24 @@ class Texts(Artist, MplLayer):
         for child, color0 in zip(self.get_children(), color):
             self._set_bbox_props(child, facecolor=color0)
 
-    def _plt_get_face_pattern(self) -> FacePattern:
+    def _plt_get_face_pattern(self) -> Hatch:
         out = []
         for child in self.get_children():
             patch = child.get_bbox_patch()
             if patch is None:
-                out.append(FacePattern.SOLID)
+                out.append(Hatch.SOLID)
             else:
-                out.append(FacePattern(patch.get_hatch() or ""))
+                out.append(Hatch(patch.get_hatch() or ""))
         return out
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        if isinstance(pattern, FacePattern):
-            if pattern is FacePattern.SOLID:
+    def _plt_set_face_pattern(self, pattern: Hatch):
+        if isinstance(pattern, Hatch):
+            if pattern is Hatch.SOLID:
                 ptn = [None] * len(self.get_children())
             else:
                 ptn = [pattern.value] * len(self.get_children())
         else:
-            ptn = [p.value if p is not FacePattern.SOLID else None for p in pattern]
+            ptn = [p.value if p is not Hatch.SOLID else None for p in pattern]
         for child, ptn0 in zip(self.get_children(), ptn):
             self._set_bbox_props(child, hatch=ptn0)
 

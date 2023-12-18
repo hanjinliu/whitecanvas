@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib.collections import PolyCollection
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import FacePattern, LineStyle, Orientation
+from whitecanvas.types import Hatch, LineStyle, Orientation
 
 
 @check_protocol(BandProtocol)
@@ -70,11 +70,11 @@ class Band(PolyCollection, MplLayer):
     def _plt_set_face_color(self, color):
         self.set_facecolor(color)
 
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return FacePattern(self.get_hatch() or "")
+    def _plt_get_face_pattern(self) -> Hatch:
+        return Hatch(self.get_hatch() or "")
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
-        if pattern is FacePattern.SOLID:
+    def _plt_set_face_pattern(self, pattern: Hatch):
+        if pattern is Hatch.SOLID:
             ptn = None
         else:
             ptn = pattern.value

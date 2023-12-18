@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+import itertools
 
 from typing import TypeVar
 import numpy as np
@@ -21,6 +22,8 @@ class IdentityJitter(JitterBase):
     """No jittering."""
 
     def __init__(self, by: str):
+        if not isinstance(by, str):
+            raise TypeError(f"Only str is allowed, got {type(by)}")
         self._by = by
 
     def map(self, src: DataFrameWrapper[_DF]) -> np.ndarray:
@@ -28,35 +31,41 @@ class IdentityJitter(JitterBase):
 
 
 class UniformJitter(JitterBase):
-    def __init__(self, by: str, extent: float = 0.8, seed: int | None = 0):
-        self._by = by
+    """Jitter with uniform distribution."""
+
+    def __init__(
+        self,
+        by: str | tuple[str, ...],
+        extent: float = 0.8,
+        seed: int | None = 0,
+    ):
+        self._by = _tuple(by)
         self._rng = np.random.default_rng(seed)
         self._extent = extent
 
     def map(self, src: DataFrameWrapper[_DF]) -> np.ndarray:
         w = self._extent
         jitter = self._rng.uniform(-w / 2, w / 2, size=len(src))
-        return src[self._by] + jitter
+        return _map_x([src[b] for b in self._by]) + jitter
 
 
 class SwarmJitter(JitterBase):
+    """Jitter for swarm plot."""
+
     def __init__(
         self,
-        by: str,
+        by: str | tuple[str, ...],
+        value: str,
         limits: tuple[float, float],
         extent: float = 0.8,
-        sort: bool = False,
     ):
-        self._by = by
+        self._by = _tuple(by)
+        self._value = value
         self._extent = extent
-        self._sort = sort
         self._limits = limits
 
     def map(self, src: DataFrameWrapper[_DF]) -> np.ndarray:
-        if self._sort:
-            values = np.sort(values)
-        else:
-            values = np.asarray(values)
+        values = src[self._value]
         vmin, vmax = self._limits
         nbin = 25
         dv = (vmax - vmin) / nbin
@@ -74,11 +83,24 @@ class SwarmJitter(JitterBase):
         offset_max = np.abs(offset_pre).max()
         width_default = dv * offset_max
         offsets = offset_pre / offset_max * min(self._extent / 2, width_default)
-        return src[self._by] + offsets
+        out = _map_x([src[b] for b in self._by]) + offsets
+        return out
 
 
-def _map_x(*args: np.ndarray) -> NDArray[np.floating]:
+def _tuple(x) -> tuple[str, ...]:
+    if isinstance(x, str):
+        return (x,)
+    return tuple(x)
+
+
+def _map_x(args: list[np.ndarray]) -> NDArray[np.floating]:
     by_all = tuple(str(i) for i in range(len(args)))
     plan = OffsetPlan.default().more_by(*by_all)
-    labels = [unique(a) for a in args]
-    return plan.generate(labels, by_all)
+    each_unique = [unique(a, axis=None) for a in args]
+    labels = list(itertools.product(*each_unique))
+    offsets = np.asarray(plan.generate(labels, by_all))
+    out = np.zeros_like(args[0], dtype=np.float32)
+    for i, row in enumerate(labels):
+        sl = np.all(np.column_stack([a == r for a, r in zip(args, row)]), axis=1)
+        out[sl] = offsets[i]
+    return out

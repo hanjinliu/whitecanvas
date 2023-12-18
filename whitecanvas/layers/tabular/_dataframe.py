@@ -256,7 +256,7 @@ class WrappedViolinPlot(DataFrameLayerWrapper[_lg.ViolinPlot, _DF], Generic[_DF]
         by_all = _unique_tuple(self._color_by.by, by)
         hatch_by = self._hatch_by.update(*by, values=choices)
         segs, unique_sl = self._generate_datasets(by_all)
-        self._base_layer.face.pattern = hatch_by.generate(unique_sl, by_all)
+        self._base_layer.face.hatch = hatch_by.generate(unique_sl, by_all)
         self._hatch_by = hatch_by
         return self
 
@@ -317,16 +317,9 @@ class WrappedMarkers(
         xj = _jitter.IdentityJitter(x)
         yj = _jitter.IdentityJitter(y)
         return WrappedMarkers(
-            src,
-            xj,
-            yj,
-            name=name,
-            color=color,
-            hatch=hatch,
-            symbol=symbol,
-            size=size,
-            backend=backend,
-        )
+            src, xj, yj, name=name, color=color, hatch=hatch, symbol=symbol,
+            size=size, backend=backend,
+        )  # fmt: skip
 
     @classmethod
     def build_stripplot(
@@ -351,16 +344,9 @@ class WrappedMarkers(
         if not Orientation.parse(orient).is_vertical:
             xj, yj = yj, xj
         return WrappedMarkers(
-            src,
-            xj,
-            yj,
-            name=name,
-            color=color,
-            hatch=hatch,
-            symbol=symbol,
-            size=size,
-            backend=backend,
-        )
+            src, xj, yj, name=name, color=color, hatch=hatch,
+            symbol=symbol, size=size, backend=backend,
+        )  # fmt: skip
 
     @classmethod
     def build_swarmplot(
@@ -380,22 +366,17 @@ class WrappedMarkers(
         backend: str | Backend | None = None,
     ) -> WrappedMarkers[_DF]:
         src = parse(df)
+        if sort:
+            src = src.sort(value)
         lims = src[value].min(), src[value].max()
-        xj = _jitter.SwarmJitter(label, limits=lims, extent=extent, sort=sort)
+        xj = _jitter.SwarmJitter(label, value, limits=lims, extent=extent)
         yj = _jitter.IdentityJitter(value)
         if not Orientation.parse(orient).is_vertical:
             xj, yj = yj, xj
         return WrappedMarkers(
-            src,
-            xj,
-            yj,
-            name=name,
-            color=color,
-            hatch=hatch,
-            symbol=symbol,
-            size=size,
-            backend=backend,
-        )
+            src, xj, yj, name=name, color=color, hatch=hatch,
+            symbol=symbol, size=size, backend=backend,
+        )  # fmt: skip
 
     def with_color(self, by: str | Iterable[str] | None = None, palette=None) -> Self:
         if by is None:
@@ -405,11 +386,11 @@ class WrappedMarkers(
         else:
             by = tuple(by)
         color_by = self._color_by.update(*by, values=palette)
-        self._base_layer.with_face_multi(color_by.map(self._source))
+        self._base_layer.with_face_multi(color=color_by.map(self._source))
         self._color_by = color_by
         return self
 
-    def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
+    def with_hatch(self, by: str | Iterable[str] | None = None, choices=None) -> Self:
         if by is None:
             by = self._hatch_by.by
         elif isinstance(by, str):
@@ -417,7 +398,7 @@ class WrappedMarkers(
         else:
             by = tuple(by)
         hatch_by = self._hatch_by.update(*by, values=choices)
-        self._base_layer.with_face_multi(hatch_by.map(self._source))
+        self._base_layer.with_face_multi(hatch=hatch_by.map(self._source))
         self._hatch_by = hatch_by
         return self
 

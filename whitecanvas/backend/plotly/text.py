@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Alignment, FacePattern, LineStyle
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
 from ._base import PlotlyLayer
@@ -103,10 +103,10 @@ class Texts(PlotlyLayer):
     def _plt_set_face_color(self, color):
         pass
 
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return [FacePattern.SOLID] * len(self._props["text"])
+    def _plt_get_face_pattern(self) -> Hatch:
+        return [Hatch.SOLID] * len(self._props["text"])
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch):
         pass
 
     ##### HasEdges #####

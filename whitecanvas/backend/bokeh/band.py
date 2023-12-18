@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from cmap import Color
 from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import FacePattern, LineStyle, Orientation
+from whitecanvas.types import Hatch, LineStyle, Orientation
 
 import bokeh.models as bk_models
 
@@ -67,10 +67,10 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         if self._visible:
             self._model.fill_color = self._face_color
 
-    def _plt_get_face_pattern(self) -> FacePattern:
+    def _plt_get_face_pattern(self) -> Hatch:
         return from_bokeh_hatch(self._model.hatch_pattern)
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch):
         self._model.hatch_pattern = to_bokeh_hatch(pattern)
 
     def _plt_get_edge_color(self):

@@ -18,7 +18,7 @@ from whitecanvas.types import (
     ArrayLike1D,
     _Void,
     Alignment,
-    FacePattern,
+    Hatch,
     Orientation,
     XYData,
 )
@@ -193,7 +193,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         size: float = 10,
         color: ColorType | _Void = _void,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.Plot:
         """
         Add markers at each data point.
@@ -211,8 +211,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
             Set to the line color by default.
         alpha : float, default is 1.0
             The alpha channel.
-        pattern : str or FacePattern, default is FacePattern.SOLID
-            The marker face pattern.
+        hatch : str or FacePattern, default is FacePattern.SOLID
+            The marker face hatch.
 
         Returns
         -------
@@ -227,7 +227,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
 
         markers = Markers(
             *self.data, symbol=symbol, size=size, color=color, alpha=alpha,
-            hatch=pattern, backend=self._backend_name,
+            hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return Plot(self, markers, name=self.name)
 
@@ -300,7 +300,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
@@ -312,7 +312,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         data = self.data
         band = Band(
             data.y, data.x - err, data.x + err_high, orient="horizontal",
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
@@ -323,7 +323,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
@@ -335,7 +335,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         data = self.data
         band = Band(
             data.x, data.y - err, data.y + err_high, orient=Orientation.VERTICAL,
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
@@ -345,7 +345,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
@@ -356,7 +356,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         x0 = np.full_like(data.x, bottom)
         band = Band(
             data.y, x0, data.x, orient=Orientation.HORIZONTAL,
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
@@ -366,7 +366,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
         from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
@@ -377,7 +377,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         y0 = np.full_like(data.y, bottom)
         band = Band(
             data.x, y0, data.y, orient=Orientation.VERTICAL,
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 

@@ -6,14 +6,11 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterator, TypeVar, Generic
 
 import numpy as np
-from numpy.typing import NDArray
 
-from . import _plans as _p
-from ._utils import unique, unique_product
+from ._utils import unique_product
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from whitecanvas.canvas import Canvas
     import pandas as pd
     import polars as pl
     import pyarrow as pa
@@ -67,6 +64,10 @@ class DataFrameWrapper(ABC, Generic[_T]):
         ...
 
     @abstractmethod
+    def sort(self, by: str) -> Self:
+        ...
+
+    @abstractmethod
     def filter(
         self,
         by: tuple[str, ...],
@@ -88,6 +89,11 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
 
     def select(self, columns: list[str]) -> Self:
         return DictWrapper({k: v for k, v in self._data.items() if k in columns})
+
+    def sort(self, by: str) -> Self:
+        arr = self[by]
+        indices = np.argsort(arr)
+        return DictWrapper({k: v[indices] for k, v in self._data.items()})
 
     def filter(
         self,
@@ -116,6 +122,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
 
     def select(self, columns: list[str]) -> Self:
         return PandasWrapper(self._data[columns])
+
+    def sort(self, by: str) -> Self:
+        return PandasWrapper(self._data.sort_values(by))
 
     def filter(
         self,
@@ -147,6 +156,9 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
     def select(self, columns: list[str]) -> Self:
         return PolarsWrapper(self._data.select(columns))
 
+    def sort(self, by: str) -> Self:
+        return PolarsWrapper(self._data.sort(by))
+
     def filter(
         self,
         by: tuple[str, ...],
@@ -170,6 +182,9 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
 
     def select(self, columns: list[str]) -> Self:
         return PyArrowWrapper(self._data.select(columns))
+
+    def sort(self, by: str) -> Self:
+        return PyArrowWrapper(self._data.sort_by(by))
 
     def filter(
         self,

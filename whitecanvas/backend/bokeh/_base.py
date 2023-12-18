@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 import bokeh.models as bk_models
 from whitecanvas.protocols import BaseProtocol
-from whitecanvas.types import LineStyle, Symbol, FacePattern
+from whitecanvas.types import LineStyle, Symbol, Hatch
 from whitecanvas.utils.normalize import arr_color, hex_color
 
 _M = TypeVar("_M", bound=bk_models.Model)
@@ -42,11 +42,11 @@ class HeteroLayer(BokehLayer[_M]):
             color = [hex_color(c) for c in color]
         self._data.data["face_color"] = color
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_pattern(self) -> list[Hatch]:
         return [from_bokeh_hatch(p) for p in self._data.data["pattern"]]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
-        if isinstance(pattern, FacePattern):
+    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+        if isinstance(pattern, Hatch):
             ptn = [to_bokeh_hatch(pattern)] * self._plt_get_ndata()
         else:
             ptn = [to_bokeh_hatch(p) for p in pattern]
@@ -114,11 +114,11 @@ def from_bokeh_symbol(symbol: str, angle: float) -> Symbol:
     return _SYMBOL_MAP_INV[(symbol, angle)]
 
 
-def to_bokeh_hatch(pattern: FacePattern) -> str:
+def to_bokeh_hatch(pattern: Hatch) -> str:
     return _HATCH_MAP[pattern]
 
 
-def from_bokeh_hatch(pattern: str) -> FacePattern:
+def from_bokeh_hatch(pattern: str) -> Hatch:
     return _HATCH_MAP_INV[pattern]
 
 
@@ -141,13 +141,13 @@ _SYMBOL_MAP = {
 _SYMBOL_MAP_INV = {v: k for k, v in _SYMBOL_MAP.items()}
 
 _HATCH_MAP = {
-    FacePattern.SOLID: "",
-    FacePattern.HORIZONTAL: "horizontal_line",
-    FacePattern.VERTICAL: "vertical_line",
-    FacePattern.CROSS: "cross",
-    FacePattern.DIAGONAL_BACK: "right_diagonal_line",
-    FacePattern.DIAGONAL_FORWARD: "left_diagonal_line",
-    FacePattern.DIAGONAL_CROSS: "diagonal_cross",
-    FacePattern.DOTS: "dot",
+    Hatch.SOLID: "",
+    Hatch.HORIZONTAL: "horizontal_line",
+    Hatch.VERTICAL: "vertical_line",
+    Hatch.CROSS: "cross",
+    Hatch.DIAGONAL_BACK: "right_diagonal_line",
+    Hatch.DIAGONAL_FORWARD: "left_diagonal_line",
+    Hatch.DIAGONAL_CROSS: "diagonal_cross",
+    Hatch.DOTS: "dot",
 }
 _HATCH_MAP_INV = {v: k for k, v in _HATCH_MAP.items()}

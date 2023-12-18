@@ -7,7 +7,7 @@ from cmap import Color
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import FacePattern
+from whitecanvas.types import Hatch
 from whitecanvas.canvas._palette import ColorPalette
 from ._utils import unique, unique_product
 
@@ -217,7 +217,7 @@ class ColorPlan(Plan):
 
 
 class HatchPlan(Plan):
-    def __init__(self, by: tuple[str, ...], hatches: list[FacePattern]):
+    def __init__(self, by: tuple[str, ...], hatches: list[Hatch]):
         super().__init__(by)
         self._hatches = hatches
 
@@ -226,14 +226,14 @@ class HatchPlan(Plan):
         return cls(
             tuple(by),
             [
-                FacePattern.SOLID,
-                FacePattern.DIAGONAL_BACK,
-                FacePattern.HORIZONTAL,
-                FacePattern.CROSS,
-                FacePattern.VERTICAL,
-                FacePattern.DIAGONAL_CROSS,
-                FacePattern.DOTS,
-                FacePattern.DIAGONAL_FORWARD,
+                Hatch.SOLID,
+                Hatch.DIAGONAL_BACK,
+                Hatch.HORIZONTAL,
+                Hatch.CROSS,
+                Hatch.VERTICAL,
+                Hatch.DIAGONAL_CROSS,
+                Hatch.DOTS,
+                Hatch.DIAGONAL_FORWARD,
             ],
         )
 
@@ -247,7 +247,7 @@ class HatchPlan(Plan):
         self,
         values: np.ndarray,
         by_all: tuple[str, ...],
-    ) -> list[FacePattern]:
+    ) -> list[Hatch]:
         indices = [by_all.index(b) for b in self.by]
         size = len(self._hatches)
         filt = _filter_unique(values, indices)

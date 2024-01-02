@@ -30,6 +30,46 @@ class IdentityJitter(JitterBase):
         return src[self._by]
 
 
+class CategoricalJitter(JitterBase):
+    """Jitter for categorical data."""
+
+    def __init__(self, by: tuple[str, ...]):
+        if isinstance(by, str):
+            raise TypeError(f"Only tuple is allowed, got {type(by)}")
+        self._by = by
+
+    def map(self, src: DataFrameWrapper[_DF]) -> np.ndarray:
+        # only map the categorical data to real numbers
+        return _map_x([src[b] for b in self._by])
+
+
+def identity_or_categorical(
+    df: DataFrameWrapper[_DF],
+    by: str | tuple[str, ...],
+) -> JitterBase:
+    """
+    Return either IdentityJitter or CategoricalJitter depending on the data type.
+
+    Parameters
+    ----------
+    df : DataFrameWrapper
+        The source data.
+    by : str | tuple[str, ...]
+        Column(s) to be used for the x-axis.
+    """
+    if isinstance(by, str):
+        series = df[by]
+        if series.dtype.kind in "iuf":
+            return IdentityJitter(by)
+        else:
+            return CategoricalJitter((by,))
+    else:
+        if len(by) == 1:
+            return identity_or_categorical(df, by[0])
+        else:
+            return CategoricalJitter(by)
+
+
 class UniformJitter(JitterBase):
     """Jitter with uniform distribution."""
 
@@ -94,6 +134,12 @@ def _tuple(x) -> tuple[str, ...]:
 
 
 def _map_x(args: list[np.ndarray]) -> NDArray[np.floating]:
+    """
+    Map the input data to x-axis values.
+
+    >>> _map_x([["a", "a", "b", "b"], ["u", "v", "u", "v"]])  # [0, 1, 2, 3]
+    >>> _map_x([["p", "q", "r", "r", "q"]])  # [0, 1, 2]
+    """
     by_all = tuple(str(i) for i in range(len(args)))
     plan = OffsetPlan.default().more_by(*by_all)
     each_unique = [unique(a, axis=None) for a in args]

@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterator, TypeVar, Generic
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ._utils import unique_product
 
@@ -44,18 +45,18 @@ class DataFrameWrapper(ABC, Generic[_T]):
         return self._data
 
     @abstractmethod
-    def __getitem__(self, item: str) -> np.ndarray:
+    def __getitem__(self, item: str) -> NDArray[np.generic]:
         ...
 
     @abstractmethod
     def iter_keys(self) -> Iterator[str]:
         ...
 
-    def iter_values(self) -> Iterator[np.ndarray]:
+    def iter_values(self) -> Iterator[NDArray[np.generic]]:
         for k in self.iter_keys():
             yield self[k]
 
-    def iter_items(self) -> Iterator[tuple[str, np.ndarray]]:
+    def iter_items(self) -> Iterator[tuple[str, NDArray[np.generic]]]:
         for k in self.iter_keys():
             yield k, self[k]
 
@@ -77,6 +78,10 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
     @abstractmethod
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        ...
+
+    @abstractmethod
+    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
         ...
 
 
@@ -108,6 +113,17 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
         for values in unique_product(*[self._data[b] for b in by]):
             yield values, self.filter(by, values)
 
+    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+        if method not in ("min", "max", "mean", "median", "sum", "std", "size"):
+            raise ValueError(f"Unsupported aggregation method: {method}")
+        agg = getattr(np, method)
+        out = {k: [] for k in by + (on,)}
+        for sl, sub in self.group_by(by):
+            for b, s in zip(by, sl):
+                out[b].append(s)
+            out[on].append(agg(sub[on]))
+        return DictWrapper({k: np.array(v) for k, v in out.items()})
+
 
 class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def __getitem__(self, item: str) -> np.ndarray:
@@ -137,6 +153,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
         for sl, sub in self._data.groupby(by, observed=True):
             yield sl, PandasWrapper(sub)
+
+    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+        return PandasWrapper(self._data.groupby(by)[on].agg(method).reset_index())
 
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
@@ -172,6 +191,15 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PolarsWrapper(sub)
 
+    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+        import polars as pl
+
+        if method == "size":
+            expr = pl.count().alias("size")
+        else:
+            expr = getattr(pl.col(on), method)()
+        return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(expr))
+
 
 class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
     def __getitem__(self, item: str) -> np.ndarray:
@@ -199,9 +227,21 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PyArrowWrapper(sub)
 
+    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+        import pyarrow as pa
+
+        if method == "size":
+            method = "count"
+        expr = getattr(pa.field(on), method)()
+        return PyArrowWrapper(
+            self._data.group_by(by, maintain_order=True).aggregate(expr)
+        )
+
 
 def parse(data: Any) -> DataFrameWrapper:
     """Parse a data object into a DataFrameWrapper."""
+    if isinstance(data, DataFrameWrapper):
+        return data
     if isinstance(data, dict):
         df = {k: np.asarray(v) for k, v in data.items()}
         if len(df) > 0:  # check length

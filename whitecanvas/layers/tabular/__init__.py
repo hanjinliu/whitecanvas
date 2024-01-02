@@ -1,1 +1,1 @@
-from ._dataframe import WrappedLines, WrappedViolinPlot, WrappedMarkers
+from ._dataframe import WrappedLines, WrappedViolinPlot, WrappedMarkers, WrappedBars

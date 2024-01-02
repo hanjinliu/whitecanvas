@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable, TypeVar, Generic, Union
+from typing import TYPE_CHECKING, Any, Iterable, TypeVar, Generic, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from whitecanvas.layers._base import LayerWrapper, Layer
 from whitecanvas import layers as _l
 from whitecanvas.layers import group as _lg, _mixin
-from whitecanvas.types import Orientation
+from whitecanvas.types import Orientation, Symbol
 from whitecanvas.backend import Backend
 
 from . import _plans as _p, _jitter
@@ -314,8 +314,8 @@ class WrappedMarkers(
         backend: str | Backend | None = None,
     ) -> WrappedMarkers[_DF]:
         src = parse(df)
-        xj = _jitter.IdentityJitter(x)
-        yj = _jitter.IdentityJitter(y)
+        xj = _jitter.identity_or_categorical(src, x)
+        yj = _jitter.identity_or_categorical(src, y)
         return WrappedMarkers(
             src, xj, yj, name=name, color=color, hatch=hatch, symbol=symbol,
             size=size, backend=backend,
@@ -340,7 +340,7 @@ class WrappedMarkers(
     ) -> WrappedMarkers[_DF]:
         src = parse(df)
         xj = _jitter.UniformJitter(label, extent=extent, seed=seed)
-        yj = _jitter.IdentityJitter(value)
+        yj = _jitter.identity_or_categorical(src, value)
         if not Orientation.parse(orient).is_vertical:
             xj, yj = yj, xj
         return WrappedMarkers(
@@ -370,7 +370,7 @@ class WrappedMarkers(
             src = src.sort(value)
         lims = src[value].min(), src[value].max()
         xj = _jitter.SwarmJitter(label, value, limits=lims, extent=extent)
-        yj = _jitter.IdentityJitter(value)
+        yj = _jitter.identity_or_categorical(src, value)
         if not Orientation.parse(orient).is_vertical:
             xj, yj = yj, xj
         return WrappedMarkers(
@@ -402,26 +402,187 @@ class WrappedMarkers(
         self._hatch_by = hatch_by
         return self
 
-    def with_size(self, by: str, limits=None):
-        size_by = self._size_by.with_range(by, limits=limits)
-        self._base_layer.size = size_by.map(self._source)
+    @overload
+    def with_size(self, value: float) -> Self:
+        ...
+
+    @overload
+    def with_size(self, by: str, limits=None) -> Self:
+        ...
+
+    def with_size(self, by, /, limits=None):
+        """Set the size of the markers."""
+        if isinstance(by, str):
+            size_by = self._size_by.with_range(by, limits=limits)
+        else:
+            const_size = float(by)
+            size_by = self._size_by.with_const(const_size)
+        self._base_layer.with_size_multi(size_by.map(self._source))
         self._size_by = size_by
         return self
 
+    @overload
+    def with_symbol(self, value: str | Symbol) -> Self:
+        ...
+
+    @overload
     def with_symbol(self, by: str | Iterable[str] | None = None, symbols=None) -> Self:
-        if by is None:
-            by = self._symbol_by.by
-        elif isinstance(by, str):
-            by = (by,)
+        ...
+
+    def with_symbol(self, by, /, symbols=None) -> Self:
+        if isinstance(by, str):
+            if by in self._source.iter_keys():
+                symbol_by = self._symbol_by.update(by, values=symbols)
+            else:
+                try:
+                    const_symbol = Symbol(by)
+                except ValueError:
+                    raise ValueError(
+                        f"{by!r} does not exist either as a column or a symbol name."
+                    )
+                symbol_by = self._symbol_by.with_const(const_symbol)
+        elif isinstance(by, Symbol):
+            symbol_by = self._symbol_by.with_const(by)
         else:
-            by = tuple(by)
-        symbol_by = self._symbol_by.update(*by, values=symbols)
+            symbol_by = self._symbol_by.update(*by, values=symbols)
         self._base_layer.symbol = symbol_by.map(self._source)
         self._symbol_by = symbol_by
         return self
 
 
+class WrappedBars(
+    DataFrameLayerWrapper[_l.Bars[_mixin.MultiFace, _mixin.MultiEdge], _DF],
+    Generic[_DF],
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        offset: str,
+        value: str,
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        orient: Orientation = Orientation.VERTICAL,
+        extent: float = 0.8,
+        backend: str | Backend | None = None,
+    ):
+        splitby = _concat_by(offset, color, hatch)
+        unique_sl: list[tuple[Any, ...]] = []
+        values = []
+        for sl, df in source.group_by(splitby):
+            unique_sl.append(sl)
+            series = df[value]
+            if len(series) != 1:
+                raise ValueError(f"More than one value found for category {sl!r}.")
+            values.append(series[0])
+
+        self._color_by = _p.ColorPlan.default()
+        self._hatch_by = _p.HatchPlan.default()
+        self._offset_by = _p.OffsetPlan.default().more_by(*offset)
+        self._labels = unique_sl
+        self._splitby = splitby
+
+        x = self._offset_by.generate(self._labels, splitby)
+        base = _l.Bars(
+            x, values, name=name, orient=orient, bar_width=extent, backend=backend
+        )
+        super().__init__(base, source)
+        if color is not None:
+            self.with_color(color)
+        if hatch is not None:
+            self.with_hatch(hatch)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: _DF,
+        x: str,
+        y: str,
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        extent: float = 0.8,
+        backend: str | Backend | None = None,
+    ) -> WrappedBars[_DF]:
+        src = parse(df)
+        return WrappedBars(
+            src, x, y, name=name, color=color, hatch=hatch, extent=extent,
+            backend=backend
+        )  # fmt: skip
+
+    @classmethod
+    def build_count(
+        cls,
+        df: _DF,
+        offset: str,
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        extent: float = 0.8,
+        backend: str | Backend | None = None,
+    ) -> WrappedBars[_DF]:
+        src = parse(df)
+        splitby = _concat_by(offset, color, hatch)
+        new_src = src.agg_by(splitby, on=splitby[0], method="size")
+        return WrappedBars(
+            new_src, offset, "size", name=name, color=color, hatch=hatch,
+            orient=orient, extent=extent, backend=backend
+        )  # fmt: skip
+
+    @property
+    def color(self) -> _p.ColorPlan:
+        """Return the color plan object."""
+        return self._color_by
+
+    @property
+    def hatch(self) -> _p.HatchPlan:
+        """Return the hatch plan object."""
+        return self._hatch_by
+
+    def with_color(self, by: str | Iterable[str] | None = None, palette=None) -> Self:
+        if by is None:
+            by = self._color_by.by
+        elif isinstance(by, str):
+            by = (by,)
+        else:
+            by = tuple(by)
+        if set(by) > set(self._splitby):
+            raise ValueError(f"Cannot color by a column other than {self._splitby}")
+        color_by = self._color_by.update(*by, values=palette)
+        self._base_layer.face.color = color_by.generate(self._labels, self._splitby)
+        self._color_by = color_by
+        return self
+
+    def with_hatch(self, by: str | Iterable[str] | None = None, choices=None) -> Self:
+        if by is None:
+            by = self._hatch_by.by
+        elif isinstance(by, str):
+            by = (by,)
+        else:
+            by = tuple(by)
+        if set(by) > set(self._splitby):
+            raise ValueError(f"Cannot color by a column other than {self._splitby}")
+        hatch_by = self._hatch_by.update(*by, values=choices)
+        self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
+        self._hatch_by = hatch_by
+        return self
+
+
+# class WrappedPointPlot
+
+
 def _concat_by(*args: str | tuple[str] | None) -> tuple[str, ...]:
+    """
+    Concatenate the given arguments into a tuple of strings.
+
+    >>> _concat_by("a", "b", "c")  # ("a", "b", "c")
+    >>> _concat_by("a", ("b", "c"))  # ("a", "b", "c")
+    >>> _concat_by("a", None, "c")  # ("a", "c")
+    """
     by_all: list[str] = []
     for arg in args:
         if arg is None:

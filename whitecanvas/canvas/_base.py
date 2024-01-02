@@ -328,21 +328,6 @@ class CanvasBase(ABC):
         plotter = _df.DataFramePlotter(self, data, update_label=update_labels)
         return plotter
 
-    # def colorize(
-    #     self,
-    #     data: Any,
-    #     by: str | None = None,
-    #     *,
-    #     update_labels: bool = True,
-    #     palette: ColormapType | None = None,
-    # ) -> _cat.ColorizedPlotter[Self]:
-    #     if palette is None:
-    #         palette = self._color_palette
-    #     plotter = _cat.ColorizedPlotter(
-    #         self, data, by, palette=palette, update_label=update_labels
-    #     )
-    #     return plotter
-
     def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
         """
         Stack new data over the existing layer.

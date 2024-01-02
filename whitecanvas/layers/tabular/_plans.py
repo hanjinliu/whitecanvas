@@ -11,23 +11,13 @@ from whitecanvas.canvas._palette import ColorPalette
 from ._utils import unique, unique_product
 
 if TYPE_CHECKING:
+    from ._df_compat import DataFrameWrapper
     from typing_extensions import Self
 
 _V = TypeVar("_V", bound=Any)
 
 
-class CategoricalPlan(ABC, Generic[_V]):
-    def __init__(self, by: tuple[str, ...]):
-        self._by = by
-
-    @property
-    def by(self) -> tuple[str, ...]:
-        return self._by
-
-    @abstractclassmethod
-    def default(cls, by: Sequence[str]) -> Self:
-        """Create a default plan."""
-
+class Plan(ABC, Generic[_V]):
     @abstractmethod
     def generate(
         self,
@@ -39,6 +29,19 @@ class CategoricalPlan(ABC, Generic[_V]):
 
         Length of the returned list must be equal to vals.shape[0].
         """
+
+
+class CategoricalPlan(Plan[_V]):
+    def __init__(self, by: tuple[str, ...]):
+        self._by = by
+
+    @property
+    def by(self) -> tuple[str, ...]:
+        return self._by
+
+    @abstractclassmethod
+    def default(cls, by: Sequence[str]) -> Self:
+        """Create a default plan."""
 
 
 class OffsetPolicy(ABC):
@@ -237,6 +240,9 @@ class CyclicPlan(CategoricalPlan[_V]):
             values = [cls._norm_value(val) for val in values]
         return cls(_by, values)
 
+    def with_const(self, value: _V) -> Self:
+        return self.update(*self.by, values=[value])
+
     def generate(
         self,
         labels: list[tuple[Any, ...]],
@@ -260,9 +266,13 @@ class CyclicPlan(CategoricalPlan[_V]):
 
     def map(
         self,
-        values: dict[str, np.ndarray],  # the data frame
+        values: DataFrameWrapper,  # the data frame
     ) -> Sequence[_V]:
-        series = [values[k] for k in self._by]
+        if self._by:
+            series = [values[k] for k in self._by]
+        else:
+            # constant, no key filter
+            return self.values[0]
         uniques = [unique(ar, axis=None) for ar in series]
         out = np.empty(series[0].shape, dtype=object)
         i = 0
@@ -286,6 +296,12 @@ class MapPlan(ABC, Generic[_V]):
     ):
         self._on = on
         self._mapper = mapper
+
+    def __repr__(self) -> str:
+        cname = type(self).__name__
+        if self._on:
+            return f"{cname}(on={self._on!r}, mapper={self._mapper})"
+        return f"{cname}(<const {self._mapper.value}>)"
 
     def with_map(
         self,
@@ -318,11 +334,7 @@ class MapPlan(ABC, Generic[_V]):
         return self.with_map((on,), mapper)
 
     def with_const(self, value: _V) -> Self:
-        def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
-            series = next(iter(values.values()), np.zeros(0))
-            return [value] * series.size
-
-        return self.with_map((), mapper)
+        return self.with_map((), ConstMap(value))
 
     @classmethod
     def default(cls) -> Self:
@@ -334,9 +346,19 @@ class MapPlan(ABC, Generic[_V]):
 
     def map(
         self,
-        values: dict[str, np.ndarray],  # the data frame
+        values: DataFrameWrapper,  # the data frame
     ) -> Sequence[_V]:
-        return self._mapper({values[k] for k in self._on})
+        """Calculate the values for the input data frame."""
+        if self._on:
+            input_dict = {k: values[k] for k in self._on}
+        else:
+            # constant or default size, no key filter
+            try:
+                k, v = next(iter(values.iter_items()))
+                input_dict = {k: v}
+            except StopIteration:
+                input_dict = {}
+        return self._mapper(input_dict)
 
 
 class ColorPlan(CyclicPlan[Color]):
@@ -450,3 +472,15 @@ class SizePlan(MapPlan[float]):
 def _to_intervals(each_uniques: list[np.ndarray]):
     each_size = [un.size for un in each_uniques] + [1]
     return np.cumprod(each_size[1:][::-1])[::-1]
+
+
+class ConstMap:
+    def __init__(self, value):
+        self._value = value
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}<{self._value!r}>"
+
+    def __call__(self, values: dict[str, np.ndarray]) -> Sequence[_V]:
+        series = next(iter(values.values()), np.zeros(0))
+        return [self._value] * series.size

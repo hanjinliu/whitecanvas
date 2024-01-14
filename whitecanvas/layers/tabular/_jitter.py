@@ -1,13 +1,15 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
-import itertools
 
+import itertools
+from abc import ABC, abstractmethod
 from typing import TypeVar
+
 import numpy as np
 from numpy.typing import NDArray
-from ._utils import unique
-from ._df_compat import DataFrameWrapper
-from ._plans import OffsetPlan
+
+from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
+from whitecanvas.layers.tabular._plans import OffsetPlan
+from whitecanvas.layers.tabular._utils import unique
 
 _DF = TypeVar("_DF")
 
@@ -16,6 +18,13 @@ class JitterBase(ABC):
     @abstractmethod
     def map(self, src: DataFrameWrapper[_DF]) -> np.ndarray:
         """Map the source data to jittered data."""
+
+    @abstractmethod
+    def generate_labels(
+        self,
+        src: DataFrameWrapper[_DF],
+    ) -> tuple[NDArray[np.floating], list[tuple[str, ...]]]:
+        """Generate labels for the jittered data."""
 
 
 class IdentityJitter(JitterBase):
@@ -29,14 +38,28 @@ class IdentityJitter(JitterBase):
     def map(self, src: DataFrameWrapper[_DF]) -> np.ndarray:
         return src[self._by]
 
+    def generate_labels(
+        self,
+        src: DataFrameWrapper[_DF],
+    ) -> tuple[NDArray[np.floating], list[tuple[str, ...]]]:
+        """Generate labels for the jittered data."""
+        return _map_x_and_label([src[b] for b in self._by])
 
-class CategoricalJitter(JitterBase):
+
+class CategoricalLikeJitter(JitterBase):
+    def __init__(self, by: str | tuple[str, ...]):
+        self._by = _tuple(by)
+
+    def generate_labels(
+        self,
+        src: DataFrameWrapper[_DF],
+    ) -> tuple[NDArray[np.floating], list[tuple[str, ...]]]:
+        """Generate labels for the jittered data."""
+        return _map_x_and_label([src[b] for b in self._by])
+
+
+class CategoricalJitter(CategoricalLikeJitter):
     """Jitter for categorical data."""
-
-    def __init__(self, by: tuple[str, ...]):
-        if isinstance(by, str):
-            raise TypeError(f"Only tuple is allowed, got {type(by)}")
-        self._by = by
 
     def map(self, src: DataFrameWrapper[_DF]) -> np.ndarray:
         # only map the categorical data to real numbers
@@ -70,7 +93,7 @@ def identity_or_categorical(
             return CategoricalJitter(by)
 
 
-class UniformJitter(JitterBase):
+class UniformJitter(CategoricalLikeJitter):
     """Jitter with uniform distribution."""
 
     def __init__(
@@ -79,7 +102,7 @@ class UniformJitter(JitterBase):
         extent: float = 0.8,
         seed: int | None = 0,
     ):
-        self._by = _tuple(by)
+        super().__init__(by)
         self._rng = np.random.default_rng(seed)
         self._extent = extent
 
@@ -89,7 +112,7 @@ class UniformJitter(JitterBase):
         return _map_x([src[b] for b in self._by]) + jitter
 
 
-class SwarmJitter(JitterBase):
+class SwarmJitter(CategoricalLikeJitter):
     """Jitter for swarm plot."""
 
     def __init__(
@@ -99,7 +122,7 @@ class SwarmJitter(JitterBase):
         limits: tuple[float, float],
         extent: float = 0.8,
     ):
-        self._by = _tuple(by)
+        super().__init__(by)
         self._value = value
         self._extent = extent
         self._limits = limits
@@ -138,7 +161,7 @@ def _map_x(args: list[np.ndarray]) -> NDArray[np.floating]:
     Map the input data to x-axis values.
 
     >>> _map_x([["a", "a", "b", "b"], ["u", "v", "u", "v"]])  # [0, 1, 2, 3]
-    >>> _map_x([["p", "q", "r", "r", "q"]])  # [0, 1, 2]
+    >>> _map_x([["p", "q", "r", "r", "q"]])  # [0, 1, 2, 2, 1]
     """
     by_all = tuple(str(i) for i in range(len(args)))
     plan = OffsetPlan.default().more_by(*by_all)
@@ -150,3 +173,22 @@ def _map_x(args: list[np.ndarray]) -> NDArray[np.floating]:
         sl = np.all(np.column_stack([a == r for a, r in zip(args, row)]), axis=1)
         out[sl] = offsets[i]
     return out
+
+
+def _map_x_and_label(
+    args: list[np.ndarray],
+) -> tuple[NDArray[np.floating], list[tuple[str, ...]]]:
+    """
+    Map the input data to x-axis values and generate labels.
+
+    >>> _map_x_and_label([["a", "a", "b", "b"], ["u", "v", "u", "v"]])
+    >>> # [0, 1, 2, 3], [("a", "u"), ("a", "v"), ("b", "u"), ("b", "v")]
+    >>> _map_x_and_label([["p", "q", "r", "r", "q"]])
+    >>> # [0, 1, 2], [("p",), ("q",), ("r",)]
+    """
+    by_all = tuple(str(i) for i in range(len(args)))
+    plan = OffsetPlan.default().more_by(*by_all)
+    each_unique = [unique(a, axis=None) for a in args]
+    labels = list(itertools.product(*each_unique))
+    offsets = np.asarray(plan.generate(labels, by_all))
+    return offsets, labels

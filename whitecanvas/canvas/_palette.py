@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Iterator
 
 from cmap import Color, Colormap

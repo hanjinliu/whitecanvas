@@ -1,62 +1,64 @@
 from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Iterable,
     Iterator,
     Literal,
-    Union,
-    overload,
     TypeVar,
-    TYPE_CHECKING,
+    overload,
 )
-from abc import ABC, abstractmethod
-
-from cmap import Color
 
 import numpy as np
+from cmap import Color
 from numpy.typing import ArrayLike
 from psygnal import Signal, SignalGroup
 
-from whitecanvas import protocols
 from whitecanvas import layers as _l
-from whitecanvas.layers import group as _lg, _mixin
-from whitecanvas.types import (
-    LineStyle,
-    Symbol,
-    ColorType,
-    Alignment,
-    ColormapType,
-    Hatch,
-    Orientation,
-    ArrayLike1D,
-    Rect,
-    _Void,
-)
+from whitecanvas import protocols
+from whitecanvas._signal import MouseMoveSignal, MouseSignal
+from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.canvas import (
     _namespaces as _ns,
-    layerlist as _ll,
+)
+from whitecanvas.canvas import (
     dataframe as _df,
 )
-from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.canvas._dims import Dims
+from whitecanvas.canvas import (
+    layerlist as _ll,
+)
 from whitecanvas.canvas._between import BetweenPlotter
+from whitecanvas.canvas._dims import Dims
+from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
-from whitecanvas.utils.normalize import as_array_1d, normalize_xy
-from whitecanvas.backend import Backend, patch_dummy_backend
+from whitecanvas.layers import _mixin
+from whitecanvas.layers import group as _lg
 from whitecanvas.theme import get_theme
-from whitecanvas._signal import MouseSignal, MouseMoveSignal
+from whitecanvas.types import (
+    Alignment,
+    ArrayLike1D,
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+    Rect,
+    Symbol,
+    _Void,
+)
+from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
-    from typing_extensions import Self, Concatenate, ParamSpec
+    from typing_extensions import Concatenate, ParamSpec, Self
 
     _P = ParamSpec("_P")
 
 _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
 _void = _Void()
-
-nStrings = Union[str, Iterable[str]]
 
 
 class CanvasEvents(SignalGroup):
@@ -218,10 +220,11 @@ class CanvasBase(ABC):
                 dy0, dy1 = ypad[0] * yrange, ypad[1] * yrange
             ymin -= dy0
             ymax += dy1
-        if xmax - xmin < 1e-6:
+        small_diff = 1e-6
+        if xmax - xmin < small_diff:
             xmin -= 0.05
             xmax += 0.05
-        if ymax - ymin < 1e-6:
+        if ymax - ymin < small_diff:
             ymin -= 0.05
             ymax += 0.05
         self.x.lim = xmin, xmax
@@ -362,8 +365,9 @@ class CanvasBase(ABC):
 
     @overload
     def add_line(
-        self, ydata: ArrayLike1D, *, name: str | None = None, color: ColorType | None = None,
-        width: float = 1.0, style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
+        self, ydata: ArrayLike1D, *, name: str | None = None,
+        color: ColorType | None = None, width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
@@ -372,7 +376,8 @@ class CanvasBase(ABC):
     def add_line(
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
         color: ColorType | None = None, width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
+        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
+        antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
@@ -380,7 +385,8 @@ class CanvasBase(ABC):
     def add_line(
         self, xdata: ArrayLike1D, ydata: Callable[[ArrayLike1D], ArrayLike1D], *,
         name: str | None = None, color: ColorType | None = None, width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
+        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
+        antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
@@ -494,10 +500,11 @@ class CanvasBase(ABC):
 
     @overload
     def add_bars(
-        self, center: ArrayLike1D, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
-        name=None, orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8, color: ColorType | None = None,
-        alpha: float = 1.0, hatch: str | Hatch = Hatch.SOLID,
+        self, center: ArrayLike1D, height: ArrayLike1D, *,
+        bottom: ArrayLike1D | None = None, name=None,
+        orient: str | Orientation = Orientation.VERTICAL, extent: float = 0.8,
+        color: ColorType | None = None, alpha: float = 1.0,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
@@ -1076,9 +1083,8 @@ class CanvasBase(ABC):
         x_, y_ = normalize_xy(x, y)
         if isinstance(string, str):
             string = [string] * x_.size
-        else:
-            if len(string) != x_.size:
-                raise ValueError("Expected string to have the same size as x/y")
+        elif len(string) != x_.size:
+            raise ValueError("Expected string to have the same size as x/y")
         layer = _l.Texts(
             x_, y_, string, color=color, size=size, rotation=rotation, anchor=anchor,
             family=family, backend=self._get_backend(),
@@ -1220,9 +1226,10 @@ class CanvasBase(ABC):
             ymax = np.max([ymax, _ymax - _dy])
 
         # this happens when there is <= 1 data
+        small_diff = 1e-6
         if np.isnan(xmax) or np.isnan(xmin):
             xmin, xmax = self.x.lim
-        elif xmax - xmin < 1e-6:
+        elif xmax - xmin < small_diff:
             xmin -= 0.05
             xmax += 0.05
         else:
@@ -1231,7 +1238,7 @@ class CanvasBase(ABC):
             xmax += dx
         if np.isnan(ymax) or np.isnan(ymin):
             ymin, ymax = self.y.lim
-        elif ymax - ymin < 1e-6:
+        elif ymax - ymin < small_diff:
             ymin -= 0.05
             ymax += 0.05
         else:

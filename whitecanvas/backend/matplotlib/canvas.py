@@ -1,24 +1,35 @@
 from __future__ import annotations
 
 from typing import Callable
-from matplotlib.artist import Artist
 
-import numpy as np
 import matplotlib as mpl
+import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.artist import Artist
 from matplotlib.backend_bases import (
-    MouseEvent as mplMouseEvent,
     MouseButton as mplMouseButton,
 )
-from matplotlib.lines import Line2D
+from matplotlib.backend_bases import (
+    MouseEvent as mplMouseEvent,
+)
 from matplotlib.collections import Collection
-from .bars import Bars
-from .text import Texts as whitecanvasText
-from .image import Image as whitecanvasImage
-from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
+from matplotlib.lines import Line2D
+
 from whitecanvas import protocols
-from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType, Rect
 from whitecanvas.backend.matplotlib._base import MplLayer
+from whitecanvas.backend.matplotlib._labels import (
+    Title,
+    XAxis,
+    XLabel,
+    XTicks,
+    YAxis,
+    YLabel,
+    YTicks,
+)
+from whitecanvas.backend.matplotlib.bars import Bars
+from whitecanvas.backend.matplotlib.image import Image as whitecanvasImage
+from whitecanvas.backend.matplotlib.text import Texts as whitecanvasText
+from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType, Rect
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -37,7 +48,7 @@ class Canvas:
         ax.set_axisbelow(True)  # grid lines below other layers
         self._annot = ax.annotate(
             text="", xy=(0, 0), xytext=(20, -20), textcoords="offset points",
-            bbox=dict(fc="w"), fontproperties={"size": 14, "family": "Arial"},
+            bbox={"fc": "w"}, fontproperties={"size": 14, "family": "Arial"},
         )  # fmt: skip
         self._annot.set_visible(False)
 
@@ -113,6 +124,8 @@ class Canvas:
             raise NotImplementedError(f"{layer}")
         if hasattr(layer, "post_add"):
             layer.post_add(self)
+        if fig := self._axes.get_figure():
+            fig.tight_layout()
 
     def _plt_remove_layer(self, layer: Artist):
         """Remove layer from the canvas"""

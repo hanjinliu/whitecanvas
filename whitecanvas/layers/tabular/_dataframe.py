@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable, TypeVar, Generic, Union, overload
+from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.layers._base import LayerWrapper, Layer
-from whitecanvas import layers as _l
-from whitecanvas.layers import group as _lg, _mixin
-from whitecanvas.types import Orientation, Symbol
-from whitecanvas.backend import Backend
 
-from . import _plans as _p, _jitter
-from ._df_compat import DataFrameWrapper, parse
+from whitecanvas import layers as _l
+from whitecanvas.backend import Backend
+from whitecanvas.layers import _mixin
+from whitecanvas.layers import group as _lg
+from whitecanvas.layers._base import Layer, LayerWrapper
+from whitecanvas.layers.tabular import _jitter
+from whitecanvas.layers.tabular import _plans as _p
+from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
+from whitecanvas.types import Orientation, Symbol
 
 if TYPE_CHECKING:
-    from whitecanvas.canvas import Canvas
     from typing_extensions import Self
 
 _L = TypeVar("_L", bound="Layer")
@@ -172,11 +173,12 @@ class WrappedViolinPlot(DataFrameLayerWrapper[_lg.ViolinPlot, _DF], Generic[_DF]
             unique_sl.append(sl)
             arrays.append(df[value])
         self._y = value
+        self._splitby = splitby
         self._color_by = _p.ColorPlan.default()
         self._hatch_by = _p.HatchPlan.default()
         self._offset_by = _p.OffsetPlan.default().more_by(*offset)
         self._labels = unique_sl
-        x = self._offset_by.generate(self._labels, splitby)
+        x = self._offset_by.generate(self._labels, self._splitby)
         base = _lg.ViolinPlot.from_arrays(
             x,
             arrays,
@@ -189,6 +191,14 @@ class WrappedViolinPlot(DataFrameLayerWrapper[_lg.ViolinPlot, _DF], Generic[_DF]
             self.with_color(color)
         if hatch is not None:
             self.with_hatch(hatch)
+
+    def _generate_labels(self):
+        pos: list[float] = []
+        labels: list[str] = []
+        for p, lbl in self._offset_by.iter_ticks(self._labels, self._splitby):
+            pos.append(p)
+            labels.append("\n".join(lbl))
+        return pos, labels
 
     @classmethod
     def from_table(
@@ -298,6 +308,10 @@ class WrappedMarkers(
             self.with_symbol(symbol)
         if size is not None:
             self.with_size(size)
+
+    def _generate_labels(self):
+        pos, labels = self._x.generate_labels(self._source)
+        return pos, ["\n".join(lbl) for lbl in labels]
 
     @classmethod
     def from_table(

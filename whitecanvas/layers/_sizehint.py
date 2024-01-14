@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from typing import Union
+
 import numpy as np
 from numpy.typing import NDArray
+
 from whitecanvas.types import Orientation
 
 _Hint = Union[tuple[float, float], None]

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import weakref
-from typing import TypeVar, Generic, TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, TypeVar
+
 import numpy as np
 
-from whitecanvas.types import ArrayLike1D, ColorType, Hatch
-from whitecanvas.layers import Layer, Bars, Band
-from whitecanvas.layers.group import LabeledBars, StemPlot
 from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas.layers import Band, Bars, Layer
+from whitecanvas.layers.group import LabeledBars, StemPlot
+from whitecanvas.types import ArrayLike1D, ColorType, Hatch
 from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:

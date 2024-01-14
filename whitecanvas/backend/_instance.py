@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 
-
 _INSTALLED_MODULES = {}
 
 _DEFAULT_APP = {

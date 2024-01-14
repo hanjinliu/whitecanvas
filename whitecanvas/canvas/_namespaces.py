@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable
 import weakref
-import numpy as np
-from numpy.typing import NDArray
+from typing import TYPE_CHECKING, Any, Iterable
 
-from psygnal import Signal, SignalGroup
+import numpy as np
 from cmap import Color
+from numpy.typing import NDArray
+from psygnal import Signal, SignalGroup
+
 from whitecanvas import protocols
+from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.types import ColorType, LineStyle
 from whitecanvas.utils.normalize import arr_color
-from whitecanvas._exceptions import ReferenceDeletedError
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
     from whitecanvas.canvas._base import CanvasBase
 
 
@@ -242,7 +244,7 @@ class _AxisNamespace(Namespace):
         with self.events.blocked():
             self._get_object()._plt_set_limits(lim)
         self.events.lim.emit(lim)
-        return
+        return None
 
     @property
     def color(self):

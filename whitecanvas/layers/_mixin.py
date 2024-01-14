@@ -1,39 +1,39 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
+from enum import Enum
 from typing import (
+    TYPE_CHECKING,
     Any,
     Generic,
     Iterable,
     Iterator,
     Sequence,
+    SupportsIndex,
     TypeVar,
     overload,
-    SupportsIndex,
-    TYPE_CHECKING,
 )
-from enum import Enum
 from weakref import WeakValueDictionary
+
 import numpy as np
 from numpy.typing import NDArray
-
 from psygnal import Signal, SignalGroup
 
+from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
 from whitecanvas.protocols import layer_protocols as _lp
-from whitecanvas.layers._base import PrimitiveLayer, LayerEvents, DataBoundLayer
 from whitecanvas.theme import get_theme
 from whitecanvas.types import (
-    LineStyle,
-    Hatch,
     ColorType,
-    _Void,
-    _Void,
+    Hatch,
+    LineStyle,
     XYTextData,
+    _Void,
 )
 from whitecanvas.utils.normalize import arr_color, as_any_1d_array, as_color_array
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
     from whitecanvas.layers.group._collections import LayerCollectionBase
 
 _L = TypeVar("_L", bound=PrimitiveLayer)
@@ -778,7 +778,6 @@ class CollectionEdge(EdgeNamespace):
     @style.setter
     def style(self, style: str | LineStyle | Iterable[str | LineStyle]):
         layers = list(self._iter_children())
-        ndata = len(layers)
         styles = as_any_1d_array(style)
         for layer, ls in zip(layers, styles):
             layer.edge.style = ls

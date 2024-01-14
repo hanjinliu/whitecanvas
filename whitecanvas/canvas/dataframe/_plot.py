@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 from typing import (
     TYPE_CHECKING,
     Generic,
@@ -7,35 +8,27 @@ from typing import (
     TypeVar,
     Union,
 )
-import weakref
-from cmap import Color
-import numpy as np
-from numpy.typing import NDArray
 
-from whitecanvas import layers as _l
-from whitecanvas.layers import group as _lg
+import numpy as np
+
+from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas.canvas.dataframe._utils import PlotArg
+from whitecanvas.layers import tabular as _lt
+from whitecanvas.layers.tabular._dataframe import parse
 from whitecanvas.types import (
-    LineStyle,
-    Symbol,
     ColorType,
-    ColormapType,
     Hatch,
     Orientation,
+    Symbol,
 )
-from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.layers import tabular as _lt
-from whitecanvas._exceptions import ReferenceDeletedError
-from whitecanvas.layers.tabular._dataframe import parse
-from ._utils import PlotArg
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
     from whitecanvas.canvas._base import CanvasBase
     from whitecanvas.layers.tabular._dataframe import DataFrameWrapper
 
 _C = TypeVar("_C", bound="CanvasBase")
 _DF = TypeVar("_DF")
-nStr = Union[str, Sequence[str]]
+NStr = Union[str, Sequence[str]]
 
 
 class _Plotter(Generic[_C, _DF]):
@@ -55,6 +48,27 @@ class _Plotter(Generic[_C, _DF]):
             raise ReferenceDeletedError("Canvas has been deleted.")
         return canvas
 
+    def _update_xy_label(
+        self,
+        x: str,
+        y: str,
+        orient: Orientation = Orientation.VERTICAL,
+    ) -> None:
+        canvas = self._canvas()
+        if orient.is_vertical:
+            canvas.x.label.text = x
+            canvas.y.label.text = y
+        else:
+            canvas.x.label.text = y
+            canvas.y.label.text = x
+
+    def _update_xy_ticks(self, pos, label, orient: Orientation = Orientation.VERTICAL):
+        canvas = self._canvas()
+        if orient.is_vertical:
+            canvas.x.ticks.set_labels(pos, label)
+        else:
+            canvas.y.ticks.set_labels(pos, label)
+
 
 class DataFramePlotter(_Plotter[_C, _DF]):
     def add_line(
@@ -63,9 +77,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         y: str,
         *,
         name: str | None = None,
-        color: nStr | None = None,
+        color: NStr | None = None,
         width: str | None = None,
-        style: nStr | None = None,
+        style: NStr | None = None,
     ) -> _lt.WrappedLines[_DF]:
         canvas = self._canvas()
         layer = _lt.WrappedLines.from_table(
@@ -75,8 +89,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            canvas.x.label.text = x
-            canvas.y.label.text = y
+            self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
     def add_markers(
@@ -85,10 +98,10 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         y: str,
         *,
         name: str | None = None,
-        color: nStr | None = None,
-        hatch: nStr | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
         size: str | None = None,
-        symbol: nStr | None = None,
+        symbol: NStr | None = None,
     ) -> _lt.WrappedMarkers[_DF]:
         canvas = self._canvas()
         layer = _lt.WrappedMarkers.from_table(
@@ -98,8 +111,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            canvas.x.label.text = x
-            canvas.y.label.text = y
+            self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
     def add_bar(
@@ -108,8 +120,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         y: str,
         *,
         name: str | None = None,
-        color: nStr | None = None,
-        hatch: nStr | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
         extent: float = 0.8,
     ) -> _lt.WrappedBars[_DF]:
         canvas = self._canvas()
@@ -120,8 +132,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            canvas.x.label.text = x
-            canvas.y.label.text = y
+            self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
     def add_violinplot(
@@ -129,8 +140,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         offset: tuple[str, ...],
         value: str,
         *,
-        color: nStr | None = None,
-        hatch: nStr | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
     ) -> _lt.WrappedViolinPlot[_DF]:
@@ -142,7 +153,10 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            ...
+            pos, labels = layer._generate_labels()
+            self._update_xy_ticks(pos, labels, orient=orient)
+            self._update_xy_label("/".join(offset), value, orient=orient)
+
         return canvas.add_layer(layer)
 
     def add_stripplot(
@@ -150,9 +164,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         offset: tuple[str, ...],
         value: str,
         *,
-        color: nStr | None = None,
-        hatch: nStr | None = None,
-        symbol: nStr | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
+        symbol: NStr | None = None,
         size: str | None = None,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -160,6 +174,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         seed: int | None = 0,
     ) -> _lt.WrappedMarkers[_DF]:
         canvas = self._canvas()
+        orient = Orientation.parse(orient)
         layer = _lt.WrappedMarkers.build_stripplot(
             self._df, offset, value, name=name, color=color, hatch=hatch, symbol=symbol,
             size=size, orient=orient, extent=extent, seed=seed,
@@ -168,17 +183,19 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            ...
+            pos, labels = layer._generate_labels()
+            self._update_xy_ticks(pos, labels, orient=orient)
+            self._update_xy_label("/".join(offset), value, orient=orient)
         return canvas.add_layer(layer)
 
     def add_swarmplot(
         self,
-        offset: nStr,
+        offset: NStr,
         value: str,
         *,
-        color: nStr | None = None,
-        hatch: nStr | None = None,
-        symbol: nStr | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
+        symbol: NStr | None = None,
         size: str | None = None,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -194,33 +211,31 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            ...
+            pos, labels = layer._generate_labels()
+            self._update_xy_ticks(pos, labels, orient=orient)
+            self._update_xy_label("/".join(offset), value, orient=orient)
         return canvas.add_layer(layer)
 
     def add_countplot(
         self,
-        offset: nStr,
+        offset: NStr,
         *,
-        color: nStr | None = None,
-        hatch: nStr | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
     ) -> _lt.WrappedBars[_DF]:
         canvas = self._canvas()
-
+        orient = Orientation.parse(orient)
         layer = _lt.WrappedBars.build_count(
-            self._df,
-            offset,
-            color=color,
-            hatch=hatch,
-            orient=orient,
-            extent=extent,
-            name=name,
-            backend=canvas._get_backend(),
-        )
+            self._df, offset, color=color, hatch=hatch, orient=orient, extent=extent,
+            name=name, backend=canvas._get_backend(),
+        )  # fmt: skip
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
+        if self._update_label:
+            self._update_xy_label("/".join(offset), "count", orient=orient)
         return canvas.add_layer(layer)
 
     def mean(self, orient: str | Orientation) -> DataFrameAggPlotter[_C, _DF]:
@@ -280,9 +295,9 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         y: str,
         *,
         name: str | None = None,
-        color: nStr | None = None,
+        color: NStr | None = None,
         width: str | None = None,
-        style: nStr | None = None,
+        style: NStr | None = None,
     ) -> _lt.WrappedLines[_DF]:
         canvas = self._canvas()
         df = parse(self._df)
@@ -297,8 +312,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            canvas.x.label.text = x
-            canvas.y.label.text = y
+            self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
     def add_markers(
@@ -307,10 +321,10 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         y: str,
         *,
         name: str | None = None,
-        color: nStr | ColorType | None = None,
-        hatch: nStr | Hatch | None = None,
+        color: NStr | ColorType | None = None,
+        hatch: NStr | Hatch | None = None,
         size: np.str_ | float | None = None,
-        symbol: nStr | Symbol | None = None,
+        symbol: NStr | Symbol | None = None,
     ) -> _lt.WrappedMarkers[_DF]:
         canvas = self._canvas()
         df = parse(self._df)
@@ -328,8 +342,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         if color is not None:
             layer.with_color(palette=canvas._color_palette)
         if self._update_label:
-            canvas.x.label.text = x
-            canvas.y.label.text = y
+            self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
     def _aggregate(

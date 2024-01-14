@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from IPython import InteractiveShell
     from qtpy.QtWidgets import QApplication
-    from vispy.app import use_app
     from wx import App as wxApp
 
 
@@ -34,8 +33,8 @@ class QtApplication(Application):
         return app
 
     def create_application(self):
-        from qtpy.QtWidgets import QApplication
         from qtpy.QtCore import Qt
+        from qtpy.QtWidgets import QApplication
 
         QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
         return QApplication([])
@@ -111,8 +110,8 @@ class TkApplication(Application):
         return app
 
     def create_application(self):
-        from qtpy.QtWidgets import QApplication
         from qtpy.QtCore import Qt
+        from qtpy.QtWidgets import QApplication
 
         QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
         return QApplication([])

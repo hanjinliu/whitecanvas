@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from abc import ABC, abstractclassmethod, abstractmethod
-from typing import Any, Callable, Generic, Sequence, TYPE_CHECKING, TypeVar
 import itertools
-from cmap import Color
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterator, Sequence, TypeVar
+
 import numpy as np
+from cmap import Color
 from numpy.typing import NDArray
-from whitecanvas.types import Hatch, LineStyle, Symbol
+
 from whitecanvas.canvas._palette import ColorPalette
-from ._utils import unique, unique_product
+from whitecanvas.layers.tabular._utils import unique
+from whitecanvas.types import Hatch, LineStyle, Symbol
 
 if TYPE_CHECKING:
-    from ._df_compat import DataFrameWrapper
     from typing_extensions import Self
+
+    from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
 
 _V = TypeVar("_V", bound=Any)
 
@@ -39,7 +42,8 @@ class CategoricalPlan(Plan[_V]):
     def by(self) -> tuple[str, ...]:
         return self._by
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def default(cls, by: Sequence[str]) -> Self:
         """Create a default plan."""
 
@@ -89,7 +93,7 @@ class CompositeOffsetPolicy(OffsetPolicy):
         return sum(policy.get(interval) for policy in self._policies)
 
     def with_shift(self, val: float) -> CompositeOffsetPolicy:
-        return CompositeOffsetPolicy(self._policies + [ConstOffset(val)])
+        return CompositeOffsetPolicy([*self._policies, ConstOffset(val)])
 
 
 class ConstOffset(OffsetPolicy):
@@ -136,20 +140,20 @@ class OffsetPlan(CategoricalPlan[float]):
         new = [offset.with_shift(val) for offset in self._offsets]
         return OffsetPlan(self._by, new)
 
-    def generate(
+    def iter_ticks(
         self,
         labels: list[tuple[Any, ...]],
         by_all: tuple[str, ...],
-    ) -> list[float]:
+    ) -> Iterator[tuple[float, list[str]]]:
         indices = [by_all.index(b) for b in self.by]
         ncols = len(indices)
-        out_lookup = {}
+        out_lookup: dict[tuple, float] = {}
         # make a full mesh where all combinations are included
         each_uniques = [
             unique(np.array([row[i] for row in labels]), axis=None) for i in indices
         ]
 
-        last_row = None
+        last_row: tuple | None = None
         last_x = np.zeros(ncols, dtype=np.float32)
         # intervals will be like:
         # each_uniques --> intervals
@@ -157,18 +161,37 @@ class OffsetPlan(CategoricalPlan[float]):
         # [[1, 2], [4, 5, 6], [7, 8]] --> [6, 2, 1]
         intervals = _to_intervals(each_uniques)
         for row in itertools.product(*each_uniques):
+            row_arr = np.array(row)
             if last_row is None:
-                last_row = row
-                x = 0
+                last_row = row_arr
+                x = 0.0
             else:
-                i = int(np.where(row != last_row)[0][0])
+                i = int(np.where(row_arr != last_row)[0][0])
                 x0 = last_x[i]
                 x = x0 + self._offsets[i].get(intervals[i])
                 last_x[i:] = x
-            out_lookup[tuple(row)] = x
-            last_row = row
-        out = [out_lookup[tuple(_r[i] for i in indices)] for _r in labels]
-        return out
+            out_lookup[row] = x
+            last_row = row_arr
+        # yield like this:
+        # 0.0 ['Female', 'Dinner', 'No']
+        # 1.0 ['Female', 'Dinner', 'Yes']
+        # 2.0 ['Female', 'Lunch', 'No']
+        # 3.0 ['Female', 'Lunch', 'Yes']
+        # 4.0 ['Male', 'Dinner', 'No']
+        # 5.0 ['Male', 'Dinner', 'Yes']
+        # 6.0 ['Male', 'Lunch', 'No']
+        # 7.0 ['Male', 'Lunch', 'Yes']
+        for _r in labels:
+            _pos = out_lookup[tuple(_r[i] for i in indices)]
+            _labels = [str(_r[i]) for i in indices]
+            yield _pos, _labels
+
+    def generate(
+        self,
+        labels: list[tuple[Any, ...]],
+        by_all: tuple[str, ...],
+    ) -> list[float]:
+        return [pos for pos, _ in self.iter_ticks(labels, by_all)]
 
 
 # class TightOffsetPlan(OffsetPlan):
@@ -218,11 +241,13 @@ class CyclicPlan(CategoricalPlan[_V]):
     def values(self) -> list[_V]:
         return self._values
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def _default_values(cls) -> list[_V]:
         """Default values for the plan."""
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def _norm_value(cls, v: Any) -> _V:
         """Normalize the value."""
 
@@ -340,7 +365,8 @@ class MapPlan(ABC, Generic[_V]):
     def default(cls) -> Self:
         return cls((), cls._default_mapper())
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def _default_mapper(cls) -> Callable[[dict[str, np.ndarray]], Sequence[_V]]:
         """Default mapper for the plan."""
 
@@ -460,13 +486,13 @@ class ColormapPlan(MapPlan[Color]):
 class WidthPlan(MapPlan[float]):
     @classmethod
     def _default_mapper(cls):
-        return lambda x: 1.0
+        return lambda _: 1.0
 
 
 class SizePlan(MapPlan[float]):
     @classmethod
     def _default_mapper(cls):
-        return lambda x: 12.0
+        return lambda _: 12.0
 
 
 def _to_intervals(each_uniques: list[np.ndarray]):

@@ -1,4 +1,4 @@
-from whitecanvas.types import LineStyle, Hatch
+from whitecanvas.types import Hatch, LineStyle
 
 
 def edge_style():

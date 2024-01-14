@@ -1,16 +1,17 @@
 from __future__ import annotations
+
 from typing import Any, Iterator
 
-from typing_extensions import override
 import numpy as np
 from numpy.typing import NDArray
-
 from psygnal import Signal, SignalGroup
+from typing_extensions import override
+
 from whitecanvas import protocols
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
-from whitecanvas.utils.normalize import arr_color
 from whitecanvas.theme import get_theme
+from whitecanvas.utils.normalize import arr_color
 
 
 class GridEvents(SignalGroup):

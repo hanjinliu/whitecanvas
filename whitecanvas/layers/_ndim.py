@@ -1,16 +1,17 @@
 """LayerStack represents a stack of layers for n-D visualization."""
 
 from __future__ import annotations
-from abc import ABC, abstractmethod, abstractproperty
 
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, Generic
-from typing_extensions import ParamSpec, Concatenate
+from abc import ABC, abstractmethod, abstractproperty
+from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.layers._base import DataBoundLayer, LayerWrapper
+from typing_extensions import Concatenate, ParamSpec
+
 from whitecanvas.layers import _primitive
-from whitecanvas.types import XYData, XYYData, XYTextData
+from whitecanvas.layers._base import DataBoundLayer, LayerWrapper
+from whitecanvas.types import XYData, XYTextData, XYYData
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas

@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Generic, Iterator, TypeVar, TYPE_CHECKING
 import weakref
-from psygnal import Signal, SignalGroup
+from abc import ABC, abstractmethod, abstractproperty
+from typing import TYPE_CHECKING, Any, Generic, Iterator, TypeVar
+
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.protocols import BaseProtocol
+from psygnal import Signal, SignalGroup
+
 from whitecanvas.backend import Backend
+from whitecanvas.protocols import BaseProtocol
 
 if TYPE_CHECKING:
-    from whitecanvas.canvas import CanvasBase
     from typing_extensions import Self
+
+    from whitecanvas.canvas import CanvasBase
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
@@ -89,7 +92,7 @@ class Layer(ABC):
     def _canvas(self) -> CanvasBase:
         canvas = self._canvas_ref()
         if canvas is None:
-            raise ValueError(f"Layer is not in any canvas.")
+            raise ValueError("Layer is not in any canvas.")
         return canvas
 
     @abstractmethod

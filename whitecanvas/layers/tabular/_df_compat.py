@@ -2,19 +2,18 @@ from __future__ import annotations
 
 import sys
 from abc import ABC, abstractmethod
-
-from typing import TYPE_CHECKING, Any, Iterator, TypeVar, Generic
+from typing import TYPE_CHECKING, Any, Generic, Iterator, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
-from ._utils import unique_product
+from whitecanvas.layers.tabular._utils import unique_product
 
 if TYPE_CHECKING:
+    import pandas as pd  # noqa: F401
+    import polars as pl  # noqa: F401
+    import pyarrow as pa  # noqa: F401
     from typing_extensions import Self
-    import pandas as pd
-    import polars as pl
-    import pyarrow as pa
 
 _T = TypeVar("_T")
 
@@ -117,7 +116,7 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
         if method not in ("min", "max", "mean", "median", "sum", "std", "size"):
             raise ValueError(f"Unsupported aggregation method: {method}")
         agg = getattr(np, method)
-        out = {k: [] for k in by + (on,)}
+        out = {k: [] for k in (*by, on)}
         for sl, sub in self.group_by(by):
             for b, s in zip(by, sl):
                 out[b].append(s)
@@ -183,7 +182,7 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         by: tuple[str, ...],
         values: tuple[Any, ...],
     ) -> Self:
-        kwargs = {b: val for b, val in zip(by, values)}
+        kwargs = dict(zip(by, values))
         df = self._data.filter(**kwargs)
         return PolarsWrapper(df)
 
@@ -219,7 +218,7 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
         by: tuple[str, ...],
         values: tuple[Any, ...],
     ) -> Self:
-        kwargs = {b: val for b, val in zip(by, values)}
+        kwargs = dict(zip(by, values))
         df = self._data.filter(**kwargs)
         return PyArrowWrapper(df)
 

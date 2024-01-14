@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from cmap import Color
-from whitecanvas.types import Symbol, LineStyle, Hatch
+
+from whitecanvas.types import Hatch, LineStyle, Symbol
 
 
 def _sequence_of_column_name(keys: list[str], value) -> bool:
@@ -33,7 +34,7 @@ class PlotArg:
         return self._is_column
 
     @classmethod
-    def from_color(self, keys: list[str], color) -> PlotArg:
+    def from_color(cls, keys: list[str], color) -> PlotArg:
         if color is None:
             return PlotArg(None, False)
         if isinstance(color, str):
@@ -54,7 +55,7 @@ class PlotArg:
             return PlotArg(col, False)
 
     @classmethod
-    def from_symbol(self, keys: list[str], symbol) -> PlotArg:
+    def from_symbol(cls, keys: list[str], symbol) -> PlotArg:
         if symbol is None:
             return PlotArg(None, False)
         if isinstance(symbol, str):
@@ -75,7 +76,7 @@ class PlotArg:
             return PlotArg(sym, False)
 
     @classmethod
-    def from_hatch(self, keys: list[str], hatch) -> PlotArg:
+    def from_hatch(cls, keys: list[str], hatch) -> PlotArg:
         if hatch is None:
             return PlotArg(None, False)
         if isinstance(hatch, str):
@@ -92,11 +93,11 @@ class PlotArg:
                 raise ValueError(
                     f"'hatch' must be one of the column names {keys!r}, hatch-like "
                     "or sequence of them."
-                )
+                ) from None
             return PlotArg(htch, False)
 
     @classmethod
-    def from_style(self, keys: list[str], style) -> PlotArg:
+    def from_style(cls, keys: list[str], style) -> PlotArg:
         if style is None:
             return PlotArg(None, False)
         if isinstance(style, str):
@@ -113,11 +114,11 @@ class PlotArg:
                 raise ValueError(
                     f"'style' must be one of the column names {keys!r}, style-like "
                     "or sequence of them."
-                )
+                ) from None
             return PlotArg(stl, False)
 
     @classmethod
-    def from_scalar(self, keys: list[str], value) -> PlotArg:
+    def from_scalar(cls, keys: list[str], value) -> PlotArg:
         if value is None:
             return PlotArg(None, False)
         if isinstance(value, str):

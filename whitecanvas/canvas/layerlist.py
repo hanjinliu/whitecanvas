@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, overload, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterable, TypeVar, overload
+
 from psygnal import Signal, SignalGroup
 from psygnal.containers import EventedList
 

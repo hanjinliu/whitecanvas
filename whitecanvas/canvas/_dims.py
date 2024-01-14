@@ -1,24 +1,26 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence, SupportsIndex, TypeVar, overload
 import weakref
+from typing import TYPE_CHECKING, Any, Sequence, SupportsIndex, TypeVar, overload
 
 from psygnal import Signal, SignalGroup
-from whitecanvas.types import (
-    LineStyle,
-    Hatch,
-    ColorType,
-    Orientation,
-    ColormapType,
-    Alignment,
-)
+
 from whitecanvas import layers as _l
-from whitecanvas.layers import _ndim as _ndl
-from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas._axis import DimAxis, RangeAxis
+from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas.layers import _ndim as _ndl
+from whitecanvas.types import (
+    Alignment,
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
     from whitecanvas.canvas._base import CanvasBase
 
 _T = TypeVar("_T")
@@ -124,11 +126,12 @@ class Dims:
             names = self.names
             if len(names) < len(arg):
                 raise ValueError(
-                    f"Number of indices ({len(arg)}) exceeds number of dimensions ({len(names)})."
+                    f"Number of indices ({len(arg)}) exceeds number of dimensions "
+                    f"({len(names)})."
                 )
             if kwargs:
                 raise TypeError("Cannot specify both positional and keyword arguments.")
-            kwargs = {n: v for n, v in zip(names, arg)}
+            kwargs = dict(zip(names, arg))
         elif arg is None:
             pass
         elif hasattr(arg, "__index__"):
@@ -147,7 +150,9 @@ class Dims:
         """
         Add multi-dimensional layers in the given axis names.
 
-        >>> canvas.dims.in_axes("time").add_line(x, [np.sin(x + x0) for x0 in [0, 1, 2]])
+        >>> canvas.dims.in_axes("time").add_line(
+        ...     x, [np.sin(x + x0) for x0 in [0, 1, 2]]
+        >>> )
         """
         n_names = len(names)
         if n_names == 0:
@@ -483,7 +488,8 @@ class InAxes:
         name = canvas._coerce_name(_l.Texts, name)
         stack = _ndl.TextLayerStack.from_layer_class(
             _l.Texts, xdata, ydata, string, name=name, color=color, size=size,
-            rotation=rotation, anchor=anchor, family=family, backend=canvas._get_backend(),
+            rotation=rotation, anchor=anchor, family=family,
+            backend=canvas._get_backend(),
         )  # fmt: skip
         return self._add_layer(stack)
 

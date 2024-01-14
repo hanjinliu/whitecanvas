@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import numpy as np
 import itertools
+
+import numpy as np
 
 
 def unique(arr: np.ndarray, axis=0) -> np.ndarray:
@@ -22,4 +23,4 @@ def unique_product(each_unique: list[np.ndarray]) -> np.ndarray:
            [2, 3],
            [2, 4]])
     """
-    return np.array([un for un in itertools.product(*each_unique)])
+    return np.array(list(itertools.product(*each_unique)))

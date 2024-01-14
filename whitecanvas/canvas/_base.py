@@ -778,6 +778,38 @@ class CanvasBase(ABC):
         )  # fmt: skip
         return self.add_layer(layer)
 
+    def add_hline(
+        self,
+        y: float,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.InfLine:
+        return self.add_infline(
+            (0, y), 0, name=name, color=color, width=width, style=style, alpha=alpha,
+            antialias=antialias
+        )  # fmt: skip
+
+    def add_vline(
+        self,
+        x: float,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.InfLine:
+        return self.add_infline(
+            (x, 0), 90, name=name, color=color, width=width, style=style, alpha=alpha,
+            antialias=antialias,
+        )  # fmt: skip
+
     def add_band(
         self,
         xdata: ArrayLike1D,

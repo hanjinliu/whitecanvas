@@ -4,10 +4,10 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation
 from whitecanvas.layers._primitive import Bars, MultiLine
-from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._cat_utils import check_array_input
+from whitecanvas.layers.group._collections import LayerContainer
+from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation
 from whitecanvas.utils.normalize import as_color_array
 
 
@@ -140,6 +140,28 @@ class BoxPlot(LayerContainer):
         self.boxes.with_edge(color=color, alpha=alpha, width=width, style=style)
         self.whiskers.update(color=color, alpha=alpha, width=width, style=style)
         self.medians.update(color=color, alpha=alpha, width=width, style=style)
+        return self
+
+    def with_shift(self, shift: float) -> BoxPlot:
+        self.boxes.set_data(xdata=self.boxes.data.x + shift)
+        if self.orient.is_vertical:
+            _wdata = []
+            for seg in self.whiskers.data:
+                _wdata.append([seg[:, 0] + shift, seg[:, 1]])
+            self.whiskers.data = _wdata
+            _mdata = []
+            for seg in self.medians.data:
+                _mdata.append([seg[:, 0] + shift, seg[:, 1]])
+            self.medians.data = _mdata
+        else:
+            _wdata = []
+            for seg in self.whiskers.data:
+                _wdata.append([seg[:, 0], seg[:, 1] + shift])
+            self.whiskers.data = _wdata
+            _mdata = []
+            for seg in self.medians.data:
+                _mdata.append([seg[:, 0], seg[:, 1] + shift])
+            self.medians.data = _mdata
         return self
 
 

@@ -1,6 +1,7 @@
-from typing import Any, Union, Iterable, Sequence
-from cmap import Color, Colormap
+from typing import Any, Iterable, Sequence, Union
+
 import numpy as np
+from cmap import Color, Colormap
 from numpy.typing import NDArray
 
 ColorType = Union[str, Iterable["int | float"], Color]

@@ -1,22 +1,21 @@
 from __future__ import annotations
-from typing import Callable, Literal
+
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.protocols import BaseProtocol
-from whitecanvas.types import XYYData, Orientation, LineStyle, ColorType, Hatch
-from whitecanvas.layers._primitive import Band
 from whitecanvas.layers._mixin import CollectionFaceEdgeMixin
+from whitecanvas.layers._primitive import Band
+from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import (
     LayerCollectionBase,
     LayerContainerEvents,
 )
-from whitecanvas.layers.group._cat_utils import check_array_input
-from whitecanvas.utils.normalize import as_array_1d, as_color_array
+from whitecanvas.types import Orientation, XYYData
+from whitecanvas.utils.normalize import as_array_1d
 
 
 class BandCollectionEvents(LayerContainerEvents):
@@ -146,11 +145,20 @@ class ViolinPlot(BandCollection):
     @property
     def offsets(self) -> NDArray[np.floating]:
         if self._shape == "both":
-            _getter: Callable[[XYYData], float] = lambda x: (x.y0[0] + x.y0[1]) / 2
+
+            def _getter(x: XYYData):
+                return (x.y0[0] + x.y0[1]) / 2
+
         elif self._shape == "left":
-            _getter: Callable[[XYYData], float] = lambda x: x.y1[0]
+
+            def _getter(x: XYYData):
+                return x.y1[0]
+
         elif self._shape == "right":
-            _getter: Callable[[XYYData], float] = lambda x: x.y0[0]
+
+            def _getter(x: XYYData):
+                return x.y0[0]
+
         else:
             raise ValueError(self._shape)
         return np.array([_getter(band.data) for band in self])

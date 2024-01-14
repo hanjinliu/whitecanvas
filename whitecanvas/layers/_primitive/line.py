@@ -6,21 +6,21 @@ import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal
 
-from whitecanvas.protocols import LineProtocol, MultiLineProtocol
-from whitecanvas.layers._primitive.text import Texts
-from whitecanvas.layers._base import PrimitiveLayer, DataBoundLayer, LayerEvents
-from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.backend import Backend
+from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
+from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._sizehint import xy_size_hint
+from whitecanvas.protocols import LineProtocol, MultiLineProtocol
 from whitecanvas.types import (
-    LineStyle,
-    Symbol,
-    ColorType,
-    ArrayLike1D,
-    _Void,
     Alignment,
+    ArrayLike1D,
+    ColorType,
     Hatch,
+    LineStyle,
     Orientation,
+    Symbol,
     XYData,
+    _Void,
 )
 from whitecanvas.utils.normalize import arr_color, as_array_1d, normalize_xy
 
@@ -219,8 +219,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         Plot
             The plot layer.
         """
-        from whitecanvas.layers.group import Plot
         from whitecanvas.layers._primitive import Markers
+        from whitecanvas.layers.group import Plot
 
         if color is _void:
             color = self.color
@@ -241,8 +241,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> _lg.LabeledLine:
-        from whitecanvas.layers.group import LabeledLine
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledLine
 
         if err_high is None:
             err_high = err
@@ -272,8 +272,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> _lg.LabeledLine:
-        from whitecanvas.layers.group import LabeledLine
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledLine
 
         if err_high is None:
             err_high = err
@@ -302,8 +302,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         alpha: float = 0.5,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if err_high is None:
             err_high = err
@@ -325,8 +325,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         alpha: float = 0.5,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if err_high is None:
             err_high = err
@@ -347,8 +347,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         alpha: float = 0.5,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if color is _void:
             color = self.color
@@ -368,8 +368,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         alpha: float = 0.5,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if color is _void:
             color = self.color

@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 _C = TypeVar("_C", bound="CanvasBase")
 _DF = TypeVar("_DF")
 NStr = Union[str, Sequence[str]]
+_Orientation = Union[str, Orientation]
 
 
 class _Plotter(Generic[_C, _DF]):
@@ -50,11 +51,15 @@ class _Plotter(Generic[_C, _DF]):
 
     def _update_xy_label(
         self,
-        x: str,
-        y: str,
+        x: str | tuple[str, ...],
+        y: str | tuple[str, ...],
         orient: Orientation = Orientation.VERTICAL,
     ) -> None:
         canvas = self._canvas()
+        if not isinstance(x, str):
+            x = "/".join(x)
+        if not isinstance(y, str):
+            y = "/".join(y)
         if orient.is_vertical:
             canvas.x.label.text = x
             canvas.y.label.text = y
@@ -87,7 +92,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -109,7 +114,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -130,7 +135,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -142,20 +147,48 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         *,
         color: NStr | None = None,
         hatch: NStr | None = None,
+        extent: float = 0.8,
+        shape: str = "both",
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: _Orientation = Orientation.VERTICAL,
     ) -> _lt.WrappedViolinPlot[_DF]:
         canvas = self._canvas()
-        layer = _lt.WrappedViolinPlot(
-            self._df, offset, value, name=name, color=color, hatch=hatch,
-            orient=orient, backend=canvas._get_backend(),
+        layer = _lt.WrappedViolinPlot.from_table(
+            self._df, offset, value, name=name, color=color, hatch=hatch, extent=extent,
+            shape=shape, orient=orient, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         if self._update_label:
             pos, labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
-            self._update_xy_label("/".join(offset), value, orient=orient)
+            self._update_xy_label(offset, value, orient=orient)
+
+        return canvas.add_layer(layer)
+
+    def add_boxplot(
+        self,
+        offset: tuple[str, ...],
+        value: str,
+        *,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
+        name: str | None = None,
+        orient: _Orientation = Orientation.VERTICAL,
+        capsize: float = 0.1,
+        extent: float = 0.8,
+    ) -> _lt.WrappedBoxPlot[_DF]:
+        canvas = self._canvas()
+        layer = _lt.WrappedBoxPlot.from_table(
+            self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
+            capsize=capsize, extent=extent, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if color is not None:
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        if self._update_label:
+            pos, labels = layer._generate_labels()
+            self._update_xy_ticks(pos, labels, orient=orient)
+            self._update_xy_label(offset, value, orient=orient)
 
         return canvas.add_layer(layer)
 
@@ -169,10 +202,10 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         symbol: NStr | None = None,
         size: str | None = None,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: _Orientation = Orientation.VERTICAL,
         extent: float = 0.5,
         seed: int | None = 0,
-    ) -> _lt.WrappedMarkers[_DF]:
+    ) -> _lt.WrappedMarkerGroups[_DF]:
         canvas = self._canvas()
         orient = Orientation.parse(orient)
         layer = _lt.WrappedMarkers.build_stripplot(
@@ -181,11 +214,11 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         if self._update_label:
             pos, labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
-            self._update_xy_label("/".join(offset), value, orient=orient)
+            self._update_xy_label(offset, value, orient=orient)
         return canvas.add_layer(layer)
 
     def add_swarmplot(
@@ -198,10 +231,10 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         symbol: NStr | None = None,
         size: str | None = None,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: _Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         sort: bool = False,
-    ) -> _lt.WrappedMarkers[_DF]:
+    ) -> _lt.WrappedMarkerGroups[_DF]:
         canvas = self._canvas()
         layer = _lt.WrappedMarkers.build_swarmplot(
             self._df, offset, value, name=name, color=color, hatch=hatch, symbol=symbol,
@@ -209,11 +242,11 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         if self._update_label:
             pos, labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
-            self._update_xy_label("/".join(offset), value, orient=orient)
+            self._update_xy_label(offset, value, orient=orient)
         return canvas.add_layer(layer)
 
     def add_countplot(
@@ -223,7 +256,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         color: NStr | None = None,
         hatch: NStr | None = None,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: _Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
     ) -> _lt.WrappedBars[_DF]:
         canvas = self._canvas()
@@ -233,32 +266,32 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             name=name, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         if self._update_label:
-            self._update_xy_label("/".join(offset), "count", orient=orient)
+            self._update_xy_label(offset, "count", orient=orient)
         return canvas.add_layer(layer)
 
-    def mean(self, orient: str | Orientation) -> DataFrameAggPlotter[_C, _DF]:
+    def mean(self, orient: _Orientation = "vertical") -> DataFrameAggPlotter[_C, _DF]:
         """Return a mean-plotter."""
         return self._agg_plotter("mean", orient)
 
-    def std(self, orient: str | Orientation) -> DataFrameAggPlotter[_C, _DF]:
+    def std(self, orient: _Orientation = "vertical") -> DataFrameAggPlotter[_C, _DF]:
         """Return a std-plotter."""
         return self._agg_plotter("std", orient)
 
-    def median(self, orient: str | Orientation) -> DataFrameAggPlotter[_C, _DF]:
+    def median(self, orient: _Orientation = "vertical") -> DataFrameAggPlotter[_C, _DF]:
         """Return a median-plotter."""
         return self._agg_plotter("median", orient)
 
-    def min(self, orient: str | Orientation) -> DataFrameAggPlotter[_C, _DF]:
+    def min(self, orient: _Orientation = "vertical") -> DataFrameAggPlotter[_C, _DF]:
         """Return a min-plotter."""
         return self._agg_plotter("min", orient)
 
-    def max(self, orient: str | Orientation) -> DataFrameAggPlotter[_C, _DF]:
+    def max(self, orient: _Orientation = "vertical") -> DataFrameAggPlotter[_C, _DF]:
         """Return a max-plotter."""
         return self._agg_plotter("max", orient)
 
-    def sum(self, orient: str | Orientation) -> DataFrameAggPlotter[_C, _DF]:
+    def sum(self, orient: _Orientation = "vertical") -> DataFrameAggPlotter[_C, _DF]:
         """Return a sum-plotter."""
         return self._agg_plotter("sum", orient)
 
@@ -310,7 +343,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(_color.value, palette=canvas._color_palette)
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -340,7 +373,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None:
-            layer.with_color(palette=canvas._color_palette)
+            layer.with_color(_color.value, palette=canvas._color_palette)
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)

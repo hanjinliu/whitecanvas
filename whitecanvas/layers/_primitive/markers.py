@@ -1,40 +1,41 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
-from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
-from whitecanvas.protocols import MarkersProtocol
-from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import (
-    MultiFaceEdgeMixin,
-    FaceNamespace,
     EdgeNamespace,
     FaceEdgeMixinEvents,
+    FaceNamespace,
+    MultiFaceEdgeMixin,
 )
-from whitecanvas.backend import Backend
+from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._sizehint import xy_size_hint
+from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.types import (
-    LineStyle,
-    Symbol,
+    Alignment,
     ColorType,
     Hatch,
-    _Void,
-    Alignment,
+    LineStyle,
     Orientation,
+    Symbol,
     XYData,
+    _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
     from whitecanvas.layers._mixin import (
-        ConstFace,
         ConstEdge,
-        MultiFace,
+        ConstFace,
         MultiEdge,
+        MultiFace,
     )
 
 _void = _Void()
@@ -305,8 +306,8 @@ class Markers(
         LabeledMarkers
             Layer group containing the markers and the error bars as children.
         """
-        from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledMarkers
 
         if err_high is None:
             err_high = err
@@ -360,8 +361,8 @@ class Markers(
         LabeledMarkers
             Layer group containing the markers and the error bars as children.
         """
-        from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledMarkers
 
         if err_high is None:
             err_high = err
@@ -508,8 +509,8 @@ class Markers(
         StemPlot
             StemPlot layer containing the markers and the stems as children.
         """
-        from whitecanvas.layers.group import StemPlot
         from whitecanvas.layers._primitive import MultiLine
+        from whitecanvas.layers.group import StemPlot
 
         ori = Orientation.parse(orient)
         xdata, ydata = self.data

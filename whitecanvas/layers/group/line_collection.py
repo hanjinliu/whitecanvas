@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 from typing import Any, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.layers.group._collections import LayerCollectionBase
-from whitecanvas.layers._primitive import Line
-from whitecanvas.types import XYData, LineStyle
+
 from whitecanvas.backend import Backend
+from whitecanvas.layers._primitive import Line
+from whitecanvas.layers.group._collections import LayerCollectionBase
+from whitecanvas.types import LineStyle, XYData
 from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
 
 

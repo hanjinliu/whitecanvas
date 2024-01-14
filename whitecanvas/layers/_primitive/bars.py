@@ -1,34 +1,35 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Sequence, TypeVar
+
 import numpy as np
 from numpy.typing import NDArray
-
 from psygnal import Signal
-from whitecanvas.protocols import BarProtocol
-from whitecanvas.layers._primitive.text import Texts
+
+from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import (
-    MultiFaceEdgeMixin,
+    ConstEdge,
+    ConstFace,
+    EdgeNamespace,
     FaceEdgeMixinEvents,
     FaceNamespace,
-    EdgeNamespace,
-    ConstFace,
-    ConstEdge,
-    MultiFace,
     MultiEdge,
+    MultiFace,
+    MultiFaceEdgeMixin,
 )
+from whitecanvas.layers._primitive.text import Texts
 from whitecanvas.layers._sizehint import xyy_size_hint
-from whitecanvas.backend import Backend
+from whitecanvas.protocols import BarProtocol
 from whitecanvas.types import (
-    Hatch,
-    ColorType,
-    _Void,
     Alignment,
+    ArrayLike1D,
+    ColorType,
+    Hatch,
     LineStyle,
     Orientation,
     XYData,
-    ArrayLike1D,
+    _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d
 
@@ -270,8 +271,8 @@ class Bars(
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.LabeledBars:
-        from whitecanvas.layers.group import LabeledBars
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledBars
 
         xerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
@@ -293,8 +294,8 @@ class Bars(
         antialias: bool = True,
         capsize: float = 0,
     ) -> _lg.LabeledBars:
-        from whitecanvas.layers.group import LabeledBars
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledBars
 
         yerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,

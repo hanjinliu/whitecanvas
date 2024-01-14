@@ -1,14 +1,14 @@
 import sys
 from typing import Any
 
-from whitecanvas.canvas import (
-    CanvasGrid,
-    CanvasVGrid,
-    CanvasHGrid,
-    SingleCanvas,
-    Canvas,
-)
 from whitecanvas.backend import Backend
+from whitecanvas.canvas import (
+    Canvas,
+    CanvasGrid,
+    CanvasHGrid,
+    CanvasVGrid,
+    SingleCanvas,
+)
 from whitecanvas.types import ColormapType
 
 
@@ -119,11 +119,11 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
     >>> import matplotlib.pyplot as plt
     >>> canvas = wrap_canvas(plt.gca())
     """
-    mod = type(obj).__module__.split(".")[0]
     typ = type(obj).__name__
 
     if _is_in_module(typ, "matplotlib", "Axes"):
         from matplotlib.axes import Axes
+
         from whitecanvas.backend.matplotlib import Canvas as BackendCanvas
 
         if not isinstance(obj, Axes):
@@ -132,6 +132,7 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
 
     elif _is_in_module(typ, "plotly", "FigureWidget"):
         from plotly.graph_objs import FigureWidget
+
         from whitecanvas.backend.plotly import Canvas as BackendCanvas
 
         if not isinstance(obj, FigureWidget):
@@ -139,6 +140,7 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
         backend = "plotly"
     elif _is_in_module(typ, "bokeh", "Plot"):
         from bokeh.models import Plot
+
         from whitecanvas.backend.bokeh import Canvas as BackendCanvas
 
         if not isinstance(obj, Plot):
@@ -146,6 +148,7 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
         backend = "bokeh"
     elif _is_in_module(typ, "vispy", "ViewBox"):
         from vispy.scene import ViewBox
+
         from whitecanvas.backend.vispy import Canvas as BackendCanvas
 
         if not isinstance(obj, ViewBox):
@@ -153,6 +156,7 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
         backend = "vispy"
     elif _is_in_module(typ, "pyqtgraph", "ViewBox"):
         from pyqtgraph import ViewBox
+
         from whitecanvas.backend.pyqtgraph import Canvas as BackendCanvas
 
         if not isinstance(obj, ViewBox):

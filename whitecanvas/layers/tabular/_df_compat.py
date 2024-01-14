@@ -127,7 +127,7 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
 class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def __getitem__(self, item: str) -> np.ndarray:
         series = self._data[item]
-        if series.size > 0 and isinstance(series[0], str):
+        if series.size > 0 and isinstance(series.iloc[0], str):
             return series.to_numpy().astype(str)
         else:
             return series.to_numpy()
@@ -150,11 +150,11 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         return PandasWrapper(self._data[sers])
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
-        for sl, sub in self._data.groupby(by, observed=True):
+        for sl, sub in self._data.groupby(list(by), observed=True):
             yield sl, PandasWrapper(sub)
 
     def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
-        return PandasWrapper(self._data.groupby(by)[on].agg(method).reset_index())
+        return PandasWrapper(self._data.groupby(list(by))[on].agg(method).reset_index())
 
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):

@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 
 
-class _strEnum(Enum):
+class _StrEnum(Enum):
     def __eq__(self, other):
         if isinstance(other, str):
             if other in self._value_:
@@ -21,14 +21,14 @@ class _strEnum(Enum):
         return f"{self.__class__.__name__}.{self.name}<{self.value!r}>"
 
 
-class LineStyle(_strEnum):
+class LineStyle(_StrEnum):
     SOLID = "-"
     DASH = "--"
     DASH_DOT = "-."
     DOT = ":"
 
 
-class Hatch(_strEnum):
+class Hatch(_StrEnum):
     SOLID = ""
     HORIZONTAL = "-"
     VERTICAL = "|"
@@ -39,7 +39,7 @@ class Hatch(_strEnum):
     DOTS = "."
 
 
-class Symbol(_strEnum):
+class Symbol(_StrEnum):
     CIRCLE = "o"
     SQUARE = "s"
     TRIANGLE_UP = "^"
@@ -62,14 +62,14 @@ class Symbol(_strEnum):
         )
 
 
-class Modifier(_strEnum):
+class Modifier(_StrEnum):
     SHIFT = "shift"
     CTRL = "ctrl"
     ALT = "alt"
     META = "meta"
 
 
-class MouseButton(_strEnum):
+class MouseButton(_StrEnum):
     NONE = "none"
     LEFT = "left"
     MIDDLE = "middle"
@@ -78,14 +78,14 @@ class MouseButton(_strEnum):
     FORWARD = "forward"
 
 
-class MouseEventType(_strEnum):
+class MouseEventType(_StrEnum):
     MOVE = "move"
     CLICK = "click"
     RELEASE = "release"
     DOUBLE_CLICK = "double_click"
 
 
-class Alignment(_strEnum):
+class Alignment(_StrEnum):
     TOP = "top"
     BOTTOM = "bottom"
     LEFT = "left"
@@ -143,7 +143,7 @@ class Alignment(_strEnum):
         return vertical, horizontal
 
 
-class Orientation(_strEnum):
+class Orientation(_StrEnum):
     VERTICAL = "vertical"
     HORIZONTAL = "horizontal"
 
@@ -167,7 +167,7 @@ class Orientation(_strEnum):
         return self is Orientation.VERTICAL
 
 
-class Origin(_strEnum):
+class Origin(_StrEnum):
     """
     Enum that define the center of image.
 

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
+
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from cmap import Color
+from numpy.typing import ArrayLike, NDArray
 
 
 def as_array_1d(x: ArrayLike, dtype=None) -> NDArray[np.number]:
@@ -29,7 +30,7 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
             ydata = arr[:, 1]
         else:
             raise ValueError(
-                "Expected 1D array or 2D array with shape (N, 2), " f"got {arr.shape}"
+                f"Expected 1D array or 2D array with shape (N, 2), got {arr.shape}"
             )
     elif len(args) == 2:
         if np.isscalar(args[0]) and np.isscalar(args[1]):
@@ -53,7 +54,7 @@ def arr_color(color) -> np.ndarray:
     """Normalize a color input to a 4-element float array."""
     try:
         c = Color(color)
-    except Exception as e:
+    except Exception:
         raise ValueError(f"Invalid input for a color: {color!r}") from None
     return np.array(c.rgba, dtype=np.float32)
 
@@ -96,8 +97,8 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
             return color
         else:
             raise ValueError(
-                f"Color array must have shape (3,), (4,), (N={size}, 3), or (N={size}, 4) "
-                f"but got {color.shape}"
+                f"Color array must have shape (3,), (4,), (N={size}, 3), or (N={size},"
+                f" 4) but got {color.shape}"
             )
     arr = np.array(color)
     return as_color_array(arr, size)

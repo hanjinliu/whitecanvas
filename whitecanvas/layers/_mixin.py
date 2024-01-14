@@ -763,8 +763,7 @@ class CollectionEdge(EdgeNamespace):
     @width.setter
     def width(self, width: float | Iterable[float]):
         layers = list(self._iter_children())
-        ndata = len(layers)
-        widths = as_any_1d_array(width, ndata, dtype=np.float32)
+        widths = as_any_1d_array(width, len(layers), dtype=np.float32)
         for layer, w in zip(layers, widths):
             layer.edge.width = w
         self.events.width.emit(width)
@@ -778,7 +777,7 @@ class CollectionEdge(EdgeNamespace):
     @style.setter
     def style(self, style: str | LineStyle | Iterable[str | LineStyle]):
         layers = list(self._iter_children())
-        styles = as_any_1d_array(style)
+        styles = as_any_1d_array(style, len(layers), dtype=object)
         for layer, ls in zip(layers, styles):
             layer.edge.style = ls
         self.events.style.emit(style)
@@ -816,6 +815,33 @@ class CollectionFaceEdgeMixin(_AbstractFaceEdgeMixin[CollectionFace, CollectionE
     def __init__(self):
         self._face_namespace = CollectionFace(self)
         self._edge_namespace = CollectionEdge(self)
+
+    def with_face(
+        self,
+        *,
+        color: ColorType | None = None,
+        hatch: Hatch | str = Hatch.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the face properties."""
+        if color is None:
+            color = self.face.color
+        self.face.update(color=color, hatch=hatch, alpha=alpha)
+        return self
+
+    def with_edge(
+        self,
+        *,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the edge properties."""
+        if color is None:
+            color = self.face.color
+        self.edge.update(color=color, style=style, width=width, alpha=alpha)
+        return self
 
 
 # just for typing
@@ -951,7 +977,7 @@ class MultiFont(FontNamespace):
     def family(self, value):
         if value is None:
             value = get_theme().fontfamily
-        family = as_any_1d_array(value, self._layer.ntexts)
+        family = as_any_1d_array(value, self._layer.ntexts, dtype=object)
         self._layer._backend._plt_set_text_fontfamily(family)
         self.events.family.emit(family)
 

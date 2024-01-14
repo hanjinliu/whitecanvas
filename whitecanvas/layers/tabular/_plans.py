@@ -407,7 +407,11 @@ class ColorPlan(CyclicPlan[Color]):
         self,
         values: dict[str, np.ndarray],  # the data frame
     ) -> Sequence[_V]:
-        series = [values[k] for k in self._by]
+        if self._by:
+            series = [values[k] for k in self._by]
+        else:
+            # constant, no key filter
+            return self.values[0]
         uniques = [unique(ar, axis=None) for ar in series]
         out = np.empty((series[0].size, 4), dtype=np.float32)
         i = 0

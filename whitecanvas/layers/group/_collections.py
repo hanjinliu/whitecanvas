@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import Iterable, Iterator, TYPE_CHECKING, Sequence, MutableSequence, TypeVar
+from typing import TYPE_CHECKING, Iterable, Iterator, MutableSequence, Sequence, TypeVar
+
 from psygnal import Signal
-from whitecanvas.layers._base import Layer, LayerGroup, LayerEvents, PrimitiveLayer
+
+from whitecanvas.layers._base import Layer, LayerEvents, LayerGroup, PrimitiveLayer
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas

@@ -19,12 +19,9 @@ def main():
     ).with_edge(color="#3F3F00").with_shift(-0.3)
     cat_plt.add_boxplot(x, y, color=x, extent=0.3)
     cat_plt.mean().add_markers(x, y, color="black", size=10, symbol="+")
-    (
-        cat_plt
-        .add_violinplot(x, y, color=x, extent=0.3, shape="right")
-        .with_edge(color="#3F3F00")
-        .with_shift(0.2)
-    )
+    cat_plt.add_violinplot(
+        x, y, color=x, extent=0.3, shape="right"
+    ).with_edge(color="#3F3F00").with_shift(0.2)
 
     canvas.show(block=True)
 

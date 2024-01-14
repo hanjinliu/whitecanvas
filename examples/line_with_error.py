@@ -1,5 +1,7 @@
 import numpy as np
+
 from whitecanvas import new_canvas
+
 
 def main():
     canvas = new_canvas(backend="matplotlib:qt")
@@ -13,6 +15,8 @@ def main():
         .with_markers(symbol="o", size=12)
         .with_yerr(yerr, capsize=0.5, color="black")
     )
+
+    print("Layer of type", type(layer), "added.")  # noqa: T201
 
     canvas.show(block=True)
 

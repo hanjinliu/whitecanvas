@@ -1,5 +1,6 @@
-from whitecanvas import new_canvas
 import numpy as np
+
+from whitecanvas import new_canvas
 
 # This example shows how to use the `with_yfill` method to fill the area between
 # a line and the x-axis.

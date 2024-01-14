@@ -1,5 +1,7 @@
-from whitecanvas import new_canvas
 import numpy as np
+
+from whitecanvas import new_canvas
+
 
 def main():
     canvas = new_canvas(backend="matplotlib:qt")

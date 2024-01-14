@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import weakref
 from typing import TYPE_CHECKING, Generic, TypeVar
 
@@ -47,6 +48,13 @@ class StackOverPlotter(Generic[_C, _L]):
         canvas = self._canvas()
         layer = self._layer()
         color = canvas._generate_colors(color)
+
+        if name is None:
+            if re.match(r".+\+\d", layer.name):
+                stem, num = layer.name.rsplit("+", 1)
+                name = f"{stem}+{int(num) + 1}"
+            else:
+                name = f"{layer.name}+1"
 
         # unwrap nested layers in a group
         if isinstance(layer, LabeledBars):

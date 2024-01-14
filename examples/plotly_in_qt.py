@@ -1,5 +1,7 @@
-from whitecanvas import plot as plt
 import numpy as np
+
+from whitecanvas import plot as plt
+
 
 def main():
     canvas = plt.figure("plotly:qt")

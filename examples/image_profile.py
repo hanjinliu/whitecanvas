@@ -1,6 +1,8 @@
 import numpy as np
 from scipy import ndimage as ndi
-from whitecanvas import new_canvas, vgrid_nonuniform
+
+from whitecanvas import vgrid_nonuniform
+
 
 def main():
     grid = vgrid_nonuniform(heights=[3, 1], backend="pyqtgraph:qt")

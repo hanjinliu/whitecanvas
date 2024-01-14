@@ -1,6 +1,8 @@
+import numpy as np
+
 from whitecanvas import new_canvas
 from whitecanvas.types import MouseEvent
-import numpy as np
+
 
 def main():
     canvas = new_canvas("matplotlib:qt")

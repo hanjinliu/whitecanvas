@@ -1,5 +1,6 @@
 from whitecanvas import new_canvas
 
+
 def main():
     canvas = new_canvas(backend="matplotlib")
     x = [1, 2, 3, 4, 5]

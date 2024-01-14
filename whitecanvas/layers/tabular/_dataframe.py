@@ -700,6 +700,8 @@ class WrappedBars(
         extent: float = 0.8,
         backend: str | Backend | None = None,
     ):
+        if isinstance(offset, str):
+            offset = (offset,)
         splitby = _concat_by(offset, color, hatch)
         unique_sl: list[tuple[Any, ...]] = []
         values = []
@@ -760,7 +762,7 @@ class WrappedBars(
     ) -> WrappedBars[_DF]:
         src = parse(df)
         splitby = _concat_by(offset, color, hatch)
-        new_src = src.agg_by(splitby, on=splitby[0], method="size")
+        new_src = src.value_count(splitby)
         return WrappedBars(
             new_src, offset, "size", name=name, color=color, hatch=hatch,
             orient=orient, extent=extent, backend=backend

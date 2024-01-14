@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING, Any, Generic, Iterator, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.layers.tabular._utils import unique_product
-
 if TYPE_CHECKING:
     import pandas as pd  # noqa: F401
     import polars as pl  # noqa: F401
@@ -83,10 +81,19 @@ class DataFrameWrapper(ABC, Generic[_T]):
     def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
         ...
 
+    @abstractmethod
+    def value_count(self, by: tuple[str, ...]) -> Self:
+        ...
+
 
 class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
     def __getitem__(self, item: str) -> np.ndarray:
-        return self._data[item]
+        try:
+            return self._data[item]
+        except KeyError:
+            raise KeyError(
+                f"{item!r} not in the keys. Valid keys are: {list(self._data.keys())}."
+            ) from None
 
     def iter_keys(self) -> Iterator[str]:
         return iter(self._data.keys())
@@ -109,11 +116,15 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
         return DictWrapper({k: v[sl] for k, v in self._data.items()})
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
-        for values in unique_product(*[self._data[b] for b in by]):
-            yield values, self.filter(by, values)
+        observed = set()
+        for row in zip(*[self._data[b] for b in by]):
+            if row in observed:
+                continue
+            yield row, self.filter(by, row)
+            observed.add(row)
 
     def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
-        if method not in ("min", "max", "mean", "median", "sum", "std", "size"):
+        if method not in ("min", "max", "mean", "median", "sum", "std"):
             raise ValueError(f"Unsupported aggregation method: {method}")
         agg = getattr(np, method)
         out = {k: [] for k in (*by, on)}
@@ -121,6 +132,14 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
             for b, s in zip(by, sl):
                 out[b].append(s)
             out[on].append(agg(sub[on]))
+        return DictWrapper({k: np.array(v) for k, v in out.items()})
+
+    def value_count(self, by: tuple[str, ...]) -> Self:
+        out = {k: [] for k in [*by, "size"]}
+        for sl, sub in self.group_by(by):
+            for b, s in zip(by, sl):
+                out[b].append(s)
+            out["size"].append(len(sub[by[0]]))
         return DictWrapper({k: np.array(v) for k, v in out.items()})
 
 
@@ -155,6 +174,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
 
     def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
         return PandasWrapper(self._data.groupby(list(by))[on].agg(method).reset_index())
+
+    def value_count(self, by: tuple[str, ...]) -> Self:
+        raise NotImplementedError
 
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
@@ -193,11 +215,15 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
     def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
         import polars as pl
 
-        if method == "size":
-            expr = pl.count().alias("size")
-        else:
-            expr = getattr(pl.col(on), method)()
+        expr = getattr(pl.col(on), method)()
         return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(expr))
+
+    def value_count(self, by: tuple[str, ...]) -> Self:
+        return (
+            self._data.group_by(by, maintain_order=True)
+            .count()
+            .rename({"count": "size"})
+        )
 
 
 class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
@@ -234,6 +260,13 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
         expr = getattr(pa.field(on), method)()
         return PyArrowWrapper(
             self._data.group_by(by, maintain_order=True).aggregate(expr)
+        )
+
+    def value_count(self, by: tuple[str, ...]) -> Self:
+        return (
+            self._data.group_by(by, maintain_order=True)
+            .count()
+            .rename_columns([*by, "size"])
         )
 
 

@@ -1,6 +1,7 @@
-import pytest
-from whitecanvas import new_canvas
 import numpy as np
+import pytest
+
+from whitecanvas import new_canvas
 
 BACKENDS = ["matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
 
@@ -13,11 +14,11 @@ def test_cat_plots(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
 
-    canvas.cat(df, by="label").add_stripplot(y="y")
-    canvas.cat(df, by="label").add_swarmplot(y="y")
-    canvas.cat(df, by="label").add_boxplot(y="y")
-    canvas.cat(df, by="label").add_violinplot(y="y")
-    canvas.cat(df, by="label").add_countplot()
+    canvas.cat(df).add_stripplot("label", "y")
+    canvas.cat(df).add_swarmplot("label", "y")
+    canvas.cat(df).add_boxplot("label", "y")
+    canvas.cat(df).add_violinplot("label", "y")
+    canvas.cat(df).add_countplot("label")
 
 @pytest.mark.parametrize("backend", BACKENDS)
 def test_colored_plots(backend: str):
@@ -28,7 +29,5 @@ def test_colored_plots(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
 
-    canvas.colorize(df, by="label").add_markers("x", "y")
-    canvas.colorize(df, by="label").add_line("x", "y")
-    canvas.colorize(df, by="label").add_hist("y")
-    canvas.colorize(df, by="label").add_cdf(value_column="y")
+    canvas.cat(df).add_markers("x", "y", color="label")
+    canvas.cat(df).add_line("x", "y", color="label")

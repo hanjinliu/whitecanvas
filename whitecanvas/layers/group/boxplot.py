@@ -162,6 +162,8 @@ class BoxPlot(LayerContainer):
             for seg in self.medians.data:
                 _mdata.append([seg[:, 0], seg[:, 1] + shift])
             self.medians.data = _mdata
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
 

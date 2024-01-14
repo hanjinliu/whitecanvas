@@ -1,6 +1,6 @@
-from whitecanvas.canvas import Canvas, CanvasGrid
-from whitecanvas.core import new_canvas, grid
 from whitecanvas.backend import Backend
+from whitecanvas.canvas import Canvas, CanvasGrid
+from whitecanvas.core import grid, new_canvas
 
 
 def current_grid() -> CanvasGrid:

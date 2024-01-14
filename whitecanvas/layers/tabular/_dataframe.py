@@ -157,6 +157,8 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
             old_data = layer.data
             new_data = (old_data[0] + dx, old_data[1] + dy)
             layer.data = new_data
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
 
@@ -291,6 +293,8 @@ class WrappedViolinPlot(DataFrameLayerWrapper[_lg.ViolinPlot, _DF], Generic[_DF]
         for layer in self._base_layer:
             _old = layer.data
             layer.set_data(edge_low=_old.y0 + shift, edge_high=_old.y1 + shift)
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
     def with_edge(
@@ -652,6 +656,8 @@ class WrappedMarkers(
         """Add a constant shift to the layer."""
         _old_data = self._base_layer.data
         self._base_layer.set_data(xdata=_old_data.x + dx, ydata=_old_data.y + dy)
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
 
@@ -672,6 +678,8 @@ class WrappedMarkerGroups(WrappedMarkers):
             self._base_layer.set_data(xdata=_old_data.x + shift)
         else:
             self._base_layer.set_data(ydata=_old_data.y + shift)
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
 

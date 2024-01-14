@@ -178,7 +178,7 @@ class CanvasBase(ABC):
         self,
         xpad: float | tuple[float, float] | None = None,
         ypad: float | tuple[float, float] | None = None,
-    ):
+    ) -> tuple[float, float, float, float]:
         """
         Autoscale the canvas to fit the contents.
 

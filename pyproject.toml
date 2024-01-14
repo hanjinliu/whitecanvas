@@ -144,13 +144,12 @@ select = [
   "YTT",
 ]
 ignore = [
-  "A002", "A003",
-  "ARG002",
+  "A002", "A003", "ARG001", "ARG002",
   # Allow non-abstract empty methods in abstract base classes
   "B027", "B904", "B006",
   "E741",
   # Ignore checks for possible passwords
-  "S105", "S106", "S107",
+  "S101", "S105", "S106", "S107",
   # Ignore complexity
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
 ]

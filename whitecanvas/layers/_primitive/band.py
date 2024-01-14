@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 from typing import Any
 
 import numpy as np
 
-from whitecanvas.protocols import BandProtocol
+from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import FaceEdgeMixin
 from whitecanvas.layers._sizehint import xyy_size_hint
-from whitecanvas.backend import Backend
-from whitecanvas.types import Hatch, ColorType, Orientation, XYYData, ArrayLike1D
+from whitecanvas.protocols import BandProtocol
+from whitecanvas.types import ArrayLike1D, ColorType, Hatch, Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
 
 

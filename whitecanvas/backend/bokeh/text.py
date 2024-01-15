@@ -1,21 +1,19 @@
 from __future__ import annotations
 
+import bokeh.models as bk_models
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Alignment, Hatch, LineStyle
-from whitecanvas.protocols import TextProtocol, check_protocol
-
-import bokeh.models as bk_models
-
-from whitecanvas.utils.normalize import arr_color, as_color_array, hex_color
-from ._base import (
+from whitecanvas.backend.bokeh._base import (
     BokehLayer,
-    to_bokeh_line_style,
+    from_bokeh_hatch,
     from_bokeh_line_style,
     to_bokeh_hatch,
-    from_bokeh_hatch,
+    to_bokeh_line_style,
 )
+from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.types import Alignment, Hatch, LineStyle
+from whitecanvas.utils.normalize import arr_color, as_color_array, hex_color
 
 
 @check_protocol(TextProtocol)
@@ -25,20 +23,20 @@ class Texts(BokehLayer[bk_models.Text]):
     ):
         ntexts = len(text)
         self._data = bk_models.ColumnDataSource(
-            data=dict(
-                x=x,
-                y=y,
-                text=text,
-                text_font=["Arial"] * ntexts,
-                text_font_size=["12pt"] * ntexts,
-                text_color=["black"] * ntexts,
-                angle=[0] * ntexts,
-                background_fill_color=["#00000000"] * ntexts,
-                background_hatch_pattern=[""] * ntexts,
-                border_line_color=["#00000000"] * ntexts,
-                border_line_width=[0] * ntexts,
-                border_line_dash=["solid"] * ntexts,
-            )
+            data={
+                "x": x,
+                "y": y,
+                "text": text,
+                "text_font": ["Arial"] * ntexts,
+                "text_font_size": ["12pt"] * ntexts,
+                "text_color": ["black"] * ntexts,
+                "angle": [0] * ntexts,
+                "background_fill_color": ["#00000000"] * ntexts,
+                "background_hatch_pattern": [""] * ntexts,
+                "border_line_color": ["#00000000"] * ntexts,
+                "border_line_width": [0] * ntexts,
+                "border_line_dash": ["solid"] * ntexts,
+            }
         )
         self._model = bk_models.Text(
             x="x",

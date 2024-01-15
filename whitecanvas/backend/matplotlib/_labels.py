@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import weakref
 from typing import TYPE_CHECKING
+
 from matplotlib import pyplot as plt
+
 from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
-    from .canvas import Canvas
+    from whitecanvas.backend.matplotlib.canvas import Canvas
 
 
 class SupportsText:
@@ -147,15 +149,14 @@ class YLabel(SupportsText):
 
 
 class XTicks(SupportsText):
-    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         axes = self._canvas()._axes
         return axes.get_xticks(), [x.get_text() for x in axes.get_xticklabels()]
 
-    def _plt_set_text(self, text: tuple[list[float], list[str]]):
-        pos, texts = text
-        self._canvas()._axes.set_xticks(pos, texts)
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
+        self._canvas()._axes.set_xticks(pos, labels)
 
-    def _plt_reset_text(self):
+    def _plt_reset_override(self):
         self._canvas()._axes.set_xticks([])
 
     def _plt_set_color(self, color):
@@ -189,6 +190,13 @@ class XTicks(SupportsText):
             x.set_fontfamily(font)
         self._fontdict = d
 
+    def _plt_get_text_rotation(self) -> float:
+        return self._canvas()._axes.get_xticklabels()[0].get_rotation()
+
+    def _plt_set_text_rotation(self, rotation: float):
+        for x in self._canvas()._axes.get_xticklabels():
+            x.set_rotation(rotation)
+
 
 class YTicks(SupportsText):
     def _plt_get_text(self) -> tuple[list[float], list[str]]:
@@ -199,7 +207,7 @@ class YTicks(SupportsText):
         pos, texts = text
         self._canvas()._axes.set_yticks(pos, texts)
 
-    def _plt_reset_text(self):
+    def _plt_reset_override(self):
         self._canvas()._axes.set_yticks([])
 
     def _plt_set_color(self, color):

@@ -1,8 +1,10 @@
 from typing import Any, Callable, Protocol, runtime_checkable
+
 import numpy as np
-from numpy.typing import NDArray
 from cmap import Colormap
-from whitecanvas.types import LineStyle, Symbol, Hatch, Orientation, Alignment
+from numpy.typing import NDArray
+
+from whitecanvas.types import Alignment, Hatch, LineStyle, Orientation, Symbol
 
 Array1D = NDArray[np.number]
 

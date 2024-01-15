@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import weakref
 from typing import TYPE_CHECKING
+
 import numpy as np
+from bokeh.models import FactorRange
 from cmap import Color
+
+from whitecanvas.backend.bokeh._base import to_bokeh_line_style
 from whitecanvas.types import LineStyle
-from ._base import to_bokeh_line_style
 
 if TYPE_CHECKING:
-    from .canvas import Canvas
-    from bokeh.models import Axis as BokehAxis, Grid as BokehGrid, DataRange1d
+    from bokeh.models import Axis as BokehAxis
+    from bokeh.models import DataRange1d
+    from bokeh.models import Grid as BokehGrid
+
+    from whitecanvas.backend.bokeh.canvas import Canvas
 
 
 class _CanvasComponent:
@@ -139,15 +145,14 @@ class Ticks(_CanvasComponent):
     def _plt_get_axis(self) -> BokehAxis:
         raise NotImplementedError
 
-    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         return tuple(zip(*self._plt_get_axis().ticker))
 
-    def _plt_set_text(self, text: tuple[list[float], list[str]]):
-        pos, labels = text
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
         self._plt_get_axis().ticker = pos
         self._plt_get_axis().major_label_overrides = dict(zip(pos, labels))
 
-    def _plt_reset_text(self):
+    def _plt_reset_override(self):
         self._plt_get_axis().ticker = None
         self._plt_get_axis().major_label_overrides = None
 
@@ -175,6 +180,12 @@ class Ticks(_CanvasComponent):
 
     def _plt_set_color(self, color):
         self._plt_get_axis().major_label_text_color = Color(color).hex
+
+    def _plt_get_text_rotation(self) -> float:
+        return self._plt_get_axis().major_label_orientation
+
+    def _plt_set_text_rotation(self, rotation: float):
+        self._plt_get_axis().major_label_orientation = rotation
 
 
 class XAxis(X, Axis):
@@ -228,8 +239,10 @@ class YLabel(Y, Label):
 
 
 class XTicks(X, Ticks):
-    pass
+    def _plt_set_multilevel_text(self, text: list[tuple[str, ...]]):
+        self._canvas()._plot.x_range = FactorRange(*text)
 
 
 class YTicks(Y, Ticks):
-    pass
+    def _plt_set_multilevel_text(self, text: list[tuple[str, ...]]):
+        self._canvas()._plot.y_range = FactorRange(*text)

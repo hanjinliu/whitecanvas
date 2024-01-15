@@ -326,7 +326,8 @@ class MapPlan(ABC, Generic[_V]):
         cname = type(self).__name__
         if self._on:
             return f"{cname}(on={self._on!r}, mapper={self._mapper})"
-        return f"{cname}(<const {self._mapper.value}>)"
+        else:
+            return f"{cname}(mapper={self._mapper!r})"
 
     def with_map(
         self,

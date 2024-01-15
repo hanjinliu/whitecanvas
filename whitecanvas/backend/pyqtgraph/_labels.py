@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import weakref
 from typing import TYPE_CHECKING
+
 import numpy as np
+from cmap import Color
 from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
-from cmap import Color
+
+from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
 from whitecanvas.types import LineStyle
-from ._qt_utils import array_to_qcolor
 
 if TYPE_CHECKING:
-    from qtpy import QtWidgets as QtW
     import pyqtgraph as pg
-    from .canvas import Canvas
+    from qtpy import QtWidgets as QtW
+
+    from whitecanvas.backend.pyqtgraph.canvas import Canvas
 
 
 class _CanvasComponent:
@@ -167,7 +170,7 @@ class Ticks(_CanvasComponent):
     def _plt_get_axis(self) -> pg.AxisItem:
         return self._canvas()._plot_item.getAxis(self._axis)
 
-    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         axis = self._plt_get_axis()
         if axis._tickLevels is not None:
             major: list[tuple[float, str]] = axis._tickLevels[0]
@@ -190,11 +193,11 @@ class Ticks(_CanvasComponent):
             strings = values
         return values, strings
 
-    def _plt_set_text(self, text: tuple[list[float], list[str]]):
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
         axis = self._plt_get_axis()
-        axis.setTicks([[(pos, label) for pos, label in zip(*text)]])
+        axis.setTicks([list(zip(pos, labels))])
 
-    def _plt_reset_text(self):
+    def _plt_reset_override(self):
         self._plt_get_axis().setTicks(None)
 
     def _plt_get_visible(self) -> bool:
@@ -211,7 +214,7 @@ class Ticks(_CanvasComponent):
         self._visible = visible
 
     def _get_font(self) -> QFont:
-        return self._plt_get_axis().style['tickFont']
+        return self._plt_get_axis().style["tickFont"]
 
     def _plt_get_size(self) -> float:
         return self._get_font().pointSizeF()
@@ -237,3 +240,9 @@ class Ticks(_CanvasComponent):
         pen.setColor(array_to_qcolor(color))
         self._plt_get_axis().setTickPen(pen)
         self._plt_get_axis().setTextPen(pen)
+
+    def _plt_get_text_rotation(self) -> float:
+        return 0
+
+    def _plt_set_text_rotation(self, rotation: float):
+        raise NotImplementedError

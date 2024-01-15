@@ -140,7 +140,7 @@ class _TextLabelNamespace(_TextBoundNamespace):
 
 class _TicksNamespace(_TextBoundNamespace):
     def __repr__(self) -> str:
-        pos, labels = self._get_object()._plt_get_text()
+        pos, labels = self._get_object()._plt_get_tick_labels()
         pos = list(pos)
         color = self.color
         size = self.size
@@ -148,19 +148,24 @@ class _TicksNamespace(_TextBoundNamespace):
         name = type(self).__name__
         return f"{name}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {family=!r})"
 
+    def _get_object(self) -> protocols.TicksProtocol:
+        raise NotImplementedError
+
     @property
     def pos(self) -> NDArray[np.floating]:
-        pos, _ = self._get_object()._plt_get_text()
+        pos, _ = self._get_object()._plt_get_tick_labels()
         return np.asarray(pos)
 
     @property
-    def labels(self) -> tuple[list[float], list[str]]:
-        _, labels = self._get_object()._plt_get_text()
+    def labels(self) -> list[str]:
+        _, labels = self._get_object()._plt_get_tick_labels()
         return labels
 
     def set_labels(self, pos: Iterable[float], labels: Iterable[str] | None = None):
         """
-        Set tick labels.
+        Override tick labels.
+
+        >>> canvas.x.ticks.set_labels([0, 1, 2], ["a", "b", "c"])
 
         Parameters
         ----------
@@ -181,11 +186,20 @@ class _TicksNamespace(_TextBoundNamespace):
             _labels = [str(round(p, ndigits)) for p in _pos]
         if len(_pos) != len(_labels):
             raise ValueError("pos and labels must have the same length.")
-        self._get_object()._plt_set_text((_pos, _labels))
+        self._get_object()._plt_override_labels((_pos, _labels))
 
     def reset_labels(self) -> None:
         """Reset the tick labels to the default."""
-        self._get_object()._plt_reset_text()
+        self._get_object()._plt_reset_override()
+
+    @property
+    def rotation(self) -> float:
+        """Tick label rotation in degrees."""
+        return self._get_object()._plt_get_text_rotation()
+
+    @rotation.setter
+    def rotation(self, rotation: float):
+        self._get_object()._plt_set_text_rotation(rotation)
 
 
 class XTickNamespace(_TicksNamespace):

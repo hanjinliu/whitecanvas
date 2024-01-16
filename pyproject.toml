@@ -114,6 +114,12 @@ all = [
   "typing",
 ]
 
+[tool.hatch.envs.test]
+features = ["testing"]
+
+[tool.hatch.envs.test.scripts]
+run = "pytest -v"
+
 [tool.black]
 target-version = ["py37"]
 line-length = 88

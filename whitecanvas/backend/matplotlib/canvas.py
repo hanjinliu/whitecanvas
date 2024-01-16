@@ -124,8 +124,6 @@ class Canvas:
             raise NotImplementedError(f"{layer}")
         if hasattr(layer, "post_add"):
             layer.post_add(self)
-        if fig := self._axes.get_figure():
-            fig.tight_layout()
 
     def _plt_remove_layer(self, layer: Artist):
         """Remove layer from the canvas"""

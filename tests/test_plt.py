@@ -1,5 +1,7 @@
 import numpy as np
+
 import whitecanvas.plot as plt
+
 
 def test_functions():
     arr = np.arange(10)

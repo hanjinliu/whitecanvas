@@ -762,7 +762,7 @@ class WrappedBars(
         x = self._offset_by.generate(self._labels, splitby)
         base = _l.Bars(
             x, values, name=name, orient=orient, bar_width=extent, backend=backend
-        )
+        ).with_face_multi()
         super().__init__(base, source)
         if color is not None:
             self.with_color(color)

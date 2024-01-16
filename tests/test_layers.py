@@ -1,17 +1,16 @@
-import pytest
+import numpy as np
+
 from whitecanvas import new_canvas
 from whitecanvas.layers import Layer
-import numpy as np
+
 from ._utils import assert_color_equal
 
-BACKENDS = ["matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
 
 def _test_visibility(layer: Layer):
     layer.visible
     layer.visible = False
     layer.visible = True
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_line(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_line(np.arange(10), np.zeros(10))
@@ -29,7 +28,6 @@ def test_line(backend: str):
     assert layer.width == 2
     _test_visibility(layer)
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_markers(np.arange(10), np.zeros(10))
@@ -70,7 +68,6 @@ def test_markers(backend: str):
         assert layer.symbol == sym
     _test_visibility(layer)
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_bars(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_bars(np.arange(10), np.zeros(10), bottom=np.ones(10))
@@ -102,7 +99,6 @@ def test_bars(backend: str):
     assert layer.bar_width == 0.5
     _test_visibility(layer)
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_infcurve(backend: str):
     canvas = new_canvas(backend=backend)
 
@@ -116,7 +112,6 @@ def test_infcurve(backend: str):
     assert layer.width == 2
     _test_visibility(layer)
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_band(backend: str):
     canvas = new_canvas(backend=backend)
 
@@ -143,7 +138,6 @@ def test_band(backend: str):
     assert layer.edge.width == 2
     _test_visibility(layer)
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_image(backend: str):
     canvas = new_canvas(backend=backend)
 
@@ -155,7 +149,6 @@ def test_image(backend: str):
     assert layer.clim == (0.5, 1.5)
     _test_visibility(layer)
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_errorbars(backend: str):
     canvas = new_canvas(backend=backend)
 
@@ -169,7 +162,6 @@ def test_errorbars(backend: str):
     assert layer.width == 2
     _test_visibility(layer)
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_texts(backend: str):
     canvas = new_canvas(backend=backend)
 
@@ -180,7 +172,10 @@ def test_texts(backend: str):
     repr(layer.edge)
     repr(layer.font)
     layer.anchor
-    for anc in ["top", "bottom", "left", "right", "center", "top_left", "top_right", "bottom_left", "bottom_right"]:
+    for anc in [
+        "top", "bottom", "left", "right", "center", "top_left", "top_right",
+        "bottom_left", "bottom_right"
+    ]:
         layer.anchor = anc
         assert layer.anchor == anc
 

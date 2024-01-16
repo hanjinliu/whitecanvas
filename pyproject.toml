@@ -58,12 +58,15 @@ testing = [
     "pytest-qt",
     "matplotlib>=3.8.2",
     "pyqtgraph>=0.13.3",
+    "plotly>=5.3.1",
+    "vispy>=0.14.1",
+    "bokeh>=3.3.1",
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/whitecanvas#readme"
-Issues = "https://github.com/unknown/whitecanvas/issues"
-Source = "https://github.com/unknown/whitecanvas"
+Documentation = "https://github.com/hanjinliu/whitecanvas#readme"
+Issues = "https://github.com/hanjinliu/whitecanvas/issues"
+Source = "https://github.com/hanjinliu/whitecanvas"
 
 [tool.hatch.version]
 path = "whitecanvas/__init__.py"
@@ -157,6 +160,7 @@ unfixable = [
   # Don't touch unused imports
   "F401",
 ]
+exclude = ["tests"]
 
 [tool.ruff.isort]
 known-first-party = ["whitecanvas"]

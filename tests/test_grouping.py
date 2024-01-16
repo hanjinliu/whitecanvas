@@ -1,11 +1,9 @@
-import pytest
-from whitecanvas import new_canvas
 import numpy as np
-from numpy.testing import assert_array_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 
-BACKENDS = ["matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
+from whitecanvas import new_canvas
 
-@pytest.mark.parametrize("backend", BACKENDS)
+
 def test_line_marker_text(backend: str):
     canvas = new_canvas(backend=backend)
     layer = canvas.add_line(
@@ -22,7 +20,6 @@ def test_line_marker_text(backend: str):
     assert len(canvas.layers) == 1
 
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_bar_err_text(backend: str):
     canvas = new_canvas(backend=backend)
     layer = canvas.add_bars(
@@ -36,7 +33,6 @@ def test_bar_err_text(backend: str):
     assert_allclose(layer.data.y, np.arange(10) * 2, atol=1e-6)
     assert len(canvas.layers) == 1
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_stem(backend: str):
     canvas = new_canvas(backend=backend)
     layer = canvas.add_markers(
@@ -46,7 +42,6 @@ def test_stem(backend: str):
     assert_allclose(layer.data.y, np.arange(10) * 2, atol=1e-6)
     assert len(canvas.layers) == 1
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_network(backend: str):
     canvas = new_canvas(backend=backend)
     layer = canvas.add_markers(

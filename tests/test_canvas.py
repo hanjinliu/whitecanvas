@@ -1,12 +1,11 @@
-from whitecanvas import new_canvas
-import whitecanvas as wc
-import pytest
 from numpy.testing import assert_allclose
+
+import whitecanvas as wc
+from whitecanvas import new_canvas
+
 from ._utils import assert_color_equal
 
-BACKENDS = ["matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_namespaces(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.title.text = "Title-0"
@@ -36,7 +35,6 @@ def test_namespaces(backend: str):
     canvas.y.label.family = "Arial"
     assert canvas.y.label.family == "Arial"
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_grid(backend: str):
     cgrid = wc.grid(2, 2, link_x=True, link_y=True, backend=backend)
     c00 = cgrid.add_canvas(0, 0)
@@ -62,9 +60,10 @@ def test_grid(backend: str):
     assert len(c11.layers) == 1
 
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_grid_nonuniform(backend: str):
-    cgrid = wc.grid_nonuniform([2, 1], [2, 1], link_x=True, link_y=True, backend=backend)
+    cgrid = wc.grid_nonuniform(
+        [2, 1], [2, 1], link_x=True, link_y=True, backend=backend
+    )
     c00 = cgrid.add_canvas(0, 0)
     c01 = cgrid.add_canvas(0, 1)
     c10 = cgrid.add_canvas(1, 0)
@@ -87,7 +86,6 @@ def test_grid_nonuniform(backend: str):
     assert len(c10.layers) == 1
     assert len(c11.layers) == 1
 
-@pytest.mark.parametrize("backend", BACKENDS)
 def test_vgrid_hgrid(backend: str):
     cgrid = wc.vgrid(2, backend=backend, link_x=True, link_y=True)
     c0 = cgrid.add_canvas(0)

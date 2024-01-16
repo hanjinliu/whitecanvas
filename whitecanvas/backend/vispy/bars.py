@@ -1,12 +1,12 @@
 from __future__ import annotations
+
 import numpy as np
 from numpy.typing import NDArray
-
 from vispy.scene import visuals
-from whitecanvas.protocols import BarProtocol, check_protocol
-from whitecanvas.types import LineStyle, Hatch
-from whitecanvas.utils.normalize import as_color_array
+
 from whitecanvas.backend import _not_implemented
+from whitecanvas.protocols import BarProtocol, check_protocol
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(BarProtocol)
@@ -15,14 +15,14 @@ class Bars(visuals.Compound):
         center = np.stack([(xlow + xhigh) / 2, (ylow + yhigh) / 2], axis=1)
         rectangles: list[visuals.Rectangle] = []
         for c, w, h in zip(center, xhigh - xlow, yhigh - ylow):
-            w = abs(w)
-            h = abs(h)
-            if w == 0:
-                w = h * 1e-6
-            elif h == 0:
-                h = w * 1e-6
+            _w = abs(w)
+            _h = abs(h)
+            if _w == 0:
+                _w = _h * 1e-6
+            elif _h == 0:
+                _h = _w * 1e-6
             rectangles.append(
-                visuals.Rectangle(center=c, width=w, height=h, border_width=0)
+                visuals.Rectangle(center=c, width=_w, height=_h, border_width=0)
             )
         super().__init__(rectangles)
         self.unfreeze()

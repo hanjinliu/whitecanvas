@@ -3,15 +3,15 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
+from whitecanvas.backend import _not_implemented
+from whitecanvas.backend.plotly._base import (
+    PlotlyLayer,
+    from_plotly_marker_symbol,
+    to_plotly_marker_symbol,
+)
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol
 from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
-from whitecanvas.backend import _not_implemented
-from ._base import (
-    PlotlyLayer,
-    to_plotly_marker_symbol,
-    from_plotly_marker_symbol,
-)
 
 
 @check_protocol(MarkersProtocol)

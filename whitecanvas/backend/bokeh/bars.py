@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import numpy as np
-from whitecanvas.protocols import BarProtocol, check_protocol
 import bokeh.models as bk_models
-from ._base import HeteroLayer
+import numpy as np
+
+from whitecanvas.backend.bokeh._base import HeteroLayer
+from whitecanvas.protocols import BarProtocol, check_protocol
 
 
 @check_protocol(BarProtocol)
@@ -12,18 +13,18 @@ class Bars(HeteroLayer[bk_models.Quad]):
         ndata = len(xlow)
         self._visible = True
         self._data = bk_models.ColumnDataSource(
-            data=dict(
-                x0=xlow,
-                x1=xhigh,
-                y0=ylow,
-                y1=yhigh,
-                face_color=["blue"] * ndata,
-                edge_color=["black"] * ndata,
-                width=np.zeros(ndata),
-                pattern=[" "] * ndata,
-                style=["solid"] * ndata,
-                hovertexts=np.array([""] * len(xlow)),
-            )
+            data={
+                "x0": xlow,
+                "x1": xhigh,
+                "y0": ylow,
+                "y1": yhigh,
+                "face_color": ["blue"] * ndata,
+                "edge_color": ["black"] * ndata,
+                "width": np.zeros(ndata),
+                "pattern": [" "] * ndata,
+                "style": ["solid"] * ndata,
+                "hovertexts": np.array([""] * len(xlow)),
+            }
         )
         self._model = bk_models.Quad(
             left="x0",
@@ -48,7 +49,7 @@ class Bars(HeteroLayer[bk_models.Quad]):
         )
 
     def _plt_set_data(self, x0, x1, y0, y1):
-        self._data.data = dict(x0=x0, x1=x1, y0=y0, y1=y1)
+        self._data.data = {"x0": x0, "x1": x1, "y0": y0, "y1": y1}
 
     def _plt_get_ndata(self) -> int:
         return len(self._data.data["x0"])

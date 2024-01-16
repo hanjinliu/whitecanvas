@@ -1,21 +1,24 @@
 from __future__ import annotations
+
 from typing import Callable, cast
 
-import qtpy
-from qtpy import QtCore, QtGui
-from qtpy.QtCore import Signal
+import numpy as np
 import pyqtgraph as pg
+import qtpy
 from pyqtgraph.GraphicsScene.mouseEvents import (
-    MouseClickEvent as pgMouseClickEvent,
     HoverEvent as pgHoverEvent,
 )
-import numpy as np
+from pyqtgraph.GraphicsScene.mouseEvents import (
+    MouseClickEvent as pgMouseClickEvent,
+)
+from qtpy import QtCore, QtGui
+from qtpy.QtCore import Signal
 
 from whitecanvas import protocols
-from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from ._qt_utils import from_qt_modifiers, from_qt_button
-from ._labels import Title, AxisLabel, Axis, Ticks
+from whitecanvas.backend.pyqtgraph._labels import Axis, AxisLabel, Ticks, Title
+from whitecanvas.backend.pyqtgraph._qt_utils import from_qt_button, from_qt_modifiers
+from whitecanvas.types import MouseButton, MouseEvent, MouseEventType
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -75,8 +78,8 @@ class Canvas:
 
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""
-        locked = self._viewbox().state['aspectLocked']
-        if locked == False:
+        locked = self._viewbox().state["aspectLocked"]
+        if not locked:
             return None
         return float(locked)
 
@@ -313,15 +316,15 @@ class SignalListener(pg.GraphicsObject):
         (x0, x1), (y0, y1) = rng
         self._rect = QtCore.QRectF(x0, y0, x1 - x0, y1 - y0)
 
-    def boundingRect(self):
+    def boundingRect(self):  # noqa: N802
         return self._rect
 
-    def mousePressEvent(self, ev: pgMouseClickEvent):
+    def mousePressEvent(self, ev: pgMouseClickEvent):  # noqa: N802
         self.pressed.emit(ev)
         self._had_button = bool(ev.buttons() ^ QtCore.Qt.MouseButton.NoButton)
         super().mousePressEvent(ev)
 
-    def hoverEvent(self, ev: pgHoverEvent):
+    def hoverEvent(self, ev: pgHoverEvent):  # noqa: N802
         if ev.isExit():
             return
         btns: QtCore.Qt.MouseButtons = ev.buttons()
@@ -333,7 +336,7 @@ class SignalListener(pg.GraphicsObject):
             self.moved.emit(ev.pos())
         self._had_button = has_button
 
-    def mouseDoubleClickEvent(self, ev):
+    def mouseDoubleClickEvent(self, ev):  # noqa: N802
         self.double_clicked.emit(ev)
         super().mouseDoubleClickEvent(ev)
 

@@ -1,23 +1,24 @@
 from __future__ import annotations
+
 from functools import lru_cache
 from typing import TYPE_CHECKING
+
 import numpy as np
-from numpy.typing import NDArray
-
-from qtpy import QtGui
 import pyqtgraph as pg
+from numpy.typing import NDArray
+from qtpy import QtGui
 
-from whitecanvas.types import Alignment, Hatch, LineStyle
-from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from whitecanvas.utils.normalize import as_color_array
-from ._qt_utils import (
+from whitecanvas.backend.pyqtgraph._qt_utils import (
+    array_to_qcolor,
     from_qt_brush_style,
     from_qt_line_style,
     to_qt_brush_style,
     to_qt_line_style,
-    array_to_qcolor,
 )
+from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.types import Alignment, Hatch, LineStyle
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(TextProtocol)
@@ -31,7 +32,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     if TYPE_CHECKING:
 
-        def childItems(self) -> list[SingleText]:
+        def childItems(self) -> list[SingleText]:  # noqa: N802
             ...
 
     ##### TextProtocol #####

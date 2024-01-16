@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 import numpy as np
 from numpy.typing import NDArray
-
 from vispy.scene import visuals
-from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
+
 from whitecanvas.backend import _not_implemented
+from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 
 
 @check_protocol(LineProtocol)

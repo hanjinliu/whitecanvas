@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy.typing import NDArray
-from matplotlib.text import Text as mplText
 from matplotlib.artist import Artist
+from matplotlib.text import Text as mplText
+from numpy.typing import NDArray
 
 from whitecanvas.backend.matplotlib._base import MplLayer
-from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
 
 

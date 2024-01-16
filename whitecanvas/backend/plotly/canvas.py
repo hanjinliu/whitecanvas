@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import sys
-from typing import Callable
 import weakref
+from typing import Callable
+
 import numpy as np
 from plotly import graph_objects as go
 
 from whitecanvas import protocols
-from whitecanvas.types import MouseEventType, MouseEvent
+from whitecanvas.backend.plotly._base import Location, PlotlyLayer
+from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
+from whitecanvas.backend.plotly.markers import Markers
+from whitecanvas.types import MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
-from .markers import Markers
-from ._base import PlotlyLayer, Location
-from ._labels import Title, AxisLabel, Axis, Ticks
 
 
 class Canvas:
@@ -78,7 +81,7 @@ class Canvas:
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""
         try:
-            locked = self._fig['layout'][self._yaxis.name]['scaleanchor'] == 'x'
+            locked = self._fig["layout"][self._yaxis.name]["scaleanchor"] == "x"
         except KeyError:
             locked = False
         if locked:
@@ -88,9 +91,9 @@ class Canvas:
     def _plt_set_aspect_ratio(self, ratio: float | None):
         """Set aspect ratio of canvas"""
         if ratio is None:
-            self._fig['layout'][self._yaxis.name]['scaleanchor'] = None
+            self._fig["layout"][self._yaxis.name]["scaleanchor"] = None
         elif ratio == 1:
-            self._fig['layout'][self._yaxis.name]['scaleanchor'] = 'x'
+            self._fig["layout"][self._yaxis.name]["scaleanchor"] = "x"
         else:
             raise NotImplementedError(
                 f"Invalid aspect ratio for plotly backend: {ratio}"
@@ -159,19 +162,20 @@ class Canvas:
             raise RuntimeError("did not find any existing axis.")
         cur_ref = self._fig._grid_ref[self._loc.row - 1][self._loc.col - 1]
         x_id: str = cur_ref[0].layout_keys[0].replace("xaxis", "")
-        cur_ref = cur_ref + (
+        cur_ref = (
+            *cur_ref,
             SubplotRef(
-                subplot_type='xy',
-                layout_keys=(f'xaxis{x_id}', f'yaxis{y_id}'),
-                trace_kwargs={'xaxis': f'x{x_id}', 'yaxis': f'y{y_id}'},
+                subplot_type="xy",
+                layout_keys=(f"xaxis{x_id}", f"yaxis{y_id}"),
+                trace_kwargs={"xaxis": f"x{x_id}", "yaxis": f"y{y_id}"},
             ),
         )
         self._fig._grid_ref[self._loc.row - 1][self._loc.col - 1] = cur_ref
         self._fig.update_layout(
-            yaxis2=dict(
-                overlaying="y",
-                side="right",
-            )
+            yaxis2={
+                "overlaying": "y",
+                "side": "right",
+            }
         )
         kwargs = self._loc.asdict()
         kwargs["secondary_y"] = True
@@ -179,7 +183,7 @@ class Canvas:
 
 
 def _convert_cb(cb):
-    return lambda _, points, state: cb(points.point_inds)
+    return lambda _, points, state: cb(points.point_inds)  # noqa: ARG005
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
@@ -195,7 +199,7 @@ class CanvasGrid:
                 column_widths=widths,
             )
         )
-        self._figs.update_layout(margin=dict(l=6, r=6, t=6, b=6))
+        self._figs.update_layout(margin={"l": 6, "r": 6, "t": 6, "b": 6})
         self._app = app
         self._heights = heights
         self._widths = widths
@@ -209,8 +213,8 @@ class CanvasGrid:
         if self._app in ("qt", "wx", "tk"):
             return NotImplemented
         if self._app == "notebook" or "IPython" in sys.modules:
-            from IPython.display import display
             from IPython import get_ipython
+            from IPython.display import display
 
             if get_ipython().__class__.__name__ == "ZMQInteractiveShell":
                 display(self._figs)
@@ -224,8 +228,9 @@ class CanvasGrid:
         self._figs.layout.paper_bgcolor = rgba_str_color(color)
 
     def _plt_screenshot(self):
-        from PIL import Image
         import io
+
+        from PIL import Image
 
         width, height = self._figs.layout.width, self._figs.layout.height
         img_bytes = self._figs.to_image(format="png", width=width, height=height)

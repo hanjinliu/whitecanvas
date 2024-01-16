@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy.typing import NDArray
-
-from qtpy import QtGui
 import pyqtgraph as pg
-from whitecanvas.protocols import BandProtocol, check_protocol
-from whitecanvas.types import LineStyle, Hatch, Orientation
+from numpy.typing import NDArray
+from qtpy import QtGui
+
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from ._qt_utils import (
+from whitecanvas.backend.pyqtgraph._qt_utils import (
     array_to_qcolor,
-    from_qt_line_style,
-    to_qt_line_style,
     from_qt_brush_style,
+    from_qt_line_style,
     to_qt_brush_style,
+    to_qt_line_style,
 )
+from whitecanvas.protocols import BandProtocol, check_protocol
+from whitecanvas.types import Hatch, LineStyle, Orientation
 
 
 @check_protocol(BandProtocol)

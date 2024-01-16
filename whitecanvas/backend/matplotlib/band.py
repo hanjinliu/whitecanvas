@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
-
 from matplotlib.collections import PolyCollection
+
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle, Orientation

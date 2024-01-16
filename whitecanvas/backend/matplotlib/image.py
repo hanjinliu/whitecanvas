@@ -1,10 +1,10 @@
 from __future__ import annotations
-from matplotlib.backend_bases import RendererBase
 
 import numpy as np
-from matplotlib.image import BboxImage
-from matplotlib.transforms import Bbox, TransformedBbox, Affine2D
 from cmap import Colormap
+from matplotlib.backend_bases import RendererBase
+from matplotlib.image import BboxImage
+from matplotlib.transforms import Affine2D, Bbox, TransformedBbox
 
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import ImageProtocol, check_protocol

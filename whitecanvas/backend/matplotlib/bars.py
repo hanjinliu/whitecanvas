@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy.typing import NDArray
-
 from matplotlib.container import BarContainer
 from matplotlib.patches import Rectangle
+from numpy.typing import NDArray
+
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle

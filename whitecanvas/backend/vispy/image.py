@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import numpy as np
+from cmap import Colormap
 from numpy.typing import NDArray
 from vispy.scene import visuals
 from vispy.visuals.transforms import STTransform
-from cmap import Colormap
+
 from whitecanvas.protocols import ImageProtocol, check_protocol
 
 

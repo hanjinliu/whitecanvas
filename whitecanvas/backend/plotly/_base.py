@@ -1,7 +1,11 @@
-from typing import Any, Callable
-from whitecanvas.types import LineStyle, Symbol
-from plotly.graph_objs import FigureWidget
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any, Callable
+
+from plotly.graph_objs import FigureWidget
+
+from whitecanvas.types import LineStyle, Symbol
 
 
 class PlotlyLayer:

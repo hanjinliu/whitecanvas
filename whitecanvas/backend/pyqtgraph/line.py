@@ -1,14 +1,20 @@
 from __future__ import annotations
-from functools import reduce
-import numpy as np
-from numpy.typing import NDArray
 
-from qtpy import QtGui, QtCore
+from functools import reduce
+
+import numpy as np
 import pyqtgraph as pg
+from numpy.typing import NDArray
+from qtpy import QtCore, QtGui
+
+from whitecanvas.backend.pyqtgraph._base import PyQtLayer
+from whitecanvas.backend.pyqtgraph._qt_utils import (
+    array_to_qcolor,
+    from_qt_line_style,
+    to_qt_line_style,
+)
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
-from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from ._qt_utils import array_to_qcolor, from_qt_line_style, to_qt_line_style
 
 
 @check_protocol(LineProtocol)
@@ -77,7 +83,7 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
         self._bounding_rect_cache = None
         self._antialias = True
 
-    def boundingRect(self):
+    def boundingRect(self):  # noqa: N802
         if self._bounding_rect_cache is not None:
             return self._bounding_rect_cache
         if len(self._lines) == 0:

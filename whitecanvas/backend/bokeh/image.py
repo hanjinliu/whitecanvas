@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import bokeh.models as bk_models
 import numpy as np
 from cmap import Colormap
 
-import bokeh.models as bk_models
-from ._base import BokehLayer
+from whitecanvas.backend.bokeh._base import BokehLayer
 from whitecanvas.protocols import ImageProtocol, check_protocol
 
 
 @check_protocol(ImageProtocol)
 class Image(BokehLayer[bk_models.Image]):
     def __init__(self, data: np.ndarray):
-        self._data = bk_models.ColumnDataSource(dict(image=[data], hovertexts=[""]))
+        self._data = bk_models.ColumnDataSource({"image": [data], "hovertexts": [""]})
         h, w = data.shape[:2]
         self._model = bk_models.Image(image="image", x=0, y=0, dw=w, dh=h)
         self._cmap = Colormap("gray")
@@ -20,7 +20,7 @@ class Image(BokehLayer[bk_models.Image]):
         return self._data.data["image"][0]
 
     def _plt_set_data(self, data: np.ndarray):
-        self._data.data = dict(image=[data])
+        self._data.data = {"image": [data]}
 
     def _plt_get_colormap(self) -> Colormap:
         return self._cmap

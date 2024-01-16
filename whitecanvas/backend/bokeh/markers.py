@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-import numpy as np
-from numpy.typing import NDArray
-from whitecanvas.types import Symbol
-from whitecanvas.protocols import MarkersProtocol, check_protocol
-
 import bokeh.models as bk_models
+import numpy as np
 from bokeh.events import Tap
+from numpy.typing import NDArray
 
-from ._base import HeteroLayer, to_bokeh_symbol, from_bokeh_symbol
+from whitecanvas.backend.bokeh._base import (
+    HeteroLayer,
+    from_bokeh_symbol,
+    to_bokeh_symbol,
+)
+from whitecanvas.protocols import MarkersProtocol, check_protocol
+from whitecanvas.types import Symbol
 
 
 @check_protocol(MarkersProtocol)
@@ -16,17 +19,17 @@ class Markers(HeteroLayer[bk_models.Scatter]):
     def __init__(self, xdata, ydata):
         ndata = len(xdata)
         self._data = bk_models.ColumnDataSource(
-            data=dict(
-                x=xdata,
-                y=ydata,
-                sizes=np.full(ndata, 10.0),
-                face_color=["blue"] * ndata,
-                edge_color=["black"] * ndata,
-                width=np.zeros(ndata),
-                pattern=[" "] * ndata,
-                style=["solid"] * ndata,
-                hovertexts=[""] * ndata,
-            )
+            data={
+                "x": xdata,
+                "y": ydata,
+                "sizes": np.full(ndata, 10.0),
+                "face_color": ["blue"] * ndata,
+                "edge_color": ["black"] * ndata,
+                "width": np.zeros(ndata),
+                "pattern": [" "] * ndata,
+                "style": ["solid"] * ndata,
+                "hovertexts": [""] * ndata,
+            }
         )
         self._model = bk_models.Scatter(
             x="x",
@@ -44,7 +47,7 @@ class Markers(HeteroLayer[bk_models.Scatter]):
         return self._data.data["x"], self._data.data["y"]
 
     def _plt_set_data(self, xdata, ydata):
-        self._data.data = dict(x=xdata, y=ydata)
+        self._data.data = {"x": xdata, "y": ydata}
 
     def _plt_get_symbol(self) -> Symbol:
         sym = self._model.marker

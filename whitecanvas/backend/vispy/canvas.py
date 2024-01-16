@@ -1,23 +1,24 @@
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, cast
-import weakref
 
-from psygnal import Signal
-from vispy.scene import ViewBox, SceneCanvas, PanZoomCamera, visuals
-from vispy.util import keys
-from vispy import use as vispy_use
+import weakref
+from typing import TYPE_CHECKING, Callable, cast
+
 import numpy as np
 from numpy.typing import NDArray
+from psygnal import Signal
+from vispy import use as vispy_use
+from vispy.scene import PanZoomCamera, SceneCanvas, ViewBox, visuals
+from vispy.util import keys
 
 from whitecanvas import protocols
-from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent
-from ._label import TextLabel, Axis, Ticks
+from whitecanvas.backend.vispy._label import Axis, TextLabel, Ticks
+from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType
 
 if TYPE_CHECKING:
+    from vispy.app.canvas import MouseEvent as vispyMouseEvent
     from vispy.scene import Grid
     from vispy.scene.subscene import SubScene
     from vispy.visuals import Visual
-    from vispy.app.canvas import MouseEvent as vispyMouseEvent
 
 
 class Camera(PanZoomCamera):

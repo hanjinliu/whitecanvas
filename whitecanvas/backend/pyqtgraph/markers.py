@@ -1,23 +1,23 @@
 from __future__ import annotations
 
-from qtpy import QtGui
-import pyqtgraph as pg
-
 import numpy as np
+import pyqtgraph as pg
 from numpy.typing import NDArray
-from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, LineStyle, Hatch
+from qtpy import QtGui
+
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from whitecanvas.utils.normalize import as_color_array
-from ._qt_utils import (
+from whitecanvas.backend.pyqtgraph._qt_utils import (
     array_to_qcolor,
-    from_qt_line_style,
-    to_qt_line_style,
-    from_qt_symbol,
-    to_qt_symbol,
     from_qt_brush_style,
+    from_qt_line_style,
+    from_qt_symbol,
     to_qt_brush_style,
+    to_qt_line_style,
+    to_qt_symbol,
 )
+from whitecanvas.protocols import MarkersProtocol, check_protocol
+from whitecanvas.types import Hatch, LineStyle, Symbol
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(MarkersProtocol)

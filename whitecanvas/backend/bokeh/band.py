@@ -1,18 +1,12 @@
 from __future__ import annotations
 
+import bokeh.models as bk_models
 import numpy as np
-from cmap import Color
+
+from whitecanvas.backend.bokeh._base import BokehLayer, from_bokeh_hatch, to_bokeh_hatch
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle, Orientation
-
-import bokeh.models as bk_models
-
 from whitecanvas.utils.normalize import arr_color, hex_color
-from ._base import (
-    BokehLayer,
-    to_bokeh_hatch,
-    from_bokeh_hatch,
-)
 
 
 @check_protocol(BandProtocol)
@@ -25,7 +19,12 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         orient: Orientation,
     ):
         self._data = bk_models.ColumnDataSource(
-            data=dict(t=t, y0=ydata0, y1=ydata1, hovertexts=np.array([""] * len(t)))
+            data={
+                "t": t,
+                "y0": ydata0,
+                "y1": ydata1,
+                "hovertexts": np.array([""] * len(t)),
+            }
         )
         if orient.is_vertical:
             self._model = bk_models.VArea(x="t", y1="y0", y2="y1")
@@ -55,7 +54,7 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
     _plt_get_horizontal_data = _plt_get_vertical_data
 
     def _plt_set_vertical_data(self, t, ydata0, ydata1):
-        self._data.data = dict(t=t, y0=ydata0, y1=ydata1)
+        self._data.data = {"t": t, "y0": ydata0, "y1": ydata1}
 
     _plt_set_horizontal_data = _plt_set_vertical_data
 

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class MplLayer:
     def _plt_get_visible(self):
         return self.get_visible()

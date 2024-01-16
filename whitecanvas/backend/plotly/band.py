@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import numpy as np
+
+from whitecanvas.backend._not_implemented import face_pattern
+from whitecanvas.backend.plotly._base import (
+    PlotlyLayer,
+    from_plotly_linestyle,
+    to_plotly_linestyle,
+)
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import LineStyle, Orientation
 from whitecanvas.utils.normalize import arr_color, rgba_str_color
-
-from ._base import PlotlyLayer, to_plotly_linestyle, from_plotly_linestyle
-from whitecanvas.backend._not_implemented import face_pattern
 
 
 @check_protocol(BandProtocol)

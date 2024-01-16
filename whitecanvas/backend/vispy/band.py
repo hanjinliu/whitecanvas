@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-
 from vispy.scene import visuals
+
+from whitecanvas.backend import _not_implemented
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import LineStyle, Orientation
-from whitecanvas.backend import _not_implemented
 
 
 @check_protocol(BandProtocol)

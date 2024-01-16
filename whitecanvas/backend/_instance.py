@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
 
 _INSTALLED_MODULES = {}
@@ -13,7 +15,7 @@ class Backend:
 
     _default: str = "matplotlib"
 
-    def __init__(self, name: "Backend | str | None" = None) -> None:
+    def __init__(self, name: Backend | str | None = None) -> None:
         if name is None:
             name = self._default
         if isinstance(name, Backend):

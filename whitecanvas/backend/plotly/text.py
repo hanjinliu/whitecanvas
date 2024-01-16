@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Alignment, Hatch, LineStyle
+from whitecanvas.backend.plotly._base import PlotlyLayer
 from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
-from ._base import PlotlyLayer
 
 
 @check_protocol(TextProtocol)

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import pyqtgraph as pg
 import numpy as np
+import pyqtgraph as pg
 from cmap import Colormap
-from ._qt_utils import array_to_qcolor
 from qtpy.QtGui import QTransform
-from whitecanvas.protocols import ImageProtocol, check_protocol
+
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
+from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
+from whitecanvas.protocols import ImageProtocol, check_protocol
 
 
 @check_protocol(ImageProtocol)

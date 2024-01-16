@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from vispy.scene import visuals
-
 import numpy as np
 from numpy.typing import NDArray
+from vispy.scene import visuals
+
+from whitecanvas.backend import _not_implemented
 
 # from vispy.visuals.filters.markers import MarkerPickingFilter
-
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol
 from whitecanvas.utils.normalize import as_color_array
-from whitecanvas.backend import _not_implemented
 
 
 @check_protocol(MarkersProtocol)

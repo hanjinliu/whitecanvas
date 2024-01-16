@@ -3,19 +3,33 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
-
-from whitecanvas.utils.normalize import arr_color, hex_color
-from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
-from whitecanvas import protocols
-from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
 from bokeh import (
     events as bk_events,
-    models as bk_models,
+)
+from bokeh import (
     layouts as bk_layouts,
+)
+from bokeh import (
+    models as bk_models,
+)
+from bokeh import (
     plotting as bk_plotting,
 )
 from bokeh.io import output_notebook
-from ._base import BokehLayer
+
+from whitecanvas import protocols
+from whitecanvas.backend.bokeh._base import BokehLayer
+from whitecanvas.backend.bokeh._labels import (
+    Title,
+    XAxis,
+    XLabel,
+    XTicks,
+    YAxis,
+    YLabel,
+    YTicks,
+)
+from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType
+from whitecanvas.utils.normalize import arr_color, hex_color
 
 
 def _prep_plot(width=400, height=300):
@@ -199,13 +213,19 @@ class Canvas:
         self, callback: Callable[[tuple[float, float]], None]
     ):
         rng = self._plot.x_range
-        rng.on_change("start", lambda attr, old, new: callback((rng.start, rng.end)))
+        rng.on_change(
+            "start",
+            lambda attr, old, new: callback((rng.start, rng.end)),  # noqa: ARG005
+        )
 
     def _plt_connect_ylim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
         rng = self._plot.y_range
-        rng.on_change("start", lambda attr, old, new: callback((rng.start, rng.end)))
+        rng.on_change(
+            "start",
+            lambda attr, old, new: callback((rng.start, rng.end)),  # noqa: ARG005
+        )
 
     def _plt_draw(self):
         pass
@@ -239,9 +259,9 @@ class CanvasGrid:
     def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
         nr, nc = len(heights), len(widths)
         children = []
-        for r in range(nr):
+        for _ in range(nr):
             row = []
-            for c in range(nc):
+            for _ in range(nc):
                 row.append(_prep_plot())
             children.append(row)
         self._grid_plot: bk_layouts.GridPlot = bk_layouts.gridplot(
@@ -279,6 +299,7 @@ class CanvasGrid:
 
     def _plt_screenshot(self):
         import io
+
         from bokeh.io import export_png
 
         with io.BytesIO() as buff:

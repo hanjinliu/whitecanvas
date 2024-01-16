@@ -1,9 +1,11 @@
+from __future__ import annotations
+
+import numpy as np
+from pyqtgraph.graphicsItems.ScatterPlotItem import Symbols
 from qtpy import QtGui
 from qtpy.QtCore import Qt
-from pyqtgraph.graphicsItems.ScatterPlotItem import Symbols
-import numpy as np
 
-from whitecanvas.types import LineStyle, Symbol, Hatch, MouseButton, Modifier
+from whitecanvas.types import Hatch, LineStyle, Modifier, MouseButton, Symbol
 
 
 def array_to_qcolor(arr: np.ndarray) -> QtGui.QColor:

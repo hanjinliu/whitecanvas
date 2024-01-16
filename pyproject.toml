@@ -56,6 +56,8 @@ bokeh = [
 testing = [
     "pytest",
     "pytest-qt",
+    "qtpy>=2.4.1",
+    "pyqt6>=6.2.0",
     "matplotlib>=3.8.2",
     "pyqtgraph>=0.13.3",
     "plotly>=5.3.1",

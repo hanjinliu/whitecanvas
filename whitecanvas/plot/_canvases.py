@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasGrid
 from whitecanvas.core import grid, new_canvas

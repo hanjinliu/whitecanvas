@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import numpy as np
 from typing import Sequence
+
+import numpy as np
 from numpy.typing import ArrayLike, NDArray
+
 from whitecanvas.utils.normalize import as_array_1d
 
 

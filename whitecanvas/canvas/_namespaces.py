@@ -186,7 +186,7 @@ class _TicksNamespace(_TextBoundNamespace):
             _labels = [str(round(p, ndigits)) for p in _pos]
         if len(_pos) != len(_labels):
             raise ValueError("pos and labels must have the same length.")
-        self._get_object()._plt_override_labels((_pos, _labels))
+        self._get_object()._plt_override_labels(_pos, _labels)
 
     def reset_labels(self) -> None:
         """Reset the tick labels to the default."""

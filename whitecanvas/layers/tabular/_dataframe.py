@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, Union, overlo
 
 import numpy as np
 from cmap import Color
-from numpy.typing import NDArray
 
 from whitecanvas import layers as _l
 from whitecanvas.backend import Backend
@@ -445,7 +444,9 @@ class WrappedBoxPlot(DataFrameLayerWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
 
 class WrappedMarkers(
     DataFrameLayerWrapper[
-        _l.Markers[_mixin.MultiFace, _mixin.MultiEdge, NDArray[np.floating]], _DF
+        # _l.Markers[_mixin.MultiFace, _mixin.MultiEdge, NDArray[np.floating]], _DF
+        _lg.MarkerCollection,
+        _DF,
     ],
     Generic[_DF],
 ):
@@ -470,7 +471,9 @@ class WrappedMarkers(
         self._symbol_by = _p.SymbolPlan.default()
         self._width_by = _p.WidthPlan.default()
 
-        base = _l.Markers(x.map(source), y.map(source), name=name, backend=backend)
+        base = _lg.MarkerCollection(
+            x.map(source), y.map(source), name=name, backend=backend
+        )
 
         super().__init__(base, source)
         if color is not None:
@@ -485,6 +488,26 @@ class WrappedMarkers(
     def _generate_labels(self):
         pos, labels = self._x.generate_labels(self._source)
         return pos, ["\n".join(lbl) for lbl in labels]
+
+    @property
+    def symbol(self) -> _p.SymbolPlan:
+        return self._symbol_by
+
+    @property
+    def size(self) -> _p.SizePlan:
+        return self._size_by
+
+    @property
+    def color(self) -> _p.ColorPlan:
+        return self._color_by
+
+    @property
+    def hatch(self) -> _p.HatchPlan:
+        return self._hatch_by
+
+    @property
+    def width(self) -> _p.WidthPlan:
+        return self._width_by
 
     @classmethod
     def from_table(
@@ -572,7 +595,7 @@ class WrappedMarkers(
         else:
             color_by = self._color_by.with_const(Color(cov.value))
         colors = color_by.map(self._source)
-        self._base_layer.with_face_multi(color=colors)
+        self._base_layer.with_face(color=colors)
         self._color_by = color_by
         return self
 
@@ -581,9 +604,9 @@ class WrappedMarkers(
         if cov.is_column:
             hatch_by = self._hatch_by.update(*cov.columns, values=choices)
         else:
-            hatch_by = self._hatch_by.with_const(Color(cov.value))
+            hatch_by = self._hatch_by.with_const(Hatch(cov.value))
         hatches = hatch_by.map(self._source)
-        self._base_layer.with_face_multi(hatch=hatches)
+        self._base_layer.with_face(hatch=hatches)
         self._hatch_by = hatch_by
         return self
 
@@ -601,7 +624,7 @@ class WrappedMarkers(
             size_by = self._size_by.with_range(by, limits=limits)
         else:
             size_by = self._size_by.with_const(float(by))
-        self._base_layer.with_size_multi(size_by.map(self._source))
+        self._base_layer.size = size_by.map(self._source)
         self._size_by = size_by
         return self
 
@@ -616,7 +639,7 @@ class WrappedMarkers(
     def with_symbol(self, by, /, symbols=None) -> Self:
         cov = ColumnOrValue(by, self._source)
         if cov.is_column:
-            symbol_by = self._symbol_by.update(cov.columns, values=symbols)
+            symbol_by = self._symbol_by.update(*cov.columns, values=symbols)
         else:
             symbol_by = self._symbol_by.with_const(Symbol(by))
         self._base_layer.symbol = symbol_by.map(self._source)
@@ -637,7 +660,7 @@ class WrappedMarkers(
         else:
             const_size = float(by)
             width_by = self._width_by.with_const(const_size)
-        self._base_layer.with_edge_multi(width=width_by.map(self._source))
+        self._base_layer.with_edge(width=width_by.map(self._source))
         self._width_by = width_by
         return self
 

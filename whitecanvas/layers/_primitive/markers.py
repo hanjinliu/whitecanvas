@@ -19,6 +19,7 @@ from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.types import (
     Alignment,
+    ArrayLike1D,
     ColorType,
     Hatch,
     LineStyle,
@@ -42,7 +43,6 @@ _void = _Void()
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 _Size = TypeVar("_Size", float, NDArray[np.floating])
-_Symbol = TypeVar("_Symbol", Symbol, "list[Symbol]")
 
 
 class MarkersLayerEvents(FaceEdgeMixinEvents):
@@ -66,8 +66,8 @@ class Markers(
 
     def __init__(
         self,
-        xdata: ArrayLike,
-        ydata: ArrayLike,
+        xdata: ArrayLike1D,
+        ydata: ArrayLike1D,
         *,
         name: str | None = None,
         symbol: Symbol | str = Symbol.CIRCLE,
@@ -81,8 +81,8 @@ class Markers(
         xdata, ydata = normalize_xy(xdata, ydata)
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.update(symbol=symbol, size=size, color=color, hatch=hatch, alpha=alpha)
         self._size_is_array = False
+        self.update(symbol=symbol, size=size, color=color, hatch=hatch, alpha=alpha)
         self.edge.color = color
         if self.symbol.has_face():
             self.edge.update(width=1.0, color="black")
@@ -99,50 +99,6 @@ class Markers(
     ) -> Markers[ConstFace, ConstEdge, float]:
         """Return an empty markers layer."""
         return cls([], [], backend=backend)
-
-    @classmethod
-    def maybe_multi(
-        cls,
-        xdata: ArrayLike,
-        ydata: ArrayLike,
-        *,
-        name: str | None = None,
-        symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 15.0,
-        color: ColorType | Sequence[ColorType] | None = None,
-        width: float | Sequence[float] | None = None,
-        style: str | LineStyle | Sequence[str | LineStyle] | None = None,
-        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
-        alpha: float = 1.0,
-        backend: Backend | str | None = None,
-    ) -> Markers[ConstFace | MultiFace, ConstEdge | MultiEdge, NDArray[np.float32]]:
-        """
-        Return a markers layer with multi-face properties if the properties are
-        sequences, otherwise return a markers layer with constant-face
-        properties.
-        """
-        color = np.asarray(color)
-        _is_multi_color = color.ndim == 2 or (color.ndim == 1 and color.dtype == object)
-        _is_multi_face = hasattr(hatch, "__iter__")
-        _is_multi_size = hasattr(size, "__iter__")
-        _is_multi_edge = hasattr(width, "__iter__") or hasattr(style, "__iter__")
-
-        if _is_multi_color or _is_multi_face:
-            self = cls(xdata, ydata, symbol=symbol, backend=backend).with_face_multi(
-                color=color, hatch=hatch, alpha=alpha
-            )
-        else:
-            self = cls(
-                xdata, ydata, backend=backend, name=name, symbol=symbol, color=color,
-                hatch=hatch, alpha=alpha
-            )  # fmt: skip
-        if _is_multi_size:
-            self = self.with_size_multi(size)
-        else:
-            self.size = size
-        if _is_multi_edge:
-            self = self.with_edge_multi(width=width, style=style)
-        return self
 
     @property
     def ndata(self) -> int:
@@ -182,6 +138,10 @@ class Markers(
         xdata: ArrayLike | None = None,
         ydata: ArrayLike | None = None,
     ):
+        if xdata is None:
+            xdata = self.data.x
+        if ydata is None:
+            ydata = self.data.y
         self.data = XYData(xdata, ydata)
 
     @property
@@ -211,12 +171,15 @@ class Markers(
         """Set marker size"""
         if not isinstance(size, (float, int, np.number)):
             if not self._size_is_array:
-                raise ValueError("Expected size to be a scalar")
+                raise ValueError(
+                    "Expected size to be a scalar. Use with_size_multi() to "
+                    "set multiple sizes."
+                )
             size = as_array_1d(size)
             if size.size != self.ndata:
                 raise ValueError(
-                    "Expected size to have the same size as the data, "
-                    f"got {size.size} and {self.ndata}"
+                    f"Expected `size` to have the same size as the layer data size "
+                    f"({self.ndata}), got {size.size}."
                 )
         self._backend._plt_set_symbol_size(size)
         self.events.size.emit(size)
@@ -663,3 +626,8 @@ class Markers(
         self._size_is_array = True
         self.size = size
         return self
+
+    def _as_all_multi(self) -> Markers[MultiFace, MultiEdge, NDArray[np.float32]]:
+        return (
+            self.with_face_multi().with_edge_multi(width=0.0).with_size_multi(self.size)
+        )

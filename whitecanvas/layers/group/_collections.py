@@ -100,9 +100,9 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
         if not hasattr(n, "__index__"):
             raise TypeError(f"Index must be an integer, not {type(n)}")
         line = self._children.pop(n)
-        _canvas = self._canvas()
-        _canvas._canvas()._plt_remove_layer(line._backend)
-        line._disconnect_canvas(_canvas)
+        if _canvas := self._canvas_ref():
+            _canvas._canvas()._plt_remove_layer(line._backend)
+            line._disconnect_canvas(_canvas)
         return None
 
     def __iter__(self) -> Iterator[_L]:
@@ -112,11 +112,17 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
         return len(self._children)
 
     def insert(self, n: int, layer: _L):
-        _canvas = self._canvas()
-        _canvas._canvas()._plt_add_layer(layer._backend)
-        layer._connect_canvas(_canvas)
-        self._children.append(layer)
+        if _canvas := self._canvas_ref():
+            _canvas._canvas()._plt_add_layer(layer._backend)
+            layer._connect_canvas(_canvas)
+        self._children.insert(n, layer)
+        self._ordering_indices.insert(n, len(self._ordering_indices))
         return None
+
+    if TYPE_CHECKING:
+
+        def iter_children(self) -> Iterator[_L]:
+            ...
 
 
 def _check_layer(l) -> Layer:

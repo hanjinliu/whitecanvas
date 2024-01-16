@@ -396,7 +396,7 @@ class MultiFace(FaceNamespace):
     @property
     def hatch(self) -> EnumArray[Hatch]:
         """Face fill hatches."""
-        return self._layer._backend._plt_get_face_pattern()
+        return np.asarray(self._layer._backend._plt_get_face_pattern(), dtype=object)
 
     @hatch.setter
     def hatch(self, hatch: str | Hatch | Iterable[str | Hatch]):
@@ -468,7 +468,7 @@ class MultiEdge(EdgeNamespace):
     def width(self, width: float | Iterable[float]):
         if not isinstance(width, (int, float, np.number)):
             width = np.asarray(width, dtype=np.float32)
-            if width.shape != self._layer.ndata:
+            if width.shape != (self._layer.ndata,):
                 raise ValueError(
                     "Width must be a scalar or an array of length "
                     f"{self._layer.ndata}, got {width.shape!r}"
@@ -481,7 +481,7 @@ class MultiEdge(EdgeNamespace):
     @property
     def style(self) -> EnumArray[LineStyle]:
         """Edge styles."""
-        return self._layer._backend._plt_get_edge_style()
+        return np.asarray(self._layer._backend._plt_get_edge_style(), dtype=object)
 
     @style.setter
     def style(self, style: str | LineStyle | Iterable[str | LineStyle]):

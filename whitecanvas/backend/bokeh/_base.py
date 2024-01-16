@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from typing import Generic, TypeVar
+
+import bokeh.models as bk_models
 import numpy as np
 from numpy.typing import NDArray
-import bokeh.models as bk_models
+
 from whitecanvas.protocols import BaseProtocol
-from whitecanvas.types import LineStyle, Symbol, Hatch
+from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.utils.normalize import arr_color, hex_color
 
 _M = TypeVar("_M", bound=bk_models.Model)

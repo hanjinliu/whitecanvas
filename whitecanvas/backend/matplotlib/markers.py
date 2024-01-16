@@ -1,25 +1,26 @@
 from __future__ import annotations
+
 import warnings
 import weakref
 from typing import TYPE_CHECKING
 
-import numpy as np
-from numpy.typing import NDArray
-
-import matplotlib.pyplot as plt
-from matplotlib.collections import PathCollection
 import matplotlib.markers as mmarkers
+import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
-
+import numpy as np
+from matplotlib.collections import PathCollection
+from numpy.typing import NDArray
 from psygnal import throttled
+
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, Hatch, LineStyle
+from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.utils.normalize import as_color_array
 
 if TYPE_CHECKING:
-    from whitecanvas.backend.matplotlib.canvas import Canvas
     from matplotlib.backend_bases import MouseEvent as mplMouseEvent
+
+    from whitecanvas.backend.matplotlib.canvas import Canvas
 
 
 def _get_path(symbol: Symbol):
@@ -84,10 +85,12 @@ class Markers(PathCollection, MplLayer):
 
     def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
         if not isinstance(pattern, Hatch):
-            warnings.warn(
-                "matplotlib markers do not support multiple hatch patterns.",
-                UserWarning,
-            )
+            if len(set(pattern)) > 1:
+                warnings.warn(
+                    "matplotlib markers do not support multiple hatch patterns.",
+                    UserWarning,
+                    stacklevel=2,
+                )
             pattern = pattern[0]
         if pattern is Hatch.SOLID:
             ptn = None

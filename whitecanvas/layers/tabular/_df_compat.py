@@ -88,6 +88,8 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
 class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
     def __getitem__(self, item: str) -> np.ndarray:
+        if not isinstance(item, str):
+            raise TypeError(f"Unsupported type: {type(item)}")
         try:
             return self._data[item]
         except KeyError:
@@ -145,6 +147,8 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
 
 class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def __getitem__(self, item: str) -> np.ndarray:
+        if not isinstance(item, str):
+            raise TypeError(f"Unsupported type: {type(item)}")
         series = self._data[item]
         if series.size > 0 and isinstance(series.iloc[0], str):
             return series.to_numpy().astype(str)
@@ -181,6 +185,8 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
     def __getitem__(self, item: str) -> np.ndarray:
+        if not isinstance(item, str):
+            raise TypeError(f"Unsupported type: {type(item)}")
         try:
             return self._data[item].to_numpy()
         except Exception as e:
@@ -228,6 +234,8 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
 
 class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
     def __getitem__(self, item: str) -> np.ndarray:
+        if not isinstance(item, str):
+            raise TypeError(f"Unsupported type: {type(item)}")
         return self._data[item].to_numpy()
 
     def iter_keys(self) -> Iterator[str]:

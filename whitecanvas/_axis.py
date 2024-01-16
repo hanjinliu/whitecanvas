@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import Any, SupportsIndex
+
 from abc import ABC, abstractmethod
+from typing import Any, SupportsIndex
 
 
 class DimAxis(ABC):

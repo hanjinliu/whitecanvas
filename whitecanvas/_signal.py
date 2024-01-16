@@ -1,7 +1,10 @@
 from __future__ import annotations
-from typing import Any, Callable, Generic, TypeVar, Generator, overload
+
 import inspect
+from typing import Any, Callable, Generator, Generic, TypeVar, overload
+
 from psygnal import throttled
+
 from whitecanvas.types import MouseEvent
 
 _R = TypeVar("_R")

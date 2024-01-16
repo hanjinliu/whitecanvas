@@ -86,6 +86,38 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         width: str | None = None,
         style: NStr | None = None,
     ) -> _lt.WrappedLines[_DF]:
+        """
+        Add a categorical line plot.
+
+        >>> ### Use "time" column as x-axis and "value" column as y-axis
+        >>> canvas.cat(df).add_line("time", "value")
+
+        >>> ### Multiple lines colored by column "group"
+        >>> canvas.cat(df).add_line("time", "value", color="group")
+
+        >>> ### Multiple lines styled by column "group"
+        >>> canvas.cat(df).add_line("time", "value", style="group")
+
+        Parameters
+        ----------
+        x : str
+            Column name for x-axis.
+        y : str
+            Column name for y-axis.
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        width : str, optional
+            Column name for line width. Must be numerical.
+        style : str or sequence of str, optional
+            Column name(s) for styling the lines. Must be categorical.
+
+        Returns
+        -------
+        WrappedLines
+            Line collection layer.
+        """
         canvas = self._canvas()
         layer = _lt.WrappedLines.from_table(
             self._df, x, y, name=name, color=color, width=width, style=style,
@@ -110,6 +142,43 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         size: str | None = None,
         symbol: NStr | None = None,
     ) -> _lt.WrappedMarkers[_DF]:
+        """
+        Add a categorical marker plot.
+
+        >>> ### Use "time" column as x-axis and "value" column as y-axis
+        >>> canvas.cat(df).add_markers("time", "value")
+
+        >>> ### Multiple markers colored by column "group"
+        >>> canvas.cat(df).add_markers("time", "value", color="group")
+
+        >>> ### Multiple markers with hatches determined by column "group"
+        >>> canvas.cat(df).add_markers("time", "value", style="group")
+
+        >>> ### Multiple markers with symbols determined by "group"
+        >>> canvas.cat(df).add_markers("time", "value", symbol="group")
+
+        Parameters
+        ----------
+        x : str
+            Column name for x-axis.
+        y : str
+            Column name for y-axis.
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        size : str, optional
+            Column name for marker size. Must be numerical.
+        symbol : str or sequence of str, optional
+            Column name(s) for symbols. Must be categorical.
+
+        Returns
+        -------
+        WrappedMarkers
+            Marker collection layer.
+        """
         canvas = self._canvas()
         layer = _lt.WrappedMarkers.from_table(
             self._df, x, y, name=name, color=color, hatch=hatch, size=size,
@@ -133,6 +202,38 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         hatch: NStr | None = None,
         extent: float = 0.8,
     ) -> _lt.WrappedBars[_DF]:
+        """
+        Add a categorical bar plot.
+
+        >>> ### Use "time" column as x-axis and "value" column as y-axis
+        >>> canvas.cat(df).add_bar("time", "value")
+
+        >>> ### Multiple bars colored by column "group"
+        >>> canvas.cat(df).add_bar("time", "value", color="group")
+
+        >>> ### Multiple bars with hatches determined by column "group"
+        >>> canvas.cat(df).add_bar("time", "value", hatch="group")
+
+        Parameters
+        ----------
+        x : str
+            Column name for x-axis.
+        y : str
+            Column name for y-axis.
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        extent : float, optional
+            Width of the bars. Usually in range (0, 1].
+
+        Returns
+        -------
+        WrappedBars
+            Bar collection layer.
+        """
         canvas = self._canvas()
         layer = _lt.WrappedBars.from_table(
             self._df, x, y, name=name, color=color, hatch=hatch, extent=extent,
@@ -158,6 +259,40 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         name: str | None = None,
         orient: _Orientation = Orientation.VERTICAL,
     ) -> _lt.WrappedViolinPlot[_DF]:
+        """
+        Add a categorical violin plot.
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat(df).add_violinplot("species", "weight")
+
+        >>> ### Color by column "region" with dodging.
+        >>> offset = ["species", "region"]  # categories that offset will be added
+        >>> canvas.cat(df).add_violinplot(offset, "weight", color="region")
+
+        Parameters
+        ----------
+        offset : tuple of str
+            Column name(s) for x-axis.
+        value : str
+            Column name for y-axis.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        extent : float, default 0.8
+            Width of the violins. Usually in range (0, 1].
+        shape : str, default "both"
+            Shape of the violins. Can be "both", "left", or "right".
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+
+        Returns
+        -------
+        WrappedViolinPlot
+            Violin plot layer.
+        """
         canvas = self._canvas()
         layer = _lt.WrappedViolinPlot.from_table(
             self._df, offset, value, name=name, color=color, hatch=hatch, extent=extent,
@@ -186,6 +321,40 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         capsize: float = 0.1,
         extent: float = 0.8,
     ) -> _lt.WrappedBoxPlot[_DF]:
+        """
+        Add a categorical box plot.
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat(df).add_boxplot("species", "weight")
+
+        >>> ### Color by column "region" with dodging.
+        >>> offset = ["species", "region"]  # categories that offset will be added
+        >>> canvas.cat(df).add_boxplot(offset, "weight", color="region")
+
+        Parameters
+        ----------
+        offset : tuple of str
+            Column name(s) for x-axis.
+        value : str
+            Column name for y-axis.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        capsize : float, default 0.1
+            Length of the caps as a fraction of the width of the box.
+        extent : float, default 0.8
+            Width of the violins. Usually in range (0, 1].
+
+        Returns
+        -------
+        WrappedBoxPlot
+            Box plot layer.
+        """
         canvas = self._canvas()
         layer = _lt.WrappedBoxPlot.from_table(
             self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
@@ -216,6 +385,44 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         extent: float = 0.5,
         seed: int | None = 0,
     ) -> _lt.WrappedMarkerGroups[_DF]:
+        """
+        Add a categorical strip plot.
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat(df).add_stripplot("species", "weight")
+
+        >>> ### Color by column "region" with dodging.
+        >>> offset = ["species", "region"]  # categories that offset will be added
+        >>> canvas.cat(df).add_stripplot(offset, "weight", color="region")
+
+        Parameters
+        ----------
+        offset : tuple of str
+            Column name(s) for x-axis.
+        value : str
+            Column name for y-axis.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        symbol : str or sequence of str, optional
+            Column name(s) for symbols. Must be categorical.
+        size : str, optional
+            Column name for marker size. Must be numerical.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        extent : float, default 0.5
+            Width of the violins. Usually in range (0, 1].
+        seed : int, optional
+            Random seed for jittering.
+
+        Returns
+        -------
+        WrappedMarkerGroups
+            Marker collection layer.
+        """
         canvas = self._canvas()
         orient = Orientation.parse(orient)
         layer = _lt.WrappedMarkers.build_stripplot(
@@ -247,6 +454,44 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         extent: float = 0.8,
         sort: bool = False,
     ) -> _lt.WrappedMarkerGroups[_DF]:
+        """
+        Add a categorical swarm plot.
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat(df).add_swarmplot("species", "weight")
+
+        >>> ### Color by column "region" with dodging.
+        >>> offset = ["species", "region"]  # categories that offset will be added
+        >>> canvas.cat(df).add_swarmplot(offset, "weight", color="region")
+
+        Parameters
+        ----------
+        offset : tuple of str
+            Column name(s) for x-axis.
+        value : str
+            Column name for y-axis.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        symbol : str or sequence of str, optional
+            Column name(s) for symbols. Must be categorical.
+        size : str, optional
+            Column name for marker size. Must be numerical.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        extent : float, default 0.8
+            Width of the violins. Usually in range (0, 1].
+        sort : bool, default False
+            Whether to sort the data by value.
+
+        Returns
+        -------
+        WrappedMarkerGroups
+            Marker collection layer.
+        """
         canvas = self._canvas()
         layer = _lt.WrappedMarkers.build_swarmplot(
             self._df, offset, value, name=name, color=color, hatch=hatch, symbol=symbol,
@@ -273,6 +518,36 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         orient: _Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
     ) -> _lt.WrappedBars[_DF]:
+        """
+        Add a categorical count plot.
+
+        >>> ### Count for each category in column "species".
+        >>> canvas.cat(df).add_countplot("species")
+
+        >>> ### Color by column "region" with dodging.
+        >>> offset = ["species", "region"]  # categories that offset will be added
+        >>> canvas.cat(df).add_countplot(offset, color="region")
+
+        Parameters
+        ----------
+        offset : tuple of str
+            Column name(s) for x-axis.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        extent : float, default 0.8
+            Width of the violins. Usually in range (0, 1].
+
+        Returns
+        -------
+        WrappedBars
+            Bar collection layer.
+        """
         canvas = self._canvas()
         orient = Orientation.parse(orient)
         layer = _lt.WrappedBars.build_count(

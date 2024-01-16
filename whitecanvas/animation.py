@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Iterable, TypeVar, Generic
+from typing import TYPE_CHECKING, Generic, Iterable, TypeVar
+
 import numpy as np
 from numpy.typing import NDArray
+
 from whitecanvas._exceptions import ReferenceDeletedError
 
 if TYPE_CHECKING:
@@ -24,14 +26,17 @@ class Animation:
     >>> from whitecanvas import plot as plt
     >>> from whitecanvas.animation import Animation
     >>> import numpy as np
+
     >>> ### Create a canvas and a line
     >>> canvas = plt.figure()
     >>> x = np.linspace(0, 4 * np.pi, 200)
     >>> line = plt.line(x, np.sin(x))
+
     >>> ### Create an animation
     >>> anim = Animation(canvas)
     >>> for i in anim.iter_range(20):
     ...     line.set_data(x, np.sin(x + i * np.pi / 10))
+
     >>> ### Save the animation
     >>> anim.save("animation.gif")
     """

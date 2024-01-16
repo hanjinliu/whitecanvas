@@ -15,7 +15,14 @@ from whitecanvas.layers._base import Layer, LayerWrapper
 from whitecanvas.layers.tabular import _jitter
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
-from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation, Symbol
+from whitecanvas.types import (
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+    Symbol,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -105,7 +112,19 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
     def style(self) -> _p.StylePlan:
         return self._style_by
 
-    def with_color(self, by: str | Iterable[str], palette=None) -> Self:
+    @overload
+    def with_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def with_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def with_color(self, by, /, palette=None):
         cov = ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -444,7 +463,6 @@ class WrappedBoxPlot(DataFrameLayerWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
 
 class WrappedMarkers(
     DataFrameLayerWrapper[
-        # _l.Markers[_mixin.MultiFace, _mixin.MultiEdge, NDArray[np.floating]], _DF
         _lg.MarkerCollection,
         _DF,
     ],
@@ -595,7 +613,7 @@ class WrappedMarkers(
         else:
             color_by = self._color_by.with_const(Color(cov.value))
         colors = color_by.map(self._source)
-        self._base_layer.with_face(color=colors)
+        self._base_layer.face.color = colors
         self._color_by = color_by
         return self
 
@@ -606,7 +624,7 @@ class WrappedMarkers(
         else:
             hatch_by = self._hatch_by.with_const(Hatch(cov.value))
         hatches = hatch_by.map(self._source)
-        self._base_layer.with_face(hatch=hatches)
+        self._base_layer.face.hatch = hatches
         self._hatch_by = hatch_by
         return self
 

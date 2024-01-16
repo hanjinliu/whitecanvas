@@ -397,13 +397,13 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
                 all_data.y[mask],
                 symbol=layer.symbol,
                 backend=self._backend_name,
-            )._as_all_multi()
-            markers.size = layer.size[mask]
-            markers.face.update(
+            )
+            markers.with_size_multi(
+                layer.size[mask],
+            ).with_face_multi(
                 color=layer.face.color[mask],
                 hatch=layer.face.hatch[mask],
-            )
-            markers.edge.update(
+            ).with_edge_multi(
                 color=layer.edge.color[mask],
                 width=layer.edge.width[mask],
                 style=layer.edge.style[mask],

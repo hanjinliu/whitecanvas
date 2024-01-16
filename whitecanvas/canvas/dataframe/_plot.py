@@ -93,6 +93,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -115,6 +117,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -136,6 +140,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -159,6 +165,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
@@ -185,6 +193,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
@@ -215,6 +225,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
@@ -243,6 +255,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
@@ -267,6 +281,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(offset, "count", orient=orient)
         return canvas.add_layer(layer)
@@ -344,6 +360,8 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(_color.value, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
@@ -374,6 +392,8 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         )  # fmt: skip
         if color is not None:
             layer.with_color(_color.value, palette=canvas._color_palette)
+        else:
+            layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)

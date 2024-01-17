@@ -67,6 +67,10 @@ class Backend:
             raise RuntimeError(f"Backend {self._name!r} does not have {attr!r}")
         return out
 
+    def is_dummy(self) -> bool:
+        """True is the backend is a dummy backend."""
+        return self.name.startswith(".")
+
 
 class DummyObject:
     def __init__(self, *args, **kwargs):

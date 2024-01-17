@@ -97,10 +97,10 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
             brush.setColor(array_to_qcolor(c))
         self.setBrush(brushes)
 
-    def _plt_get_face_pattern(self) -> list[Hatch]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [from_qt_brush_style(brush.style()) for brush in self._get_brush()]
 
-    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         brushes = self._get_brush()
         if isinstance(pattern, Hatch):
             ptn = to_qt_brush_style(pattern)

@@ -73,7 +73,7 @@ class Band(PlotlyLayer):
     def _plt_set_face_color(self, color):
         self._props["fillcolor"] = rgba_str_color(color)
 
-    _plt_get_face_pattern, _plt_set_face_pattern = face_pattern()
+    _plt_get_face_hatch, _plt_set_face_hatch = face_pattern()
 
     def _plt_get_edge_color(self):
         return arr_color(self._props["line"]["color"])

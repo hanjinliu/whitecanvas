@@ -104,10 +104,10 @@ class Texts(PlotlyLayer):
     def _plt_set_face_color(self, color):
         pass
 
-    def _plt_get_face_pattern(self) -> Hatch:
+    def _plt_get_face_hatch(self) -> Hatch:
         return [Hatch.SOLID] * len(self._props["text"])
 
-    def _plt_set_face_pattern(self, pattern: Hatch):
+    def _plt_set_face_hatch(self, pattern: Hatch):
         pass
 
     ##### HasEdges #####

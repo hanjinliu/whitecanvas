@@ -70,10 +70,10 @@ class Band(PolyCollection, MplLayer):
     def _plt_set_face_color(self, color):
         self.set_facecolor(color)
 
-    def _plt_get_face_pattern(self) -> Hatch:
+    def _plt_get_face_hatch(self) -> Hatch:
         return Hatch(self.get_hatch() or "")
 
-    def _plt_set_face_pattern(self, pattern: Hatch):
+    def _plt_set_face_hatch(self, pattern: Hatch):
         if pattern is Hatch.SOLID:
             ptn = None
         else:

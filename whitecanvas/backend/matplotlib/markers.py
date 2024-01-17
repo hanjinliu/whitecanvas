@@ -80,10 +80,10 @@ class Markers(PathCollection, MplLayer):
         color = as_color_array(color, len(self.get_offsets()))
         self.set_facecolor(color)
 
-    def _plt_get_face_pattern(self) -> Hatch:
+    def _plt_get_face_hatch(self) -> Hatch:
         return [Hatch(self.get_hatch() or "")] * len(self.get_offsets())
 
-    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         if not isinstance(pattern, Hatch):
             if len(set(pattern)) > 1:
                 warnings.warn(

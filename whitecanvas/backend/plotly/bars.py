@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
+
+from whitecanvas.backend import _not_implemented
+from whitecanvas.backend.plotly._base import PlotlyLayer
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import Hatch
-from whitecanvas.utils.normalize import rgba_str_color, arr_color
-from ._base import PlotlyLayer
-from whitecanvas.backend import _not_implemented
+from whitecanvas.utils.normalize import arr_color, rgba_str_color
 
 
 @check_protocol(BarProtocol)
@@ -67,10 +68,10 @@ class Bars(PlotlyLayer):
             color = [rgba_str_color(c) for c in color]
         self._props["marker"]["color"] = color
 
-    def _plt_get_face_pattern(self) -> list[Hatch]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [Hatch(p) for p in self._props["marker"]["pattern"]["shape"]]
 
-    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         if isinstance(pattern, Hatch):
             ptn = [pattern.value] * self._plt_get_ndata()
         else:

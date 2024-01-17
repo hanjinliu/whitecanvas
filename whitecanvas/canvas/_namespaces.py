@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
     from whitecanvas.canvas._base import CanvasBase
 
+_no_canvas = object()
+
 
 class AxisSignals(SignalGroup):
     lim = Signal(tuple)
@@ -32,7 +34,7 @@ class Namespace:
                 canvas = canvas._canvas_ref()
             self._canvas_ref = weakref.ref(canvas)
         else:
-            self._canvas_ref = lambda: None
+            self._canvas_ref = lambda: _no_canvas
         self._instances: dict[int, Self] = {}
 
     def __get__(self, canvas, owner) -> Self:
@@ -47,6 +49,8 @@ class Namespace:
         l = self._canvas_ref()
         if l is None:
             raise ReferenceDeletedError("Canvas has been deleted.")
+        elif l is _no_canvas:
+            raise TypeError("No canvas is associated with the class itself.")
         return l._canvas()
 
     def __repr__(self) -> str:

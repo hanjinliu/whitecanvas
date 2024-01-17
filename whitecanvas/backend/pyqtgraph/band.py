@@ -66,10 +66,10 @@ class Band(pg.FillBetweenItem, PyQtLayer):
         brush.setColor(array_to_qcolor(color))
         self.setBrush(brush)
 
-    def _plt_get_face_pattern(self) -> Hatch:
+    def _plt_get_face_hatch(self) -> Hatch:
         return from_qt_brush_style(self._get_brush().style())
 
-    def _plt_set_face_pattern(self, pattern: Hatch):
+    def _plt_set_face_hatch(self, pattern: Hatch):
         brush = self._get_brush()
         brush.setStyle(to_qt_brush_style(pattern))
         self.setBrush(brush)

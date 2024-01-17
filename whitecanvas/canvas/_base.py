@@ -87,7 +87,7 @@ class CanvasBase(ABC):
         self.events = CanvasEvents()
         self._is_grouping = False
         self._autoscale_enabled = True
-        if not self._get_backend().name.startswith("."):
+        if not self._get_backend().is_dummy():
             self._init_canvas()
 
     def _init_canvas(self):
@@ -641,11 +641,11 @@ class CanvasBase(ABC):
 
         >>> canvas.add_spans([[5, 10], [15, 20]])
 
-           |////|     |////|
-           |////|     |////|
+           |::::|     |::::|
+           |::::|     |::::|
         ───5────10────15───20─────>
-           |////|     |////|
-           |////|     |////|
+           |::::|     |::::|
+           |::::|     |::::|
 
         Parameters
         ----------
@@ -1393,6 +1393,8 @@ class Canvas(CanvasBase):
     ) -> Self:
         """Create a canvas object from a backend object."""
         with patch_dummy_backend() as name:
+            # this patch will delay initialization by "_init_canvas" until the backend
+            # objects are created.
             self = cls(backend=name, palette=palette)
         self._backend = Backend(backend)
         self._backend_object = obj

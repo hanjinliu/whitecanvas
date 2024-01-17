@@ -118,10 +118,10 @@ class Texts(pg.ItemGroup, PyQtLayer):
             brush.setColor(array_to_qcolor(color0))
             t.fill = brush
 
-    def _plt_get_face_pattern(self) -> list[Hatch]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [from_qt_brush_style(s._get_brush().style()) for s in self.childItems()]
 
-    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         if isinstance(pattern, Hatch):
             pattern = [pattern] * self._plt_get_ndata()
         for t, pattern0 in zip(self.childItems(), pattern):

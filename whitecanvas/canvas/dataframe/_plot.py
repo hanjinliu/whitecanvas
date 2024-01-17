@@ -623,6 +623,31 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         width: str | None = None,
         style: NStr | None = None,
     ) -> _lt.WrappedLines[_DF]:
+        """
+        Add line that connect the aggregated values.
+
+        >>> canvas.cat(df).mean().add_line("time", "value")
+
+        Parameters
+        ----------
+        x : str
+            Column name for x-axis.
+        y : str
+            Column name for y-axis.
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        width : str, optional
+            Column name for line width. Must be numerical.
+        style : str or sequence of str, optional
+            Column name(s) for styling the lines. Must be categorical.
+
+        Returns
+        -------
+        WrappedLines
+            Line collection layer.
+        """
         canvas = self._canvas()
         df = parse(self._df)
         keys = list(df.iter_keys())

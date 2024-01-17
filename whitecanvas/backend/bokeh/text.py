@@ -140,12 +140,12 @@ class Texts(BokehLayer[bk_models.Text]):
         color = as_color_array(color, len(self._data.data["text"]))
         self._data.data["background_fill_color"] = [hex_color(c) for c in color]
 
-    def _plt_get_face_pattern(self) -> list[Hatch]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [
             from_bokeh_hatch(h) for h in self._data.data["background_hatch_pattern"]
         ]
 
-    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         if isinstance(pattern, Hatch):
             pattern = [pattern] * len(self._data.data["text"])
         self._data.data["background_hatch_pattern"] = [

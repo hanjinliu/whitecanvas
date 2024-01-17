@@ -57,7 +57,7 @@ class Markers(PlotlyLayer):
         color = as_color_array(color, self._plt_get_ndata())
         self._props["marker"]["color"] = [rgba_str_color(c) for c in color]
 
-    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_patterns()
+    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_patterns()
 
     def _plt_get_symbol(self) -> Symbol:
         return from_plotly_marker_symbol(self._props["marker"]["symbol"])

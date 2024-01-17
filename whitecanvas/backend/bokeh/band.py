@@ -10,7 +10,7 @@ from whitecanvas.utils.normalize import arr_color, hex_color
 
 
 @check_protocol(BandProtocol)
-class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
+class Band(BokehLayer["bk_models.VArea | bk_models.HArea"]):
     def __init__(
         self,
         t: np.ndarray,
@@ -66,10 +66,10 @@ class Band(BokehLayer[bk_models.VArea | bk_models.HArea]):
         if self._visible:
             self._model.fill_color = self._face_color
 
-    def _plt_get_face_pattern(self) -> Hatch:
+    def _plt_get_face_hatch(self) -> Hatch:
         return from_bokeh_hatch(self._model.hatch_pattern)
 
-    def _plt_set_face_pattern(self, pattern: Hatch):
+    def _plt_set_face_hatch(self, pattern: Hatch):
         self._model.hatch_pattern = to_bokeh_hatch(pattern)
 
     def _plt_get_edge_color(self):

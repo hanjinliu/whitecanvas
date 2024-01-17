@@ -44,10 +44,10 @@ class HeteroLayer(BokehLayer[_M]):
             color = [hex_color(c) for c in color]
         self._data.data["face_color"] = color
 
-    def _plt_get_face_pattern(self) -> list[Hatch]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [from_bokeh_hatch(p) for p in self._data.data["pattern"]]
 
-    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         if isinstance(pattern, Hatch):
             ptn = [to_bokeh_hatch(pattern)] * self._plt_get_ndata()
         else:

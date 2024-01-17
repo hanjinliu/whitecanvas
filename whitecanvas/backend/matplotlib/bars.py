@@ -67,10 +67,10 @@ class Bars(BarContainer, MplLayer):
         for patch, c in zip(self.patches, color):
             patch.set_facecolor(c)
 
-    def _plt_get_face_pattern(self) -> list[Hatch]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [Hatch(patch.get_hatch() or "") for patch in self.patches]
 
-    def _plt_set_face_pattern(self, pattern: Hatch | list[Hatch]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         if isinstance(pattern, Hatch):
             pattern = [pattern] * len(self.patches)
         for pat, patch in zip(pattern, self.patches):

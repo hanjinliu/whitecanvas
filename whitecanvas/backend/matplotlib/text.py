@@ -155,7 +155,7 @@ class Texts(Artist, MplLayer):
         for child, color0 in zip(self.get_children(), color):
             self._set_bbox_props(child, facecolor=color0)
 
-    def _plt_get_face_pattern(self) -> Hatch:
+    def _plt_get_face_hatch(self) -> Hatch:
         out = []
         for child in self.get_children():
             patch = child.get_bbox_patch()
@@ -165,7 +165,7 @@ class Texts(Artist, MplLayer):
                 out.append(Hatch(patch.get_hatch() or ""))
         return out
 
-    def _plt_set_face_pattern(self, pattern: Hatch):
+    def _plt_set_face_hatch(self, pattern: Hatch):
         if isinstance(pattern, Hatch):
             if pattern is Hatch.SOLID:
                 ptn = [None] * len(self.get_children())

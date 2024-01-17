@@ -143,12 +143,12 @@ class MonoFace(FaceNamespace):
 
     @property
     def hatch(self) -> Hatch:
-        return self._layer._backend._plt_get_face_pattern()
+        return self._layer._backend._plt_get_face_hatch()
 
     @hatch.setter
     def hatch(self, value: str | Hatch):
         hatch = Hatch(value)
-        self._layer._backend._plt_set_face_pattern(hatch)
+        self._layer._backend._plt_set_face_hatch(hatch)
         self.events.hatch.emit(hatch)
 
     @property
@@ -202,12 +202,12 @@ class ConstFace(FaceNamespace):
 
     @property
     def hatch(self) -> Hatch:
-        return self._layer._backend._plt_get_face_pattern()[0]
+        return self._layer._backend._plt_get_face_hatch()[0]
 
     @hatch.setter
     def hatch(self, value: str | Hatch):
         hatch = Hatch(value)
-        self._layer._backend._plt_set_face_pattern(hatch)
+        self._layer._backend._plt_set_face_hatch(hatch)
         self.events.hatch.emit(hatch)
 
     @property
@@ -396,7 +396,7 @@ class MultiFace(FaceNamespace):
     @property
     def hatch(self) -> EnumArray[Hatch]:
         """Face fill hatches."""
-        return np.asarray(self._layer._backend._plt_get_face_pattern(), dtype=object)
+        return np.asarray(self._layer._backend._plt_get_face_hatch(), dtype=object)
 
     @hatch.setter
     def hatch(self, hatch: str | Hatch | Iterable[str | Hatch]):
@@ -406,7 +406,7 @@ class MultiFace(FaceNamespace):
             pass
         else:
             hatch = [Hatch(p) for p in hatch]
-        self._layer._backend._plt_set_face_pattern(hatch)
+        self._layer._backend._plt_set_face_hatch(hatch)
         self.events.hatch.emit(hatch)
 
     @property

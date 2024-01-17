@@ -27,22 +27,25 @@ class AxisSignals(SignalGroup):
 
 class Namespace:
     _attrs: tuple[str, ...] = ()
+    _instances: weakref.WeakKeyDictionary[CanvasBase, Self]
 
     def __init__(self, canvas: CanvasBase | None = None):
         if canvas is not None:
-            while isinstance(canvas, Namespace):
-                canvas = canvas._canvas_ref()
             self._canvas_ref = weakref.ref(canvas)
         else:
             self._canvas_ref = lambda: _no_canvas
-        self._instances: dict[int, Self] = {}
+        self._instances = weakref.WeakKeyDictionary()
 
     def __get__(self, canvas, owner) -> Self:
         if canvas is None:
             return self
-        _id = id(canvas)
-        if (ns := self._instances.get(_id)) is None:
-            ns = self._instances[_id] = type(self)(canvas)
+        # _id = id(canvas)
+        while isinstance(canvas, Namespace):
+            canvas = canvas._canvas_ref()
+        if (ns := self._instances.get(canvas)) is None:
+            while isinstance(canvas, Namespace):
+                canvas = canvas._canvas_ref()
+            ns = self._instances[canvas] = type(self)(canvas)
         return ns
 
     def _get_canvas(self) -> protocols.CanvasProtocol:
@@ -55,15 +58,16 @@ class Namespace:
 
     def __repr__(self) -> str:
         cname = type(self).__name__
-        try:
-            props = [f"canvas={self._get_canvas()!r}"]
-            for k in self._attrs:
-                v = getattr(self, k)
-                props.append(f"{k}={v!r}")
-            return f"{cname}({', '.join(props)})"
-
-        except ReferenceDeletedError:
+        l = self._canvas_ref()
+        if l is None:
             return f"<{cname} of deleted canvas>"
+        elif l is _no_canvas:
+            return f"<{cname}>"
+        props = [f"canvas={l!r}"]
+        for k in self._attrs:
+            v = getattr(self, k)
+            props.append(f"{k}={v!r}")
+        return f"{cname}({', '.join(props)})"
 
     def update(self, d: dict[str, Any] = {}, **kwargs):
         values = dict(d, **kwargs)
@@ -117,15 +121,21 @@ class _TextBoundNamespace(Namespace):
 
 class _TextLabelNamespace(_TextBoundNamespace):
     def __repr__(self) -> str:
+        cname = type(self).__name__
+        l = self._canvas_ref()
+        if l is None:
+            return f"<{cname} of deleted canvas>"
+        elif l is _no_canvas:
+            return f"<{cname}>"
         text = self.text
         color = self.color
         size = self.size
         fontfamily = self.family
-        name = type(self).__name__
-        return f"{name}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
+        return f"{cname}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
 
     @property
     def text(self) -> str:
+        """Text content."""
         return self._get_object()._plt_get_text()
 
     @text.setter
@@ -144,13 +154,18 @@ class _TextLabelNamespace(_TextBoundNamespace):
 
 class _TicksNamespace(_TextBoundNamespace):
     def __repr__(self) -> str:
+        cname = type(self).__name__
+        l = self._canvas_ref()
+        if l is None:
+            return f"<{cname} of deleted canvas>"
+        elif l is _no_canvas:
+            return f"<{cname}>"
         pos, labels = self._get_object()._plt_get_tick_labels()
         pos = list(pos)
         color = self.color
         size = self.size
         family = self.family
-        name = type(self).__name__
-        return f"{name}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {family=!r})"
+        return f"{cname}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {family=!r})"
 
     def _get_object(self) -> protocols.TicksProtocol:
         raise NotImplementedError

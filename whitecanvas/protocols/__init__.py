@@ -9,6 +9,7 @@ from whitecanvas.protocols.canvas_protocol import (
     TicksProtocol,
 )
 from whitecanvas.protocols.layer_protocols import (
+    ArrowProtocol,
     BandProtocol,
     BarProtocol,
     BaseProtocol,
@@ -22,6 +23,7 @@ from whitecanvas.protocols.layer_protocols import (
 )
 
 __all__ = [
+    "ArrowProtocol",
     "BaseProtocol",
     "LineProtocol",
     "MultiLineProtocol",

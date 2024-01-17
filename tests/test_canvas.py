@@ -35,6 +35,20 @@ def test_namespaces(backend: str):
     canvas.y.label.family = "Arial"
     assert canvas.y.label.family == "Arial"
 
+def test_namespace_pointing_at_different_objects():
+    c0 = new_canvas(backend="matplotlib")
+    c1 = new_canvas(backend="matplotlib")
+    assert c0.title is not c1.title
+    assert c0.x is not c1.x
+    c0.title.text = "Title-0"
+    c1.title.text = "Title-1"
+    assert c0.title.text == "Title-0"
+    assert c1.title.text == "Title-1"
+    c0.x.color = "red"
+    c1.x.color = "blue"
+    assert_color_equal(c0.x.color, "red")
+    assert_color_equal(c1.x.color, "blue")
+
 def test_grid(backend: str):
     cgrid = wc.grid(2, 2, link_x=True, link_y=True, backend=backend)
     c00 = cgrid.add_canvas(0, 0)

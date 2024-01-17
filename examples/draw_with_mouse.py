@@ -1,3 +1,7 @@
+# In this example, two mouse events are connected to the canvas.
+# 1. Dragging the left mouse button without any keyboard modifiers draws a line.
+# 2. Dragging the left mouse button with the shift key held down draws a span.
+
 import numpy as np
 
 from whitecanvas import new_canvas

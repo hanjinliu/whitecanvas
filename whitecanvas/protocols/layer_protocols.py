@@ -280,6 +280,15 @@ class TextProtocol(HasText, HasEdges, HasFaces, Protocol):
 
 
 @runtime_checkable
+class ArrowProtocol(HasEdges, Protocol):
+    def _plt_get_arrow_size(self) -> float:
+        """Return the arrow size."""
+
+    def _plt_set_arrow_size(self, size: float):
+        """Set the arrow size."""
+
+
+@runtime_checkable
 class ImageProtocol(BaseProtocol, Protocol):
     def _plt_get_data(self) -> NDArray[np.number]:
         """Return the image data."""

@@ -677,6 +677,33 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         size: np.str_ | float | None = None,
         symbol: NStr | Symbol | None = None,
     ) -> _lt.WrappedMarkers[_DF]:
+        """
+        Add markers that represent the aggregated values.
+
+        >>> canvas.cat(df).mean().add_markers("time", "value")
+
+        Parameters
+        ----------
+        x : str
+            Column name for x-axis.
+        y : str
+            Column name for y-axis.
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        size : str, optional
+            Column name for marker size. Must be numerical.
+        symbol : str or sequence of str, optional
+            Column name(s) for symbols. Must be categorical.
+
+        Returns
+        -------
+        WrappedMarkers
+            Marker collection layer.
+        """
         canvas = self._canvas()
         df = parse(self._df)
         keys = list(df.iter_keys())

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import weakref
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar
 
 import numpy as np
 from cmap import Color
@@ -19,33 +18,45 @@ if TYPE_CHECKING:
     from whitecanvas.canvas._base import CanvasBase
 
 _no_canvas = object()
+_T = TypeVar("_T")
 
 
 class AxisSignals(SignalGroup):
+    """Signals emitted by an axis."""
+
     lim = Signal(tuple)
+
+
+class StrongRef(Generic[_T]):
+    """Strong reference to an object."""
+
+    def __init__(self, obj: _T):
+        self._obj = obj
+
+    def __call__(self) -> _T:
+        return self._obj
 
 
 class Namespace:
     _attrs: tuple[str, ...] = ()
-    _instances: weakref.WeakKeyDictionary[CanvasBase, Self]
 
     def __init__(self, canvas: CanvasBase | None = None):
         if canvas is not None:
-            self._canvas_ref = weakref.ref(canvas)
+            # This line *should* be an weak reference, but canvas is sometimes deleted
+            # for some reason. Just use a strong reference for now.
+            self._canvas_ref = StrongRef(canvas)
         else:
-            self._canvas_ref = lambda: _no_canvas
-        self._instances = weakref.WeakKeyDictionary()
+            self._canvas_ref = StrongRef(_no_canvas)
+        self._instances: dict[int, Self] = {}
 
     def __get__(self, canvas, owner) -> Self:
         if canvas is None:
             return self
-        # _id = id(canvas)
         while isinstance(canvas, Namespace):
             canvas = canvas._canvas_ref()
-        if (ns := self._instances.get(canvas)) is None:
-            while isinstance(canvas, Namespace):
-                canvas = canvas._canvas_ref()
-            ns = self._instances[canvas] = type(self)(canvas)
+        id_ = id(canvas)
+        if (ns := self._instances.get(id_)) is None:
+            ns = self._instances[id_] = type(self)(canvas)
         return ns
 
     def _get_canvas(self) -> protocols.CanvasProtocol:

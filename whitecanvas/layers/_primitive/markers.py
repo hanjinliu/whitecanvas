@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar
 
 import numpy as np
+from cmap import Colormap
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
@@ -20,6 +21,7 @@ from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.types import (
     Alignment,
     ArrayLike1D,
+    ColormapType,
     ColorType,
     Hatch,
     LineStyle,
@@ -204,6 +206,62 @@ class Markers(
             self.face.hatch = hatch
         if alpha is not _void:
             self.face.alpha = alpha
+        return self
+
+    def color_by_density(
+        self,
+        cmap: ColormapType = "jet",
+        *,
+        width: float = 0.0,
+    ) -> Markers[_Face, _Edge, _Size]:
+        """
+        Set the color of the markers by density.
+
+        Parameters
+        ----------
+        cmap : ColormapType, optional
+            Colormap used to map the density to colors.
+        """
+        from whitecanvas.utils.kde import gaussian_kde
+
+        xydata = self.data
+        xy = np.vstack([xydata.x, xydata.y])
+        density = gaussian_kde(xy)(xy)
+        normed = density / density.max()
+        self.with_face_multi(color=Colormap(cmap)(normed))
+        if width is not None:
+            self.width = width
+        return self
+
+    def as_edge_only(
+        self,
+        *,
+        width: float = 3.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Markers[_Face, _Edge, _Size]:
+        """
+        Convert the markers to edge-only mode.
+
+        This method will set the face color to transparent and the edge color to the
+        current face color.
+
+        Parameters
+        ----------
+        width : float, default 3.0
+            Width of the edge.
+        style : str or LineStyle, default LineStyle.SOLID
+            Line style of the edge.
+        """
+        color = self.face.color
+        if color.ndim == 0:
+            pass
+        elif color.ndim == 1:
+            self.with_edge(color=color, width=width, style=style)
+        elif color.ndim == 2:
+            self.with_edge_multi(color=color, width=width, style=style)
+        else:
+            raise RuntimeError("Unreachable error.")
+        self.face.update(alpha=0.0)
         return self
 
     def with_hover_text(self, text: Iterable[Any]) -> Markers[_Face, _Edge, _Size]:

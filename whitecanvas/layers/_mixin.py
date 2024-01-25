@@ -88,19 +88,19 @@ class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
     _events_class = FaceEvents
 
     @abstractproperty
-    def color(self):
+    def color(self) -> NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractproperty
-    def hatch(self):
+    def hatch(self) -> Hatch | EnumArray[Hatch]:
         raise NotImplementedError
 
     @abstractproperty
-    def alpha(self):
+    def alpha(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color, hatch, alpha):
+    def update(self, color=None, hatch=None, alpha=1.0):
         ...
 
 
@@ -110,23 +110,23 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
     _events_class = EdgeEvents
 
     @abstractproperty
-    def color(self):
+    def color(self) -> NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractproperty
-    def width(self):
+    def width(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractproperty
-    def style(self):
+    def style(self) -> LineStyle | EnumArray[LineStyle]:
         raise NotImplementedError
 
     @abstractproperty
-    def alpha(self):
+    def alpha(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color, width, style, alpha):
+    def update(self, color=None, width=None, style=None, alpha=1.0):
         ...
 
 

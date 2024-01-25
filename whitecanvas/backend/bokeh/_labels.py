@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import weakref
 from typing import TYPE_CHECKING
+
 import numpy as np
+from bokeh.models import FactorRange
 from cmap import Color
+
+from whitecanvas.backend.bokeh._base import to_bokeh_line_style
 from whitecanvas.types import LineStyle
-from ._base import to_bokeh_line_style
 
 if TYPE_CHECKING:
-    from .canvas import Canvas
-    from bokeh.models import Axis as BokehAxis, Grid as BokehGrid, DataRange1d
+    from bokeh.models import Axis as BokehAxis
+    from bokeh.models import DataRange1d
+    from bokeh.models import Grid as BokehGrid
+
+    from whitecanvas.backend.bokeh.canvas import Canvas
 
 
 class _CanvasComponent:
@@ -55,12 +61,18 @@ class Title(_CanvasComponent):
 
 class X:
     def _plt_get_axis(self) -> BokehAxis:
-        return self._plot.xaxis
+        return self._canvas()._get_xaxis()
+
+    def _plt_get_range(self) -> DataRange1d:
+        return self._canvas()._get_xrange()
 
 
 class Y:
     def _plt_get_axis(self) -> BokehAxis:
-        return self._plot.yaxis
+        return self._canvas()._get_yaxis()
+
+    def _plt_get_range(self) -> DataRange1d:
+        return self._canvas()._get_yrange()
 
 
 class Axis(_CanvasComponent):
@@ -71,10 +83,10 @@ class Axis(_CanvasComponent):
         raise NotImplementedError
 
     def _plt_get_visible(self) -> bool:
-        return self._plot.xaxis.visible
+        return self._plt_get_axis().visible
 
     def _plt_set_visible(self, visible: bool):
-        self._plot.xaxis.visible = visible
+        self._plt_get_axis().visible = visible
 
     def _plt_get_color(self):
         return np.array(Color(self._plt_get_axis().axis_label_text_color).rgba)
@@ -133,15 +145,14 @@ class Ticks(_CanvasComponent):
     def _plt_get_axis(self) -> BokehAxis:
         raise NotImplementedError
 
-    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         return tuple(zip(*self._plt_get_axis().ticker))
 
-    def _plt_set_text(self, text: tuple[list[float], list[str]]):
-        pos, labels = text
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
         self._plt_get_axis().ticker = pos
         self._plt_get_axis().major_label_overrides = dict(zip(pos, labels))
 
-    def _plt_reset_text(self):
+    def _plt_reset_override(self):
         self._plt_get_axis().ticker = None
         self._plt_get_axis().major_label_overrides = None
 
@@ -170,6 +181,12 @@ class Ticks(_CanvasComponent):
     def _plt_set_color(self, color):
         self._plt_get_axis().major_label_text_color = Color(color).hex
 
+    def _plt_get_text_rotation(self) -> float:
+        return self._plt_get_axis().major_label_orientation
+
+    def _plt_set_text_rotation(self, rotation: float):
+        self._plt_get_axis().major_label_orientation = rotation
+
 
 class XAxis(X, Axis):
     def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
@@ -184,12 +201,12 @@ class XAxis(X, Axis):
         fig.x_range.flipped = not fig.x_range.flipped
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        limits: DataRange1d = self._canvas()._plot.x_range
-        return limits.start, limits.end
+        _range = self._plt_get_range()
+        return _range.start, _range.end
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        x_range: DataRange1d = self._canvas()._plot.x_range
-        x_range.start, x_range.end = limits
+        _range = self._plt_get_range()
+        _range.start, _range.end = limits
 
 
 class YAxis(Y, Axis):
@@ -205,11 +222,11 @@ class YAxis(Y, Axis):
         fig.y_range.flipped = not fig.y_range.flipped
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        limits: DataRange1d = self._canvas()._plot.y_range
+        limits = self._plt_get_range()
         return limits.start, limits.end
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        x_range: DataRange1d = self._canvas()._plot.y_range
+        x_range = self._plt_get_range()
         x_range.start, x_range.end = limits
 
 
@@ -222,8 +239,10 @@ class YLabel(Y, Label):
 
 
 class XTicks(X, Ticks):
-    pass
+    def _plt_set_multilevel_text(self, text: list[tuple[str, ...]]):
+        self._canvas()._plot.x_range = FactorRange(*text)
 
 
 class YTicks(Y, Ticks):
-    pass
+    def _plt_set_multilevel_text(self, text: list[tuple[str, ...]]):
+        self._canvas()._plot.y_range = FactorRange(*text)

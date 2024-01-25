@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-
 from vispy.scene import visuals
+
+from whitecanvas.backend import _not_implemented
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import LineStyle, Orientation
-from whitecanvas.backend import _not_implemented
 
 
 @check_protocol(BandProtocol)
@@ -73,7 +73,7 @@ class Band(visuals.Polygon):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         self.color = color
 
-    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_pattern()
+    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_pattern()
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:

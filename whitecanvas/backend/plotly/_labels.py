@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import weakref
 from typing import TYPE_CHECKING
+
 import numpy as np
-from whitecanvas.utils.normalize import rgba_str_color
+
 from whitecanvas.types import LineStyle
+from whitecanvas.utils.normalize import rgba_str_color
 
 if TYPE_CHECKING:
-    from .canvas import Canvas
     from plotly.graph_objs.layout import Title as PlotlyTitle
+
+    from whitecanvas.backend.plotly.canvas import Canvas
 
 
 class _CanvasComponent:
@@ -64,7 +67,7 @@ class _SupportsTitle:
 class Title(_SupportsTitle):
     def __init__(self, canvas: Canvas):
         super().__init__(canvas)
-        canvas._fig.layout.title = dict(text="", x=0.5, xanchor="center")
+        canvas._fig.layout.title = {"text": "", "x": 0.5, "xanchor": "center"}
 
     def _get_title(self):
         return self._canvas()._fig.layout.title
@@ -76,7 +79,8 @@ class AxisLabel(_SupportsTitle):
         self._axis = axis
 
     def _get_title(self):
-        return self._canvas()._fig.layout[self._axis + "axis"].title
+        layout = self._canvas()._subplot_layout()
+        return getattr(layout, self._axis).title
 
 
 class Axis(_CanvasComponent):
@@ -84,8 +88,12 @@ class Axis(_CanvasComponent):
         super().__init__(canvas)
         self._axis = axis
 
+    @property
+    def name(self) -> str:
+        return self._axis
+
     def _plt_get_axis(self):
-        return self._canvas()._fig.layout[self._axis + "axis"]
+        return getattr(self._canvas()._subplot_layout(), self._axis)
 
     def _plt_get_limits(self) -> tuple[float, float]:
         lim = self._plt_get_axis().range
@@ -105,7 +113,7 @@ class Axis(_CanvasComponent):
 
     def _plt_flip(self) -> None:
         if self._plt_get_axis().autorange is None:
-            self._plt_get_axis().autorange = 'reversed'
+            self._plt_get_axis().autorange = "reversed"
         else:
             self._plt_get_axis().autorange = None
 
@@ -123,19 +131,20 @@ class Ticks(_CanvasComponent):
         self._visible = True
 
     def _plt_get_axis(self):
-        return self._canvas()._fig.layout[self._axis + "axis"]
+        layout = self._canvas()._subplot_layout()
+        return getattr(layout, self._axis)
 
-    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         return (
             self._plt_get_axis().tickvals,
             self._plt_get_axis().ticktext,
         )
 
-    def _plt_set_text(self, text: tuple[list[float], list[str]]):
-        self._plt_get_axis().tickvals = text[0]
-        self._plt_get_axis().ticktext = text[1]
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
+        self._plt_get_axis().tickvals = pos
+        self._plt_get_axis().ticktext = labels
 
-    def _plt_reset_text(self):
+    def _plt_reset_override(self):
         self._plt_get_axis().tickvals = None
         self._plt_get_axis().ticktext = None
 
@@ -163,3 +172,9 @@ class Ticks(_CanvasComponent):
 
     def _plt_set_color(self, color):
         self._plt_get_axis().tickfont.color = rgba_str_color(color)
+
+    def _plt_get_text_rotation(self) -> float:
+        return self._plt_get_axis().tickangle
+
+    def _plt_set_text_rotation(self, angle: float):
+        self._plt_get_axis().tickangle = angle

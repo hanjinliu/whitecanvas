@@ -4,10 +4,10 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import ColorType, FacePattern, LineStyle, Orientation
 from whitecanvas.layers._primitive import Bars, MultiLine
-from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._cat_utils import check_array_input
+from whitecanvas.layers.group._collections import LayerContainer
+from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation
 from whitecanvas.utils.normalize import as_color_array
 
 
@@ -67,11 +67,11 @@ class BoxPlot(LayerContainer):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        box_width: float = 0.3,
+        extent: float = 0.3,
         capsize: float = 0.15,
         color: ColorType | list[ColorType] = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: str | Backend | None = None,
     ):
         x, data = check_array_input(x, data)
@@ -83,16 +83,16 @@ class BoxPlot(LayerContainer):
         agg_arr = np.stack(agg_values, axis=1)
         box = Bars(
             x, agg_arr[3] - agg_arr[1], agg_arr[1], name=name, orient=ori,
-            bar_width=box_width, backend=backend,
+            bar_width=extent, backend=backend,
         ).with_face_multi(
-            pattern=pattern, color=color, alpha=alpha,
+            hatch=hatch, color=color, alpha=alpha,
         ).with_edge(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], capsize
             )
             medsegs = [
-                [(x0 - box_width / 2, y0), (x0 + box_width / 2, y0)]
+                [(x0 - extent / 2, y0), (x0 + extent / 2, y0)]
                 for x0, y0 in zip(x, agg_arr[2])
             ]
         else:
@@ -100,7 +100,7 @@ class BoxPlot(LayerContainer):
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], capsize
             )
             medsegs = [
-                [(x0, y0 - box_width / 2), (x0, y0 + box_width / 2)]
+                [(x0, y0 - extent / 2), (x0, y0 + extent / 2)]
                 for x0, y0 in zip(x, agg_arr[2])
             ]
         whiskers = MultiLine(
@@ -122,10 +122,10 @@ class BoxPlot(LayerContainer):
         self,
         color: ColorType | list[ColorType],
         alpha: float | list[float] = 1.0,
-        pattern: str | FacePattern | list[FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | list[Hatch] = Hatch.SOLID,
     ) -> BoxPlot:
         """Add face to the strip plot."""
-        self.boxes.with_face(color=color, alpha=alpha, pattern=pattern)
+        self.boxes.with_face(color=color, alpha=alpha, hatch=hatch)
         return self
 
     def with_edge(
@@ -140,6 +140,30 @@ class BoxPlot(LayerContainer):
         self.boxes.with_edge(color=color, alpha=alpha, width=width, style=style)
         self.whiskers.update(color=color, alpha=alpha, width=width, style=style)
         self.medians.update(color=color, alpha=alpha, width=width, style=style)
+        return self
+
+    def with_shift(self, shift: float) -> BoxPlot:
+        self.boxes.set_data(xdata=self.boxes.data.x + shift)
+        if self.orient.is_vertical:
+            _wdata = []
+            for seg in self.whiskers.data:
+                _wdata.append([seg[:, 0] + shift, seg[:, 1]])
+            self.whiskers.data = _wdata
+            _mdata = []
+            for seg in self.medians.data:
+                _mdata.append([seg[:, 0] + shift, seg[:, 1]])
+            self.medians.data = _mdata
+        else:
+            _wdata = []
+            for seg in self.whiskers.data:
+                _wdata.append([seg[:, 0], seg[:, 1] + shift])
+            self.whiskers.data = _wdata
+            _mdata = []
+            for seg in self.medians.data:
+                _mdata.append([seg[:, 0], seg[:, 1] + shift])
+            self.medians.data = _mdata
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
 

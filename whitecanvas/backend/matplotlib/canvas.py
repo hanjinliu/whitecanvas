@@ -1,24 +1,35 @@
 from __future__ import annotations
 
 from typing import Callable
-from matplotlib.artist import Artist
 
-import numpy as np
 import matplotlib as mpl
+import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.artist import Artist
 from matplotlib.backend_bases import (
-    MouseEvent as mplMouseEvent,
     MouseButton as mplMouseButton,
 )
-from matplotlib.lines import Line2D
+from matplotlib.backend_bases import (
+    MouseEvent as mplMouseEvent,
+)
 from matplotlib.collections import Collection
-from .bars import Bars
-from .text import Texts as whitecanvasText
-from .image import Image as whitecanvasImage
-from ._labels import Title, XAxis, YAxis, XLabel, YLabel, XTicks, YTicks
+from matplotlib.lines import Line2D
+
 from whitecanvas import protocols
-from whitecanvas.types import MouseEvent, Modifier, MouseButton, MouseEventType
 from whitecanvas.backend.matplotlib._base import MplLayer
+from whitecanvas.backend.matplotlib._labels import (
+    Title,
+    XAxis,
+    XLabel,
+    XTicks,
+    YAxis,
+    YLabel,
+    YTicks,
+)
+from whitecanvas.backend.matplotlib.bars import Bars
+from whitecanvas.backend.matplotlib.image import Image as whitecanvasImage
+from whitecanvas.backend.matplotlib.text import Texts as whitecanvasText
+from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType, Rect
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -37,7 +48,7 @@ class Canvas:
         ax.set_axisbelow(True)  # grid lines below other layers
         self._annot = ax.annotate(
             text="", xy=(0, 0), xytext=(20, -20), textcoords="offset points",
-            bbox=dict(fc="w"), fontproperties={"size": 14, "family": "Arial"},
+            bbox={"fc": "w"}, fontproperties={"size": 14, "family": "Arial"},
         )  # fmt: skip
         self._annot.set_visible(False)
 
@@ -126,6 +137,20 @@ class Canvas:
         """Set visibility of canvas"""
         self._axes.set_visible(visible)
 
+    def _plt_twinx(self) -> Canvas:
+        axnew = self._axes.twinx()
+        return Canvas(axnew)
+
+    def _plt_twiny(self) -> Canvas:
+        axnew = self._axes.twiny()
+        return Canvas(axnew)
+
+    def _plt_inset(self, rect: Rect) -> Canvas:
+        axnew = self._axes.inset_axes(
+            (rect.left, rect.bottom, rect.width, rect.height), zorder=1000
+        )
+        return Canvas(axnew)
+
     def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
 
@@ -155,6 +180,16 @@ class Canvas:
             callback(self._translate_mouse_event(ev, MouseEventType.DOUBLE_CLICK))
 
         self._axes.figure.canvas.mpl_connect("button_press_event", _cb)
+
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
+        def _cb(ev: mplMouseEvent):
+            if ev.inaxes is not self._axes or ev.dblclick:
+                return
+            callback(self._translate_mouse_event(ev, MouseEventType.RELEASE))
+
+        self._axes.figure.canvas.mpl_connect("button_release_event", _cb)
 
     def _plt_draw(self):
         if fig := self._axes.get_figure():

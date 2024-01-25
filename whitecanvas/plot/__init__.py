@@ -7,12 +7,23 @@ Plot API for whitecanvas.
 >>> plt.show()
 """
 
-from whitecanvas.plot._methods import (
-    line, markers, bars, band, hist, spans, infcurve, infline, errorbars,
-    kde, rug, text, cat,
-)  # fmt: skip
-from whitecanvas.plot._canvases import current_canvas, current_grid, show, subplots
 from whitecanvas.core import new_canvas
+from whitecanvas.plot._canvases import current_canvas, current_grid, show, subplots
+from whitecanvas.plot._methods import (
+    band,
+    bars,
+    cat,
+    errorbars,
+    hist,
+    infcurve,
+    infline,
+    kde,
+    line,
+    markers,
+    rug,
+    spans,
+    text,
+)
 
 figure = new_canvas
 

@@ -1,25 +1,26 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
 
-from typing import TYPE_CHECKING, Any, Sequence, SupportsIndex, TypeVar, overload
 import weakref
-import numpy as np
-from numpy.typing import NDArray
+from typing import TYPE_CHECKING, Any, Sequence, SupportsIndex, TypeVar, overload
 
 from psygnal import Signal, SignalGroup
-from whitecanvas.types import (
-    LineStyle,
-    FacePattern,
-    ColorType,
-    Orientation,
-    ColormapType,
-)
+
 from whitecanvas import layers as _l
-from whitecanvas.layers import _ndim as _ndl
+from whitecanvas._axis import DimAxis, RangeAxis
 from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas.layers import _ndim as _ndl
+from whitecanvas.types import (
+    Alignment,
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
     from whitecanvas.canvas._base import CanvasBase
 
 _T = TypeVar("_T")
@@ -29,63 +30,7 @@ class DimsEvents(SignalGroup):
     """Event signals for :class:`Dims`."""
 
     indices = Signal(dict)
-
-
-class DimAxis(ABC):
-    def __init__(self, name: str):
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """Name of the axis."""
-        return self._name
-
-    @abstractmethod
-    def value(self) -> SupportsIndex:
-        """Value of the axis."""
-
-    @abstractmethod
-    def set_value(self, value: Any):
-        """Set the value of the axis."""
-
-
-class RangeAxis(DimAxis):
-    def __init__(self, name: str, size: int):
-        super().__init__(name)
-        self._size = size
-        self._value = 0
-
-    def value(self) -> SupportsIndex:
-        return self._value
-
-    def set_value(self, value: Any):
-        v = int(value)
-        if not 0 <= v < self._size:
-            raise ValueError(
-                f"Size of axis {self!r} is {self._size} but got index {value!r}."
-            )
-        self._value = value
-
-    def set_size(self, size: int):
-        self._size = size
-        self._value = min(self._value, size - 1)
-
-
-class CategoricalAxis(DimAxis):
-    def __init__(self, name: str, categories: list[str]):
-        super().__init__(name)
-        self._mapper = {c: i for i, c in enumerate(categories)}
-        self._value = categories[0]
-
-    def value(self) -> SupportsIndex:
-        return self._mapper[self._value]
-
-    def set_value(self, value: Any):
-        if value not in self._mapper:
-            raise ValueError(
-                f"Value must be one of {list(self._mapper)} but got {value!r}."
-            )
-        self._value = value
+    axis_names = Signal(list)
 
 
 _default = object()
@@ -181,11 +126,12 @@ class Dims:
             names = self.names
             if len(names) < len(arg):
                 raise ValueError(
-                    f"Number of indices ({len(arg)}) exceeds number of dimensions ({len(names)})."
+                    f"Number of indices ({len(arg)}) exceeds number of dimensions "
+                    f"({len(names)})."
                 )
             if kwargs:
                 raise TypeError("Cannot specify both positional and keyword arguments.")
-            kwargs = {n: v for n, v in zip(names, arg)}
+            kwargs = dict(zip(names, arg))
         elif arg is None:
             pass
         elif hasattr(arg, "__index__"):
@@ -204,7 +150,9 @@ class Dims:
         """
         Add multi-dimensional layers in the given axis names.
 
-        >>> canvas.dims.in_axes("time").add_line(x, [np.sin(x + x0) for x0 in [0, 1, 2]])
+        >>> canvas.dims.in_axes("time").add_line(
+        ...     x, [np.sin(x + x0) for x0 in [0, 1, 2]]
+        >>> )
         """
         n_names = len(names)
         if n_names == 0:
@@ -220,6 +168,13 @@ class Dims:
                 new_axes.append(RangeAxis(name, 0))
         self._axes.extend(new_axes)
         return InAxes(self, names)
+
+    def create_widget(self):
+        from whitecanvas.backend._window import make_dim_slider
+
+        canvas = self._get_canvas()
+        sl = make_dim_slider(canvas, canvas._get_backend().app)
+        return sl
 
     def add_line(
         self,
@@ -247,7 +202,7 @@ class Dims:
         name: str | None = None,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ):
         return InAxes(self).add_band(
             xdata,
@@ -256,7 +211,7 @@ class Dims:
             name=name,
             color=color,
             alpha=alpha,
-            pattern=pattern,
+            hatch=hatch,
         )
 
     def add_errorbars(
@@ -303,6 +258,24 @@ class Dims:
         return InAxes(self).add_rug(
             events, low=low, high=high, name=name, orient=orient, color=color,
             width=width, style=style, antialias=antialias, alpha=alpha
+        )  # fmt: skip
+
+    def add_text(
+        self,
+        xdata: Any,
+        ydata: Any,
+        string: Any,
+        *,
+        name: str | None = None,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        family: str | None = None,
+    ):
+        return InAxes(self).add_text(
+            xdata, ydata, string, name=name, color=color, size=size,
+            rotation=rotation, anchor=anchor, family=family,
         )  # fmt: skip
 
     def add_image(
@@ -375,7 +348,7 @@ class InAxes:
         name: str | None = None,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _ndl.XYYLayerStack:
         """
         Add multi-dimensional band layer.
@@ -398,7 +371,7 @@ class InAxes:
         name = canvas._coerce_name(_l.Band, name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYYLayerStack.from_layer_class(
-            _l.Band, xdata, ylow, yhigh, name=name, color=color, pattern=pattern,
+            _l.Band, xdata, ylow, yhigh, name=name, color=color, hatch=hatch,
             alpha=alpha, backend=canvas._get_backend(),
         )  # fmt: skip
         return self._add_layer(stack)
@@ -481,6 +454,45 @@ class InAxes:
         )  # fmt: skip
         return self._add_layer(stack)
 
+    def add_text(
+        self,
+        xdata: Any,
+        ydata: Any,
+        string: Any,
+        *,
+        name: str | None = None,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        family: str | None = None,
+    ) -> _ndl.TextLayerStack:
+        """
+        Add multi-dimensional text layer.
+
+        Parameters
+        ----------
+        xdata : Any
+            _description_
+        ydata : Any
+            _description_
+        string : Any
+            _description_
+
+        Returns
+        -------
+        TextLayerStack
+            Layer stack of text layers.
+        """
+        canvas = self._get_canvas()
+        name = canvas._coerce_name(_l.Texts, name)
+        stack = _ndl.TextLayerStack.from_layer_class(
+            _l.Texts, xdata, ydata, string, name=name, color=color, size=size,
+            rotation=rotation, anchor=anchor, family=family,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        return self._add_layer(stack)
+
     def add_image(
         self,
         image: Any,
@@ -499,14 +511,14 @@ class InAxes:
         ----------
         image : Any
             Image stack of multi-dimensional structure.
-        rgb : bool, default is False
+        rgb : bool, default False
             If input image is an RGB(A) image of shape (..., 3) or (..., 4),
             then set this to True to display the image as RGB(A).
 
         Returns
         -------
         ImageLayerStack
-            Layer stack of an image layer.
+            Layer stack of image layers.
         """
         canvas = self._get_canvas()
         name = canvas._coerce_name(_l.Image, name)
@@ -514,8 +526,6 @@ class InAxes:
             _l.Image, image, name=name, cmap=cmap, clim=clim, rgb=rgb,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        if self._axis_names is not None:
-            stack._with_axis_names(self._axis_names)
         self._add_layer(stack)
 
         if flip_canvas and not canvas.y.flipped:
@@ -539,6 +549,8 @@ class InAxes:
                 else:
                     raise NotImplementedError
         self._dims._axes.extend(new_axes)
+        if len(new_axes) > 0:
+            self._dims.events.axis_names.emit(self._dims.names)
         return canvas.add_layer(stack)
 
 

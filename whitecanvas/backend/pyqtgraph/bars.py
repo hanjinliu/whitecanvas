@@ -1,20 +1,21 @@
 from __future__ import annotations
-import numpy as np
-from numpy.typing import NDArray
 
-from qtpy import QtGui
+import numpy as np
 import pyqtgraph as pg
-from whitecanvas.protocols import BarProtocol, check_protocol
-from whitecanvas.types import LineStyle, FacePattern
-from whitecanvas.utils.normalize import as_color_array
+from numpy.typing import NDArray
+from qtpy import QtGui
+
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from ._qt_utils import (
+from whitecanvas.backend.pyqtgraph._qt_utils import (
     array_to_qcolor,
-    from_qt_line_style,
-    to_qt_line_style,
     from_qt_brush_style,
+    from_qt_line_style,
     to_qt_brush_style,
+    to_qt_line_style,
 )
+from whitecanvas.protocols import BarProtocol, check_protocol
+from whitecanvas.types import Hatch, LineStyle
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(BarProtocol)
@@ -54,12 +55,12 @@ class Bars(pg.BarGraphItem, PyQtLayer):
             brush.setColor(array_to_qcolor(c))
         self.setOpts(brushes=brushes)
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [from_qt_brush_style(brush.style()) for brush in self._get_brushes()]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         brushes = self._get_brushes()
-        if isinstance(pattern, FacePattern):
+        if isinstance(pattern, Hatch):
             ptn = to_qt_brush_style(pattern)
             for brush in brushes:
                 brush.setStyle(ptn)

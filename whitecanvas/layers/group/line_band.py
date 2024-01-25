@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from whitecanvas.types import _Void, Symbol, ColorType, FacePattern, XYData
+from whitecanvas.types import _Void, Symbol, ColorType, Hatch, XYData
 from whitecanvas.layers._primitive import Line, Band, Markers
 from whitecanvas.layers.group._collections import LayerContainer
 
@@ -54,12 +54,12 @@ class LineBand(LayerContainer):
         size: float = 10,
         color: ColorType | _Void = _void,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> LineBand:
         """Add markers at the data points."""
         if color is _void:
             color = self.line.color
         self.markers.update(
-            symbol=symbol, size=size, color=color, alpha=alpha, pattern=pattern
+            symbol=symbol, size=size, color=color, alpha=alpha, hatch=hatch
         )
         return self

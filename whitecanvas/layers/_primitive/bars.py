@@ -1,34 +1,35 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Sequence, TypeVar
+
 import numpy as np
 from numpy.typing import NDArray
-
 from psygnal import Signal
-from whitecanvas.protocols import BarProtocol
-from whitecanvas.layers._primitive.text import Texts
+
+from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import (
-    MultiFaceEdgeMixin,
+    ConstEdge,
+    ConstFace,
+    EdgeNamespace,
     FaceEdgeMixinEvents,
     FaceNamespace,
-    EdgeNamespace,
-    ConstFace,
-    ConstEdge,
-    MultiFace,
     MultiEdge,
+    MultiFace,
+    MultiFaceEdgeMixin,
 )
+from whitecanvas.layers._primitive.text import Texts
 from whitecanvas.layers._sizehint import xyy_size_hint
-from whitecanvas.backend import Backend
+from whitecanvas.protocols import BarProtocol
 from whitecanvas.types import (
-    FacePattern,
-    ColorType,
-    _Void,
     Alignment,
+    ArrayLike1D,
+    ColorType,
+    Hatch,
     LineStyle,
     Orientation,
     XYData,
-    ArrayLike1D,
+    _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d
 
@@ -47,9 +48,20 @@ class BarEvents(FaceEdgeMixinEvents):
 
 
 class Bars(
-    MultiFaceEdgeMixin[BarProtocol, _Face, _Edge],
     DataBoundLayer[BarProtocol, XYData],
+    MultiFaceEdgeMixin[_Face, _Edge],
 ):
+    """
+    Layer that represents vertical/hosizontal bars.
+
+    Attributes
+    ----------
+    face : :class:`~whitecanvas.layers._mixin.FaceNamespace`
+        Face properties of the bars.
+    edge : :class:`~whitecanvas.layers._mixin.EdgeNamespace`
+        Edge properties of the bars.
+    """
+
     events: BarEvents
     _events_class = BarEvents
 
@@ -64,16 +76,17 @@ class Bars(
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
+        MultiFaceEdgeMixin.__init__(self)
         ori = Orientation.parse(orient)
         xxyy, xhint, yhint = _norm_bar_inputs(x, height, bottom, ori, bar_width)
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._bar_width = bar_width
         self._orient = ori
-        self.face.update(color=color, alpha=alpha, pattern=pattern)
+        self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xhint, yhint
         self._bar_type = "bars"
 
@@ -90,7 +103,7 @@ class Bars(
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
         """Construct a bar plot from a histogram."""
@@ -101,7 +114,7 @@ class Bars(
             bar_width = edges[1] - edges[0]
         self = Bars(
             centers, counts, bar_width=bar_width, name=name, color=color, alpha=alpha,
-            orient=orient, pattern=pattern, backend=backend,
+            orient=orient, hatch=hatch, backend=backend,
         )  # fmt: skip
         if density:
             self._bar_type = "histogram-density"
@@ -173,6 +186,7 @@ class Bars(
 
     @property
     def bottom(self) -> NDArray[np.floating]:
+        """The bottom values of the bars."""
         x0, _, y0, _ = self._backend._plt_get_data()
         if self._orient.is_vertical:
             return y0
@@ -185,6 +199,7 @@ class Bars(
 
     @property
     def top(self) -> NDArray[np.floating]:
+        """The top values of the bars."""
         _, x1, _, y1 = self._backend._plt_get_data()
         if self._orient.is_vertical:
             return y1
@@ -256,8 +271,8 @@ class Bars(
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.LabeledBars:
-        from whitecanvas.layers.group import LabeledBars
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledBars
 
         xerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
@@ -279,8 +294,8 @@ class Bars(
         antialias: bool = True,
         capsize: float = 0,
     ) -> _lg.LabeledBars:
-        from whitecanvas.layers.group import LabeledBars
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledBars
 
         yerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
@@ -362,18 +377,18 @@ class Bars(
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Bars[ConstFace, _Edge]:
-        return super().with_face(color, pattern, alpha)
+        return super().with_face(color, hatch, alpha)
 
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Bars[MultiFace, _Edge]:
-        return super().with_face_multi(color, pattern, alpha)
+        return super().with_face_multi(color, hatch, alpha)
 
     def with_edge(
         self,

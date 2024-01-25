@@ -6,21 +6,21 @@ import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal
 
-from whitecanvas.protocols import LineProtocol, MultiLineProtocol
-from whitecanvas.layers._primitive.text import Texts
-from whitecanvas.layers._base import PrimitiveLayer, DataBoundLayer, LayerEvents
-from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.backend import Backend
+from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
+from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._sizehint import xy_size_hint
+from whitecanvas.protocols import LineProtocol, MultiLineProtocol
 from whitecanvas.types import (
-    LineStyle,
-    Symbol,
-    ColorType,
-    ArrayLike1D,
-    _Void,
     Alignment,
-    FacePattern,
+    ArrayLike1D,
+    ColorType,
+    Hatch,
+    LineStyle,
     Orientation,
+    Symbol,
     XYData,
+    _Void,
 )
 from whitecanvas.utils.normalize import arr_color, as_array_1d, normalize_xy
 
@@ -160,14 +160,14 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
             xdata, ydata = data[:, 0], data[:, 1]
         else:
             xdata, ydata = data
-        if xdata is None:
-            xdata = self.data.x
-        else:
-            xdata = as_array_1d(xdata)
-        if ydata is None:
-            ydata = self.data.y
-        else:
-            ydata = as_array_1d(ydata)
+            if xdata is None:
+                xdata = self.data.x
+            else:
+                xdata = as_array_1d(xdata)
+            if ydata is None:
+                ydata = self.data.y
+            else:
+                ydata = as_array_1d(ydata)
         if xdata.size != ydata.size:
             raise ValueError(
                 "Expected xdata and ydata to have the same size, "
@@ -193,17 +193,41 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         size: float = 10,
         color: ColorType | _Void = _void,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.Plot:
-        from whitecanvas.layers.group import Plot
+        """
+        Add markers at each data point.
+
+        >>> canvas.add_line(x, y).with_markers(color="yellow")
+
+        Parameters
+        ----------
+        symbol : str or Symbol, default Symbol.CIRCLE
+            Marker symbols.
+        size : float, optional
+            Marker size, by default 10
+        color : color-like, optional
+            Marker face colors. To set edge colors, use `with_edge` method.
+            Set to the line color by default.
+        alpha : float, default 1.0
+            The alpha channel.
+        hatch : str or FacePattern, default FacePattern.SOLID
+            The marker face hatch.
+
+        Returns
+        -------
+        Plot
+            The plot layer.
+        """
         from whitecanvas.layers._primitive import Markers
+        from whitecanvas.layers.group import Plot
 
         if color is _void:
             color = self.color
 
         markers = Markers(
             *self.data, symbol=symbol, size=size, color=color, alpha=alpha,
-            pattern=pattern, backend=self._backend_name,
+            hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return Plot(self, markers, name=self.name)
 
@@ -217,8 +241,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> _lg.LabeledLine:
-        from whitecanvas.layers.group import LabeledLine
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledLine
 
         if err_high is None:
             err_high = err
@@ -248,8 +272,8 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> _lg.LabeledLine:
-        from whitecanvas.layers.group import LabeledLine
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledLine
 
         if err_high is None:
             err_high = err
@@ -276,10 +300,10 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if err_high is None:
             err_high = err
@@ -288,7 +312,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         data = self.data
         band = Band(
             data.y, data.x - err, data.x + err_high, orient="horizontal",
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
@@ -299,10 +323,10 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if err_high is None:
             err_high = err
@@ -311,7 +335,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         data = self.data
         band = Band(
             data.x, data.y - err, data.y + err_high, orient=Orientation.VERTICAL,
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
@@ -321,10 +345,10 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if color is _void:
             color = self.color
@@ -332,7 +356,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         x0 = np.full_like(data.x, bottom)
         band = Band(
             data.y, x0, data.x, orient=Orientation.HORIZONTAL,
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 
@@ -342,10 +366,10 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         *,
         color: ColorType | _Void = _void,
         alpha: float = 0.5,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand:
-        from whitecanvas.layers.group import LineBand
         from whitecanvas.layers._primitive import Band
+        from whitecanvas.layers.group import LineBand
 
         if color is _void:
             color = self.color
@@ -353,7 +377,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         y0 = np.full_like(data.y, bottom)
         band = Band(
             data.x, y0, data.y, orient=Orientation.VERTICAL,
-            color=color, alpha=alpha, pattern=pattern, backend=self._backend_name,
+            color=color, alpha=alpha, hatch=hatch, backend=self._backend_name,
         )  # fmt: skip
         return LineBand(self, band, name=self.name)
 

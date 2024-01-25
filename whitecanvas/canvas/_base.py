@@ -1,53 +1,57 @@
 from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Iterable,
     Iterator,
     Literal,
-    overload,
     TypeVar,
-    TYPE_CHECKING,
+    overload,
 )
-from abc import ABC, abstractmethod
-
-from cmap import Color
 
 import numpy as np
+from cmap import Color
 from numpy.typing import ArrayLike
 from psygnal import Signal, SignalGroup
 
-from whitecanvas import protocols
 from whitecanvas import layers as _l
-from whitecanvas.layers import group as _lg, _mixin
-from whitecanvas.types import (
-    LineStyle,
-    Symbol,
-    ColorType,
-    Alignment,
-    ColormapType,
-    FacePattern,
-    Orientation,
-    ArrayLike1D,
-    Rect,
-    _Void,
-)
+from whitecanvas import protocols, theme
+from whitecanvas._signal import MouseMoveSignal, MouseSignal
+from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.canvas import (
     _namespaces as _ns,
-    layerlist as _ll,
-    _categorical as _cat,
 )
-from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.canvas._dims import Dims
+from whitecanvas.canvas import (
+    dataframe as _df,
+)
+from whitecanvas.canvas import (
+    layerlist as _ll,
+)
 from whitecanvas.canvas._between import BetweenPlotter
+from whitecanvas.canvas._dims import Dims
+from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
+from whitecanvas.layers import _mixin
+from whitecanvas.layers import group as _lg
+from whitecanvas.types import (
+    Alignment,
+    ArrayLike1D,
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+    Rect,
+    Symbol,
+    _Void,
+)
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
-from whitecanvas.backend import Backend, patch_dummy_backend
-from whitecanvas.theme import get_theme
-from whitecanvas._signal import MouseSignal, GeneratorSignal
 
 if TYPE_CHECKING:
-    from typing_extensions import Self, Concatenate, ParamSpec
+    from typing_extensions import Concatenate, ParamSpec, Self
 
     _P = ParamSpec("_P")
 
@@ -60,7 +64,7 @@ class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
     drawn = Signal()
     mouse_clicked = MouseSignal(object)
-    mouse_moved = GeneratorSignal()
+    mouse_moved = MouseMoveSignal()
     mouse_double_clicked = MouseSignal(object)
 
 
@@ -72,36 +76,41 @@ class CanvasBase(ABC):
     y = _ns.YAxisNamespace()
     dims = Dims()
     layers = _ll.LayerList()
+    overlays = _ll.LayerList()
     events: CanvasEvents
 
     def __init__(self, palette: ColormapType | None = None):
         if palette is None:
-            palette = get_theme().palette
+            palette = theme.get_theme().palette
         self._color_palette = ColorPalette(palette)
         self.events = CanvasEvents()
         self._is_grouping = False
         self._autoscale_enabled = True
-        if not self._get_backend().name.startswith("."):
+        if not self._get_backend().is_dummy():
             self._init_canvas()
 
     def _init_canvas(self):
         # default colors
-        theme = get_theme()
-        self.x.color = theme.foreground_color
-        self.y.color = theme.foreground_color
-        self.x.ticks.family = theme.fontfamily
-        self.y.ticks.family = theme.fontfamily
-        self.x.ticks.color = theme.foreground_color
-        self.y.ticks.color = theme.foreground_color
-        self.x.ticks.size = theme.fontsize
-        self.y.ticks.size = theme.fontsize
-        self.background_color = theme.background_color
+        _t = theme.get_theme()
+        self.x.color = _t.foreground_color
+        self.y.color = _t.foreground_color
+        self.x.ticks.family = _t.font.family
+        self.y.ticks.family = _t.font.family
+        self.x.ticks.color = _t.foreground_color
+        self.y.ticks.color = _t.foreground_color
+        self.x.ticks.size = _t.font.size
+        self.y.ticks.size = _t.font.size
+        # self.background_color = theme.background_color
 
         # connect layer events
         self.layers.events.inserted.connect(self._cb_inserted, unique=True)
         self.layers.events.removed.connect(self._cb_removed, unique=True)
         self.layers.events.reordered.connect(self._cb_reordered, unique=True)
         self.layers.events.connect(self._draw_canvas, unique=True)
+
+        self.overlays.events.inserted.connect(self._cb_inserted_overlay, unique=True)
+        self.overlays.events.removed.connect(self._cb_removed, unique=True)
+        self.overlays.events.connect(self._draw_canvas, unique=True)
 
         canvas = self._canvas()
         canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
@@ -112,6 +121,7 @@ class CanvasBase(ABC):
         canvas._plt_connect_mouse_click(self.events.mouse_clicked.emit)
         canvas._plt_connect_mouse_click(self.events.mouse_moved.emit)
         canvas._plt_connect_mouse_drag(self.events.mouse_moved.emit)
+        canvas._plt_connect_mouse_release(self.events.mouse_moved.emit)
         canvas._plt_connect_mouse_double_click(self.events.mouse_double_clicked.emit)
         canvas._plt_connect_mouse_double_click(self.events.mouse_moved.emit)
 
@@ -122,6 +132,18 @@ class CanvasBase(ABC):
     def _emit_ylim_changed(self, lim):
         self.y.events.lim.emit(lim)
         self.events.lims.emit(Rect(*self.x.lim, *lim))
+
+    def _emit_mouse_moved(self, ev):
+        """Emit mouse moved event with autoscaling blocked"""
+        _was_enabled = self._autoscale_enabled
+        # If new layers are added during the mouse move event, the canvas
+        # should not be autoscaled, otherwise unexpected values will be
+        # passed to the callback functions.
+        self._autoscale_enabled = False
+        try:
+            self.events.mouse_moved.emit(ev)
+        finally:
+            self._autoscale_enabled = _was_enabled
 
     @abstractmethod
     def _get_backend(self) -> Backend:
@@ -155,7 +177,7 @@ class CanvasBase(ABC):
         self,
         xpad: float | tuple[float, float] | None = None,
         ypad: float | tuple[float, float] | None = None,
-    ):
+    ) -> tuple[float, float, float, float]:
         """
         Autoscale the canvas to fit the contents.
 
@@ -197,15 +219,50 @@ class CanvasBase(ABC):
                 dy0, dy1 = ypad[0] * yrange, ypad[1] * yrange
             ymin -= dy0
             ymax += dy1
-        if xmax - xmin < 1e-6:
+        small_diff = 1e-6
+        if xmax - xmin < small_diff:
             xmin -= 0.05
             xmax += 0.05
-        if ymax - ymin < 1e-6:
+        if ymax - ymin < small_diff:
             ymin -= 0.05
             ymax += 0.05
         self.x.lim = xmin, xmax
         self.y.lim = ymin, ymax
         return xmin, xmax, ymin, ymax
+
+    def install_second_y(
+        self,
+        *,
+        palette: ColormapType | None = None,
+    ) -> Canvas:
+        """Create a twin canvas that share one of the axis."""
+        try:
+            new = self._canvas()._plt_twinx()
+        except AttributeError:
+            raise NotImplementedError(
+                f"Backend {self._get_backend()} does not support `install_second_y`."
+            )
+        canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
+        canvas._init_canvas()
+        return canvas
+
+    def install_inset(
+        self,
+        rect: Rect | tuple[float, float, float, float],
+        *,
+        palette: ColormapType | None = None,
+    ) -> Canvas:
+        if not isinstance(rect, Rect):
+            rect = Rect(*rect)
+        try:
+            new = self._canvas()._plt_inset(rect)
+        except AttributeError:
+            raise NotImplementedError(
+                f"Backend {self._get_backend()} does not support `install_inset`"
+            )
+        canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
+        canvas._init_canvas()
+        return canvas
 
     @property
     def visible(self):
@@ -249,72 +306,28 @@ class CanvasBase(ABC):
             self.y.label.color = color
         return self
 
-    def cat(
-        self,
-        data: Any,
-        by: str | None = None,
-        *,
-        orient: str | Orientation = Orientation.VERTICAL,
-        offsets: float | ArrayLike1D | None = None,
-        palette: ColormapType | None = None,
-        update_labels: bool = True,
-    ) -> _cat.CategorizedDataPlotter[Self]:
+    def cat(self, data, update_labels: bool = True) -> _df.DataFramePlotter:
         """
         Categorize input data for plotting.
 
         This method provides categorical plotting methods for the input data.
         Methods are very similar to `seaborn` and `plotly.express`.
 
-        >>> df = sns.load_dataset("iris")
-        >>> canvas.cat(df, by="species").to_violinplot(y="sepal_width)
-        >>> canvas.cat(df, by="species").mean().to_line(y="sepal_width)
-
         Parameters
         ----------
         data : tabular data
             Any categorizable data. Currently, dict, pandas.DataFrame, and
             polars.DataFrame are supported.
-        by : str, optional
-            Which column to use for grouping.
-        orient : str or Orientation, default is Orientation.VERTICAL
-            Orientation of the plot.
-        offsets : scalar or sequence, optional
-            Offset for each category. If scalar, the same offset is used for all.
-        palette : ColormapType, optional
-            Color palette used for plotting the categories.
-        update_labels : bool, default is True
+
+        update_labels : bool, default True
             If True, update the x/y labels to the corresponding names.
 
         Returns
         -------
-        CategorizedDataPlotter
+        CategorizedPlot
             Plotter object.
         """
-        orient = Orientation.parse(orient)
-        plotter = _cat.CategorizedDataPlotter(
-            self, data, by=by, orient=orient, offsets=offsets,
-            update_label=update_labels, palette=palette
-        )  # fmt: skip
-        if update_labels:
-            if orient.is_vertical:
-                self.x.label.text = by
-            else:
-                self.y.label.text = by
-        return plotter
-
-    def colorize(
-        self,
-        data: Any,
-        by: str | None = None,
-        *,
-        update_labels: bool = True,
-        palette: ColormapType | None = None,
-    ) -> _cat.ColorizedPlotter[Self]:
-        if palette is None:
-            palette = self._color_palette
-        plotter = _cat.ColorizedPlotter(
-            self, data, by, palette=palette, update_label=update_labels
-        )
+        plotter = _df.DataFramePlotter(self, data, update_label=update_labels)
         return plotter
 
     def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
@@ -351,8 +364,9 @@ class CanvasBase(ABC):
 
     @overload
     def add_line(
-        self, ydata: ArrayLike1D, *, name: str | None = None, color: ColorType | None = None,
-        width: float = 1.0, style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
+        self, ydata: ArrayLike1D, *, name: str | None = None,
+        color: ColorType | None = None, width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
@@ -360,16 +374,18 @@ class CanvasBase(ABC):
     @overload
     def add_line(
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
-        color: ColorType | None = None, width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
+        color: ColorType | None = None, width: float | None = None,
+        style: LineStyle | str | None = None, alpha: float = 1.0,
+        antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
     @overload
     def add_line(
         self, xdata: ArrayLike1D, ydata: Callable[[ArrayLike1D], ArrayLike1D], *,
-        name: str | None = None, color: ColorType | None = None, width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
+        name: str | None = None, color: ColorType | None = None,
+        width: float | None = None, style: LineStyle | str | None = None,
+        alpha: float = 1.0, antialias: bool = True,
     ) -> _l.Line:  # fmt: skip
         ...
 
@@ -378,8 +394,8 @@ class CanvasBase(ABC):
         *args,
         name=None,
         color=None,
-        width=1.0,
-        style=LineStyle.SOLID,
+        width=None,
+        style=None,
         alpha=1.0,
         antialias=True,
     ):
@@ -395,13 +411,13 @@ class CanvasBase(ABC):
             Name of the layer.
         color : color-like, optional
             Color of the bars.
-        width : float, default is 1.0
-            Line width.
-        style : str or LineStyle, default is LineStyle.SOLID
-            Line style.
-        alpha : float, default is 1.0
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
             Alpha channel of the line.
-        antialias : bool, default is True
+        antialias : bool, default True
             Antialiasing of the line.
 
         Returns
@@ -412,6 +428,8 @@ class CanvasBase(ABC):
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Line, name)
         color = self._generate_colors(color)
+        width = theme.default("line.width", width)
+        style = theme.default("line.style", style)
         layer = _l.Line(
             xdata, ydata, name=name, color=color, width=width, style=style,
             alpha=alpha, antialias=antialias, backend=self._get_backend(),
@@ -421,18 +439,18 @@ class CanvasBase(ABC):
     @overload
     def add_markers(
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *,
-        name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        name: str | None = None, symbol: Symbol | str | None = None,
+        size: float | None = None, color: ColorType | None = None, alpha: float = 1.0,
+        hatch: str | Hatch | None = None,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
 
     @overload
     def add_markers(
         self, ydata: ArrayLike1D, *,
-        name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        name: str | None = None, symbol: Symbol | str | None = None,
+        size: float | None = None, color: ColorType | None = None, alpha: float = 1.0,
+        hatch: str | Hatch | None = None,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
         ...
 
@@ -440,11 +458,11 @@ class CanvasBase(ABC):
         self,
         *args,
         name=None,
-        symbol=Symbol.CIRCLE,
-        size=12,
+        symbol=None,
+        size=None,
         color=None,
         alpha=1.0,
-        pattern=FacePattern.SOLID,
+        hatch=None,
     ):
         """
         Add markers (scatter plot).
@@ -456,16 +474,16 @@ class CanvasBase(ABC):
         ----------
         name : str, optional
             Name of the layer.
-        symbol : str or Symbol, default is Symbol.CIRCLE
-            Marker symbols.
-        size : float, default is 15
-            Marker size.
+        symbol : str or Symbol, optional
+            Marker symbols. Use the theme default if not specified.
+        size : float, optional
+            Marker size. Use the theme default if not specified.
         color : color-like, optional
             Color of the marker faces.
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             Alpha channel of the marker faces.
-        pattern : str or FacePattern, default is FacePattern.SOLID
-            Pattern of the marker faces.
+        hatch : str or FacePattern, optional
+            Pattern of the marker faces. Use the theme default if not specified.
 
         Returns
         -------
@@ -475,18 +493,22 @@ class CanvasBase(ABC):
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Markers, name)
         color = self._generate_colors(color)
+        symbol = theme.default("markers.symbol", symbol)
+        size = theme.default("markers.size", size)
+        hatch = theme.default("markers.hatch", hatch)
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, color=color,
-            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
     @overload
     def add_bars(
-        self, center: ArrayLike1D, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
-        name=None, orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8, color: ColorType | None = None,
-        alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
+        self, center: ArrayLike1D, height: ArrayLike1D, *,
+        bottom: ArrayLike1D | None = None, name=None,
+        orient: str | Orientation = Orientation.VERTICAL, extent: float | None = None,
+        color: ColorType | None = None, alpha: float = 1.0,
+        hatch: str | Hatch | None = None,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
@@ -494,8 +516,8 @@ class CanvasBase(ABC):
     def add_bars(
         self, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
         name=None, orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8, color: ColorType | None = None,
-        alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
+        extent: float | None = None, color: ColorType | None = None,
+        alpha: float = 1.0, hatch: str | Hatch | None = None,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
         ...
 
@@ -505,10 +527,10 @@ class CanvasBase(ABC):
         bottom=None,
         name=None,
         orient=Orientation.VERTICAL,
-        extent=0.8,
+        extent=None,
         color=None,
         alpha=1.0,
-        pattern=FacePattern.SOLID,
+        hatch=None,
     ):
         """
         Add a bar plot.
@@ -523,15 +545,15 @@ class CanvasBase(ABC):
             Bottom level of the bars.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default is Orientation.VERTICAL
+        orient : str or Orientation, default Orientation.VERTICAL
             Orientation of the bars.
-        extent : float, default is 0.8
+        extent : float, default 0.8
             Bar width in the canvas coordinate
         color : color-like, optional
             Color of the bars.
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             Alpha channel of the bars.
-        pattern : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default FacePattern.SOLID
             Pattern of the bar faces.
 
         Returns
@@ -546,9 +568,11 @@ class CanvasBase(ABC):
                 raise ValueError("Expected bottom to have the same shape as height")
         name = self._coerce_name(_l.Bars, name)
         color = self._generate_colors(color)
+        extent = theme.default("bars.extent", extent)
+        hatch = theme.default("bars.hatch", hatch)
         layer = _l.Bars(
             center, height, bottom, bar_width=extent, name=name, orient=orient,
-            color=color, alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            color=color, alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -563,7 +587,7 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch | None = None,
     ) -> _l.Bars:
         """
         Add data as a histogram.
@@ -574,26 +598,26 @@ class CanvasBase(ABC):
         ----------
         data : array-like
             1D Array of data.
-        bins : int or 1D array-like, default is 10
+        bins : int or 1D array-like, default 10
             Bins of the histogram. This parameter will directly be passed
             to `np.histogram`.
         range : (float, float), optional
             Range in which histogram will be built. This parameter will
             directly be passed to `np.histogram`.
-        density : bool, default is False
+        density : bool, default False
             If True, heights of bars will be normalized so that the total
             area of the histogram will be 1. This parameter will directly
             be passed to `np.histogram`.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default is Orientation.VERTICAL
+        orient : str or Orientation, default Orientation.VERTICAL
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             Alpha channel of the bars.
-        pattern : str or FacePattern, default is FacePattern.SOLID
-            Pattern of the bar faces.
+        hatch : str or FacePattern, optional
+            Pattern of the bar faces. Use the theme default if not specified.
 
         Returns
         -------
@@ -602,9 +626,10 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name("histogram", name)
         color = self._generate_colors(color)
+        hatch = theme.default("bars.hatch", hatch)
         layer = _l.Bars.from_histogram(
             data, bins=bins, range=range, density=density, name=name, color=color,
-            orient=orient, alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            orient=orient, alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -615,19 +640,19 @@ class CanvasBase(ABC):
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType = "blue",
-        alpha: float = 0.2,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        alpha: float = 0.4,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Spans:
         """
         Add spans that extends infinitely.
 
         >>> canvas.add_spans([[5, 10], [15, 20]])
 
-           |////|     |////|
-           |////|     |////|
+           |::::|     |::::|
+           |::::|     |::::|
         ───5────10────15───20─────>
-           |////|     |////|
-           |////|     |////|
+           |::::|     |::::|
+           |::::|     |::::|
 
         Parameters
         ----------
@@ -635,13 +660,13 @@ class CanvasBase(ABC):
             Array that contains the start and end points of the spans.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default is Orientation.VERTICAL
+        orient : str or Orientation, default Orientation.VERTICAL
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
-        alpha : float, default is 1.0
+        alpha : float, default 0.4
             Alpha channel of the bars.
-        pattern : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default FacePattern.SOLID
             Pattern of the bar faces.
 
         Returns
@@ -653,7 +678,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Spans(
             spans, name=name, orient=orient, color=color, alpha=alpha,
-            pattern=pattern, backend=self._get_backend(),
+            hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -664,8 +689,8 @@ class CanvasBase(ABC):
         *,
         name: str | None = None,
         color: ColorType | None = None,
-        width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
         alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.InfLine:
@@ -678,22 +703,22 @@ class CanvasBase(ABC):
 
         Parameters
         ----------
-        pos : (float, float), default is (0, 0)
+        pos : (float, float), default (0, 0)
             One of the points this line passes.
-        angle : float, default is 0.0
+        angle : float, default 0.0
             Angle of the line in degree, defined by the counter-clockwise
             rotation from the x axis.
         name : str, optional
             Name of the layer.
         color : color-like, optional
             Color of the bars.
-        width : float, default is 1.0
-            Line width.
-        style : str or LineStyle, default is LineStyle.SOLID
-            Line style.
-        alpha : float, default is 1.0
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
             Alpha channel of the line.
-        antialias : bool, default is True
+        antialias : bool, default True
             Antialiasing of the line.
 
         Returns
@@ -703,6 +728,8 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name(_l.InfLine, name)
         color = self._generate_colors(color)
+        width = theme.default("line.width", width)
+        style = theme.default("line.style", style)
         layer = _l.InfLine(
             pos, angle, name=name, color=color, alpha=alpha,
             width=width, style=style, antialias=antialias,
@@ -717,8 +744,8 @@ class CanvasBase(ABC):
         bounds: tuple[float, float] = (-float("inf"), float("inf")),
         name: str | None = None,
         color: ColorType | None = None,
-        width: float = 1.0,
-        style: str | LineStyle = LineStyle.SOLID,
+        width: float | None = None,
+        style: str | LineStyle | None = None,
         antialias: bool = True,
     ) -> _l.InfCurve[_P]:
         """
@@ -732,19 +759,19 @@ class CanvasBase(ABC):
         model : callable
             The model function. The first argument must be the x coordinates. Same
             signature as `scipy.optimize.curve_fit`.
-        bounds : (float, float), default is (-inf, inf)
+        bounds : (float, float), default (-inf, inf)
             Lower and upper bounds that the function is defined.
         name : str, optional
             Name of the layer.
         color : color-like, optional
             Color of the bars.
-        width : float, default is 1.0
-            Line width.
-        style : str or LineStyle, default is LineStyle.SOLID
-            Line style.
-        alpha : float, default is 1.0
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
             Alpha channel of the line.
-        antialias : bool, default is True
+        antialias : bool, default True
             Antialiasing of the line.
 
         Returns
@@ -754,11 +781,45 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name(_l.InfCurve, name)
         color = self._generate_colors(color)
+        width = theme.default("line.width", width)
+        style = theme.default("line.style", style)
         layer = _l.InfCurve(
             model, bounds=bounds, name=name, color=color, width=width,
             style=style, antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
+
+    def add_hline(
+        self,
+        y: float,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.InfLine:
+        return self.add_infline(
+            (0, y), 0, name=name, color=color, width=width, style=style, alpha=alpha,
+            antialias=antialias
+        )  # fmt: skip
+
+    def add_vline(
+        self,
+        x: float,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.InfLine:
+        return self.add_infline(
+            (x, 0), 90, name=name, color=color, width=width, style=style, alpha=alpha,
+            antialias=antialias,
+        )  # fmt: skip
 
     def add_band(
         self,
@@ -770,7 +831,7 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Band:
         """
         Add a band (fill-between) layer to the canvas.
@@ -785,15 +846,15 @@ class CanvasBase(ABC):
             The other y coordinates of the band.
         name : str, optional
             Name of the layer, by default None
-        orient : str, Orientation, default is Orientation.VERTICAL
+        orient : str, Orientation, default Orientation.VERTICAL
             Orientation of the band. If vertical, band will be filled between
             vertical orientation.,
-        color : color-like, default is None
+        color : color-like, default None
             Color of the band face.,
-        alpha : float, default is 1.0
-            Alpha channel of the band face.,
-        pattern : str, FacePattern, default is FacePattern.SOLID
-            Fill pattern of the band face.,
+        alpha : float, default 1.0
+            Alpha channel of the band face.
+        hatch : str, FacePattern, default FacePattern.SOLID
+            Hatch of the band face.
 
         Returns
         -------
@@ -804,7 +865,7 @@ class CanvasBase(ABC):
         color = self._generate_colors(color)
         layer = _l.Band(
             xdata, ylow, yhigh, name=name, orient=orient, color=color,
-            alpha=alpha, pattern=pattern, backend=self._get_backend(),
+            alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -816,9 +877,9 @@ class CanvasBase(ABC):
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        color: ColorType = "blue",
-        width: float = 1,
-        style: LineStyle | str = LineStyle.SOLID,
+        color: ColorType | None = None,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
         antialias: bool = False,
         capsize: float = 0.0,
     ) -> _l.Errorbars:
@@ -835,20 +896,20 @@ class CanvasBase(ABC):
             Upper bound of the errorbars.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default is Orientation.VERTICAL
+        orient : str or Orientation, default Orientation.VERTICAL
             Orientation of the errorbars. If vertical, errorbars will be parallel
             to the y axis.
         color : color-like, optional
             Color of the bars.
-        width : float, default is 1.0
-            Line width.
-        style : str or LineStyle, default is LineStyle.SOLID
-            Line style.
-        alpha : float, default is 1.0
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
             Alpha channel of the line.
-        antialias : bool, default is True
+        antialias : bool, default True
             Antialiasing of the line.
-        capsize : float, default is 0.0
+        capsize : float, default 0.0
             Size of the caps of the error indicators
 
         Returns
@@ -858,6 +919,8 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name(_l.Errorbars, name)
         color = self._generate_colors(color)
+        width = theme.default("line.width", width)
+        style = theme.default("line.style", style)
         layer = _l.Errorbars(
             xdata, ylow, yhigh, name=name, color=color, width=width,
             style=style, antialias=antialias, capsize=capsize,
@@ -892,24 +955,24 @@ class CanvasBase(ABC):
         ----------
         events : array-like
             A 1D array of events.
-        low : float, default is 0.0
+        low : float, default 0.0
             The lower bound of the rug lines.
-        high : float, default is 1.0
+        high : float, default 1.0
             The upper bound of the rug lines.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default is Orientation.VERTICAL
+        orient : str or Orientation, default Orientation.VERTICAL
             Orientation of the errorbars. If vertical, rug lines will be parallel
             to the y axis.
         color : color-like, optional
             Color of the bars.
-        width : float, default is 1.0
+        width : float, default 1.0
             Line width.
-        style : str or LineStyle, default is LineStyle.SOLID
+        style : str or LineStyle, default LineStyle.SOLID
             Line style.
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             Alpha channel of the line.
-        antialias : bool, default is True
+        antialias : bool, default True
             Antialiasing of the line.
 
         Returns
@@ -936,7 +999,7 @@ class CanvasBase(ABC):
         band_width: float | Literal["scott", "silverman"] = "scott",
         color: ColorType | None = None,
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
     ) -> _l.Band:
         """
         Add data as a band layer representing kernel density estimation (KDE).
@@ -945,21 +1008,21 @@ class CanvasBase(ABC):
         ----------
         data : array-like
             1D data to calculate the KDE.
-        bottom : float, default is 0.0
+        bottom : float, default 0.0
             Scalar value that define the height of the bottom line.
         name : str, optional
             Name of the layer, by default None
-        orient : str, Orientation, default is Orientation.VERTICAL
+        orient : str, Orientation, default Orientation.VERTICAL
             Orientation of the KDE.
-        band_width : float or str, default is "scott"
+        band_width : float or str, default "scott"
             Band width parameter of KDE. Must be a number or a string as the
             method to automatic determination.
-        color : color-like, default is None
+        color : color-like, default None
             Color of the band face.,
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             Alpha channel of the band face.
-        pattern : str, FacePattern, default is FacePattern.SOLID
-            Fill pattern of the band face.
+        hatch : str, FacePattern, default FacePattern.SOLID
+            Hatch of the band face.
 
         Returns
         -------
@@ -977,11 +1040,12 @@ class CanvasBase(ABC):
             orient=orient,
             color=color,
             alpha=alpha,
-            pattern=pattern,
+            hatch=hatch,
             backend=self._get_backend(),
         )
         return self.add_layer(layer)
 
+    @overload
     def add_text(
         self,
         x: ArrayLike1D,
@@ -994,6 +1058,35 @@ class CanvasBase(ABC):
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         family: str | None = None,
     ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
+        ...
+
+    @overload
+    def add_text(
+        self,
+        x: float,
+        y: float,
+        string: str,
+        *,
+        color: ColorType = "black",
+        size: float = 12,
+        rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
+        family: str | None = None,
+    ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
+        ...
+
+    def add_text(
+        self,
+        x,
+        y,
+        string,
+        *,
+        color="black",
+        size=12,
+        rotation=0.0,
+        anchor=Alignment.BOTTOM_LEFT,
+        family=None,
+    ):
         """
         Add a text layer to the canvas.
 
@@ -1011,11 +1104,11 @@ class CanvasBase(ABC):
             Text string to display.
         color : ColorType, optional
             Color of the text string.
-        size : float, default is 12
+        size : float, default 12
             Point size of the text.
-        rotation : float, default is 0.0
+        rotation : float, default 0.0
             Rotation angle of the text in degrees.
-        anchor : str or Alignment, default is Alignment.BOTTOM_LEFT
+        anchor : str or Alignment, default Alignment.BOTTOM_LEFT
             Anchor position of the text. The anchor position will be the coordinate
             given by (x, y).
         family : str, optional
@@ -1026,12 +1119,17 @@ class CanvasBase(ABC):
         Text
             The text layer.
         """
+        if (
+            isinstance(x, (int, float, np.number))
+            and isinstance(y, (int, float, np.number))
+            and isinstance(string, str)
+        ):
+            x, y, string = [x], [y], [string]
         x_, y_ = normalize_xy(x, y)
         if isinstance(string, str):
             string = [string] * x_.size
-        else:
-            if len(string) != x_.size:
-                raise ValueError("Expected string to have the same size as x/y")
+        elif len(string) != x_.size:
+            raise ValueError("Expected string to have the same size as x/y")
         layer = _l.Texts(
             x_, y_, string, color=color, size=size, rotation=rotation, anchor=anchor,
             family=family, backend=self._get_backend(),
@@ -1058,13 +1156,13 @@ class CanvasBase(ABC):
         image : ArrayLike
             Image data. Must be 2D or 3D array. If 3D, the last dimension must be
             RGB(A). Note that the first dimension is the vertical axis.
-        cmap : ColormapType, default is "gray"
+        cmap : ColormapType, default "gray"
             Colormap used for the image.
         clim : (float or None, float or None) or None
             Contrast limits. If None, the limits are automatically determined by
             min and max of the data. You can also pass None separately to either
             limit to use the default behavior.
-        flip_canvas : bool, default is True
+        flip_canvas : bool, default True
             If True, flip the canvas vertically so that the image looks normal.
 
         Returns
@@ -1156,6 +1254,7 @@ class CanvasBase(ABC):
         return name
 
     def _autoscale_for_layer(self, layer: _l.Layer, pad_rel: float = 0.025):
+        """This function will be called when a layer is inserted to the canvas."""
         if not self._autoscale_enabled:
             return
         xmin, xmax, ymin, ymax = layer.bbox_hint()
@@ -1172,9 +1271,10 @@ class CanvasBase(ABC):
             ymax = np.max([ymax, _ymax - _dy])
 
         # this happens when there is <= 1 data
+        small_diff = 1e-6
         if np.isnan(xmax) or np.isnan(xmin):
             xmin, xmax = self.x.lim
-        elif xmax - xmin < 1e-6:
+        elif xmax - xmin < small_diff:
             xmin -= 0.05
             xmax += 0.05
         else:
@@ -1183,7 +1283,7 @@ class CanvasBase(ABC):
             xmax += dx
         if np.isnan(ymax) or np.isnan(ymin):
             ymin, ymax = self.y.lim
-        elif ymax - ymin < 1e-6:
+        elif ymax - ymin < small_diff:
             ymin -= 0.05
             ymax += 0.05
         else:
@@ -1197,14 +1297,13 @@ class CanvasBase(ABC):
             # this happens when the grouped layer is inserted
             layer._connect_canvas(self)
             return
-        if idx < 0:
-            idx = len(self.layers) + idx
+
         _canvas = self._canvas()
         for l in _iter_layers(layer):
             _canvas._plt_add_layer(l._backend)
             l._connect_canvas(self)
 
-        if isinstance(layer, _l.LayerStack):
+        if isinstance(layer, _l.LayerWrapper):
             # TODO: check if connecting LayerGroup is necessary
             layer._connect_canvas(self)
         # autoscale
@@ -1213,6 +1312,19 @@ class CanvasBase(ABC):
         else:
             pad_rel = 0.025
         self._autoscale_for_layer(layer, pad_rel=pad_rel)
+
+    def _cb_inserted_overlay(self, idx: int, layer: _l.Layer):
+        _canvas = self._canvas()
+        fn = self._get_backend().get("as_overlay")
+        for l in _iter_layers(layer):
+            _canvas._plt_add_layer(l._backend)
+            fn(l._backend, _canvas)
+            l._connect_canvas(self)
+
+        if isinstance(layer, _l.LayerWrapper):
+            # TODO: check if connecting LayerGroup is necessary
+            fn(l._backend, _canvas)
+            layer._connect_canvas(self)
 
     def _cb_removed(self, idx: int, layer: _l.Layer):
         if self._is_grouping:
@@ -1294,6 +1406,8 @@ class Canvas(CanvasBase):
     ) -> Self:
         """Create a canvas object from a backend object."""
         with patch_dummy_backend() as name:
+            # this patch will delay initialization by "_init_canvas" until the backend
+            # objects are created.
             self = cls(backend=name, palette=palette)
         self._backend = Backend(backend)
         self._backend_object = obj
@@ -1317,7 +1431,7 @@ def _iter_layers(
         yield layer
     elif isinstance(layer, _l.LayerGroup):
         yield from layer.iter_children_recursive()
-    elif isinstance(layer, _l.LayerStack):
+    elif isinstance(layer, _l.LayerWrapper):
         yield from _iter_layers(layer._base_layer)
     else:
         raise TypeError(f"Unknown layer type: {type(layer).__name__}")

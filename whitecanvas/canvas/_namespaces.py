@@ -1,24 +1,40 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable
-import weakref
-import numpy as np
-from numpy.typing import NDArray
+from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar
 
-from psygnal import Signal, SignalGroup
+import numpy as np
 from cmap import Color
+from numpy.typing import NDArray
+from psygnal import Signal, SignalGroup
+
 from whitecanvas import protocols
+from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.types import ColorType, LineStyle
 from whitecanvas.utils.normalize import arr_color
-from whitecanvas._exceptions import ReferenceDeletedError
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
     from whitecanvas.canvas._base import CanvasBase
+
+_no_canvas = object()
+_T = TypeVar("_T")
 
 
 class AxisSignals(SignalGroup):
+    """Signals emitted by an axis."""
+
     lim = Signal(tuple)
+
+
+class StrongRef(Generic[_T]):
+    """Strong reference to an object."""
+
+    def __init__(self, obj: _T):
+        self._obj = obj
+
+    def __call__(self) -> _T:
+        return self._obj
 
 
 class Namespace:
@@ -26,38 +42,43 @@ class Namespace:
 
     def __init__(self, canvas: CanvasBase | None = None):
         if canvas is not None:
-            while isinstance(canvas, Namespace):
-                canvas = canvas._canvas_ref()
-            self._canvas_ref = weakref.ref(canvas)
+            # This line *should* be an weak reference, but canvas is sometimes deleted
+            # for some reason. Just use a strong reference for now.
+            self._canvas_ref = StrongRef(canvas)
         else:
-            self._canvas_ref = lambda: None
+            self._canvas_ref = StrongRef(_no_canvas)
         self._instances: dict[int, Self] = {}
 
     def __get__(self, canvas, owner) -> Self:
         if canvas is None:
             return self
-        _id = id(canvas)
-        if (ns := self._instances.get(_id)) is None:
-            ns = self._instances[_id] = type(self)(canvas)
+        while isinstance(canvas, Namespace):
+            canvas = canvas._canvas_ref()
+        id_ = id(canvas)
+        if (ns := self._instances.get(id_)) is None:
+            ns = self._instances[id_] = type(self)(canvas)
         return ns
 
     def _get_canvas(self) -> protocols.CanvasProtocol:
         l = self._canvas_ref()
         if l is None:
             raise ReferenceDeletedError("Canvas has been deleted.")
+        elif l is _no_canvas:
+            raise TypeError("No canvas is associated with the class itself.")
         return l._canvas()
 
     def __repr__(self) -> str:
         cname = type(self).__name__
-        try:
-            props = [f"canvas={self._get_canvas()!r}"]
-            for k in self._attrs:
-                v = getattr(self, k)
-                props.append(f"{k}={v!r}")
-            return f"{cname}({', '.join(props)})"
-
-        except ReferenceDeletedError:
+        l = self._canvas_ref()
+        if l is None:
             return f"<{cname} of deleted canvas>"
+        elif l is _no_canvas:
+            return f"<{cname}>"
+        props = [f"canvas={l!r}"]
+        for k in self._attrs:
+            v = getattr(self, k)
+            props.append(f"{k}={v!r}")
+        return f"{cname}({', '.join(props)})"
 
     def update(self, d: dict[str, Any] = {}, **kwargs):
         values = dict(d, **kwargs)
@@ -111,15 +132,21 @@ class _TextBoundNamespace(Namespace):
 
 class _TextLabelNamespace(_TextBoundNamespace):
     def __repr__(self) -> str:
+        cname = type(self).__name__
+        l = self._canvas_ref()
+        if l is None:
+            return f"<{cname} of deleted canvas>"
+        elif l is _no_canvas:
+            return f"<{cname}>"
         text = self.text
         color = self.color
         size = self.size
         fontfamily = self.family
-        name = type(self).__name__
-        return f"{name}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
+        return f"{cname}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
 
     @property
     def text(self) -> str:
+        """Text content."""
         return self._get_object()._plt_get_text()
 
     @text.setter
@@ -138,27 +165,37 @@ class _TextLabelNamespace(_TextBoundNamespace):
 
 class _TicksNamespace(_TextBoundNamespace):
     def __repr__(self) -> str:
-        pos, labels = self._get_object()._plt_get_text()
+        cname = type(self).__name__
+        l = self._canvas_ref()
+        if l is None:
+            return f"<{cname} of deleted canvas>"
+        elif l is _no_canvas:
+            return f"<{cname}>"
+        pos, labels = self._get_object()._plt_get_tick_labels()
         pos = list(pos)
         color = self.color
         size = self.size
         family = self.family
-        name = type(self).__name__
-        return f"{name}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {family=!r})"
+        return f"{cname}({pos=!r}, {labels=}, {color=!r}, {size=!r}, {family=!r})"
+
+    def _get_object(self) -> protocols.TicksProtocol:
+        raise NotImplementedError
 
     @property
     def pos(self) -> NDArray[np.floating]:
-        pos, _ = self._get_object()._plt_get_text()
+        pos, _ = self._get_object()._plt_get_tick_labels()
         return np.asarray(pos)
 
     @property
-    def labels(self) -> tuple[list[float], list[str]]:
-        _, labels = self._get_object()._plt_get_text()
+    def labels(self) -> list[str]:
+        _, labels = self._get_object()._plt_get_tick_labels()
         return labels
 
     def set_labels(self, pos: Iterable[float], labels: Iterable[str] | None = None):
         """
-        Set tick labels.
+        Override tick labels.
+
+        >>> canvas.x.ticks.set_labels([0, 1, 2], ["a", "b", "c"])
 
         Parameters
         ----------
@@ -171,7 +208,7 @@ class _TicksNamespace(_TextBoundNamespace):
         _pos = list(pos)
         # test sorted
         if len(_pos) > 0 and np.any(np.diff(_pos) <= 0):
-            raise ValueError("pos must be strictly increasing.")
+            raise ValueError(f"pos must be strictly increasing, got {pos}.")
         if labels is not None:
             _labels = [str(l) for l in labels]
         else:
@@ -179,11 +216,20 @@ class _TicksNamespace(_TextBoundNamespace):
             _labels = [str(round(p, ndigits)) for p in _pos]
         if len(_pos) != len(_labels):
             raise ValueError("pos and labels must have the same length.")
-        self._get_object()._plt_set_text((_pos, _labels))
+        self._get_object()._plt_override_labels(_pos, _labels)
 
     def reset_labels(self) -> None:
         """Reset the tick labels to the default."""
-        self._get_object()._plt_reset_text()
+        self._get_object()._plt_reset_override()
+
+    @property
+    def rotation(self) -> float:
+        """Tick label rotation in degrees."""
+        return self._get_object()._plt_get_text_rotation()
+
+    @rotation.setter
+    def rotation(self, rotation: float):
+        self._get_object()._plt_set_text_rotation(rotation)
 
 
 class XTickNamespace(_TicksNamespace):
@@ -242,7 +288,7 @@ class _AxisNamespace(Namespace):
         with self.events.blocked():
             self._get_object()._plt_set_limits(lim)
         self.events.lim.emit(lim)
-        return
+        return None
 
     @property
     def color(self):

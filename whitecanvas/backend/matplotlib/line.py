@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import numpy as np
-from numpy.typing import NDArray
-from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection
+from matplotlib.lines import Line2D
+from numpy.typing import NDArray
+
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle

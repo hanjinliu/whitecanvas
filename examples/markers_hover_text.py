@@ -2,6 +2,7 @@
 
 from whitecanvas import new_canvas
 
+
 def main():
     canvas = new_canvas(backend="matplotlib:qt")
 

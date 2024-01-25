@@ -1,23 +1,24 @@
 from __future__ import annotations
+
 from functools import lru_cache
 from typing import TYPE_CHECKING
+
 import numpy as np
-from numpy.typing import NDArray
-
-from qtpy import QtGui
 import pyqtgraph as pg
+from numpy.typing import NDArray
+from qtpy import QtGui
 
-from whitecanvas.types import Alignment, FacePattern, LineStyle
-from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from whitecanvas.utils.normalize import as_color_array
-from ._qt_utils import (
+from whitecanvas.backend.pyqtgraph._qt_utils import (
+    array_to_qcolor,
     from_qt_brush_style,
     from_qt_line_style,
     to_qt_brush_style,
     to_qt_line_style,
-    array_to_qcolor,
 )
+from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.types import Alignment, Hatch, LineStyle
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(TextProtocol)
@@ -31,7 +32,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     if TYPE_CHECKING:
 
-        def childItems(self) -> list[SingleText]:
+        def childItems(self) -> list[SingleText]:  # noqa: N802
             ...
 
     ##### TextProtocol #####
@@ -117,11 +118,11 @@ class Texts(pg.ItemGroup, PyQtLayer):
             brush.setColor(array_to_qcolor(color0))
             t.fill = brush
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [from_qt_brush_style(s._get_brush().style()) for s in self.childItems()]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
-        if isinstance(pattern, FacePattern):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
+        if isinstance(pattern, Hatch):
             pattern = [pattern] * self._plt_get_ndata()
         for t, pattern0 in zip(self.childItems(), pattern):
             brush = t._get_brush()

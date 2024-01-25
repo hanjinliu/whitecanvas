@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy.typing import NDArray
-
 from matplotlib.container import BarContainer
 from matplotlib.patches import Rectangle
+from numpy.typing import NDArray
+
 from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import BarProtocol, check_protocol
-from whitecanvas.types import FacePattern, LineStyle
+from whitecanvas.types import Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
 
 
@@ -67,14 +67,14 @@ class Bars(BarContainer, MplLayer):
         for patch, c in zip(self.patches, color):
             patch.set_facecolor(c)
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
-        return [FacePattern(patch.get_hatch() or "") for patch in self.patches]
+    def _plt_get_face_hatch(self) -> list[Hatch]:
+        return [Hatch(patch.get_hatch() or "") for patch in self.patches]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
-        if isinstance(pattern, FacePattern):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
+        if isinstance(pattern, Hatch):
             pattern = [pattern] * len(self.patches)
         for pat, patch in zip(pattern, self.patches):
-            patch.set_hatch(None if pat is FacePattern.SOLID else pat.value)
+            patch.set_hatch(None if pat is Hatch.SOLID else pat.value)
 
     ##### HasEdges protocol #####
 

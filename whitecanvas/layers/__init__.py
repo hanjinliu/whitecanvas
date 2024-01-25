@@ -1,24 +1,25 @@
-from ._base import PrimitiveLayer, Layer, LayerGroup
-from ._ndim import LayerStack
-from ._primitive import (
-    Line,
-    MultiLine,
+from whitecanvas.layers._base import Layer, LayerGroup, LayerWrapper, PrimitiveLayer
+from whitecanvas.layers._ndim import LayerStack
+from whitecanvas.layers._primitive import (
+    Band,
+    Bars,
+    Errorbars,
+    Image,
     InfCurve,
     InfLine,
+    Line,
     Markers,
-    Bars,
-    Spans,
-    Band,
-    Errorbars,
-    Texts,
-    Image,
+    MultiLine,
     Rug,
+    Spans,
+    Texts,
 )
 
 __all__ = [
     "Layer",
     "PrimitiveLayer",
     "LayerGroup",
+    "LayerWrapper",
     "LayerStack",
     "Line",
     "MultiLine",

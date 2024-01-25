@@ -56,14 +56,20 @@ bokeh = [
 testing = [
     "pytest",
     "pytest-qt",
+    "qtpy>=2.4.1",
+    "pyqt5>=5.15.4",
+    "ipywidgets>=8.0.0",
     "matplotlib>=3.8.2",
     "pyqtgraph>=0.13.3",
+    "plotly>=5.3.1",
+    "vispy>=0.14.1",
+    "bokeh>=3.3.1",
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/whitecanvas#readme"
-Issues = "https://github.com/unknown/whitecanvas/issues"
-Source = "https://github.com/unknown/whitecanvas"
+Documentation = "https://github.com/hanjinliu/whitecanvas#readme"
+Issues = "https://github.com/hanjinliu/whitecanvas/issues"
+Source = "https://github.com/hanjinliu/whitecanvas"
 
 [tool.hatch.version]
 path = "whitecanvas/__init__.py"
@@ -111,6 +117,12 @@ all = [
   "typing",
 ]
 
+[tool.hatch.envs.test]
+features = ["testing"]
+
+[tool.hatch.envs.test.scripts]
+run = "pytest -v"
+
 [tool.black]
 target-version = ["py37"]
 line-length = 88
@@ -126,16 +138,13 @@ select = [
   "C",
   "DTZ",
   "E",
-  "EM",
   "F",
-  "FBT",
   "I",
   "ICN",
   "ISC",
   "N",
   "PLC",
   "PLE",
-  "PLR",
   "PLW",
   "Q",
   "RUF",
@@ -147,12 +156,12 @@ select = [
   "YTT",
 ]
 ignore = [
+  "A002", "A003", "ARG001", "ARG002",
   # Allow non-abstract empty methods in abstract base classes
-  "B027",
-  # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
+  "B027", "B904", "B006",
+  "E741",
   # Ignore checks for possible passwords
-  "S105", "S106", "S107",
+  "S101", "S105", "S106", "S107",
   # Ignore complexity
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
 ]
@@ -160,6 +169,7 @@ unfixable = [
   # Don't touch unused imports
   "F401",
 ]
+exclude = ["tests"]
 
 [tool.ruff.isort]
 known-first-party = ["whitecanvas"]

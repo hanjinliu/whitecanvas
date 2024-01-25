@@ -1,22 +1,24 @@
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, cast
-import weakref
 
-from psygnal import Signal
-from vispy.scene import ViewBox, SceneCanvas, PanZoomCamera, visuals
-from vispy.util import keys
-from vispy import use as vispy_use
+import weakref
+from typing import TYPE_CHECKING, Callable, cast
+
 import numpy as np
 from numpy.typing import NDArray
+from psygnal import Signal
+from vispy import use as vispy_use
+from vispy.scene import PanZoomCamera, SceneCanvas, ViewBox, visuals
+from vispy.util import keys
 
 from whitecanvas import protocols
-from whitecanvas.types import MouseButton, Modifier, MouseEventType, MouseEvent
-from ._label import TextLabel, Axis, Ticks
+from whitecanvas.backend.vispy._label import Axis, TextLabel, Ticks
+from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType
 
 if TYPE_CHECKING:
+    from vispy.app.canvas import MouseEvent as vispyMouseEvent
     from vispy.scene import Grid
     from vispy.scene.subscene import SubScene
-    from vispy.app.canvas import MouseEvent as vispyMouseEvent
+    from vispy.visuals import Visual
 
 
 class Camera(PanZoomCamera):
@@ -78,6 +80,7 @@ class Canvas:
         self._mouse_click_callbacks: list[Callable[[MouseEvent], None]] = []
         self._mouse_move_callbacks: list[Callable[[MouseEvent], None]] = []
         self._mouse_double_click_callbacks: list[Callable[[MouseEvent], None]] = []
+        self._mouse_release_callbacks: list[Callable[[MouseEvent], None]] = []
 
     def _set_scene_ref(self, scene):
         self._viewbox.unfreeze()
@@ -163,6 +166,10 @@ class Canvas:
         """Connect callback to clicked event"""
         self._mouse_double_click_callbacks.append(callback)
 
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+        self._mouse_release_callbacks.append(callback)
+
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
@@ -185,6 +192,8 @@ class CanvasGrid:
         self._scene = SceneCanvasExt(keys="interactive")
         self._grid: Grid = self._scene.central_widget.add_grid()
         self._scene.create_native()
+        self._heights = heights  # TODO: not used
+        self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int):
         viewbox: ViewBox = self._grid.add_view(row, col, rowspan, colspan)
@@ -202,7 +211,6 @@ class CanvasGrid:
         return self._scene.render()
 
     def _plt_show(self):
-        """Set visibility of canvas"""
         self._scene.show()
 
     def _plt_set_figsize(self, width: float, height: float):
@@ -268,6 +276,27 @@ class SceneCanvasExt(SceneCanvas):
 
             for callback in canvas._mouse_double_click_callbacks:
                 callback(ev)
+
+    def on_mouse_release(self, event: vispyMouseEvent):
+        visual = self.visual_at(event.pos)
+        if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):
+            canvas: Canvas = visual._canvas_ref()
+            tr = self.scene.node_transform(visual.scene)
+            pos = tr.map(event.pos)[:2] - 0.5
+            ev = MouseEvent(
+                button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
+                modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
+                pos=pos,
+                type=MouseEventType.RELEASE,
+            )
+
+            for callback in canvas._mouse_release_callbacks:
+                callback(ev)
+
+
+def as_overlay(layer: Visual, canvas: Canvas):
+    layer.parent = canvas._outer_viewbox.scene
+    layer.order = 10000
 
 
 _VISPY_KEY_MAP = {

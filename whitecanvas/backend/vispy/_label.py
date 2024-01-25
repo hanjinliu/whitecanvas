@@ -1,16 +1,19 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-import weakref
 
+import weakref
+from typing import TYPE_CHECKING
+
+import numpy as np
 from vispy import scene
 from vispy.visuals.axis import AxisVisual, Ticker
-import numpy as np
+
 from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
     from vispy.scene.cameras import PanZoomCamera
     from vispy.visuals import TextVisual
-    from .canvas import Canvas
+
+    from whitecanvas.backend.vispy.canvas import Canvas
 
 
 class TextLabel(scene.Label):
@@ -115,14 +118,14 @@ class Ticks:
     def _text(self) -> TextVisual:
         return self._axis().axis._text
 
-    def _plt_get_text(self) -> list[tuple[float, str]]:
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         axis = self._axis().axis
         return list(axis._ticks.pos), self._text.text
 
-    def _plt_set_text(self, ticks: tuple[list[float], list[str]]):
-        self._axis().axis.ticker._categorical_labels = ticks
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
+        self._axis().axis.ticker._categorical_labels = (pos, labels)
 
-    def _plt_reset_text(self):
+    def _plt_reset_override(self):
         self._axis().axis.ticker._categorical_labels = None
 
     def _plt_get_color(self):
@@ -149,6 +152,12 @@ class Ticks:
 
     def _plt_set_fontfamily(self, font):
         self._text.face = font
+
+    def _plt_get_text_rotation(self) -> float:
+        return self._text.rotation
+
+    def _plt_set_text_rotation(self, rotation: float):
+        self._text.rotation = rotation
 
 
 class VispyTicker(Ticker):

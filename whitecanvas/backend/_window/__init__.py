@@ -1,19 +1,47 @@
-from whitecanvas.canvas import CanvasGrid
+from whitecanvas.canvas import CanvasGrid, CanvasBase
 
 
-def view(canvas: CanvasGrid, app: str = "qt"):
+def view(grid: CanvasGrid, app: str = "qt"):
     if app == "qt":
-        _view_qt(canvas)
+        return _view_qt(grid)
+    elif app == "tk":
+        return _view_tk(grid)
+    raise ValueError(f"Appication {app} not supported")
 
 
-_instance = None
+def make_dim_slider(canvas: CanvasBase, app: str = "qt"):
+    if app == "qt":
+        sl = _slider_qt(canvas)
+    elif app == "tk":
+        sl = _slider_tk(canvas)
+    else:
+        raise ValueError(f"Appication {app} not supported")
+    return sl
 
 
-def _view_qt(canvas: CanvasGrid):
-    global _instance
+def _view_qt(grid: CanvasGrid):
     from ._qt import QtMainWindow
 
-    main = QtMainWindow(canvas)
+    main = QtMainWindow(grid)
     main.show()
-    _instance = main
     return main
+
+
+def _view_tk(grid: CanvasGrid):
+    from ._tk import TkMainWindow
+
+    main = TkMainWindow(grid)
+    main.mainloop()
+    return main
+
+
+def _slider_qt(canvas: CanvasBase):
+    from ._qt import QtDimSliders
+
+    return QtDimSliders.from_canvas(canvas)
+
+
+def _slider_tk(canvas: CanvasGrid):
+    from ._tk import TkDimSliders
+
+    return TkDimSliders.from_canvas(canvas)

@@ -15,7 +15,7 @@ from whitecanvas.layers._mixin import (
     MultiFace,
     MultiEdge,
 )
-from whitecanvas.types import ColorType, FacePattern, Orientation, LineStyle
+from whitecanvas.types import ColorType, Hatch, Orientation, LineStyle, Rect
 from whitecanvas.backend import Backend
 
 if TYPE_CHECKING:
@@ -26,18 +26,19 @@ _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 
 
 class Spans(
-    MultiFaceEdgeMixin[BarProtocol, _Face, _Edge],
     DataBoundLayer[BarProtocol, NDArray[np.number]],
+    MultiFaceEdgeMixin[_Face, _Edge],
     Generic[_Face, _Edge],
 ):
     """
     Layer that represents vertical/hosizontal spans.
 
-       |///|      |///////////|
-       |///|      |///////////|
-    ──────────────────────────────>
-       |///|      |///////////|
-       |///|      |///////////|
+    Attributes
+    ----------
+    face : :class:`~whitecanvas.layers._mixin.FaceNamespace`
+        Face properties of the spans.
+    edge : :class:`~whitecanvas.layers._mixin.EdgeNamespace`
+        Edge properties of the spans.
     """
 
     _backend_class_name = "Bars"
@@ -50,10 +51,11 @@ class Spans(
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
-        _spans = _norm_data(spans)
+        MultiFaceEdgeMixin.__init__(self)
+        _spans = self._norm_layer_data(spans)
         ori = Orientation.parse(orient)
         nspans = _spans.shape[0]
         if ori.is_vertical:
@@ -67,8 +69,10 @@ class Spans(
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), *xxyy)
         self._orient = ori
-        self.face.update(color=color, alpha=alpha, pattern=pattern)
+        self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xhint, yhint
+        self._low_lim = -1e10
+        self._high_lim = 1e10
 
     @property
     def orient(self) -> Orientation:
@@ -83,15 +87,23 @@ class Spans(
             return np.column_stack([y0, y1])
 
     def _norm_layer_data(self, data: Any) -> NDArray[np.number]:
-        return _norm_data(data)
+        _spans = np.asarray(data)
+        if _spans.ndim != 2:
+            raise ValueError(f"spans must be 2-dimensional, got {_spans.ndim}")
+        if _spans.shape[1] != 2:
+            raise ValueError(f"spans must be (N, 2), got {_spans.shape}")
+        if _spans.dtype.kind not in "uif":
+            raise ValueError(f"spans must be numeric, got {_spans.dtype}")
+        return _spans
 
     def _set_layer_data(self, data: NDArray[np.number]):
-        _old_spans = self.data
+        _low = np.full_like(data[:, 0], self._low_lim)
+        _high = np.full_like(data[:, 0], self._high_lim)
         if self.orient.is_vertical:
-            xxyy = data[:, 0], data[:, 1], _old_spans[:, 2], _old_spans[:, 3]
+            xxyy = data[:, 0], data[:, 1], _low, _high
             self._x_hint = data.min(), data.max()
         else:
-            xxyy = _old_spans[:, 0], _old_spans[:, 1], data[:, 0], data[:, 1]
+            xxyy = _low, _high, data[:, 0], data[:, 1]
             self._y_hint = data.min(), data.max()
         self._backend._plt_set_data(*xxyy)
 
@@ -104,19 +116,28 @@ class Spans(
         return self._backend._plt_get_data()[0].size
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.y.events.lim.connect(self._recalculate_spans)
+        canvas.events.lims.connect(self._recalculate_spans)
         return super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
-        canvas.x.events.lim.connect(self._recalculate_spans)
+        canvas.events.lims.connect(self._recalculate_spans)
         return super()._disconnect_canvas(canvas)
 
-    def _recalculate_spans(self, lim: tuple[float, float]):
-        # TODO: this is not efficient. Limits of min/max should be chunked.
-        _min, _max = lim
+    def _recalculate_spans(self, rect: Rect):
+        # update the rectangles so that their limits are not visible
+        if self.orient.is_vertical:
+            _min, _max = rect.bottom, rect.top
+        else:
+            _min, _max = rect.left, rect.right
+        if _min > _max:
+            _min, _max = _max, _min
+        if _min >= self._low_lim and _max <= self._high_lim:
+            return
+        self._low_lim = _min - 1e10
+        self._high_lim = _max + 1e10
         x0, x1, y0, y1 = self._backend._plt_get_data()
-        _min_arr = np.full_like(x0, _min)
-        _max_arr = np.full_like(x0, _max)
+        _min_arr = np.full_like(x0, self._low_lim)
+        _max_arr = np.full_like(x0, self._high_lim)
         if self.orient.is_vertical:
             spans = x0, x1, _min_arr, _max_arr
         else:
@@ -126,18 +147,18 @@ class Spans(
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Spans[ConstFace, _Edge]:
-        return super().with_face(color, pattern, alpha)
+        return super().with_face(color, hatch, alpha)
 
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Spans[MultiFace, _Edge]:
-        return super().with_face_multi(color, pattern, alpha)
+        return super().with_face_multi(color, hatch, alpha)
 
     def with_edge(
         self,
@@ -156,14 +177,3 @@ class Spans(
         alpha: float = 1,
     ) -> Spans[_Face, MultiEdge]:
         return super().with_edge_multi(color, width, style, alpha)
-
-
-def _norm_data(spans):
-    _spans = np.asarray(spans)
-    if _spans.ndim != 2:
-        raise ValueError(f"spans must be 2-dimensional, got {_spans.ndim}")
-    if _spans.shape[1] != 2:
-        raise ValueError(f"spans must be (N, 2), got {_spans.shape}")
-    if _spans.dtype.kind not in "uif":
-        raise ValueError(f"spans must be numeric, got {_spans.dtype}")
-    return _spans

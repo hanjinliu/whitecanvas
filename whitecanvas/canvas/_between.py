@@ -1,11 +1,13 @@
 from __future__ import annotations
-from typing import TypeVar, Generic, TYPE_CHECKING
+
 import weakref
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 import numpy as np
+
 from whitecanvas._exceptions import ReferenceDeletedError
-from whitecanvas.types import Orientation, LineStyle, ColorType, XYData
-from whitecanvas.layers import MultiLine, Markers, Layer
+from whitecanvas.layers import Layer, MultiLine
+from whitecanvas.types import ColorType, LineStyle, XYData
 
 if TYPE_CHECKING:
     from whitecanvas.canvas._base import CanvasBase

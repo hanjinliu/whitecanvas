@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Alignment, FacePattern, LineStyle
+from whitecanvas.backend.plotly._base import PlotlyLayer
 from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
-from ._base import PlotlyLayer
 
 
 @check_protocol(TextProtocol)
@@ -17,18 +18,13 @@ class Texts(PlotlyLayer):
         self._props = {
             "x": x,
             "y": y,
-            "mode": "markers",
-            "marker": {
-                "color": "rgba(0, 0, 0, 0)",
-                "size": 10,
-                "symbol": "circle",
-            },
+            "mode": "text",
             "text": text,
             "textposition": ["bottom left"] * ntexts,
             "textfont": {
                 "family": ["Arial"] * ntexts,
                 "size": np.full(ntexts, 10),
-                "color": ["black"] * ntexts,
+                "color": ["rgba(0, 0, 0, 255)"] * ntexts,
             },
             "type": "scatter",
             "showlegend": False,
@@ -74,15 +70,15 @@ class Texts(PlotlyLayer):
         self._props["x"], self._props["y"] = position
 
     def _plt_get_text_anchor(self) -> list[Alignment]:
-        return [_norm_alignment(p) for p in self._props["textposition"]]
+        return [_from_plotly_alignment(p) for p in self._props["textposition"]]
 
     def _plt_set_text_anchor(self, anc: Alignment | list[Alignment]):
         if isinstance(anc, Alignment):
-            self._props["textposition"] = [anc.value.replace("_", " ")] * len(
+            self._props["textposition"] = [_to_plotly_alignment(anc)] * len(
                 self._props["textposition"]
             )
         else:
-            self._props["textposition"] = [a.value.replace("_", " ") for a in anc]
+            self._props["textposition"] = [_to_plotly_alignment(a) for a in anc]
 
     def _plt_get_text_rotation(self):
         return self._angle
@@ -108,10 +104,10 @@ class Texts(PlotlyLayer):
     def _plt_set_face_color(self, color):
         pass
 
-    def _plt_get_face_pattern(self) -> FacePattern:
-        return [FacePattern.SOLID] * len(self._props["text"])
+    def _plt_get_face_hatch(self) -> Hatch:
+        return [Hatch.SOLID] * len(self._props["text"])
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
+    def _plt_set_face_hatch(self, pattern: Hatch):
         pass
 
     ##### HasEdges #####
@@ -135,18 +131,24 @@ class Texts(PlotlyLayer):
         pass
 
 
-def _norm_alignment(s: str) -> Alignment:
+def _from_plotly_alignment(s: str) -> Alignment:
     return _ALIGNMENT_MAP.get(s.lower(), Alignment.CENTER)
 
 
+def _to_plotly_alignment(a: Alignment) -> str:
+    return _ALIGNMENT_MAP_INV.get(a, "center")
+
+
 _ALIGNMENT_MAP = {
-    "top": Alignment.TOP,
-    "bottom": Alignment.BOTTOM,
-    "left": Alignment.LEFT,
-    "right": Alignment.RIGHT,
+    "top": Alignment.BOTTOM,
+    "bottom": Alignment.TOP,
+    "left": Alignment.RIGHT,
+    "right": Alignment.LEFT,
     "center": Alignment.CENTER,
-    "top left": Alignment.TOP_LEFT,
-    "top right": Alignment.TOP_RIGHT,
-    "bottom left": Alignment.BOTTOM_LEFT,
-    "bottom right": Alignment.BOTTOM_RIGHT,
+    "top left": Alignment.BOTTOM_RIGHT,
+    "top right": Alignment.BOTTOM_LEFT,
+    "bottom left": Alignment.TOP_RIGHT,
+    "bottom right": Alignment.TOP_LEFT,
 }
+
+_ALIGNMENT_MAP_INV = {v: k for k, v in _ALIGNMENT_MAP.items()}

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import re
 import weakref
-from typing import TypeVar, Generic, TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, TypeVar
+
 import numpy as np
 
-from whitecanvas.types import ArrayLike1D, ColorType, FacePattern
-from whitecanvas.layers import Layer, Bars, Band
-from whitecanvas.layers.group import LabeledBars, StemPlot
 from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas.layers import Band, Bars, Layer
+from whitecanvas.layers.group import LabeledBars, StemPlot
+from whitecanvas.types import ArrayLike1D, ColorType, Hatch
 from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
@@ -39,13 +41,20 @@ class StackOverPlotter(Generic[_C, _L]):
         ydata: ArrayLike1D,
         *,
         color: ColorType | None = None,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         alpha: float = 1.0,
         name: str | None = None,
     ) -> _L:
         canvas = self._canvas()
         layer = self._layer()
         color = canvas._generate_colors(color)
+
+        if name is None:
+            if re.match(r".+\+\d", layer.name):
+                stem, num = layer.name.rsplit("+", 1)
+                name = f"{stem}+{int(num) + 1}"
+            else:
+                name = f"{layer.name}+1"
 
         # unwrap nested layers in a group
         if isinstance(layer, LabeledBars):
@@ -60,7 +69,7 @@ class StackOverPlotter(Generic[_C, _L]):
                 color=color,
                 alpha=alpha,
                 name=name,
-                pattern=pattern,
+                hatch=hatch,
                 bar_width=layer.bar_width,
                 backend=layer._backend_name,
             )
@@ -74,7 +83,7 @@ class StackOverPlotter(Generic[_C, _L]):
                 color=color,
                 alpha=alpha,
                 name=name,
-                pattern=pattern,
+                hatch=hatch,
                 backend=layer._backend_name,
             )
         elif isinstance(layer, StemPlot):
@@ -97,7 +106,7 @@ class StackOverPlotter(Generic[_C, _L]):
         *,
         name: str | None = None,
         color: ColorType | None = None,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         alpha: float = 1.0,
     ) -> _L:
         """
@@ -111,10 +120,10 @@ class StackOverPlotter(Generic[_C, _L]):
             Name of the layer.
         color : color-like, optional
             Color of the layer face.
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             Alpha channel of the bars.
-        pattern : str or FacePattern, default is FacePattern.SOLID
-            Pattern of the bar faces.
+        hatch : str or FacePattern, default FacePattern.SOLID
+            Hatch Pattern of the bar faces.
 
         Returns
         -------
@@ -141,7 +150,7 @@ class StackOverPlotter(Generic[_C, _L]):
         )
         new_layer = Bars(
             centers, counts, bottom=layer.top, bar_width=dx * 2, name=name,
-            color=color, alpha=alpha, orient=layer.orient, pattern=pattern,
+            color=color, alpha=alpha, orient=layer.orient, hatch=hatch,
             backend=layer._backend_name,
         )  # fmt: skip
         new_layer._bar_type = layer._bar_type

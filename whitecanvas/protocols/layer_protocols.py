@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from typing import Any, Callable, Protocol, runtime_checkable
+
 import numpy as np
-from numpy.typing import NDArray
 from cmap import Colormap
-from whitecanvas.types import LineStyle, Symbol, FacePattern, Orientation, Alignment
+from numpy.typing import NDArray
+
+from whitecanvas.types import Alignment, Hatch, LineStyle, Orientation, Symbol
 
 Array1D = NDArray[np.number]
 
@@ -76,10 +80,10 @@ class HasFaces(Protocol):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         """Set the face color."""
 
-    def _plt_get_face_pattern(self) -> FacePattern:
+    def _plt_get_face_hatch(self) -> Hatch:
         """Return the face pattern."""
 
-    def _plt_set_face_pattern(self, pattern: FacePattern):
+    def _plt_set_face_hatch(self, pattern: Hatch):
         """Set the face pattern."""
 
 
@@ -91,10 +95,10 @@ class HasMultiFaces(Protocol):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         """Set the face color."""
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         """Return the face pattern."""
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         """Set the face pattern."""
 
 
@@ -273,6 +277,15 @@ class ErrorbarProtocol(OrientedXYYDataProtocol, HasEdges, Protocol):
 @runtime_checkable
 class TextProtocol(HasText, HasEdges, HasFaces, Protocol):
     pass
+
+
+@runtime_checkable
+class ArrowProtocol(HasEdges, Protocol):
+    def _plt_get_arrow_size(self) -> float:
+        """Return the arrow size."""
+
+    def _plt_set_arrow_size(self, size: float):
+        """Set the arrow size."""
 
 
 @runtime_checkable

@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
 from typing import Any, Callable
-from whitecanvas.types import LineStyle, Symbol
+
 from plotly.graph_objs import FigureWidget
+
+from whitecanvas.types import LineStyle, Symbol
 
 
 class PlotlyLayer:
@@ -12,6 +17,22 @@ class PlotlyLayer:
 
     def _plt_set_visible(self, visible: bool) -> bool:
         self._props["visible"] = visible
+
+
+@dataclass
+class Location:
+    row: int
+    col: int
+    secondary_y: bool = False
+
+    def asdict(self):
+        out = {}
+        if self.row > 1 or self.col > 1:
+            out["row"] = self.row
+            out["col"] = self.col
+        if self.secondary_y:
+            out["secondary_y"] = True
+        return out
 
 
 _LINE_STYLES = {

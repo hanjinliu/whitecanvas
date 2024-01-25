@@ -1,25 +1,29 @@
-from typing import TypeVar, Callable
-from .layer_protocols import (
-    BaseProtocol,
-    LineProtocol,
-    MultiLineProtocol,
-    MarkersProtocol,
-    BarProtocol,
-    RangeDataProtocol,
-    BandProtocol,
-    ErrorbarProtocol,
-    TextProtocol,
-    ImageProtocol,
-)
-from .canvas_protocol import (
-    CanvasProtocol,
+from typing import Callable, TypeVar
+
+from whitecanvas.protocols.canvas_protocol import (
+    AxisProtocol,
     CanvasGridProtocol,
+    CanvasProtocol,
     HasVisibility,
     TextLabelProtocol,
-    AxisProtocol,
+    TicksProtocol,
+)
+from whitecanvas.protocols.layer_protocols import (
+    ArrowProtocol,
+    BandProtocol,
+    BarProtocol,
+    BaseProtocol,
+    ErrorbarProtocol,
+    ImageProtocol,
+    LineProtocol,
+    MarkersProtocol,
+    MultiLineProtocol,
+    RangeDataProtocol,
+    TextProtocol,
 )
 
 __all__ = [
+    "ArrowProtocol",
     "BaseProtocol",
     "LineProtocol",
     "MultiLineProtocol",
@@ -34,6 +38,7 @@ __all__ = [
     "CanvasGridProtocol",
     "HasVisibility",
     "TextLabelProtocol",
+    "TicksProtocol",
     "AxisProtocol",
 ]
 

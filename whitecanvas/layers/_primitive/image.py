@@ -1,15 +1,16 @@
 from __future__ import annotations
+
 from typing import Any
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from cmap import Colormap
+from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
-from whitecanvas.protocols import ImageProtocol
-from whitecanvas.types import ColormapType, _Void
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import PrimitiveLayer, DataBoundLayer, LayerEvents
+from whitecanvas.layers._base import DataBoundLayer, LayerEvents
+from whitecanvas.protocols import ImageProtocol
+from whitecanvas.types import ColormapType, Origin, _Void
 
 _void = _Void()
 
@@ -29,12 +30,15 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
     ----------
     image : array_like
         2D or 3D array of image data.
-    cmap : colormap type, default is "gray"
+    cmap : colormap type, default "gray"
         Colormap to use.
     clim : tuple of float or None, optional
-        Contrast limits. If ``None``, the limits are set to the min and max of the data.
-        You can also pass ``None`` separately to either limit to only autoscale one of
+        Contrast limits. If `None`, the limits are set to the min and max of the data.
+        You can also pass `None` separately to either limit to only autoscale one of
         them.
+    origin : str or Origin, default "corner"
+        Origin of the image. This is a redundant parameter which overlaps with `shift`,
+        but it makes it easier to operate on the image.
     """
 
     events: ImageEvents
@@ -52,6 +56,7 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         backend: Backend | str | None = None,
     ):
         img = _normalize_image(image)
+        self._origin = Origin.CORNER
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), img)
         if img.ndim == 2:
@@ -106,8 +111,17 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
 
     @shift.setter
     def shift(self, shift: tuple[float, float]):
-        self._backend._plt_set_translation(shift)
         img = self.data
+        if self.origin is Origin.EDGE:
+            shift = shift[0] + 0.5, shift[1] + 0.5
+        elif self.origin is Origin.CORNER:
+            pass
+        elif self.origin is Origin.CENTER:
+            sizex, sizey = img.shape[:2]
+            shift = shift[0] - (sizex - 1) / 2, shift[1] - (sizey - 1) / 2
+        else:
+            raise RuntimeError("Unreachable")
+        self._backend._plt_set_translation(shift)
         self._x_hint, self._y_hint = _hint_for(
             (img.shape[1], img.shape[0]), shift=shift, scale=self.scale
         )
@@ -132,13 +146,24 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         )
         self.events.scale.emit(scale)
 
+    @property
+    def origin(self) -> Origin:
+        """Current origin of the image."""
+        return self._origin
+
+    @origin.setter
+    def origin(self, origin: Origin | str):
+        self._origin = Origin(origin)
+        self.shift = self.shift  # recalculate
+
     def update(
         self,
         *,
-        cmap: ColormapType | _void = _void,
+        cmap: ColormapType | _Void = _void,
         clim: tuple[float | None, float | None] | None | _Void = _void,
-        shift: tuple[float, float] | _void = _void,
-        scale: tuple[float, float] | _void = _void,
+        shift: tuple[float, float] | _Void = _void,
+        scale: tuple[float, float] | _Void = _void,
+        origin: str | Origin | _Void = _void,
     ) -> Image:
         if cmap is not _void:
             if self.is_rgba:
@@ -148,6 +173,8 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             if self.is_rgba:
                 raise ValueError("Cannot set contrast limits for an RGBA image.")
             self.clim = clim
+        if origin is not _void:
+            self.origin = origin
         if shift is not _void:
             self.shift = shift
         if scale is not _void:

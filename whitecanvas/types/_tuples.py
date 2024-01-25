@@ -1,44 +1,43 @@
 from __future__ import annotations
 
-from typing import Generic, NamedTuple, TypeVar
+from typing import NamedTuple
+
 import numpy as np
 from numpy.typing import NDArray
 
-_D = TypeVar("_D", bound=np.floating)
 
-
-class XYData(NamedTuple, Generic[_D]):
+class XYData(NamedTuple):
     """
     Tuple of x and y array.
 
     Used for data of Line, Markers etc.
     """
 
-    x: NDArray[_D]
-    y: NDArray[_D]
+    x: NDArray[np.floating]
+    y: NDArray[np.floating]
 
-    def stack(self) -> NDArray[_D]:
+    def stack(self) -> NDArray[np.floating]:
         """Data as a stacked (N, 2) array."""
         return np.stack([self.x, self.y], axis=1)
 
 
-class XYYData(NamedTuple, Generic[_D]):
+class XYYData(NamedTuple):
     """
     Tuple of x, y0, and y1 array.
 
     Used for data of Bars, Errorbars etc.
     """
 
-    x: NDArray[_D]
-    y0: NDArray[_D]
-    y1: NDArray[_D]
+    x: NDArray[np.floating]
+    y0: NDArray[np.floating]
+    y1: NDArray[np.floating]
 
     @property
-    def ycenter(self) -> NDArray[_D]:
+    def ycenter(self) -> NDArray[np.floating]:
         return (self.y0 + self.y1) / 2
 
     @property
-    def ydiff(self) -> NDArray[_D]:
+    def ydiff(self) -> NDArray[np.floating]:
         return self.y1 - self.y0
 
 
@@ -68,7 +67,7 @@ class Rect(NamedTuple):
 
     @property
     def size(self) -> tuple[float, float]:
-        """Size (width, height) of the range.""" ""
+        """Size (width, height) of the range."""
         return self.width, self.height
 
     @property

@@ -4,15 +4,15 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from whitecanvas.types import ColorType, LineStyle, Alignment, XYData
-from whitecanvas.layers._primitive import Line, Markers, Bars, Errorbars, Texts
 from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._primitive import Bars, Errorbars, Line, Markers, Texts
 from whitecanvas.layers.group._collections import LayerContainer
-from whitecanvas.layers.group._offsets import TextOffset, NoOffset
-
+from whitecanvas.layers.group._offsets import NoOffset, TextOffset
+from whitecanvas.types import Alignment, ColorType, LineStyle, XYData
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
     from whitecanvas.layers.group.line_markers import Plot
 
 
@@ -24,8 +24,10 @@ class _LabeledLayerBase(LayerContainer):
         yerr: Errorbars,
         texts: Texts | None = None,
         name: str | None = None,
-        offset: TextOffset = NoOffset(),
+        offset: TextOffset | None = None,
     ):
+        if offset is None:
+            offset = NoOffset()
         if texts is None:
             px, py = self._get_data_xy(layer)
             texts = Texts(
@@ -185,17 +187,17 @@ class _LabeledLayerBase(LayerContainer):
         strings : str or list of str
             The text strings. If a single string is given, it will be used for all
             the data points.
-        color : ColorType, default is "black"
+        color : ColorType, default "black"
             Text color.
         size : float, default 12
             Font point size of the text.
         rotation : float, default 0.0
             Rotation of the text in degrees.
-        anchor : str or Alignment, default is Alignment.BOTTOM_LEFT
+        anchor : str or Alignment, default Alignment.BOTTOM_LEFT
             Text anchoring position.
         fontfamily : str, optional
             The font family of the text.
-        offset : tuple, default is None
+        offset : tuple, default None
             The offset of the text from the data point.
 
         Returns

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic, TYPE_CHECKING
 import weakref
+from typing import TYPE_CHECKING, Generic, TypeVar
+
 from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.types import Orientation
 
 if TYPE_CHECKING:
-    from whitecanvas.layers._primitive import Image
     from whitecanvas.canvas._base import CanvasBase
+    from whitecanvas.layers._primitive import Image
 
 _C = TypeVar("_C", bound="CanvasBase")
 

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from vispy.scene import visuals
-
 import numpy as np
 from numpy.typing import NDArray
+from vispy.scene import visuals
+
+from whitecanvas.backend import _not_implemented
 
 # from vispy.visuals.filters.markers import MarkerPickingFilter
-
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol
 from whitecanvas.utils.normalize import as_color_array
-from whitecanvas.backend import _not_implemented
 
 
 @check_protocol(MarkersProtocol)
@@ -100,7 +99,7 @@ class Markers(visuals.Markers):
             symbol=self._plt_get_symbol(),
         )
 
-    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_patterns()
+    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_patterns()
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:

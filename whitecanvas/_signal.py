@@ -1,8 +1,11 @@
 from __future__ import annotations
-from typing import Any, Callable, Generic, TypeVar, Generator
+
 import inspect
-import warnings
-from psygnal import Signal
+from typing import Any, Callable, Generator, Generic, TypeVar, overload
+
+from psygnal import throttled
+
+from whitecanvas.types import MouseEvent
 
 _R = TypeVar("_R")
 _S = TypeVar("_S")
@@ -14,53 +17,62 @@ _F = TypeVar("_F", bound=Callable)
 
 
 class _Slot(Generic[_G]):
-    _NOT_STARTED = object()
-    _FINISHED = object()
+    def __init__(self, slot: _G, msec: int = 0, leading: bool = True):
+        self._slot_orig = slot
+        if not inspect.isgeneratorfunction(slot):
+            fn = _to_generator_function(slot)
+        else:
+            fn = slot
+        if msec > 0:
+            fn = throttled(fn, timeout=msec, leading=leading)
+        self._slot = fn
+        self._generator: Generator | None = None
+        self._current_event: MouseEvent | None = None
 
-    def __init__(self, slot: _G):
-        self._slot = slot
-        self._generator: Generator | object = self._NOT_STARTED
-
-    def init(self):
-        """Initialize the slot."""
-        self._generator = self._NOT_STARTED
-
-    def next(self, *args):
+    def next(self, ev: MouseEvent):
         """Advance the slot."""
-        if self._generator is self._FINISHED:
-            return
-        if self._generator is self._NOT_STARTED:
-            self._generator = self._slot(*args)
+        if self._generator is None:
+            self._generator = self._slot(ev)
+            self._current_event = ev
         try:
+            self._current_event.update(ev)
             next(self._generator)
         except StopIteration:
-            self._generator = self._FINISHED
+            self._generator = None
             return
 
-    def terminate(self, *args, warn: bool = True):
-        """Terminate the slot."""
-        self.next(*args)
-        if self._generator is self._FINISHED:
-            return
-        if warn:
-            warnings.warn(
-                f"Generator {self._slot!r} did not terminate.",
-                UserWarning,
-                stacklevel=2,
-            )
+
+def _to_generator_function(f: Callable[[MouseEvent], Any | None]):
+    def _f(ev: MouseEvent):
+        yield f(ev)
+
+    return _f
 
 
-class GeneratorSignal:
+class MouseMoveSignal:
     def __init__(self):
         self._slots: list[_Slot] = []
 
-    def connect(self, slot: _G | None = None) -> _G:
-        if not callable(slot):
-            raise TypeError(f"Can only connect callable object, got {slot!r}")
-        if not inspect.isgeneratorfunction(slot):
-            raise TypeError(f"Can only connect generator function, got {slot!r}")
-        self._slots.append(_Slot(slot))
-        return slot
+    @overload
+    def connect(self, slot: _G, *, msec: int = 0, leading: bool = True) -> _G:
+        ...
+
+    @overload
+    def connect(
+        self, slot: None = None, *, msec: int = 0, leading: bool = True
+    ) -> Callable[[_G], _G]:
+        ...
+
+    def connect(self, slot=None, *, msec: int = 0, leading: bool = True):
+        """Connect a mouse move callback."""
+
+        def _inner(slot: _F) -> _F:
+            if not callable(slot):
+                raise TypeError(f"Can only connect callable object, got {slot!r}")
+            self._slots.append(_Slot(slot, msec=msec, leading=leading))
+            return slot
+
+        return _inner(slot) if slot is not None else _inner
 
     def disconnect(
         self, slot: GeneratorFunction | None = None, missing_ok: bool = True
@@ -69,7 +81,7 @@ class GeneratorSignal:
             return self._slots.clear()
         i = -1
         for _i, _slot in enumerate(self._slots):
-            if _slot._slot is slot:
+            if _slot._slot_orig is slot:
                 i = _i
                 break
         if i > 0:
@@ -78,9 +90,10 @@ class GeneratorSignal:
             raise ValueError(f"Slot {slot!r} not found")
         return
 
-    def emit(self, *args) -> None:
+    def emit(self, ev: MouseEvent) -> None:
+        """Emit the mouse event"""
         for slot in self._slots:
-            slot.next(*args)
+            slot.next(ev)
 
 
 class MouseSignal(Generic[_R]):

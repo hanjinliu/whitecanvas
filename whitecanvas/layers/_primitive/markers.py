@@ -1,40 +1,44 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar
+
 import numpy as np
+from cmap import Colormap
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
-from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
-from whitecanvas.protocols import MarkersProtocol
-from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.layers._mixin import (
-    MultiFaceEdgeMixin,
-    FaceNamespace,
     EdgeNamespace,
     FaceEdgeMixinEvents,
+    FaceNamespace,
+    MultiFaceEdgeMixin,
 )
-from whitecanvas.backend import Backend
+from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._sizehint import xy_size_hint
+from whitecanvas.protocols import MarkersProtocol
 from whitecanvas.types import (
-    LineStyle,
-    Symbol,
-    ColorType,
-    FacePattern,
-    _Void,
     Alignment,
+    ArrayLike1D,
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
     Orientation,
+    Symbol,
     XYData,
+    _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
     from whitecanvas.layers._mixin import (
-        ConstFace,
         ConstEdge,
-        MultiFace,
+        ConstFace,
         MultiEdge,
+        MultiFace,
     )
 
 _void = _Void()
@@ -50,34 +54,40 @@ class MarkersLayerEvents(FaceEdgeMixinEvents):
 
 
 class Markers(
-    MultiFaceEdgeMixin[MarkersProtocol, _Face, _Edge],
     DataBoundLayer[MarkersProtocol, XYData],
+    MultiFaceEdgeMixin[_Face, _Edge],
     Generic[_Face, _Edge, _Size],
 ):
     events: MarkersLayerEvents
     _events_class = MarkersLayerEvents
 
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args, **kwargs) -> Markers[ConstFace, ConstEdge, float]:
+            ...
+
     def __init__(
         self,
-        xdata: ArrayLike,
-        ydata: ArrayLike,
+        xdata: ArrayLike1D,
+        ydata: ArrayLike1D,
         *,
         name: str | None = None,
         symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 15.0,
+        size: float = 12.0,
         color: ColorType = "blue",
         alpha: float = 1.0,
-        pattern: str | FacePattern = FacePattern.SOLID,
+        hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
+        MultiFaceEdgeMixin.__init__(self)
         xdata, ydata = normalize_xy(xdata, ydata)
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.update(symbol=symbol, size=size, color=color, pattern=pattern, alpha=alpha)
         self._size_is_array = False
+        self.update(symbol=symbol, size=size, color=color, hatch=hatch, alpha=alpha)
         self.edge.color = color
         if not self.symbol.has_face():
-            self.edge.update(width=1.0, color=color)
+            self.edge.update(width=2.0, color=color)
         pad_r = size / 400
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
 
@@ -128,6 +138,10 @@ class Markers(
         xdata: ArrayLike | None = None,
         ydata: ArrayLike | None = None,
     ):
+        if xdata is None:
+            xdata = self.data.x
+        if ydata is None:
+            ydata = self.data.y
         self.data = XYData(xdata, ydata)
 
     @property
@@ -157,12 +171,15 @@ class Markers(
         """Set marker size"""
         if not isinstance(size, (float, int, np.number)):
             if not self._size_is_array:
-                raise ValueError("Expected size to be a scalar")
+                raise ValueError(
+                    "Expected size to be a scalar. Use with_size_multi() to "
+                    "set multiple sizes."
+                )
             size = as_array_1d(size)
             if size.size != self.ndata:
                 raise ValueError(
-                    "Expected size to have the same size as the data, "
-                    f"got {size.size} and {self.ndata}"
+                    f"Expected `size` to have the same size as the layer data size "
+                    f"({self.ndata}), got {size.size}."
                 )
         self._backend._plt_set_symbol_size(size)
         self.events.size.emit(size)
@@ -174,7 +191,7 @@ class Markers(
         size: float | _Void = _void,
         color: ColorType | _Void = _void,
         alpha: float | _Void = _void,
-        pattern: str | FacePattern | _Void = _void,
+        hatch: str | Hatch | _Void = _void,
     ) -> Markers[_Face, _Edge, _Size]:
         """Update the properties of the markers."""
         if symbol is not _void:
@@ -183,10 +200,66 @@ class Markers(
             self.size = size
         if color is not _void:
             self.face.color = color
-        if pattern is not _void:
-            self.face.pattern = pattern
+        if hatch is not _void:
+            self.face.hatch = hatch
         if alpha is not _void:
             self.face.alpha = alpha
+        return self
+
+    def color_by_density(
+        self,
+        cmap: ColormapType = "jet",
+        *,
+        width: float = 0.0,
+    ) -> Markers[_Face, _Edge, _Size]:
+        """
+        Set the color of the markers by density.
+
+        Parameters
+        ----------
+        cmap : ColormapType, optional
+            Colormap used to map the density to colors.
+        """
+        from whitecanvas.utils.kde import gaussian_kde
+
+        xydata = self.data
+        xy = np.vstack([xydata.x, xydata.y])
+        density = gaussian_kde(xy)(xy)
+        normed = density / density.max()
+        self.with_face_multi(color=Colormap(cmap)(normed))
+        if width is not None:
+            self.width = width
+        return self
+
+    def as_edge_only(
+        self,
+        *,
+        width: float = 3.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Markers[_Face, _Edge, _Size]:
+        """
+        Convert the markers to edge-only mode.
+
+        This method will set the face color to transparent and the edge color to the
+        current face color.
+
+        Parameters
+        ----------
+        width : float, default 3.0
+            Width of the edge.
+        style : str or LineStyle, default LineStyle.SOLID
+            Line style of the edge.
+        """
+        color = self.face.color
+        if color.ndim == 0:
+            pass
+        elif color.ndim == 1:
+            self.with_edge(color=color, width=width, style=style)
+        elif color.ndim == 2:
+            self.with_edge_multi(color=color, width=width, style=style)
+        else:
+            raise RuntimeError("Unreachable error.")
+        self.face.update(alpha=0.0)
         return self
 
     def with_hover_text(self, text: Iterable[Any]) -> Markers[_Face, _Edge, _Size]:
@@ -252,8 +325,8 @@ class Markers(
         LabeledMarkers
             Layer group containing the markers and the error bars as children.
         """
-        from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledMarkers
 
         if err_high is None:
             err_high = err
@@ -307,8 +380,8 @@ class Markers(
         LabeledMarkers
             Layer group containing the markers and the error bars as children.
         """
-        from whitecanvas.layers.group import LabeledMarkers
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group import LabeledMarkers
 
         if err_high is None:
             err_high = err
@@ -435,7 +508,7 @@ class Markers(
 
         Parameters
         ----------
-        orient : str or Orientation, default is vertical
+        orient : str or Orientation, default vertical
             Orientation to grow stems.
         bottom : float or array-like, optional
             Bottom of the stems. If not specified, the bottom is set to 0.
@@ -455,8 +528,8 @@ class Markers(
         StemPlot
             StemPlot layer containing the markers and the stems as children.
         """
-        from whitecanvas.layers.group import StemPlot
         from whitecanvas.layers._primitive import MultiLine
+        from whitecanvas.layers.group import StemPlot
 
         ori = Orientation.parse(orient)
         xdata, ydata = self.data
@@ -492,8 +565,9 @@ class Markers(
 
     def with_face(
         self,
+        *,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1.0,
     ) -> Markers[ConstFace, _Edge, _Size]:
         """
@@ -515,8 +589,8 @@ class Markers(
         ----------
         color : color-like, optional
             Color of the marker faces.
-        pattern : str or FacePattern, optional
-            Pattern (hatch) of the faces.
+        hatch : str or FacePattern, optional
+            Hatch pattern of the faces.
         alpha : float, optional
             Alpha channel of the faces.
 
@@ -525,7 +599,7 @@ class Markers(
         Markers
             The updated markers layer.
         """
-        super().with_face(color, pattern, alpha)
+        super().with_face(color, hatch, alpha)
         if not self.symbol.has_face():
             width = self.edge.width
             if isinstance(width, (float, int, np.number)):
@@ -536,8 +610,9 @@ class Markers(
 
     def with_face_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Markers[MultiFace, _Edge, _Size]:
         """
@@ -552,7 +627,7 @@ class Markers(
         ----------
         color : color-like or sequence of color-like, optional
             Color(s) of the marker faces.
-        pattern : str or FacePattern or sequence of it, optional
+        hatch : str or Hatch or sequence of it, optional
             Pattern(s) of the faces.
         alpha : float or sequence of float, optional
             Alpha channel(s) of the faces.
@@ -562,7 +637,7 @@ class Markers(
         Markers
             The updated markers layer.
         """
-        super().with_face_multi(color, pattern, alpha)
+        super().with_face_multi(color, hatch, alpha)
         if not self.symbol.has_face():
             width = self.edge.width
             if isinstance(width, (float, int, np.number)):
@@ -573,6 +648,7 @@ class Markers(
 
     def with_edge(
         self,
+        *,
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -582,6 +658,7 @@ class Markers(
 
     def with_edge_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1.0,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
@@ -605,3 +682,8 @@ class Markers(
         self._size_is_array = True
         self.size = size
         return self
+
+    def _as_all_multi(self) -> Markers[MultiFace, MultiEdge, NDArray[np.float32]]:
+        return (
+            self.with_face_multi().with_edge_multi(width=0.0).with_size_multi(self.size)
+        )

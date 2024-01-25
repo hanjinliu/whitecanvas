@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import numpy as np
+from cmap import Colormap
 from numpy.typing import NDArray
 from vispy.scene import visuals
-from vispy.visuals.transforms import STTransform, NullTransform
-from cmap import Colormap
+from vispy.visuals.transforms import STTransform
+
 from whitecanvas.protocols import ImageProtocol, check_protocol
 
 
@@ -16,6 +17,8 @@ class Image(visuals.Image):
         if data.dtype == np.float64:
             data = data.astype(np.float32)
         super().__init__(data, cmap="gray")
+        tr = STTransform()
+        self.transform = tr
 
     def _plt_get_visible(self) -> bool:
         return self.visible
@@ -43,37 +46,35 @@ class Image(visuals.Image):
         self.clim = clim
 
     def _plt_get_translation(self) -> NDArray[np.floating]:
-        tr = self.transform
-        if tr is None:
-            return (0.0, 0.0)
-        elif isinstance(tr, STTransform):
-            return tuple(tr.translate)
-        elif isinstance(tr, NullTransform):
-            return (0.0, 0.0)
-        else:
-            raise TypeError(f"Unexpected transform type: {type(tr)}")
+        tr = self._plt_get_transform()
+        dx, dy, *_ = tr.translate
+        sx, sy = self._plt_get_scale()
+        return (dx + 0.5 * sx, dy + 0.5 * sy)
 
     def _plt_set_translation(self, translation):
-        tr = self.transform
-        if tr is None:
-            tr = STTransform()
-        tr.translate = np.asarray(translation, dtype=np.float32)
+        tr = self._plt_get_transform()
+        dx, dy = translation
+        sx, sy = self._plt_get_scale()
+        tr.translate = dx - 0.5 * sx, dy - 0.5 * sy, 0.0, 0.0
         self.transform = tr
+        self.update()
 
     def _plt_get_scale(self) -> NDArray[np.floating]:
-        tr = self.transform
-        if tr is None:
-            return (1.0, 1.0)
-        elif isinstance(tr, STTransform):
-            return tuple(tr.scale)
-        elif isinstance(tr, NullTransform):
-            return (1.0, 1.0)
-        else:
-            raise TypeError(f"Unexpected transform type: {type(tr)}")
+        tr = self._plt_get_transform()
+        scale = tr.scale
+        return scale[0], scale[1]
 
     def _plt_set_scale(self, scale):
-        tr = self.transform
-        if tr is None:
-            tr = STTransform()
-        tr.scale = np.asarray(scale, dtype=np.float32)
+        tr = self._plt_get_transform()
+        dx, dy = self._plt_get_translation()
+        sx, sy = scale[0], scale[1]
+        tr.scale = (sx, sy, 1, 1)
+        tr.translate = dx - 0.5 * sx, dy - 0.5 * sy, 0.0, 0.0
         self.transform = tr
+        self.update()
+
+    def _plt_get_transform(self) -> STTransform:
+        tr = self.transform
+        if not isinstance(tr, STTransform):
+            raise TypeError(f"Unexpected transform type: {type(tr)}")
+        return tr

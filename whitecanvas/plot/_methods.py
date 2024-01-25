@@ -1,25 +1,27 @@
 from __future__ import annotations
 
-from typing import Literal, TypeVar, overload, Callable, Any, TYPE_CHECKING
-from numpy.typing import ArrayLike
-from whitecanvas.canvas import Canvas
-from whitecanvas import layers as _l
-from whitecanvas.layers import _mixin
-from whitecanvas.types import (
-    LineStyle,
-    Symbol,
-    ColorType,
-    Alignment,
-    ColormapType,
-    FacePattern,
-    Orientation,
-    ArrayLike1D,
-)
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar, overload
 
-from ._canvases import current_canvas
+from numpy.typing import ArrayLike
+
+from whitecanvas import layers as _l
+from whitecanvas.canvas import Canvas
+from whitecanvas.layers import _mixin
+from whitecanvas.plot._canvases import current_canvas
+from whitecanvas.types import (
+    Alignment,
+    ArrayLike1D,
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+    Symbol,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec
+
     from whitecanvas.canvas._stacked import StackOverPlotter
 
     _P = ParamSpec("_P")
@@ -43,7 +45,7 @@ def _copy_add_method(f: _F, pref: str = "add_") -> _F:
 
     canvas_func = getattr(Canvas, fname)
     doc = canvas_func.__doc__
-    assert type(doc) is str
+    assert isinstance(doc, str)
     _inner.__doc__ = doc.replace(f">>> canvas.{pref}", ">>> plt.")
     _inner.__name__ = f.__name__
     _inner.__qualname__ = f.__qualname__
@@ -65,7 +67,8 @@ def line(
 def line(
     xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
     color: ColorType | None = None, width: float = 1.0,
-    style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
+    style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
+    antialias: bool = True,
 ) -> _l.Line:  # fmt: skip
     ...
 
@@ -74,7 +77,8 @@ def line(
 def line(
     xdata: ArrayLike1D, ydata: Callable[[ArrayLike1D], ArrayLike1D], *,
     name: str | None = None, color: ColorType | None = None, width: float = 1.0,
-    style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0, antialias: bool = True,
+    style: LineStyle | str = LineStyle.SOLID, alpha: float = 1.0,
+    antialias: bool = True,
 ) -> _l.Line:  # fmt: skip
     ...
 
@@ -89,7 +93,7 @@ def markers(
     xdata: ArrayLike1D, ydata: ArrayLike1D, *,
     name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
     size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
-    pattern: str | FacePattern = FacePattern.SOLID,
+    hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
     ...
 
@@ -99,7 +103,7 @@ def markers(
     ydata: ArrayLike1D, *,
     name: str | None = None, symbol: Symbol | str = Symbol.CIRCLE,
     size: float = 12, color: ColorType | None = None, alpha: float = 1.0,
-    pattern: str | FacePattern = FacePattern.SOLID,
+    hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:  # fmt: skip
     ...
 
@@ -114,7 +118,7 @@ def bars(
     center: ArrayLike1D, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
     name=None, orient: str | Orientation = Orientation.VERTICAL,
     extent: float = 0.8, color: ColorType | None = None,
-    alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
+    alpha: float = 1.0, hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
     ...
 
@@ -124,7 +128,7 @@ def bars(
     height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
     name=None, orient: str | Orientation = Orientation.VERTICAL,
     extent: float = 0.8, color: ColorType | None = None,
-    alpha: float = 1.0, pattern: str | FacePattern = FacePattern.SOLID,
+    alpha: float = 1.0, hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
     ...
 
@@ -144,7 +148,7 @@ def band(
     orient: str | Orientation = Orientation.VERTICAL,
     color: ColorType | None = None,
     alpha: float = 1.0,
-    pattern: str | FacePattern = FacePattern.SOLID,
+    hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Band:
     ...
 
@@ -206,7 +210,7 @@ def hist(
     orient: str | Orientation = Orientation.VERTICAL,
     color: ColorType | None = None,
     alpha: float = 1.0,
-    pattern: str | FacePattern = FacePattern.SOLID,
+    hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Bars:
     ...
 
@@ -236,7 +240,7 @@ def spans(
     orient: str | Orientation = Orientation.VERTICAL,
     color: ColorType = "blue",
     alpha: float = 0.2,
-    pattern: str | FacePattern = FacePattern.SOLID,
+    hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Spans:
     ...
 
@@ -278,7 +282,7 @@ def kde(
     band_width: float | Literal["scott", "silverman"] = "scott",
     color: ColorType | None = None,
     alpha: float = 1.0,
-    pattern: str | FacePattern = FacePattern.SOLID,
+    hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Band:
     ...
 

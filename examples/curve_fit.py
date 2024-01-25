@@ -1,8 +1,10 @@
 # This example shows how to efficiently use scipy.optimize.curve_fit
 
-from whitecanvas import new_canvas
-from scipy.optimize import curve_fit
 import numpy as np
+from scipy.optimize import curve_fit
+
+from whitecanvas import new_canvas
+
 
 def sample_data():
     x = np.arange(20)

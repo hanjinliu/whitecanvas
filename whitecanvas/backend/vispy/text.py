@@ -1,14 +1,13 @@
 from __future__ import annotations
+
 import numpy as np
 from numpy.typing import NDArray
-
 from vispy.scene import visuals
 
-from whitecanvas.types import Alignment, FacePattern, LineStyle
-from whitecanvas.protocols import TextProtocol, check_protocol
-from whitecanvas.utils.normalize import as_color_array
-
 from whitecanvas.backend import _not_implemented
+from whitecanvas.protocols import TextProtocol, check_protocol
+from whitecanvas.types import Alignment, LineStyle
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(TextProtocol)
@@ -63,7 +62,8 @@ class Texts(visuals.Compound):
     def _plt_get_text_position(
         self,
     ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
-        return tuple(np.array(t.pos[0, 1:]) for t in self.subvisuals)
+        pos = np.stack([np.array(t.pos[0, 1:]) for t in self.subvisuals], axis=0)
+        return pos[:, 0], pos[:, 1]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
@@ -106,7 +106,7 @@ class Texts(visuals.Compound):
     def _plt_set_face_color(self, color):
         pass
 
-    _plt_get_face_pattern, _plt_set_face_pattern = _not_implemented.face_patterns()
+    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_patterns()
 
     def _plt_get_edge_color(self):
         return np.zeros((self._plt_get_ndata(), 4))

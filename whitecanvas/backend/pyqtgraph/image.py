@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import pyqtgraph as pg
 import numpy as np
+import pyqtgraph as pg
 from cmap import Colormap
-from ._qt_utils import array_to_qcolor
 from qtpy.QtGui import QTransform
-from whitecanvas.protocols import ImageProtocol, check_protocol
+
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
+from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
+from whitecanvas.protocols import ImageProtocol, check_protocol
 
 
 @check_protocol(ImageProtocol)
@@ -44,7 +45,7 @@ class Image(pg.ImageItem, PyQtLayer):
 
     def _plt_get_translation(self) -> tuple[float, float]:
         tr = self._get_qtransform()
-        return tr.dx(), tr.dy()
+        return tr.dx() + 0.5 * tr.m11(), tr.dy() + 0.5 * tr.m22()
 
     def _plt_set_translation(self, translation: tuple[float, float]):
         tr = self._get_qtransform()
@@ -55,8 +56,8 @@ class Image(pg.ImageItem, PyQtLayer):
             tr.m21(),
             tr.m22(),
             tr.m23(),
-            translation[0],
-            translation[1],
+            translation[0] - 0.5 * tr.m11(),
+            translation[1] - 0.5 * tr.m22(),
             tr.m33(),
         )
         self.setTransform(tr)
@@ -67,6 +68,7 @@ class Image(pg.ImageItem, PyQtLayer):
 
     def _plt_set_scale(self, scale: tuple[float, float]):
         tr = self._get_qtransform()
+        shift = self._plt_get_translation()
         tr.setMatrix(
             scale[0],
             tr.m12(),
@@ -74,8 +76,8 @@ class Image(pg.ImageItem, PyQtLayer):
             tr.m21(),
             scale[1],
             tr.m23(),
-            tr.m31(),
-            tr.m32(),
+            shift[0] - 0.5 * scale[0],
+            shift[1] - 0.5 * scale[1],
             tr.m33(),
         )
         self.setTransform(tr)

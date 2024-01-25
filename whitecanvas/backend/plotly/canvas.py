@@ -1,37 +1,53 @@
+from __future__ import annotations
+
 import sys
-from typing import Callable
 import weakref
+from typing import Callable
+
 import numpy as np
 from plotly import graph_objects as go
 
 from whitecanvas import protocols
-from whitecanvas.types import MouseEventType, MouseEvent
+from whitecanvas.backend.plotly._base import Location, PlotlyLayer
+from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
+from whitecanvas.backend.plotly.markers import Markers
+from whitecanvas.types import MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
-from .markers import Markers
-from ._base import PlotlyLayer
-from ._labels import Title, AxisLabel, Axis, Ticks
 
 
 class Canvas:
-    def __init__(self, fig: go.FigureWidget | None = None, row: int = 0, col: int = 0):
+    def __init__(
+        self,
+        fig: go.FigureWidget | None = None,
+        *,
+        row: int = 0,
+        col: int = 0,
+        secondary_y: bool = False,
+    ):
         # prepare widget
         if fig is None:
             fig = go.FigureWidget()
         self._fig = fig
-        self._xaxis = Axis(self, axis="x")
-        self._yaxis = Axis(self, axis="y")
-        self._xticks = Ticks(self, axis="x")
-        self._yticks = Ticks(self, axis="y")
+        self._loc = Location(row + 1, col + 1, secondary_y)
+        self._xaxis = Axis(self, axis="xaxis")
+        self._yaxis = Axis(self, axis="yaxis")
+        self._xticks = Ticks(self, axis="xaxis")
+        self._yticks = Ticks(self, axis="yaxis")
         self._title = Title(self)
-        self._xlabel = AxisLabel(self, axis="x")
-        self._ylabel = AxisLabel(self, axis="y")
-        # add empty scatter just for click events
+        self._xlabel = AxisLabel(self, axis="xaxis")
+        self._ylabel = AxisLabel(self, axis="yaxis")
+        # add empty scatter just for click events (may not work)
         self._scatter = go.Scatter(
             x=[], y=[], mode="markers", marker_opacity=0, showlegend=False
         )
         self._fig.add_trace(self._scatter)
-        self._row = row + 1
-        self._col = col + 1
+
+    def _subplot_layout(self):
+        try:
+            layout = self._fig.get_subplot(**self._loc.asdict())
+        except Exception:  # manually wrapped backend are not created with subplots
+            layout = self._fig.layout
+        return layout
 
     def _plt_get_native(self):
         return self._fig
@@ -65,7 +81,7 @@ class Canvas:
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""
         try:
-            locked = self._fig['layout']['yaxis']['scaleanchor'] == 'x'
+            locked = self._fig["layout"][self._yaxis.name]["scaleanchor"] == "x"
         except KeyError:
             locked = False
         if locked:
@@ -75,16 +91,16 @@ class Canvas:
     def _plt_set_aspect_ratio(self, ratio: float | None):
         """Set aspect ratio of canvas"""
         if ratio is None:
-            self._fig['layout']['yaxis']['scaleanchor'] = None
+            self._fig["layout"][self._yaxis.name]["scaleanchor"] = None
         elif ratio == 1:
-            self._fig['layout']['yaxis']['scaleanchor'] = 'x'
+            self._fig["layout"][self._yaxis.name]["scaleanchor"] = "x"
         else:
             raise NotImplementedError(
                 f"Invalid aspect ratio for plotly backend: {ratio}"
             )
 
     def _plt_add_layer(self, layer: PlotlyLayer):
-        self._fig.add_trace(layer._props, row=self._row, col=self._col)
+        self._fig.add_trace(layer._props, **self._loc.asdict())
         layer._props = self._fig._data[-1]
         if isinstance(layer, Markers):
             gobj: go.Scatter = self._fig.data[-1]
@@ -108,10 +124,12 @@ class Canvas:
             self._fig.layout.visibility = "hidden"
 
     def _plt_connect_xlim_changed(self, callback):
-        self._fig.layout.on_change(lambda _, lim: callback(lim), 'xaxis.range')
+        propname = f"{self._xaxis.name}.range"
+        self._fig.layout.on_change(lambda _, lim: callback(lim), propname)
 
     def _plt_connect_ylim_changed(self, callback):
-        self._fig.layout.on_change(lambda _, lim: callback(lim), 'yaxis.range')
+        propname = f"{self._yaxis.name}.range"
+        self._fig.layout.on_change(lambda _, lim: callback(lim), propname)
 
     def _plt_connect_mouse_click(self, callback: Callable[[MouseEvent], None]):
         """Connect callback to clicked event"""
@@ -125,12 +143,47 @@ class Canvas:
         """Connect callback to double-clicked event"""
         # TODO
 
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to clicked event"""
+
     def _plt_draw(self):
         pass
 
+    def _plt_twinx(self):
+        from plotly._subplots import SubplotRef
+
+        # count axis numbers
+        y_id = 1
+        for _c in self._fig._grid_ref:
+            for _r in _c:
+                for _ in _r:
+                    y_id += 1
+        if y_id == 1:
+            raise RuntimeError("did not find any existing axis.")
+        cur_ref = self._fig._grid_ref[self._loc.row - 1][self._loc.col - 1]
+        x_id: str = cur_ref[0].layout_keys[0].replace("xaxis", "")
+        cur_ref = (
+            *cur_ref,
+            SubplotRef(
+                subplot_type="xy",
+                layout_keys=(f"xaxis{x_id}", f"yaxis{y_id}"),
+                trace_kwargs={"xaxis": f"x{x_id}", "yaxis": f"y{y_id}"},
+            ),
+        )
+        self._fig._grid_ref[self._loc.row - 1][self._loc.col - 1] = cur_ref
+        self._fig.update_layout(
+            yaxis2={
+                "overlaying": "y",
+                "side": "right",
+            }
+        )
+        kwargs = self._loc.asdict()
+        kwargs["secondary_y"] = True
+        return Canvas(self._fig, **kwargs)
+
 
 def _convert_cb(cb):
-    return lambda _, points, state: cb(points.point_inds)
+    return lambda _, points, state: cb(points.point_inds)  # noqa: ARG005
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
@@ -146,18 +199,22 @@ class CanvasGrid:
                 column_widths=widths,
             )
         )
-        self._figs.update_layout(margin=dict(l=6, r=6, t=6, b=6))
+        self._figs.update_layout(margin={"l": 6, "r": 6, "t": 6, "b": 6})
         self._app = app
+        self._heights = heights
+        self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
+        if rowspan > 1 or colspan > 1:
+            raise NotImplementedError("Plotly backend does not support rowspan/colspan")
         return Canvas(self._figs, row=row, col=col)
 
     def _plt_show(self):
         if self._app in ("qt", "wx", "tk"):
             return NotImplemented
         if self._app == "notebook" or "IPython" in sys.modules:
-            from IPython.display import display
             from IPython import get_ipython
+            from IPython.display import display
 
             if get_ipython().__class__.__name__ == "ZMQInteractiveShell":
                 display(self._figs)
@@ -171,8 +228,9 @@ class CanvasGrid:
         self._figs.layout.paper_bgcolor = rgba_str_color(color)
 
     def _plt_screenshot(self):
-        from PIL import Image
         import io
+
+        from PIL import Image
 
         width, height = self._figs.layout.width, self._figs.layout.height
         img_bytes = self._figs.to_image(format="png", width=width, height=height)

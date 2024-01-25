@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import numpy as np
+
+from whitecanvas.backend._not_implemented import face_pattern
+from whitecanvas.backend.plotly._base import (
+    PlotlyLayer,
+    from_plotly_linestyle,
+    to_plotly_linestyle,
+)
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import LineStyle, Orientation
 from whitecanvas.utils.normalize import arr_color, rgba_str_color
-
-from ._base import PlotlyLayer, to_plotly_linestyle, from_plotly_linestyle
-from whitecanvas.backend._not_implemented import face_pattern
 
 
 @check_protocol(BandProtocol)
@@ -69,7 +73,7 @@ class Band(PlotlyLayer):
     def _plt_set_face_color(self, color):
         self._props["fillcolor"] = rgba_str_color(color)
 
-    _plt_get_face_pattern, _plt_set_face_pattern = face_pattern()
+    _plt_get_face_hatch, _plt_set_face_hatch = face_pattern()
 
     def _plt_get_edge_color(self):
         return arr_color(self._props["line"]["color"])

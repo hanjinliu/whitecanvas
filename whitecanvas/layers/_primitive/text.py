@@ -4,24 +4,23 @@ from typing import Any, Sequence, TypeVar
 
 import numpy as np
 
+from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import (
-    TextMixin,
-    FaceNamespace,
     EdgeNamespace,
+    FaceNamespace,
     FontNamespace,
+    TextMixin,
 )
 from whitecanvas.layers._sizehint import xy_size_hint
-from whitecanvas.backend import Backend
 from whitecanvas.types import (
-    ColorType,
-    _Void,
     Alignment,
+    ArrayLike1D,
+    ColorType,
     XYData,
     XYTextData,
-    ArrayLike1D,
+    _Void,
 )
 from whitecanvas.utils.normalize import normalize_xy
-
 
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)

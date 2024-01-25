@@ -1,48 +1,48 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
+from enum import Enum
 from typing import (
+    TYPE_CHECKING,
     Any,
     Generic,
     Iterable,
     Iterator,
     Sequence,
+    SupportsIndex,
     TypeVar,
     overload,
-    SupportsIndex,
-    TYPE_CHECKING,
 )
-from enum import Enum
 from weakref import WeakValueDictionary
+
 import numpy as np
 from numpy.typing import NDArray
-
 from psygnal import Signal, SignalGroup
 
+from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
 from whitecanvas.protocols import layer_protocols as _lp
-from whitecanvas.layers._base import PrimitiveLayer, LayerEvents, DataBoundLayer
 from whitecanvas.theme import get_theme
 from whitecanvas.types import (
-    LineStyle,
-    FacePattern,
     ColorType,
-    _Void,
-    _Void,
+    Hatch,
+    LineStyle,
     XYTextData,
+    _Void,
 )
 from whitecanvas.utils.normalize import arr_color, as_any_1d_array, as_color_array
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-_P = TypeVar("_P", bound=_lp.BaseProtocol)
+    from whitecanvas.layers.group._collections import LayerCollectionBase
+
 _L = TypeVar("_L", bound=PrimitiveLayer)
 _void = _Void()
 
 
 class FaceEvents(SignalGroup):
     color = Signal(object)
-    pattern = Signal(object)
+    hatch = Signal(object)
 
 
 class EdgeEvents(SignalGroup):
@@ -83,24 +83,24 @@ class LayerNamespace(ABC, Generic[_L]):
 
 
 class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
-    _properties = ("color", "pattern")
+    _properties = ("color", "hatch")
     events: FaceEvents
     _events_class = FaceEvents
 
     @abstractproperty
-    def color(self):
+    def color(self) -> NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractproperty
-    def pattern(self):
+    def hatch(self) -> Hatch | EnumArray[Hatch]:
         raise NotImplementedError
 
     @abstractproperty
-    def alpha(self):
+    def alpha(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color, pattern, alpha):
+    def update(self, color=None, hatch=None, alpha=1.0):
         ...
 
 
@@ -110,23 +110,23 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
     _events_class = EdgeEvents
 
     @abstractproperty
-    def color(self):
+    def color(self) -> NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractproperty
-    def width(self):
+    def width(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractproperty
-    def style(self):
+    def style(self) -> LineStyle | EnumArray[LineStyle]:
         raise NotImplementedError
 
     @abstractproperty
-    def alpha(self):
+    def alpha(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color, width, style, alpha):
+    def update(self, color=None, width=None, style=None, alpha=1.0):
         ...
 
 
@@ -142,14 +142,14 @@ class MonoFace(FaceNamespace):
         self.events.color.emit(col)
 
     @property
-    def pattern(self) -> FacePattern:
-        return self._layer._backend._plt_get_face_pattern()
+    def hatch(self) -> Hatch:
+        return self._layer._backend._plt_get_face_hatch()
 
-    @pattern.setter
-    def pattern(self, value: str | FacePattern):
-        pattern = FacePattern(value)
-        self._layer._backend._plt_set_face_pattern(pattern)
-        self.events.pattern.emit(pattern)
+    @hatch.setter
+    def hatch(self, value: str | Hatch):
+        hatch = Hatch(value)
+        self._layer._backend._plt_set_face_hatch(hatch)
+        self.events.hatch.emit(hatch)
 
     @property
     def alpha(self) -> float:
@@ -165,7 +165,7 @@ class MonoFace(FaceNamespace):
         self,
         *,
         color: ColorType | _Void = _void,
-        pattern: FacePattern | str | _Void = _void,
+        hatch: Hatch | str | _Void = _void,
         alpha: float | _Void = _void,
     ) -> _L:
         """
@@ -175,15 +175,15 @@ class MonoFace(FaceNamespace):
         ----------
         color : ColorType, optional
             Color of the face.
-        pattern : FacePattern, optional
-            Fill pattern of the face.
+        hatch : FacePattern, optional
+            Fill hatch of the face.
         alpha : float, optional
             Alpha value of the face.
         """
         if color is not _void:
             self.color = color
-        if pattern is not _void:
-            self.pattern = pattern
+        if hatch is not _void:
+            self.hatch = hatch
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
@@ -201,14 +201,14 @@ class ConstFace(FaceNamespace):
         self.events.color.emit(col)
 
     @property
-    def pattern(self) -> FacePattern:
-        return self._layer._backend._plt_get_face_pattern()[0]
+    def hatch(self) -> Hatch:
+        return self._layer._backend._plt_get_face_hatch()[0]
 
-    @pattern.setter
-    def pattern(self, value: str | FacePattern):
-        pattern = FacePattern(value)
-        self._layer._backend._plt_set_face_pattern(pattern)
-        self.events.pattern.emit(pattern)
+    @hatch.setter
+    def hatch(self, value: str | Hatch):
+        hatch = Hatch(value)
+        self._layer._backend._plt_set_face_hatch(hatch)
+        self.events.hatch.emit(hatch)
 
     @property
     def alpha(self) -> float:
@@ -227,7 +227,7 @@ class ConstFace(FaceNamespace):
         self,
         *,
         color: ColorType | _Void = _void,
-        pattern: FacePattern | str | _Void = _void,
+        hatch: Hatch | str | _Void = _void,
         alpha: float | _Void = _void,
     ) -> _L:
         """
@@ -237,15 +237,15 @@ class ConstFace(FaceNamespace):
         ----------
         color : ColorType, optional
             Color of the face.
-        pattern : FacePattern, optional
-            Fill pattern of the face.
+        hatch : FacePattern, optional
+            Fill hatch of the face.
         alpha : float, optional
             Alpha value of the face.
         """
         if color is not _void:
             self.color = color
-        if pattern is not _void:
-            self.pattern = pattern
+        if hatch is not _void:
+            self.hatch = hatch
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
@@ -394,20 +394,20 @@ class MultiFace(FaceNamespace):
         self.events.color.emit(col)
 
     @property
-    def pattern(self) -> EnumArray[FacePattern]:
-        """Face fill pattern of the bars."""
-        return self._layer._backend._plt_get_face_pattern()
+    def hatch(self) -> EnumArray[Hatch]:
+        """Face fill hatches."""
+        return np.asarray(self._layer._backend._plt_get_face_hatch(), dtype=object)
 
-    @pattern.setter
-    def pattern(self, pattern: str | FacePattern | Iterable[str | FacePattern]):
-        if isinstance(pattern, str):
-            pattern = FacePattern(pattern)
-        elif isinstance(pattern, FacePattern):
+    @hatch.setter
+    def hatch(self, hatch: str | Hatch | Iterable[str | Hatch]):
+        if isinstance(hatch, str):
+            hatch = Hatch(hatch)
+        elif isinstance(hatch, Hatch):
             pass
         else:
-            pattern = [FacePattern(p) for p in pattern]
-        self._layer._backend._plt_set_face_pattern(pattern)
-        self.events.pattern.emit(pattern)
+            hatch = [Hatch(p) for p in hatch]
+        self._layer._backend._plt_set_face_hatch(hatch)
+        self.events.hatch.emit(hatch)
 
     @property
     def alpha(self) -> float:
@@ -423,7 +423,7 @@ class MultiFace(FaceNamespace):
         self,
         *,
         color: ColorType | _Void = _void,
-        pattern: FacePattern | str | _Void = _void,
+        hatch: Hatch | str | _Void = _void,
         alpha: float | _Void = _void,
     ) -> _L:
         """
@@ -433,15 +433,15 @@ class MultiFace(FaceNamespace):
         ----------
         color : ColorType, optional
             Color of the face.
-        pattern : FacePattern, optional
-            Fill pattern of the face.
+        hatch : FacePattern, optional
+            Fill hatch of the face.
         alpha : float, optional
             Alpha value of the face.
         """
         if color is not _void:
             self.color = color
-        if pattern is not _void:
-            self.pattern = pattern
+        if hatch is not _void:
+            self.hatch = hatch
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
@@ -468,7 +468,7 @@ class MultiEdge(EdgeNamespace):
     def width(self, width: float | Iterable[float]):
         if not isinstance(width, (int, float, np.number)):
             width = np.asarray(width, dtype=np.float32)
-            if width.shape != self._layer.ndata:
+            if width.shape != (self._layer.ndata,):
                 raise ValueError(
                     "Width must be a scalar or an array of length "
                     f"{self._layer.ndata}, got {width.shape!r}"
@@ -481,7 +481,7 @@ class MultiEdge(EdgeNamespace):
     @property
     def style(self) -> EnumArray[LineStyle]:
         """Edge styles."""
-        return self._layer._backend._plt_get_edge_style()
+        return np.asarray(self._layer._backend._plt_get_edge_style(), dtype=object)
 
     @style.setter
     def style(self, style: str | LineStyle | Iterable[str | LineStyle]):
@@ -532,7 +532,7 @@ class FaceEdgeMixinEvents(LayerEvents):
     edge = Signal(object)
 
 
-class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
+class _AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
     face: _NFace
     edge: _NEdge
     _face_namespace: _NFace
@@ -540,8 +540,7 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
     events: FaceEdgeMixinEvents
     _events_class = FaceEdgeMixinEvents
 
-    def __init__(self, name: str | None = None):
-        super().__init__(name=name)
+    def __init__(self):
         self._face_namespace.events.connect(self.events.face.emit)
         self._edge_namespace.events.connect(self.events.edge.emit)
 
@@ -556,22 +555,21 @@ class _AbstractFaceEdgeMixin(PrimitiveLayer[_P], Generic[_P, _NFace, _NEdge]):
         return self._edge_namespace
 
 
-class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P]):
-    def __init__(self, name: str | None = None):
+class FaceEdgeMixin(_AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
+    def __init__(self):
         self._face_namespace = MonoFace(self)
         self._edge_namespace = MonoEdge(self)
-        super().__init__(name=name)
 
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
         if color is None:
             color = self.face.color
-        self.face.update(color=color, pattern=pattern, alpha=alpha)
+        self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge(
@@ -588,18 +586,17 @@ class FaceEdgeMixin(_AbstractFaceEdgeMixin[_P, MonoFace, MonoEdge], Generic[_P])
         return self
 
 
-class MultiFaceEdgeMixin(
-    _AbstractFaceEdgeMixin[_P, _NFace, _NEdge], Generic[_P, _NFace, _NEdge]
-):
-    def __init__(self, name: str | None = None):
+class MultiFaceEdgeMixin(_AbstractFaceEdgeMixin[_NFace, _NEdge]):
+    """Mixin for layers with multiple faces and edges."""
+
+    def __init__(self):
         self._face_namespace = ConstFace(self)
         self._edge_namespace = ConstEdge(self)
-        super().__init__(name=name)
 
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
@@ -609,7 +606,7 @@ class MultiFaceEdgeMixin(
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
             self._face_namespace.events.connect(self.events.face.emit)
-        self.face.update(color=color, pattern=pattern, alpha=alpha)
+        self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge(
@@ -632,7 +629,7 @@ class MultiFaceEdgeMixin(
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         if color is None:
@@ -641,7 +638,7 @@ class MultiFaceEdgeMixin(
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
             self._face_namespace.events.connect(self.events.face.emit)
-        self.face.update(color=color, pattern=pattern, alpha=alpha)
+        self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge_multi(
@@ -658,6 +655,191 @@ class MultiFaceEdgeMixin(
             self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore
             self._edge_namespace.events.connect(self.events.edge.emit)
+        self.edge.update(color=color, style=style, width=width, alpha=alpha)
+        return self
+
+
+class CollectionFace(FaceNamespace):
+    _layer: LayerCollectionBase
+
+    def _iter_children(self) -> Iterator[FaceEdgeMixin]:
+        yield from iter(self._layer)
+
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Face color of the bar."""
+        cols = [layer.face.color for layer in self._iter_children()]
+        return np.stack(cols, axis=0)
+
+    @color.setter
+    def color(self, color):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        col = as_color_array(color, ndata)
+        for layer, c in zip(layers, col):
+            layer.face.color = c
+        self.events.color.emit(col)
+
+    @property
+    def hatch(self) -> EnumArray[Hatch]:
+        """Face fill hatch."""
+        hatches = [layer.face.hatch for layer in self._iter_children()]
+        return np.array(hatches, dtype=object)
+
+    @hatch.setter
+    def hatch(self, hatch: str | Hatch | Iterable[str | Hatch]):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        hatches = as_any_1d_array(hatch, ndata, dtype=object)
+        for layer, ptn in zip(layers, hatches):
+            layer.face.hatch = ptn
+        self.events.hatch.emit(hatch)
+
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        hatch: Hatch | str | _Void = _void,
+        alpha: float | _Void = _void,
+    ) -> _L:
+        """
+        Update the face properties.
+
+        Parameters
+        ----------
+        color : ColorType, optional
+            Color of the face.
+        hatch : FacePattern, optional
+            Fill hatch of the face.
+        alpha : float, optional
+            Alpha value of the face.
+        """
+        if color is not _void:
+            self.color = color
+        if hatch is not _void:
+            self.hatch = hatch
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer
+
+
+class CollectionEdge(EdgeNamespace):
+    _layer: LayerCollectionBase
+
+    def _iter_children(self) -> Iterator[FaceEdgeMixin]:
+        yield from iter(self._layer)
+
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Face color of the bar."""
+        cols = [layer.edge.color for layer in self._iter_children()]
+        return np.stack(cols, axis=0)
+
+    @color.setter
+    def color(self, color):
+        layers = list(self._iter_children())
+        ndata = len(layers)
+        col = as_color_array(color, ndata)
+        for layer, c in zip(layers, col):
+            layer.edge.color = c
+        self.events.color.emit(col)
+
+    @property
+    def width(self) -> NDArray[np.float32]:
+        """Edge widths."""
+        widths = [layer.edge.width for layer in self._iter_children()]
+        return np.array(widths, dtype=np.float32)
+
+    @width.setter
+    def width(self, width: float | Iterable[float]):
+        layers = list(self._iter_children())
+        widths = as_any_1d_array(width, len(layers), dtype=np.float32)
+        for layer, w in zip(layers, widths):
+            layer.edge.width = w
+        self.events.width.emit(width)
+
+    @property
+    def style(self) -> EnumArray[LineStyle]:
+        """Edge styles."""
+        styles = [layer.edge.style for layer in self._iter_children()]
+        return np.array(styles, dtype=object)
+
+    @style.setter
+    def style(self, style: str | LineStyle | Iterable[str | LineStyle]):
+        layers = list(self._iter_children())
+        styles = as_any_1d_array(style, len(layers), dtype=object)
+        for layer, ls in zip(layers, styles):
+            layer.edge.style = ls
+        self.events.style.emit(style)
+
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        style: LineStyle | str | _Void = _void,
+        width: float | _Void = _void,
+        alpha: float | _Void = _void,
+    ):
+        if color is not _void:
+            self.color = color
+        if style is not _void:
+            self.style = style
+        if width is not _void:
+            self.width = width
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer
+
+
+class CollectionFaceEdgeMixin(_AbstractFaceEdgeMixin[CollectionFace, CollectionEdge]):
+    def __init__(self):
+        self._face_namespace = CollectionFace(self)
+        self._edge_namespace = CollectionEdge(self)
+
+    def with_face(
+        self,
+        *,
+        color: ColorType | None = None,
+        hatch: Hatch | str = Hatch.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the face properties."""
+        if color is None:
+            color = self.face.color
+        self.face.update(color=color, hatch=hatch, alpha=alpha)
+        return self
+
+    def with_edge(
+        self,
+        *,
+        color: ColorType | None = None,
+        width: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Self:
+        """Update the edge properties."""
+        if color is None:
+            color = self.face.color
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
@@ -729,7 +911,7 @@ class ConstFont(FontNamespace):
     @size.setter
     def size(self, value):
         if value is None:
-            value = get_theme().fontsize
+            value = get_theme().font.size
         self._layer._backend._plt_set_text_size(value)
         self.events.size.emit(value)
 
@@ -740,7 +922,7 @@ class ConstFont(FontNamespace):
     @family.setter
     def family(self, value):
         if value is None:
-            value = get_theme().fontfamily
+            value = get_theme().font.family
         if not isinstance(value, str):
             raise TypeError(f"fontfamily must be a string, got {type(value)}.")
         self._layer._backend._plt_set_text_fontfamily(value)
@@ -782,7 +964,7 @@ class MultiFont(FontNamespace):
     @size.setter
     def size(self, value):
         if value is None:
-            value = get_theme().fontsize
+            value = get_theme().font.size
         sizes = as_any_1d_array(value, self._layer.ntexts, dtype=np.float32)
         self._layer._backend._plt_set_text_size(sizes)
         self.events.size.emit(sizes)
@@ -794,8 +976,8 @@ class MultiFont(FontNamespace):
     @family.setter
     def family(self, value):
         if value is None:
-            value = get_theme().fontfamily
-        family = as_any_1d_array(value, self._layer.ntexts)
+            value = get_theme().font.family
+        family = as_any_1d_array(value, self._layer.ntexts, dtype=object)
         self._layer._backend._plt_set_text_fontfamily(family)
         self.events.family.emit(family)
 
@@ -864,7 +1046,7 @@ class TextMixin(
     def with_face(
         self,
         color: ColorType | None = None,
-        pattern: FacePattern | str = FacePattern.SOLID,
+        hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
@@ -874,7 +1056,7 @@ class TextMixin(
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
             self._face_namespace.events.connect(self.events.face.emit)
-        self.face.update(color=color, pattern=pattern, alpha=alpha)
+        self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge(
@@ -897,7 +1079,7 @@ class TextMixin(
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | None = None,
-        pattern: str | FacePattern | Sequence[str | FacePattern] = FacePattern.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         if color is None:
@@ -906,7 +1088,7 @@ class TextMixin(
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
             self._face_namespace.events.connect(self.events.face.emit)
-        self.face.update(color=color, pattern=pattern, alpha=alpha)
+        self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge_multi(

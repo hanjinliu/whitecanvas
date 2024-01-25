@@ -1,23 +1,23 @@
 from __future__ import annotations
 
-from qtpy import QtGui
-import pyqtgraph as pg
-
 import numpy as np
+import pyqtgraph as pg
 from numpy.typing import NDArray
-from whitecanvas.protocols import MarkersProtocol, check_protocol
-from whitecanvas.types import Symbol, LineStyle, FacePattern
+from qtpy import QtGui
+
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from whitecanvas.utils.normalize import as_color_array
-from ._qt_utils import (
+from whitecanvas.backend.pyqtgraph._qt_utils import (
     array_to_qcolor,
-    from_qt_line_style,
-    to_qt_line_style,
-    from_qt_symbol,
-    to_qt_symbol,
     from_qt_brush_style,
+    from_qt_line_style,
+    from_qt_symbol,
     to_qt_brush_style,
+    to_qt_line_style,
+    to_qt_symbol,
 )
+from whitecanvas.protocols import MarkersProtocol, check_protocol
+from whitecanvas.types import Hatch, LineStyle, Symbol
+from whitecanvas.utils.normalize import as_color_array
 
 
 @check_protocol(MarkersProtocol)
@@ -41,8 +41,29 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
     def _plt_get_data(self):
         return self.getData()
 
-    def _plt_set_data(self, xdata, ydata):
-        self.setData(xdata, ydata)
+    def _plt_set_data(self, xdata: np.ndarray, ydata: np.ndarray):
+        pens = self._get_pen()
+        brushes = self._get_brush()
+        ndata = xdata.size
+        if ndata <= len(brushes):
+            self.setData(
+                xdata,
+                ydata,
+                pen=pens[:ndata],
+                brush=brushes[:ndata],
+                size=self.data["size"][:ndata],
+            )
+        else:
+            new_pen = [QtGui.QPen(pens[-1])] * (ndata - len(pens))
+            new_brush = [QtGui.QBrush(brushes[-1])] * (ndata - len(brushes))
+            new_size = np.full(ndata - len(self.data["size"]), self.data["size"][-1])
+            self.setData(
+                xdata,
+                ydata,
+                pen=np.concatenate([pens, new_pen]),
+                brush=np.concatenate([brushes, new_brush]),
+                size=np.concatenate([self.data["size"], new_size]),
+            )
 
     ##### HasSymbol protocol #####
     def _plt_get_symbol(self) -> Symbol:
@@ -76,12 +97,12 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
             brush.setColor(array_to_qcolor(c))
         self.setBrush(brushes)
 
-    def _plt_get_face_pattern(self) -> list[FacePattern]:
+    def _plt_get_face_hatch(self) -> list[Hatch]:
         return [from_qt_brush_style(brush.style()) for brush in self._get_brush()]
 
-    def _plt_set_face_pattern(self, pattern: FacePattern | list[FacePattern]):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         brushes = self._get_brush()
-        if isinstance(pattern, FacePattern):
+        if isinstance(pattern, Hatch):
             ptn = to_qt_brush_style(pattern)
             for brush in brushes:
                 brush.setStyle(ptn)

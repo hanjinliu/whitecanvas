@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 from cmap import Colormap
+
+from whitecanvas.backend.plotly._base import PlotlyLayer
 from whitecanvas.protocols import ImageProtocol, check_protocol
-from ._base import PlotlyLayer
 
 
 @check_protocol(ImageProtocol)

@@ -1,20 +1,25 @@
 from __future__ import annotations
 
+import bokeh.models as bk_models
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.types import LineStyle
+
+from whitecanvas.backend.bokeh._base import (
+    BokehLayer,
+    from_bokeh_line_style,
+    to_bokeh_line_style,
+)
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
-
-import bokeh.models as bk_models
-
+from whitecanvas.types import LineStyle
 from whitecanvas.utils.normalize import arr_color, hex_color
-from ._base import BokehLayer, to_bokeh_line_style, from_bokeh_line_style
 
 
 @check_protocol(LineProtocol)
 class MonoLine(BokehLayer[bk_models.Line]):
     def __init__(self, xdata, ydata):
-        self._data = bk_models.ColumnDataSource(data=dict(x=xdata, y=ydata))
+        self._data = bk_models.ColumnDataSource(
+            data={"x": xdata, "y": ydata, "hovertexts": np.array([""] * len(xdata))}
+        )
         self._model = bk_models.Line(x="x", y="y", line_join="round", line_cap="round")
         self._line_style = LineStyle.SOLID
         self._visible = True
@@ -34,7 +39,7 @@ class MonoLine(BokehLayer[bk_models.Line]):
         return self._data.data["x"], self._data.data["y"]
 
     def _plt_set_data(self, xdata, ydata):
-        self._data.data = dict(x=xdata, y=ydata)
+        self._data.data = {"x": xdata, "y": ydata}
 
     def _plt_get_edge_width(self) -> float:
         return self._model.line_width
@@ -73,9 +78,7 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         for seg in data:
             xdata.append(seg[:, 0])
             ydata.append(seg[:, 1])
-        self._data = bk_models.ColumnDataSource(
-            dict(x=xdata, y=ydata),
-        )
+        self._data = bk_models.ColumnDataSource({"x": xdata, "y": ydata})
         self._model = bk_models.MultiLine(
             xs="x",
             ys="y",
@@ -112,7 +115,7 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         for seg in data:
             xdata.append(seg[:, 0])
             ydata.append(seg[:, 1])
-        self._data.data = dict(x=xdata, y=ydata)
+        self._data.data = {"x": xdata, "y": ydata}
 
     def _plt_get_edge_width(self) -> float:
         return self._model.line_width

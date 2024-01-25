@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import weakref
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Generic, Iterator, TypeVar, TYPE_CHECKING
-from psygnal import Signal, SignalGroup
+from typing import TYPE_CHECKING, Any, Generic, Iterator, TypeVar
+
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.protocols import BaseProtocol
+from psygnal import Signal, SignalGroup
+
 from whitecanvas.backend import Backend
+from whitecanvas.protocols import BaseProtocol
 
 if TYPE_CHECKING:
-    from whitecanvas.canvas import Canvas
+    from typing_extensions import Self
+
+    from whitecanvas.canvas import CanvasBase
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
@@ -32,6 +37,7 @@ class Layer(ABC):
         self._name = name if name is not None else self.__class__.__name__
         self._x_hint = self._y_hint = None
         self._is_grouped = False
+        self._canvas_ref = lambda: None
 
     @abstractproperty
     def visible(self) -> bool:
@@ -71,19 +77,34 @@ class Layer(ABC):
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
 
-    def _connect_canvas(self, canvas: Canvas):
+    def _connect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is added to a canvas."""
         self.events._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
         self.events.connect(canvas._draw_canvas, unique=True)
+        self._canvas_ref = weakref.ref(canvas)
 
-    def _disconnect_canvas(self, canvas: Canvas):
+    def _disconnect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is removed from a canvas."""
         self.events._layer_grouped.disconnect(canvas._cb_layer_grouped)
         self.events.disconnect(canvas._draw_canvas)
+        self._canvas_ref = lambda: None
+
+    def _canvas(self) -> CanvasBase:
+        canvas = self._canvas_ref()
+        if canvas is None:
+            raise ValueError("Layer is not in any canvas.")
+        return canvas
 
     @abstractmethod
     def bbox_hint(self) -> NDArray[np.float64]:
         """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
+
+    def as_overlay(self) -> Self:
+        """Move this layer to the overlay level."""
+        canvas = self._canvas()
+        canvas.layers.remove(self)
+        canvas.overlays.append(self)
+        return self
 
 
 class PrimitiveLayer(Layer, Generic[_P]):
@@ -156,7 +177,7 @@ class DataBoundLayer(PrimitiveLayer[_P], Generic[_P, _T]):
     @data.setter
     def data(self, data):
         """Set the data for this layer."""
-        self._set_layer_data(data)
+        self._set_layer_data(self._norm_layer_data(data))
         self.events.data.emit(data)
 
 
@@ -177,6 +198,8 @@ class LayerGroup(Layer):
         for child in self.iter_children():
             if isinstance(child, LayerGroup):
                 yield from child.iter_children_recursive()
+            elif isinstance(child, LayerWrapper):
+                yield child._base_layer
             else:
                 yield child
 
@@ -224,3 +247,42 @@ class LayerGroup(Layer):
         ymin = np.nan if allnan[2] else np.nanmin(ar[2, :])
         ymax = np.nan if allnan[3] else np.nanmax(ar[3, :])
         return np.array([xmin, xmax, ymin, ymax], dtype=np.float64)
+
+
+class LayerWrapper(Layer, Generic[_L]):
+    def __init__(
+        self,
+        base_layer: _L,
+    ):
+        self._base_layer = base_layer
+        super().__init__(base_layer.name)
+
+    @property
+    def visible(self) -> bool:
+        """Whether the layer is visible."""
+        return self._base_layer.visible
+
+    @visible.setter
+    def visible(self, visible: bool):
+        self._base_layer.visible = visible
+
+    @property
+    def name(self) -> str:
+        """Name of the layer."""
+        return self._base_layer.name
+
+    @name.setter
+    def name(self, name: str):
+        self._base_layer.name = name
+
+    def bbox_hint(self) -> NDArray[np.floating]:
+        """Return the bounding box hint using the base layer."""
+        return self._base_layer.bbox_hint()
+
+    def _connect_canvas(self, canvas: CanvasBase):
+        self._base_layer._connect_canvas(canvas)
+        return super()._connect_canvas(canvas)
+
+    def _disconnect_canvas(self, canvas: CanvasBase):
+        self._base_layer._disconnect_canvas(canvas)
+        return super()._disconnect_canvas(canvas)

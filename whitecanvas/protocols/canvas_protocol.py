@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from typing import Any, Callable, Protocol, runtime_checkable
+
 import numpy as np
 from numpy.typing import NDArray
-from .layer_protocols import BaseProtocol
-from whitecanvas.types import MouseEvent, LineStyle
+
+from whitecanvas.protocols.layer_protocols import BaseProtocol
+from whitecanvas.types import LineStyle, MouseEvent
 
 
 @runtime_checkable
@@ -48,10 +50,10 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     def _plt_get_ylabel(self) -> TextLabelProtocol:
         """Get y label handler"""
 
-    def _plt_get_xticks(self) -> TextLabelProtocol:
+    def _plt_get_xticks(self) -> TicksProtocol:
         """Get x ticks handler"""
 
-    def _plt_get_yticks(self) -> TextLabelProtocol:
+    def _plt_get_yticks(self) -> TicksProtocol:
         """Get y ticks handler"""
 
     def _plt_get_aspect_ratio(self) -> float | None:
@@ -64,10 +66,13 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
         """Connect callback to clicked event"""
 
     def _plt_connect_mouse_drag(self, callback: Callable[[MouseEvent], None]):
-        """Connect callback to clicked event"""
+        """Connect callback to drag event"""
 
     def _plt_connect_mouse_double_click(self, callback: Callable[[MouseEvent], None]):
-        """Connect callback to clicked event"""
+        """Connect callback to double-clicked event"""
+
+    def _plt_connect_mouse_release(self, callback: Callable[[MouseEvent], None]):
+        """Connect callback to release event"""
 
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]
@@ -108,6 +113,42 @@ class TextLabelProtocol(HasVisibility, Protocol):
 
     def _plt_set_fontfamily(self, font):
         """Set font family of text"""
+
+
+@runtime_checkable
+class TicksProtocol(HasVisibility, Protocol):
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
+        """Get current tick labels"""
+
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
+        """Override tick labels"""
+
+    def _plt_reset_override(self):
+        """Reset tick label override"""
+
+    def _plt_get_size(self) -> float:
+        """Get size of text"""
+
+    def _plt_set_size(self, size: float):
+        """Set size of text"""
+
+    def _plt_get_color(self) -> str:
+        """Get color of text"""
+
+    def _plt_set_color(self, color):
+        """Set color of text"""
+
+    def _plt_get_fontfamily(self) -> str:
+        """Get font family of text"""
+
+    def _plt_set_fontfamily(self, font):
+        """Set font family of text"""
+
+    def _plt_get_text_rotation(self) -> float:
+        """Get rotation of text"""
+
+    def _plt_set_text_rotation(self, rotation: float):
+        """Set rotation of text"""
 
 
 @runtime_checkable

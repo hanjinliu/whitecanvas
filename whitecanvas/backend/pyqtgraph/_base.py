@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class PyQtLayer:
     def _plt_get_visible(self) -> bool:
         return self.isVisible()

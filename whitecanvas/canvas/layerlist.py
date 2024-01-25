@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, overload, TypeVar
+from typing import TYPE_CHECKING, Any, Iterable, TypeVar, overload
+
 from psygnal import Signal, SignalGroup
 from psygnal.containers import EventedList
 
 from whitecanvas.layers import Layer, LayerGroup, PrimitiveLayer
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _V = TypeVar("_V", bound=Any)
 
@@ -23,18 +27,18 @@ class LayerListEvents(SignalGroup):
 
 class LayerList(EventedList[Layer]):
     events: LayerListEvents
-    _instances: dict[int, LayerList] = {}
 
     def __init__(self, data: Iterable[Layer] = ()):
         super().__init__(data, hashable=True, child_events=False)
+        self._instances: dict[int, Self] = {}
 
-    def __get__(self, instance, owner) -> LayerList:
+    def __get__(self, instance, owner) -> Self:
         if instance is None:
             return self
         _id = id(instance)
         cls = self.__class__
-        if (out := cls._instances.get(_id, None)) is None:
-            out = cls._instances[_id] = cls()
+        if (out := self._instances.get(_id, None)) is None:
+            out = self._instances[_id] = cls()
         return out
 
     @overload
@@ -42,7 +46,7 @@ class LayerList(EventedList[Layer]):
         ...
 
     @overload
-    def __getitem__(self, idx: slice) -> LayerList:
+    def __getitem__(self, idx: slice) -> Self:
         ...
 
     @overload

@@ -3,10 +3,14 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
+from whitecanvas.backend.plotly._base import (
+    PlotlyLayer,
+    from_plotly_linestyle,
+    to_plotly_linestyle,
+)
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 from whitecanvas.utils.normalize import arr_color, rgba_str_color
-from ._base import PlotlyLayer, to_plotly_linestyle, from_plotly_linestyle
 
 
 @check_protocol(LineProtocol)

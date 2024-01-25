@@ -1,5 +1,6 @@
-from contextlib import contextmanager
+from __future__ import annotations
 
+from contextlib import contextmanager
 
 _INSTALLED_MODULES = {}
 
@@ -14,18 +15,22 @@ class Backend:
 
     _default: str = "matplotlib"
 
-    def __init__(self, name: "Backend | str | None" = None) -> None:
+    def __init__(self, name: Backend | str | None = None) -> None:
         if name is None:
             name = self._default
-        elif isinstance(name, Backend):
+        if isinstance(name, Backend):
+            app = name._app
             name = name._name
-        if ":" in name:
-            name, app = name.split(":", maxsplit=1)
-            # normalize app name
-            if app == "nb":
-                app = "notebook"
+        elif isinstance(name, str):
+            if ":" in name:
+                name, app = name.split(":", maxsplit=1)
+                # normalize app name
+                if app == "nb":
+                    app = "notebook"
+            else:
+                app = _DEFAULT_APP.get(name, "default")
         else:
-            app = _DEFAULT_APP.get(name, "default")
+            raise TypeError(f"Backend name must be str or Backend, not {type(name)}")
         if name in _INSTALLED_MODULES:
             self._mod = _INSTALLED_MODULES[name]
         else:
@@ -39,7 +44,7 @@ class Backend:
         self.__class__._default = name
 
     def __repr__(self) -> str:
-        return f"<Backend {self._name!r}>"
+        return f"<Backend {self._name!r} (app: {self._app!r})>"
 
     @property
     def name(self) -> str:
@@ -61,6 +66,10 @@ class Backend:
         if out is None:
             raise RuntimeError(f"Backend {self._name!r} does not have {attr!r}")
         return out
+
+    def is_dummy(self) -> bool:
+        """True is the backend is a dummy backend."""
+        return self.name.startswith(".")
 
 
 class DummyObject:

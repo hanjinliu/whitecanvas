@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, Union, overload
 
 import numpy as np
-from cmap import Color
+from cmap import Color, Colormap
 
 from whitecanvas import layers as _l
 from whitecanvas.backend import Backend
@@ -129,9 +129,9 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            color_by = self._color_by.update(*cov.columns, values=palette)
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
-            color_by = self._color_by.with_const(Color(cov.value))
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
         self._base_layer.color = color_by.generate(self._labels, self._splitby)
         self._color_by = color_by
         return self
@@ -146,9 +146,9 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
 
     def with_width(self, by, /, limits=None) -> Self:
         if isinstance(by, str):
-            width_by = self._width_by.with_range(by, limits=limits)
+            width_by = _p.WidthPlan.from_range(by, limits=limits)
         else:
-            width_by = self._width_by.with_const(float(by))
+            width_by = _p.WidthPlan.from_const(float(by))
         self._base_layer.width = width_by.map(self._source)
         self._width_by = width_by
         return self
@@ -158,9 +158,9 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot style by a column other than {self._splitby}")
-            style_by = self._style_by.update(*cov.columns, values=styles)
+            style_by = _p.StylePlan.new(cov.columns, values=styles)
         else:
-            style_by = self._style_by.with_const(LineStyle(cov.value))
+            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
         self._base_layer.style = style_by.generate(self._labels, self._splitby)
         self._style_by = style_by
         return self
@@ -280,11 +280,11 @@ class WrappedViolinPlot(DataFrameLayerWrapper[_lg.ViolinPlot, _DF], Generic[_DF]
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
             by_all = _unique_tuple(cov.columns, self._hatch_by.by)
-            color_by = self._color_by.update(*cov.columns, values=palette)
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
             _, self._labels = self._generate_datasets(by_all)
             self._splitby = by_all
         else:
-            color_by = self._color_by.with_const(Color(cov.value))
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
         self._base_layer.face.color = color_by.generate(self._labels, self._splitby)
         self._color_by = color_by
         return self
@@ -295,11 +295,11 @@ class WrappedViolinPlot(DataFrameLayerWrapper[_lg.ViolinPlot, _DF], Generic[_DF]
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
             by_all = _unique_tuple(self._color_by.by, cov.columns)
-            hatch_by = self._hatch_by.update(*cov.columns, values=choices)
+            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
             _, self._labels = self._generate_datasets(by_all)
             self._splitby = by_all
         else:
-            hatch_by = self._hatch_by.with_const(Hatch(cov.value))
+            hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
         self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
         self._hatch_by = hatch_by
         return self
@@ -427,11 +427,11 @@ class WrappedBoxPlot(DataFrameLayerWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
             by_all = _unique_tuple(cov.columns, self._hatch_by.by)
-            color_by = self._color_by.update(*cov.columns, values=palette)
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
             _, self._labels = self._generate_datasets(by_all)
             self._splitby = by_all
         else:
-            color_by = self._color_by.with_const(Color(cov.value))
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
         colors = color_by.generate(self._labels, self._splitby)
         self._base_layer.boxes.with_face_multi(color=colors)
         self._color_by = color_by
@@ -443,11 +443,11 @@ class WrappedBoxPlot(DataFrameLayerWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
             by_all = _unique_tuple(self._color_by.by, cov.columns)
-            hatch_by = self._hatch_by.update(*cov.columns, values=choices)
+            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
             _, self._labels = self._generate_datasets(by_all)
             self._splitby = by_all
         else:
-            hatch_by = self._hatch_by.with_const(Hatch(cov.value))
+            hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
             hatches = hatch_by.generate(self._labels, self._splitby)
         self._base_layer.boxes.with_face_multi(hatch=hatches)
         self._hatch_by = hatch_by
@@ -461,13 +461,7 @@ class WrappedBoxPlot(DataFrameLayerWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
         return self
 
 
-class WrappedMarkers(
-    DataFrameLayerWrapper[
-        _lg.MarkerCollection,
-        _DF,
-    ],
-    Generic[_DF],
-):
+class WrappedMarkers(DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
@@ -484,6 +478,7 @@ class WrappedMarkers(
         self._x = x
         self._y = y
         self._color_by = _p.ColorPlan.default()
+        self._edge_color_by = _p.ColorPlan.default()
         self._hatch_by = _p.HatchPlan.default()
         self._size_by = _p.SizePlan.default()
         self._symbol_by = _p.SymbolPlan.default()
@@ -606,23 +601,83 @@ class WrappedMarkers(
             symbol=symbol, size=size, backend=backend,
         )  # fmt: skip
 
-    def with_color(self, by: str | Iterable[str], palette=None) -> Self:
+    @overload
+    def with_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def with_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def with_color(self, by, /, palette=None) -> Self:
         cov = ColumnOrValue(by, self._source)
         if cov.is_column:
-            color_by = self._color_by.update(*cov.columns, values=palette)
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
-            color_by = self._color_by.with_const(Color(cov.value))
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
         colors = color_by.map(self._source)
         self._base_layer.face.color = colors
         self._color_by = color_by
         return self
 
+    def with_colormap(
+        self,
+        by: str,
+        cmap: ColormapType | None = None,
+        clim: tuple[float, float] | None = None,
+    ) -> Self:
+        """Update the face colormap."""
+        if not isinstance(by, str):
+            raise ValueError("Can only colormap by a single column.")
+        if cmap is None:
+            cmap = Colormap("viridis")
+        else:
+            cmap = Colormap(cmap)
+        color_by = _p.ColormapPlan.from_colormap(by, cmap=cmap, clim=clim)
+        colors = color_by.map(self._source)
+        self._base_layer.face.color = colors
+        self._color_by = color_by
+        return self
+
+    def with_edge_color(self, by: str | Iterable[str], palette=None) -> Self:
+        cov = ColumnOrValue(by, self._source)
+        if cov.is_column:
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
+        else:
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
+        colors = color_by.map(self._source)
+        self._base_layer.face.color = colors
+        self._edge_color_by = color_by
+        return self
+
+    def with_edge_colormap(
+        self,
+        by: str,
+        cmap: ColormapType | None = None,
+        clim: tuple[float, float] | None = None,
+    ) -> Self:
+        if not isinstance(by, str):
+            raise ValueError("Can only colormap by a single column.")
+        if cmap is None:
+            cmap = Colormap("viridis")
+        else:
+            cmap = Colormap(cmap)
+        color_by = _p.ColormapPlan.from_colormap(by, cmap=cmap, clim=clim)
+        colors = color_by.map(self._source)
+        self._base_layer.edge.color = colors
+        self._edge_color_by = color_by
+        return self
+
     def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
         cov = ColumnOrValue(by, self._source)
         if cov.is_column:
-            hatch_by = self._hatch_by.update(*cov.columns, values=choices)
+            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
         else:
-            hatch_by = self._hatch_by.with_const(Hatch(cov.value))
+            hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
         hatches = hatch_by.map(self._source)
         self._base_layer.face.hatch = hatches
         self._hatch_by = hatch_by
@@ -639,9 +694,9 @@ class WrappedMarkers(
     def with_size(self, by, /, limits=None):
         """Set the size of the markers."""
         if isinstance(by, str):
-            size_by = self._size_by.with_range(by, limits=limits)
+            size_by = _p.SizePlan.from_range(by, limits=limits)
         else:
-            size_by = self._size_by.with_const(float(by))
+            size_by = _p.SizePlan.from_const(float(by))
         self._base_layer.size = size_by.map(self._source)
         self._size_by = size_by
         return self
@@ -657,9 +712,9 @@ class WrappedMarkers(
     def with_symbol(self, by, /, symbols=None) -> Self:
         cov = ColumnOrValue(by, self._source)
         if cov.is_column:
-            symbol_by = self._symbol_by.update(*cov.columns, values=symbols)
+            symbol_by = _p.SymbolPlan.new(cov.columns, values=symbols)
         else:
-            symbol_by = self._symbol_by.with_const(Symbol(by))
+            symbol_by = _p.SymbolPlan.from_const(Symbol(by))
         self._base_layer.symbol = symbol_by.map(self._source)
         self._symbol_by = symbol_by
         return self
@@ -674,10 +729,9 @@ class WrappedMarkers(
 
     def with_width(self, by, /, limits=None) -> Self:
         if isinstance(by, str):
-            width_by = self._width_by.with_range(by, limits=limits)
+            width_by = _p.WidthPlan.from_range(by, limits=limits)
         else:
-            const_size = float(by)
-            width_by = self._width_by.with_const(const_size)
+            width_by = _p.WidthPlan.from_const(float(by))
         self._base_layer.with_edge(width=width_by.map(self._source))
         self._width_by = width_by
         return self
@@ -688,9 +742,11 @@ class WrappedMarkers(
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1.0,
     ) -> Self:
-        self._base_layer.with_edge(color=color, style=style, width=width, alpha=alpha)
+        if color is not None:
+            self.with_edge_color(color)
+        self.with_width(width)
+        self._base_layer.edge.style = LineStyle(style)
         return self
 
     def with_shift(self, dx: float = 0.0, dy: float = 0.0) -> Self:
@@ -824,9 +880,9 @@ class WrappedBars(
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            color_by = self._color_by.update(*cov.columns, values=palette)
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
-            color_by = self._color_by.with_const(Color(cov.value))
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
         self._base_layer.face.color = color_by.generate(self._labels, self._splitby)
         self._color_by = color_by
         return self
@@ -836,9 +892,9 @@ class WrappedBars(
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot hatch by a column other than {self._splitby}")
-            hatch_by = self._hatch_by.update(*cov.columns, values=choices)
+            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
         else:
-            hatch_by = self._hatch_by.with_const(Color(cov.value))
+            hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
         self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
         self._hatch_by = hatch_by
         return self

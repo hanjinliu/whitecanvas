@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Generic, Iterator, Sequence, TypeVar
 
 import numpy as np
-from cmap import Color
+from cmap import Color, Colormap
 from numpy.typing import NDArray
 
 from whitecanvas.canvas._palette import ColorPalette
@@ -255,18 +255,21 @@ class CyclicPlan(CategoricalPlan[_V]):
     def default(cls) -> Self:
         return cls((), cls._default_values())
 
-    def update(self, *by: str, values: list[Any] | None = None) -> Self:
-        """Return an updated plan."""
-        cls = type(self)
-        _by = tuple(by)
+    @classmethod
+    def new(cls, by, values: list[_V] | None = None):
+        """Create a new plan."""
         if values is None:
-            values = self.values
-        else:
-            values = [cls._norm_value(val) for val in values]
-        return cls(_by, values)
+            values = cls._default_values()
+        return cls(tuple(by), values)
 
-    def with_const(self, value: _V) -> Self:
-        return self.update(*self.by, values=[value])
+    @classmethod
+    def from_const(cls, value: _V) -> Self:
+        """Create a plan that always returns a constant value."""
+        return cls((), values=[cls._norm_value(value)])
+
+    def is_const(self) -> bool:
+        """Return True if the plan is a constant plan."""
+        return len(self.values) == 1
 
     def generate(
         self,
@@ -329,38 +332,24 @@ class MapPlan(ABC, Generic[_V]):
         else:
             return f"{cname}(mapper={self._mapper!r})"
 
-    def with_map(
-        self,
-        on: tuple[str, ...],
+    @classmethod
+    def from_map(
+        cls,
+        on: Sequence[str],
         mapper: Callable[[dict[str, np.ndarray]], Sequence[_V]],
     ) -> Self:
-        return type(self)(self._on + on, mapper)
+        if not isinstance(on, (tuple, list)):
+            raise TypeError(f"on must be a sequence, not {type(on)}")
+        return cls(tuple(on), mapper)
 
-    def with_range(self, on: str, limits: tuple[float, float] | None = None) -> Self:
-        """Add a mapper that maps a range to a value."""
+    @classmethod
+    def from_const(cls, value: _V) -> Self:
+        """Create a map plan that always returns a constant value."""
+        return cls.from_map((), ConstMap(value))
 
-        def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
-            arr = values[on]
-            valid = np.isfinite(arr)
-            amin, amax = arr[valid].min(), arr[valid].max()
-            if amin == amax:
-                if limits is not None:
-                    w0, w1 = limits
-                    return np.full(arr.shape, (w0 + w1) / 2)
-                else:
-                    return np.full(arr.shape, amin)
-            _arr = arr.clip(amin, amax)
-            _arr[np.isnan(_arr)] = amin
-            if limits is not None:
-                w0, w1 = limits
-                return (_arr - amin) / (amax - amin) * (w1 - w0) + w0
-            else:
-                return _arr
-
-        return self.with_map((on,), mapper)
-
-    def with_const(self, value: _V) -> Self:
-        return self.with_map((), ConstMap(value))
+    def is_const(self) -> bool:
+        """Return True if the plan is a constant plan."""
+        return isinstance(self._mapper, ConstMap)
 
     @classmethod
     def default(cls) -> Self:
@@ -388,6 +377,32 @@ class MapPlan(ABC, Generic[_V]):
         return self._mapper(input_dict)
 
 
+class ScalarMapPlan(MapPlan[float]):
+    @classmethod
+    def from_range(cls, on: str, limits: tuple[float, float] | None = None) -> Self:
+        """Add a mapper that maps a range to a value."""
+
+        def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
+            arr = values[on]
+            valid = np.isfinite(arr)
+            amin, amax = arr[valid].min(), arr[valid].max()
+            if amin == amax:
+                if limits is not None:
+                    w0, w1 = limits
+                    return np.full(arr.shape, (w0 + w1) / 2)
+                else:
+                    return np.full(arr.shape, amin)
+            _arr = arr.clip(amin, amax)
+            _arr[np.isnan(_arr)] = amin
+            if limits is not None:
+                w0, w1 = limits
+                return (_arr - amin) / (amax - amin) * (w1 - w0) + w0
+            else:
+                return _arr
+
+        return cls.from_map((on,), mapper)
+
+
 class ColorPlan(CyclicPlan[Color]):
     @classmethod
     def _default_values(cls) -> list[Color]:
@@ -397,10 +412,17 @@ class ColorPlan(CyclicPlan[Color]):
     def _norm_value(cls, v: Any) -> Color:
         return Color(v)
 
-    def with_palette(self, palette: ColorPalette) -> ColorPlan:
+    @classmethod
+    def from_palette(
+        cls,
+        by: Sequence[str],
+        palette: ColorPalette | None = None,
+    ) -> ColorPlan:
+        if palette is None:
+            palette = "tab10"
         palette = ColorPalette(palette)
         colors = palette.nextn(palette.ncolors, update=False)
-        return ColorPlan(self._by, colors)
+        return cls(tuple(by), colors)
 
     # NOTE: Color instance is detected as a sequence of 4 floats
     #       so we need to override the default mapper
@@ -482,19 +504,43 @@ class SymbolPlan(CyclicPlan[Symbol]):
         return Symbol(v)
 
 
-class ColormapPlan(MapPlan[Color]):
+class ColormapPlan(MapPlan[NDArray[np.float32]]):
     @classmethod
     def _default_mapper(cls):
         return lambda x: np.ones((x.size, 4))
 
+    @classmethod
+    def from_colormap(
+        cls,
+        on: str,
+        cmap: Colormap,
+        *,
+        clim: tuple[float, float] | None = None,
+    ) -> Self:
+        def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
+            arr = values[on]
+            valid = np.isfinite(arr)
+            if clim is None:
+                amin, amax = arr[valid].min(), arr[valid].max()
+            else:
+                amin, amax = clim
+            if amin == amax:
+                color = cmap(0.5)
+                return np.full((arr.size, 4), np.asarray(color))
+            _arr = arr.clip(amin, amax)
+            _arr[np.isnan(_arr)] = amin
+            return cmap((_arr - amin) / (amax - amin))
 
-class WidthPlan(MapPlan[float]):
+        return cls.from_map((on,), mapper)
+
+
+class WidthPlan(ScalarMapPlan):
     @classmethod
     def _default_mapper(cls):
         return lambda _: 1.0
 
 
-class SizePlan(MapPlan[float]):
+class SizePlan(ScalarMapPlan):
     @classmethod
     def _default_mapper(cls):
         return lambda _: 12.0

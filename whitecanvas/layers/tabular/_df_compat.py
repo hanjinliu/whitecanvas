@@ -180,7 +180,12 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         return PandasWrapper(self._data.groupby(list(by))[on].agg(method).reset_index())
 
     def value_count(self, by: tuple[str, ...]) -> Self:
-        raise NotImplementedError
+        import pandas as pd
+
+        rows = []
+        for sl, sub in self._data.groupby(list(by), observed=True):
+            rows.append((*sl, len(sub)))
+        return PandasWrapper(pd.DataFrame(rows, columns=[*by, "size"]))
 
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):

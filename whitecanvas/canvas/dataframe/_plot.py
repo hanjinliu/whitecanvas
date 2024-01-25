@@ -123,9 +123,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, x, y, name=name, color=color, width=width, style=style,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
@@ -184,9 +184,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, x, y, name=name, color=color, hatch=hatch, size=size,
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
@@ -239,9 +239,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, x, y, name=name, color=color, hatch=hatch, extent=extent,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
@@ -298,9 +298,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, offset, value, name=name, color=color, hatch=hatch, extent=extent,
             shape=shape, orient=orient, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
@@ -360,9 +360,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
             capsize=capsize, extent=extent, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
@@ -430,9 +430,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             size=size, orient=orient, extent=extent, seed=seed,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
@@ -498,9 +498,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             size=size, orient=orient, extent=extent, sort=sort,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             pos, labels = layer._generate_labels()
@@ -554,9 +554,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, offset, color=color, hatch=hatch, orient=orient, extent=extent,
             name=name, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(offset, "count", orient=orient)
@@ -658,9 +658,9 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
             df_agg, x, y, name=name, color=color, width=width, style=style,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(_color.value, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
@@ -717,9 +717,9 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
             df_agg, x, y, name=name, color=color, hatch=hatch, size=size,
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None:
+        if color is not None and not layer._color_by.is_const():
             layer.with_color(_color.value, palette=canvas._color_palette)
-        else:
+        elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)

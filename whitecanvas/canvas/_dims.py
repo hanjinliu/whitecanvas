@@ -511,7 +511,7 @@ class InAxes:
         ----------
         image : Any
             Image stack of multi-dimensional structure.
-        rgb : bool, default is False
+        rgb : bool, default False
             If input image is an RGB(A) image of shape (..., 3) or (..., 4),
             then set this to True to display the image as RGB(A).
 

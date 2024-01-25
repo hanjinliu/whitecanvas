@@ -1,7 +1,8 @@
 # fmt: off
 """
 This module was copied from the seaborn project (https://github.com/mwaskom/seaborn),
-which is also a copy of the scipy project (https://github.com/scipy/scipy).
+which is also a copy of the scipy project (https://github.com/scipy/scipy). Only the
+ruff checks are considered.
 
 Original docstring from seaborn follows:
 
@@ -74,15 +75,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -------------------------------------------------------------------------------
 
 import numpy as np
-from numpy import (asarray, atleast_2d, reshape, zeros, newaxis, dot, exp, pi,
-                   sqrt, power, atleast_1d, sum, ones, cov)
-from numpy import linalg
+from numpy import (
+    asarray,
+    atleast_1d,
+    atleast_2d,
+    cov,
+    dot,
+    exp,
+    linalg,
+    newaxis,
+    ones,
+    pi,
+    power,
+    reshape,
+    sqrt,
+    sum,
+    zeros,
+)
+
+__all__ = ["gaussian_kde"]
 
 
-__all__ = ['gaussian_kde']
-
-
-class gaussian_kde:
+class gaussian_kde:  # noqa: N801
     """Representation of a kernel-density estimate using Gaussian kernels.
 
     Kernel density estimation is a way to estimate the probability density
@@ -148,7 +162,7 @@ class gaussian_kde:
     (much more so than the actual shape of the kernel).  Bandwidth selection
     can be done by a "rule of thumb", by cross-validation, by "plug-in
     methods" or by other means; see [3]_, [4]_ for reviews.  `gaussian_kde`
-    uses a rule of thumb, the default is Scott's Rule.
+    uses a rule of thumb, the default Scott's Rule.
 
     Scott's Rule [1]_, implemented as `scotts_factor`, is::
 
@@ -295,7 +309,7 @@ class gaussian_kde:
     covariance_factor = scotts_factor
     covariance_factor.__doc__ = """Computes the coefficient (`kde.factor`) that
         multiplies the data covariance matrix to obtain the kernel covariance
-        matrix. The default is `scotts_factor`.  A subclass can overwrite this
+        matrix. The default `scotts_factor`.  A subclass can overwrite this
         method to provide a different method, or set it through a call to
         `kde.set_bandwidth`."""
 
@@ -322,19 +336,18 @@ class gaussian_kde:
         """
         if bw_method is None:
             pass
-        elif bw_method == 'scott':
+        elif bw_method == "scott":
             self.covariance_factor = self.scotts_factor
-        elif bw_method == 'silverman':
+        elif bw_method == "silverman":
             self.covariance_factor = self.silverman_factor
         elif np.isscalar(bw_method) and not isinstance(bw_method, str):
-            self._bw_method = 'use constant'
+            self._bw_method = "use constant"
             self.covariance_factor = lambda: bw_method
         elif callable(bw_method):
             self._bw_method = bw_method
             self.covariance_factor = lambda: self._bw_method(self)
         else:
-            msg = "`bw_method` should be 'scott', 'silverman', a scalar " \
-                  "or a callable."
+            msg = "`bw_method` should be 'scott', 'silverman', a scalar or a callable."
             raise ValueError(msg)
 
         self._compute_covariance()
@@ -345,7 +358,7 @@ class gaussian_kde:
         """
         self.factor = self.covariance_factor()
         # Cache covariance and inverse covariance of the data
-        if not hasattr(self, '_data_inv_cov'):
+        if not hasattr(self, "_data_inv_cov"):
             self._data_covariance = atleast_2d(cov(self.dataset, rowvar=1,
                                                bias=False,
                                                aweights=self.weights))

@@ -1,29 +1,3 @@
-from __future__ import annotations
+from whitecanvas.theme._api import default, get_theme
 
-from dataclasses import dataclass
-
-
-@dataclass
-class Theme:
-    fontfamily: str = "Arial"
-    fontsize: int = 11
-    foreground_color: str = "#000000"
-    background_color: str = "#FFFFFF"
-    canvas_size: tuple[float, float] = (800, 600)
-    palette: str = "tab10"
-
-
-_EXISTING_THEMES = {
-    "light": Theme(),
-    "dark": Theme(
-        foreground_color="#FFFFFF", background_color="#000000", palette="tab10_light"
-    ),
-}
-_DEFAULT_THEME = _EXISTING_THEMES["light"]
-
-
-def get_theme(name: str | None = None) -> Theme:
-    # TODO: customizable themes
-    if name is None:
-        return _DEFAULT_THEME
-    return _EXISTING_THEMES[name]
+__all__ = ["get_theme", "default"]

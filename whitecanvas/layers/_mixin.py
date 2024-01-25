@@ -911,7 +911,7 @@ class ConstFont(FontNamespace):
     @size.setter
     def size(self, value):
         if value is None:
-            value = get_theme().fontsize
+            value = get_theme().font.size
         self._layer._backend._plt_set_text_size(value)
         self.events.size.emit(value)
 
@@ -922,7 +922,7 @@ class ConstFont(FontNamespace):
     @family.setter
     def family(self, value):
         if value is None:
-            value = get_theme().fontfamily
+            value = get_theme().font.family
         if not isinstance(value, str):
             raise TypeError(f"fontfamily must be a string, got {type(value)}.")
         self._layer._backend._plt_set_text_fontfamily(value)
@@ -964,7 +964,7 @@ class MultiFont(FontNamespace):
     @size.setter
     def size(self, value):
         if value is None:
-            value = get_theme().fontsize
+            value = get_theme().font.size
         sizes = as_any_1d_array(value, self._layer.ntexts, dtype=np.float32)
         self._layer._backend._plt_set_text_size(sizes)
         self.events.size.emit(sizes)
@@ -976,7 +976,7 @@ class MultiFont(FontNamespace):
     @family.setter
     def family(self, value):
         if value is None:
-            value = get_theme().fontfamily
+            value = get_theme().font.family
         family = as_any_1d_array(value, self._layer.ntexts, dtype=object)
         self._layer._backend._plt_set_text_fontfamily(family)
         self.events.family.emit(family)

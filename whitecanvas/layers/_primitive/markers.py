@@ -86,9 +86,7 @@ class Markers(
         self._size_is_array = False
         self.update(symbol=symbol, size=size, color=color, hatch=hatch, alpha=alpha)
         self.edge.color = color
-        if self.symbol.has_face():
-            self.edge.update(width=1.0, color="black")
-        else:
+        if not self.symbol.has_face():
             self.edge.update(width=2.0, color=color)
         pad_r = size / 400
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
@@ -510,7 +508,7 @@ class Markers(
 
         Parameters
         ----------
-        orient : str or Orientation, default is vertical
+        orient : str or Orientation, default vertical
             Orientation to grow stems.
         bottom : float or array-like, optional
             Bottom of the stems. If not specified, the bottom is set to 0.

@@ -1,15 +1,16 @@
 from __future__ import annotations
+
 from typing import Any
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from cmap import Colormap
+from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
-from whitecanvas.protocols import ImageProtocol
-from whitecanvas.types import ColormapType, _Void, Origin
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer, LayerEvents
+from whitecanvas.protocols import ImageProtocol
+from whitecanvas.types import ColormapType, Origin, _Void
 
 _void = _Void()
 
@@ -29,14 +30,14 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
     ----------
     image : array_like
         2D or 3D array of image data.
-    cmap : colormap type, default is "gray"
+    cmap : colormap type, default "gray"
         Colormap to use.
     clim : tuple of float or None, optional
-        Contrast limits. If ``None``, the limits are set to the min and max of the data.
-        You can also pass ``None`` separately to either limit to only autoscale one of
+        Contrast limits. If `None`, the limits are set to the min and max of the data.
+        You can also pass `None` separately to either limit to only autoscale one of
         them.
-    origin : str or Origin, default is "corner"
-        Origin of the image. This is a redundant parameter which overlaps with ``shift``,
+    origin : str or Origin, default "corner"
+        Origin of the image. This is a redundant parameter which overlaps with `shift`,
         but it makes it easier to operate on the image.
     """
 

@@ -120,9 +120,9 @@ class StackOverPlotter(Generic[_C, _L]):
             Name of the layer.
         color : color-like, optional
             Color of the layer face.
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             Alpha channel of the bars.
-        hatch : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default FacePattern.SOLID
             Hatch Pattern of the bar faces.
 
         Returns

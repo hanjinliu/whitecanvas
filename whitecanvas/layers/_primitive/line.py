@@ -202,16 +202,16 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
 
         Parameters
         ----------
-        symbol : str or Symbol, default is Symbol.CIRCLE
+        symbol : str or Symbol, default Symbol.CIRCLE
             Marker symbols.
         size : float, optional
             Marker size, by default 10
         color : color-like, optional
             Marker face colors. To set edge colors, use `with_edge` method.
             Set to the line color by default.
-        alpha : float, default is 1.0
+        alpha : float, default 1.0
             The alpha channel.
-        hatch : str or FacePattern, default is FacePattern.SOLID
+        hatch : str or FacePattern, default FacePattern.SOLID
             The marker face hatch.
 
         Returns

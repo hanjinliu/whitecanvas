@@ -213,7 +213,7 @@ class CanvasGrid:
     def _plt_show(self):
         self._scene.show()
 
-    def _plt_set_figsize(self, width: float, height: float):
+    def _plt_set_figsize(self, width: int, height: int):
         self._scene.size = (width, height)
 
 

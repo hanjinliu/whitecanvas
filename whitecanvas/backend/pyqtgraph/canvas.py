@@ -295,8 +295,8 @@ class CanvasGrid:
 
         return arr[:, :, [2, 1, 0, 3]]
 
-    def _plt_set_figsize(self, width: float, height: float):
-        self._layoutwidget.resize(int(width), int(height))
+    def _plt_set_figsize(self, width: int, height: int):
+        self._layoutwidget.resize(width, height)
 
 
 class SignalListener(pg.GraphicsObject):

@@ -222,17 +222,17 @@ class CanvasGrid:
         return self._backend_object._plt_screenshot()
 
     @property
-    def size(self) -> tuple[float, float]:
+    def size(self) -> tuple[int, int]:
         """Size in width x height."""
         return self._size
 
     @size.setter
-    def size(self, size: tuple[float, float]):
+    def size(self, size: tuple[int, int]):
         w, h = size
         if w <= 0 or h <= 0:
             raise ValueError("Size must be positive")
-        self._size = size
-        self._backend_object._plt_set_figsize(*size)
+        self._size = (int(w), int(h))
+        self._backend_object._plt_set_figsize(*self._size)
 
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""

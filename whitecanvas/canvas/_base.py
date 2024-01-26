@@ -100,7 +100,6 @@ class CanvasBase(ABC):
         self.y.ticks.color = _t.foreground_color
         self.x.ticks.size = _t.font.size
         self.y.ticks.size = _t.font.size
-        # self.background_color = theme.background_color
 
         # connect layer events
         self.layers.events.inserted.connect(self._cb_inserted, unique=True)
@@ -428,8 +427,8 @@ class CanvasBase(ABC):
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Line, name)
         color = self._generate_colors(color)
-        width = theme.default("line.width", width)
-        style = theme.default("line.style", style)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
         layer = _l.Line(
             xdata, ydata, name=name, color=color, width=width, style=style,
             alpha=alpha, antialias=antialias, backend=self._get_backend(),
@@ -493,9 +492,9 @@ class CanvasBase(ABC):
         xdata, ydata = normalize_xy(*args)
         name = self._coerce_name(_l.Markers, name)
         color = self._generate_colors(color)
-        symbol = theme.default("markers.symbol", symbol)
-        size = theme.default("markers.size", size)
-        hatch = theme.default("markers.hatch", hatch)
+        symbol = theme._default("markers.symbol", symbol)
+        size = theme._default("markers.size", size)
+        hatch = theme._default("markers.hatch", hatch)
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, color=color,
             alpha=alpha, hatch=hatch, backend=self._get_backend(),
@@ -568,8 +567,8 @@ class CanvasBase(ABC):
                 raise ValueError("Expected bottom to have the same shape as height")
         name = self._coerce_name(_l.Bars, name)
         color = self._generate_colors(color)
-        extent = theme.default("bars.extent", extent)
-        hatch = theme.default("bars.hatch", hatch)
+        extent = theme._default("bars.extent", extent)
+        hatch = theme._default("bars.hatch", hatch)
         layer = _l.Bars(
             center, height, bottom, bar_width=extent, name=name, orient=orient,
             color=color, alpha=alpha, hatch=hatch, backend=self._get_backend(),
@@ -626,7 +625,7 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name("histogram", name)
         color = self._generate_colors(color)
-        hatch = theme.default("bars.hatch", hatch)
+        hatch = theme._default("bars.hatch", hatch)
         layer = _l.Bars.from_histogram(
             data, bins=bins, range=range, density=density, name=name, color=color,
             orient=orient, alpha=alpha, hatch=hatch, backend=self._get_backend(),
@@ -728,8 +727,8 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name(_l.InfLine, name)
         color = self._generate_colors(color)
-        width = theme.default("line.width", width)
-        style = theme.default("line.style", style)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
         layer = _l.InfLine(
             pos, angle, name=name, color=color, alpha=alpha,
             width=width, style=style, antialias=antialias,
@@ -781,8 +780,8 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name(_l.InfCurve, name)
         color = self._generate_colors(color)
-        width = theme.default("line.width", width)
-        style = theme.default("line.style", style)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
         layer = _l.InfCurve(
             model, bounds=bounds, name=name, color=color, width=width,
             style=style, antialias=antialias, backend=self._get_backend(),
@@ -919,8 +918,8 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name(_l.Errorbars, name)
         color = self._generate_colors(color)
-        width = theme.default("line.width", width)
-        style = theme.default("line.style", style)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
         layer = _l.Errorbars(
             xdata, ylow, yhigh, name=name, color=color, width=width,
             style=style, antialias=antialias, capsize=capsize,

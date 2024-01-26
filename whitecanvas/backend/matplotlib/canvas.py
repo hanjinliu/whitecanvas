@@ -281,6 +281,8 @@ class CanvasGrid:
 
     def _plt_set_background_color(self, color):
         self._fig.set_facecolor(color)
+        for ax in self._fig.axes:
+            ax.set_facecolor(color)
 
     def _plt_screenshot(self):
         import io

@@ -1,5 +1,6 @@
 __version__ = "0.2.0"
 
+from whitecanvas import theme
 from whitecanvas.canvas import Canvas, CanvasGrid
 from whitecanvas.core import (
     grid,
@@ -23,4 +24,5 @@ __all__ = [
     "vgrid_nonuniform",
     "new_canvas",
     "wrap_canvas",
+    "theme",
 ]

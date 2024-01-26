@@ -41,11 +41,15 @@ _void = _Void()
 
 
 class FaceEvents(SignalGroup):
+    """Events of the face changes."""
+
     color = Signal(object)
     hatch = Signal(object)
 
 
 class EdgeEvents(SignalGroup):
+    """Events of the edge changes."""
+
     color = Signal(object)
     style = Signal(object)
     width = Signal(object)

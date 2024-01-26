@@ -212,5 +212,5 @@ class CanvasGridProtocol(Protocol):
     def _plt_show(self):
         """Show canvas"""
 
-    def _plt_set_figsize(self, width: float, height: float):
+    def _plt_set_figsize(self, width: int, height: int):
         """Set size of canvas in pixels."""

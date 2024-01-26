@@ -237,6 +237,6 @@ class CanvasGrid:
         image = Image.open(io.BytesIO(img_bytes))
         return np.asarray(image, dtype=np.uint8)
 
-    def _plt_set_figsize(self, width: float, height: float):
+    def _plt_set_figsize(self, width: int, height: int):
         self._figs.layout.width = width
         self._figs.layout.height = height

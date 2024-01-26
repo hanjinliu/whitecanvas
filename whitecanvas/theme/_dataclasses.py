@@ -113,8 +113,8 @@ class ErrorBars(_BaseModel):
 
 def _validate_canvas_size(size) -> tuple[float, float]:
     w, h = size
-    w = float(w)
-    h = float(h)
+    w = int(w)
+    h = int(h)
     if w <= 0 or h <= 0:
         raise ValueError("Canvas size must be positive.")
     return w, h

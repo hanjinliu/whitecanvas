@@ -1,28 +1,30 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar, Sequence, Generic
+from typing import TYPE_CHECKING, Any, Generic, Sequence, TypeVar
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from whitecanvas.protocols import BarProtocol
+from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import (
-    MultiFaceEdgeMixin,
-    FaceNamespace,
-    EdgeNamespace,
-    ConstFace,
     ConstEdge,
-    MultiFace,
+    ConstFace,
+    EdgeNamespace,
+    FaceNamespace,
     MultiEdge,
+    MultiFace,
+    MultiFaceEdgeMixin,
 )
-from whitecanvas.types import ColorType, Hatch, Orientation, LineStyle, Rect
-from whitecanvas.backend import Backend
+from whitecanvas.protocols import BarProtocol
+from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation, Rect, _Void
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
 
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
+_void = _Void()
 
 
 class Spans(
@@ -73,6 +75,7 @@ class Spans(
         self._x_hint, self._y_hint = xhint, yhint
         self._low_lim = -1e10
         self._high_lim = 1e10
+        self._init_events()
 
     @property
     def orient(self) -> Orientation:
@@ -146,15 +149,16 @@ class Spans(
 
     def with_face(
         self,
-        color: ColorType | None = None,
+        color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Spans[ConstFace, _Edge]:
+        """Update the face properties."""
         return super().with_face(color, hatch, alpha)
 
     def with_face_multi(
         self,
-        color: ColorType | Sequence[ColorType] | None = None,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Spans[MultiFace, _Edge]:
@@ -167,6 +171,7 @@ class Spans(
         style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1,
     ) -> Spans[_Face, ConstEdge]:
+        """Update the edge properties."""
         return super().with_edge(color, width, style, alpha)
 
     def with_edge_multi(

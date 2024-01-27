@@ -89,6 +89,7 @@ class Bars(
         self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xhint, yhint
         self._bar_type = "bars"
+        self._init_events()
 
     @classmethod
     def from_histogram(
@@ -376,7 +377,7 @@ class Bars(
 
     def with_face(
         self,
-        color: ColorType | None = None,
+        color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Bars[ConstFace, _Edge]:
@@ -384,7 +385,7 @@ class Bars(
 
     def with_face_multi(
         self,
-        color: ColorType | Sequence[ColorType] | None = None,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Bars[MultiFace, _Edge]:

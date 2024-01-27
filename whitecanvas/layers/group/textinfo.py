@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.types import Alignment
+
+from whitecanvas.layers._primitive import Line, Texts
 from whitecanvas.layers.group._collections import LayerContainer
-from whitecanvas.layers._primitive import Texts, Line
+from whitecanvas.types import Alignment
 
 
 def _norm_bracket_data(

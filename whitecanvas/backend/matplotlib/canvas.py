@@ -267,6 +267,7 @@ class CanvasGrid:
         r1 = row + rowspan
         c1 = col + colspan
         axes = self._fig.add_subplot(self._gridspec[row:r1, col:c1])
+        axes.set_facecolor(self._fig.get_facecolor())
         return Canvas(axes)
 
     def _plt_get_visible(self) -> bool:

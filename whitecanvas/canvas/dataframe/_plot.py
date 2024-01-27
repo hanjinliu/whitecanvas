@@ -11,6 +11,7 @@ from typing import (
 
 import numpy as np
 
+from whitecanvas import theme
 from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.canvas.dataframe._utils import PlotArg
 from whitecanvas.layers import tabular as _lt
@@ -55,6 +56,7 @@ class _Plotter(Generic[_C, _DF]):
         y: str | tuple[str, ...],
         orient: Orientation = Orientation.VERTICAL,
     ) -> None:
+        """Update the x and y labels using the column names"""
         canvas = self._canvas()
         if not isinstance(x, str):
             x = "/".join(x)
@@ -68,6 +70,7 @@ class _Plotter(Generic[_C, _DF]):
             canvas.y.label.text = x
 
     def _update_xy_ticks(self, pos, label, orient: Orientation = Orientation.VERTICAL):
+        """Update the x or y ticks to categorical ticks"""
         canvas = self._canvas()
         if orient.is_vertical:
             canvas.x.ticks.set_labels(pos, label)
@@ -303,9 +306,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
-            pos, labels = layer._generate_labels()
+            pos, labels, offset_labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
-            self._update_xy_label(offset, value, orient=orient)
+            self._update_xy_label(offset_labels, value, orient=orient)
 
         return canvas.add_layer(layer)
 
@@ -365,9 +368,9 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
-            pos, labels = layer._generate_labels()
+            pos, labels, offset_labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
-            self._update_xy_label(offset, value, orient=orient)
+            self._update_xy_label(offset_labels, value, orient=orient)
 
         return canvas.add_layer(layer)
 
@@ -425,6 +428,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         """
         canvas = self._canvas()
         orient = Orientation.parse(orient)
+        symbol = theme._default("markers.symbol", symbol)
+        size = theme._default("markers.size", size)
         layer = _lt.WrappedMarkers.build_stripplot(
             self._df, offset, value, name=name, color=color, hatch=hatch, symbol=symbol,
             size=size, orient=orient, extent=extent, seed=seed,
@@ -493,6 +498,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Marker collection layer.
         """
         canvas = self._canvas()
+        symbol = theme._default("markers.symbol", symbol)
+        size = theme._default("markers.size", size)
         layer = _lt.WrappedMarkers.build_swarmplot(
             self._df, offset, value, name=name, color=color, hatch=hatch, symbol=symbol,
             size=size, orient=orient, extent=extent, sort=sort,

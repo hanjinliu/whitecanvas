@@ -92,6 +92,7 @@ class Markers(
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
 
         self._backend._plt_connect_pick_event(self.events.picked.emit)
+        self._init_events()
 
     @classmethod
     def empty(
@@ -566,7 +567,7 @@ class Markers(
     def with_face(
         self,
         *,
-        color: ColorType | None = None,
+        color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1.0,
     ) -> Markers[ConstFace, _Edge, _Size]:
@@ -611,7 +612,7 @@ class Markers(
     def with_face_multi(
         self,
         *,
-        color: ColorType | Sequence[ColorType] | None = None,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Markers[MultiFace, _Edge, _Size]:

@@ -4,10 +4,11 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-from whitecanvas.types import _Void, ColorType, Alignment, XYData
-from whitecanvas.layers._primitive import MultiLine, Markers, Texts
+
+from whitecanvas.layers._primitive import Markers, MultiLine, Texts
 from whitecanvas.layers.group._collections import LayerContainer
-from whitecanvas.layers.group._offsets import TextOffset, NoOffset
+from whitecanvas.layers.group._offsets import NoOffset, TextOffset
+from whitecanvas.types import Alignment, ColorType
 
 
 class Graph(LayerContainer):
@@ -18,8 +19,10 @@ class Graph(LayerContainer):
         texts: Texts,
         edges_data: NDArray[np.intp],
         name: str | None = None,
-        offset: TextOffset = NoOffset(),
+        offset: TextOffset | None = None,
     ):
+        if offset is None:
+            offset = NoOffset()
         self._edges_data = edges_data
         super().__init__([nodes, edges, texts], name=name)
         self._text_offset = offset

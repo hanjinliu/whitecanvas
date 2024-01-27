@@ -75,7 +75,7 @@ class Font(_BaseModel):
 
     family: str = _field("Arial")
     size: int = _field(11)
-    color: Color = _field(Color("white"))
+    color: Color = _field(Color("black"))
 
 
 @dataclass
@@ -133,3 +133,12 @@ class Theme(_BaseModel):
     background_color: Color = _field(Color("white"))
     canvas_size: tuple[float, float] = _field((800, 600), _validate_canvas_size)
     palette: Colormap = _field(Colormap("tab10"), Colormap)
+
+
+LIGHT_THEME = Theme()
+DARK_THEME = Theme(
+    font=Font(color="white"),
+    foreground_color="#FFFFFF",
+    background_color="#000000",
+    palette="tab10_light",
+)

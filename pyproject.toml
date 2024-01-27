@@ -160,6 +160,7 @@ ignore = [
   # Allow non-abstract empty methods in abstract base classes
   "B027", "B904", "B006",
   "E741",
+  "N802",  # Qt function names are not snake_case
   # Ignore checks for possible passwords
   "S101", "S105", "S106", "S107",
   # Ignore complexity
@@ -169,7 +170,7 @@ unfixable = [
   # Don't touch unused imports
   "F401",
 ]
-exclude = ["tests"]
+exclude = ["tests", "docs"]
 
 [tool.ruff.isort]
 known-first-party = ["whitecanvas"]
@@ -181,6 +182,7 @@ ban-relative-imports = "all"
 # Tests can use magic values, assertions, and relative imports
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 "whitecanvas/theme/_dataclasses.py" = ["RUF"]
+"whitecanvas/backend/**/*" = ["F401"]
 
 [tool.coverage.run]
 source_pkgs = ["whitecanvas", "tests"]

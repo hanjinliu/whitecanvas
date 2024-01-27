@@ -1,4 +1,4 @@
-from whitecanvas.canvas import CanvasGrid, CanvasBase
+from whitecanvas.canvas import CanvasBase, CanvasGrid
 
 
 def view(grid: CanvasGrid, app: str = "qt"):
@@ -20,7 +20,7 @@ def make_dim_slider(canvas: CanvasBase, app: str = "qt"):
 
 
 def _view_qt(grid: CanvasGrid):
-    from ._qt import QtMainWindow
+    from whitecanvas.backend._window._qt import QtMainWindow
 
     main = QtMainWindow(grid)
     main.show()
@@ -28,7 +28,7 @@ def _view_qt(grid: CanvasGrid):
 
 
 def _view_tk(grid: CanvasGrid):
-    from ._tk import TkMainWindow
+    from whitecanvas.backend._window._tk import TkMainWindow
 
     main = TkMainWindow(grid)
     main.mainloop()
@@ -36,12 +36,12 @@ def _view_tk(grid: CanvasGrid):
 
 
 def _slider_qt(canvas: CanvasBase):
-    from ._qt import QtDimSliders
+    from whitecanvas.backend._window._qt import QtDimSliders
 
     return QtDimSliders.from_canvas(canvas)
 
 
 def _slider_tk(canvas: CanvasGrid):
-    from ._tk import TkDimSliders
+    from whitecanvas.backend._window._tk import TkDimSliders
 
     return TkDimSliders.from_canvas(canvas)

@@ -3,13 +3,11 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Generator
 
-from whitecanvas.theme._dataclasses import Theme
+from whitecanvas.theme._dataclasses import DARK_THEME, LIGHT_THEME, Theme
 
 _EXISTING_THEMES = {
-    "light": Theme(),
-    "dark": Theme(
-        foreground_color="#FFFFFF", background_color="#000000", palette="tab10_light"
-    ),
+    "light": LIGHT_THEME,
+    "dark": DARK_THEME,
 }
 _DEFAULT_THEME = _EXISTING_THEMES["light"]
 

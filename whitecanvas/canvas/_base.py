@@ -90,16 +90,16 @@ class CanvasBase(ABC):
             self._init_canvas()
 
     def _init_canvas(self):
-        # default colors
+        # default colors and font
         _t = theme.get_theme()
+        _ft = _t.font
         self.x.color = _t.foreground_color
         self.y.color = _t.foreground_color
-        self.x.ticks.family = _t.font.family
-        self.y.ticks.family = _t.font.family
-        self.x.ticks.color = _t.foreground_color
-        self.y.ticks.color = _t.foreground_color
-        self.x.ticks.size = _t.font.size
-        self.y.ticks.size = _t.font.size
+        self.x.label.update(family=_ft.family, color=_ft.color, size=_ft.size)
+        self.y.label.update(family=_ft.family, color=_ft.color, size=_ft.size)
+        self.title.update(family=_ft.family, color=_ft.color, size=_ft.size)
+        self.x.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
+        self.y.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
 
         # connect layer events
         self.layers.events.inserted.connect(self._cb_inserted, unique=True)

@@ -1,19 +1,19 @@
 from __future__ import annotations
+
 from typing import Any
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-
 from psygnal import Signal
 
+from whitecanvas.backend import Backend
+from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._primitive.line import (
-    MultiLine,
     LineLayerEvents,
+    MultiLine,
     MultiLineProtocol,
 )
-from whitecanvas.layers._base import DataBoundLayer
-from whitecanvas.backend import Backend
-from whitecanvas.types import ColorType, _Void, Orientation, LineStyle
+from whitecanvas.types import ColorType, LineStyle, Orientation
 from whitecanvas.utils.normalize import as_array_1d
 
 

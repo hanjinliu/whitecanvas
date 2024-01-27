@@ -27,7 +27,6 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
-        FaceEdgeMixin.__init__(self)
         ori = Orientation.parse(orient)
         x = as_array_1d(t)
         y0 = as_array_1d(edge_low)
@@ -38,11 +37,14 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
                 f"got {x.size}, {y0.size}, {y1.size}"
             )
         super().__init__(name=name if name is not None else "Band")
+        FaceEdgeMixin.__init__(self)
         self._backend = self._create_backend(Backend(backend), x, y0, y1, ori)
         self._orient = ori
         self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xyy_size_hint(x, y0, y1, ori)
         self._band_type = "band"
+        self.edge.width = 0.0
+        self._init_events()
 
     @property
     def orient(self) -> Orientation:

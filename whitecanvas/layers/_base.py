@@ -30,10 +30,13 @@ class LayerEvents(SignalGroup):
 
 class Layer(ABC):
     events: LayerEvents
-    _events_class = LayerEvents
+    _events_class: type[LayerEvents]
 
     def __init__(self, name: str | None = None):
-        self.events = self.__class__._events_class()
+        if not hasattr(self.__class__, "_events_class"):
+            self.events = LayerEvents()
+        else:
+            self.events = self.__class__._events_class()
         self._name = name if name is not None else self.__class__.__name__
         self._x_hint = self._y_hint = None
         self._is_grouped = False

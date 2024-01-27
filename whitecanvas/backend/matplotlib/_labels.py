@@ -282,7 +282,7 @@ class XAxis(AxisBase):
             visible,
             which="major",
             color=color,
-            linestyle=style,
+            linestyle=style.value,
             linewidth=width,
         )
 
@@ -322,6 +322,6 @@ class YAxis(AxisBase):
             visible,
             which="major",
             color=color,
-            linestyle=style,
+            linestyle=style.value,
             linewidth=width,
         )

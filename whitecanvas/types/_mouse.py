@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from ._enums import MouseButton, Modifier, MouseEventType
+
+from whitecanvas.types._enums import Modifier, MouseButton, MouseEventType
 
 
 @dataclass
@@ -19,4 +20,7 @@ class MouseEvent:
 
     def _repr_simple(self):
         modifiers = "+".join(mod.name for mod in self.modifiers)
-        return f"button={self.button.name!r}, {modifiers=!r}, pos={self.pos!r}, type={self.type.name!r}"
+        return (
+            f"button={self.button.name!r}, "
+            f"{modifiers=!r}, pos={self.pos!r}, type={self.type.name!r}"
+        )

@@ -11,8 +11,7 @@ from whitecanvas import layers as _l
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _mixin
 from whitecanvas.layers import group as _lg
-from whitecanvas.layers._base import Layer, LayerWrapper
-from whitecanvas.layers.tabular import _jitter
+from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 from whitecanvas.types import (
@@ -27,23 +26,13 @@ from whitecanvas.types import (
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-_L = TypeVar("_L", bound="Layer")
 _DF = TypeVar("_DF")
 _Cols = Union[str, "tuple[str, ...]"]
 
 
-class DataFrameLayerWrapper(LayerWrapper[_L], Generic[_L, _DF]):
-    def __init__(self, base: _L, source: DataFrameWrapper[_DF]):
-        super().__init__(base)
-        self._source = source
-
-    @property
-    def data(self) -> _DF:
-        """The internal dataframe."""
-        return self._source.get_native()
-
-
-class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF]):
+class WrappedLines(
+    _shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF]
+):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
@@ -55,7 +44,7 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
         name: str | None = None,
         backend: str | Backend | None = None,
     ):
-        splitby = _concat_by(color, style)
+        splitby = _shared.join_columns(color, style, source=source)
         segs = []
         unique_sl: list[tuple[Any, ...]] = []
         for sl, df in source.group_by(splitby):
@@ -125,7 +114,7 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
         ...
 
     def with_color(self, by, /, palette=None):
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
@@ -154,7 +143,7 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
         return self
 
     def with_style(self, by: str | Iterable[str], styles=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot style by a column other than {self._splitby}")
@@ -180,288 +169,7 @@ class WrappedLines(DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF])
         return self
 
 
-def _unique_tuple(a: tuple[str, ...], b: tuple[str, ...]) -> tuple[str, ...]:
-    b_filt = tuple(x for x in b if x not in a)
-    return a + b_filt
-
-
-class WrappedViolinPlot(DataFrameLayerWrapper[_lg.ViolinPlot, _DF], Generic[_DF]):
-    def __init__(
-        self,
-        source: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
-        value: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        name: str | None = None,
-        orient: Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        shape: str = "both",
-        backend: str | Backend | None = None,
-    ):
-        if isinstance(offset, str):
-            offset = (offset,)
-        splitby = _concat_by(offset, color, hatch)
-        self._y = value
-        self._splitby = splitby
-        self._color_by = _p.ColorPlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._offset_by = _p.OffsetPlan.default().more_by(*offset)
-        self._source = source
-        arrays, self._labels = self._generate_datasets(splitby)
-        x = self._offset_by.generate(self._labels, self._splitby)
-        base = _lg.ViolinPlot.from_arrays(
-            x, arrays, name=name, orient=orient, shape=shape, extent=extent,
-            backend=backend,
-        )  # fmt: skip
-        super().__init__(base, source)
-        if color is not None:
-            self.with_color(color)
-        if hatch is not None:
-            self.with_hatch(hatch)
-
-    def _generate_labels(self):
-        pos: list[float] = []
-        labels: list[str] = []
-        for p, lbl in self._offset_by.iter_ticks(self._labels, self._splitby):
-            pos.append(p)
-            labels.append("\n".join(lbl))
-        return pos, labels
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        offset: tuple[str, ...],
-        value: str,
-        color: str | None = None,
-        hatch: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        shape: str = "both",
-        backend: str | Backend | None = None,
-    ) -> WrappedViolinPlot[_DF]:
-        src = parse(df)
-        self = WrappedViolinPlot(
-            src, offset, value, orient=orient, name=name, extent=extent,
-            color=color, hatch=hatch, shape=shape, backend=backend
-        )  # fmt: skip
-        return self
-
-    @property
-    def orient(self) -> Orientation:
-        """Orientation of the violins."""
-        return self._base_layer.orient
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        return self._color_by
-
-    @property
-    def hatch(self) -> _p.HatchPlan:
-        return self._hatch_by
-
-    def _generate_datasets(
-        self,
-        by_all: tuple[str, ...],
-    ) -> tuple[list[np.ndarray], list[tuple[Any, ...]]]:
-        datasets = []
-        unique_sl: list[tuple[Any, ...]] = []
-        for sl, df in self._source.group_by(by_all):
-            unique_sl.append(sl)
-            datasets.append(df[self._y])
-        return datasets, unique_sl
-
-    def with_color(self, by: str | Iterable[str], palette=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            by_all = _unique_tuple(cov.columns, self._hatch_by.by)
-            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
-            _, self._labels = self._generate_datasets(by_all)
-            self._splitby = by_all
-        else:
-            color_by = _p.ColorPlan.from_const(Color(cov.value))
-        self._base_layer.face.color = color_by.generate(self._labels, self._splitby)
-        self._color_by = color_by
-        return self
-
-    def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            by_all = _unique_tuple(self._color_by.by, cov.columns)
-            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
-            _, self._labels = self._generate_datasets(by_all)
-            self._splitby = by_all
-        else:
-            hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
-        self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
-        self._hatch_by = hatch_by
-        return self
-
-    def with_shift(
-        self,
-        shift: float = 0.0,
-    ) -> Self:
-        for layer in self._base_layer:
-            _old = layer.data
-            layer.set_data(edge_low=_old.y0 + shift, edge_high=_old.y1 + shift)
-        if canvas := self._canvas_ref():
-            canvas._autoscale_for_layer(self, pad_rel=0.025)
-        return self
-
-    def with_edge(
-        self,
-        *,
-        color: ColorType | None = None,
-        width: float = 1.0,
-        style: str | LineStyle = LineStyle.SOLID,
-        alpha: float = 1.0,
-    ) -> Self:
-        self._base_layer.with_edge(color=color, width=width, style=style, alpha=alpha)
-        return self
-
-
-class WrappedBoxPlot(DataFrameLayerWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
-    def __init__(
-        self,
-        source: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
-        value: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        name: str | None = None,
-        orient: Orientation = Orientation.VERTICAL,
-        capsize: float = 0.1,
-        extent: float = 0.8,
-        backend: str | Backend | None = None,
-    ):
-        if isinstance(offset, str):
-            offset = (offset,)
-        splitby = _concat_by(offset, color, hatch)
-        self._y = value
-        self._splitby = splitby
-        self._color_by = _p.ColorPlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._offset_by = _p.OffsetPlan.default().more_by(*offset)
-        self._source = source
-        arrays, self._labels = self._generate_datasets(splitby)
-        x = self._offset_by.generate(self._labels, self._splitby)
-        base = _lg.BoxPlot.from_arrays(
-            x,
-            arrays,
-            name=name,
-            orient=orient,
-            capsize=capsize,
-            extent=extent,
-            backend=backend,
-        )
-        super().__init__(base, source)
-        if color is not None:
-            self.with_color(color)
-        if hatch is not None:
-            self.with_hatch(hatch)
-
-    def _generate_labels(self):
-        pos: list[float] = []
-        labels: list[str] = []
-        for p, lbl in self._offset_by.iter_ticks(self._labels, self._splitby):
-            pos.append(p)
-            labels.append("\n".join(lbl))
-        return pos, labels
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        offset: tuple[str, ...],
-        value: str,
-        color: str | None = None,
-        hatch: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        capsize: float = 0.1,
-        extent: float = 0.8,
-        backend: str | Backend | None = None,
-    ) -> WrappedBoxPlot[_DF]:
-        src = parse(df)
-        self = WrappedBoxPlot(
-            src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
-            capsize=capsize, extent=extent, backend=backend
-        )  # fmt: skip
-        return self
-
-    @property
-    def orient(self) -> Orientation:
-        """Orientation of the violins."""
-        return self._base_layer.orient
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        return self._color_by
-
-    @property
-    def hatch(self) -> _p.HatchPlan:
-        return self._hatch_by
-
-    def _generate_datasets(
-        self,
-        by_all: tuple[str, ...],
-    ) -> tuple[list[np.ndarray], list[tuple[Any, ...]]]:
-        datasets = []
-        unique_sl: list[tuple[Any, ...]] = []
-        for sl, df in self._source.group_by(by_all):
-            unique_sl.append(sl)
-            datasets.append(df[self._y])
-        return datasets, unique_sl
-
-    def with_color(self, by: str | Iterable[str], palette=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            by_all = _unique_tuple(cov.columns, self._hatch_by.by)
-            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
-            _, self._labels = self._generate_datasets(by_all)
-            self._splitby = by_all
-        else:
-            color_by = _p.ColorPlan.from_const(Color(cov.value))
-        colors = color_by.generate(self._labels, self._splitby)
-        self._base_layer.boxes.with_face_multi(color=colors)
-        self._color_by = color_by
-        return self
-
-    def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            by_all = _unique_tuple(self._color_by.by, cov.columns)
-            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
-            _, self._labels = self._generate_datasets(by_all)
-            self._splitby = by_all
-        else:
-            hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
-            hatches = hatch_by.generate(self._labels, self._splitby)
-        self._base_layer.boxes.with_face_multi(hatch=hatches)
-        self._hatch_by = hatch_by
-        return self
-
-    def with_shift(
-        self,
-        shift: float = 0.0,
-    ) -> Self:
-        self._base_layer.with_shift(shift)
-        return self
-
-
-class WrappedMarkers(DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
+class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
@@ -614,7 +322,7 @@ class WrappedMarkers(DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         ...
 
     def with_color(self, by, /, palette=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
@@ -644,13 +352,13 @@ class WrappedMarkers(DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         return self
 
     def with_edge_color(self, by: str | Iterable[str], palette=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
             color_by = _p.ColorPlan.from_const(Color(cov.value))
         colors = color_by.map(self._source)
-        self._base_layer.face.color = colors
+        self._base_layer.edge.color = colors
         self._edge_color_by = color_by
         return self
 
@@ -673,7 +381,7 @@ class WrappedMarkers(DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         return self
 
     def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
         else:
@@ -710,7 +418,7 @@ class WrappedMarkers(DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         ...
 
     def with_symbol(self, by, /, symbols=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             symbol_by = _p.SymbolPlan.new(cov.columns, values=symbols)
         else:
@@ -781,7 +489,7 @@ class WrappedMarkerGroups(WrappedMarkers):
 
 
 class WrappedBars(
-    DataFrameLayerWrapper[_l.Bars[_mixin.MultiFace, _mixin.MultiEdge], _DF],
+    _shared.DataFrameLayerWrapper[_l.Bars[_mixin.MultiFace, _mixin.MultiEdge], _DF],
     Generic[_DF],
 ):
     def __init__(
@@ -799,7 +507,7 @@ class WrappedBars(
     ):
         if isinstance(offset, str):
             offset = (offset,)
-        splitby = _concat_by(offset, color, hatch)
+        splitby = _shared.join_columns(offset, color, hatch, source=source)
         unique_sl: list[tuple[Any, ...]] = []
         values = []
         for sl, df in source.group_by(splitby):
@@ -858,7 +566,7 @@ class WrappedBars(
         backend: str | Backend | None = None,
     ) -> WrappedBars[_DF]:
         src = parse(df)
-        splitby = _concat_by(offset, color, hatch)
+        splitby = _shared.join_columns(offset, color, hatch, source=src)
         new_src = src.value_count(splitby)
         return WrappedBars(
             new_src, offset, "size", name=name, color=color, hatch=hatch,
@@ -876,7 +584,7 @@ class WrappedBars(
         return self._hatch_by
 
     def with_color(self, by: str | Iterable[str] | ColorType, palette=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot color by a column other than {self._splitby}")
@@ -888,7 +596,7 @@ class WrappedBars(
         return self
 
     def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
-        cov = ColumnOrValue(by, self._source)
+        cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot hatch by a column other than {self._splitby}")
@@ -898,67 +606,3 @@ class WrappedBars(
         self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
         self._hatch_by = hatch_by
         return self
-
-
-# class WrappedPointPlot
-
-
-def _concat_by(*args: str | tuple[str] | None) -> tuple[str, ...]:
-    """
-    Concatenate the given arguments into a tuple of strings.
-
-    >>> _concat_by("a", "b", "c")  # ("a", "b", "c")
-    >>> _concat_by("a", ("b", "c"))  # ("a", "b", "c")
-    >>> _concat_by("a", None, "c")  # ("a", "c")
-    """
-    by_all: list[str] = []
-    for arg in args:
-        if arg is None:
-            continue
-        if isinstance(arg, str):
-            if arg not in by_all:
-                by_all.append(arg)
-        else:
-            for a in arg:
-                if a not in by_all:
-                    by_all.append(a)
-    return tuple(by_all)
-
-
-class ColumnOrValue:
-    def __init__(self, by, df: DataFrameWrapper[_DF]):
-        if isinstance(by, str):
-            if by in df.iter_keys():
-                self._is_columns = True
-                self._value = (by,)
-            else:
-                self._is_columns = False
-                self._value = by
-        elif hasattr(by, "__iter__"):
-            self._is_columns = all(isinstance(each, str) for each in by)
-            if self._is_columns:
-                columns = set(df.iter_keys())
-                for each in by:
-                    if each not in columns:
-                        raise ValueError(f"{each!r} is not a column.")
-                self._value = tuple(by)
-            else:
-                self._value = by
-
-    @property
-    def is_column(self) -> bool:
-        """True if the value is column name(s)."""
-        return self._is_columns
-
-    @property
-    def value(self) -> Any:
-        """Return the value."""
-        return self._value
-
-    @property
-    def columns(self) -> tuple[str, ...]:
-        """Return the column name(s)."""
-        if self._is_columns:
-            return self._value
-        else:
-            raise ValueError("The value is not a column name(s).")

@@ -1,13 +1,13 @@
-from .line import Line, MultiLine
-from .bars import Bars
-from .markers import Markers
-from .band import Band
-from .spans import Spans
-from .errorbars import Errorbars
-from .inf_curve import InfCurve, InfLine
-from .text import Texts
-from .image import Image
-from .rug import Rug
+from whitecanvas.layers._primitive.band import Band
+from whitecanvas.layers._primitive.bars import Bars
+from whitecanvas.layers._primitive.errorbars import Errorbars
+from whitecanvas.layers._primitive.image import Image
+from whitecanvas.layers._primitive.inf_curve import InfCurve, InfLine
+from whitecanvas.layers._primitive.line import Line, MultiLine
+from whitecanvas.layers._primitive.markers import Markers
+from whitecanvas.layers._primitive.rug import Rug
+from whitecanvas.layers._primitive.spans import Spans
+from whitecanvas.layers._primitive.text import Texts
 
 __all__ = [
     "Line",

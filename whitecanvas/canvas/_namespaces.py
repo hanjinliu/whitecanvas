@@ -49,7 +49,7 @@ class Namespace:
             self._canvas_ref = StrongRef(_no_canvas)
         self._instances: dict[int, Self] = {}
 
-    def __get__(self, canvas, owner) -> Self:
+    def __get__(self, canvas, owner=None) -> Self:
         if canvas is None:
             return self
         while isinstance(canvas, Namespace):
@@ -90,6 +90,8 @@ class Namespace:
 
 
 class _TextBoundNamespace(Namespace):
+    _attrs = ("color", "size", "family", "visible")
+
     def _get_object(self) -> protocols.TextLabelProtocol:
         raise NotImplementedError
 
@@ -155,12 +157,13 @@ class _TextLabelNamespace(_TextBoundNamespace):
 
     def __set__(self, instance, value):
         # allow canvas.x.label = "X" as a shortcut for canvas.x.label.text = "X"
+        obj = self.__get__(instance)
         if isinstance(value, str):
-            self.text = value
+            obj.text = value
         elif isinstance(value, dict):
-            self.update(value)
+            obj.update(value)
         else:
-            raise TypeError(f"Cannot set {type(self)} to {value!r}.")
+            raise TypeError(f"Cannot set {value!r} to {type(obj)}.")
 
 
 class _TicksNamespace(_TextBoundNamespace):

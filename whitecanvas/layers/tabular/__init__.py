@@ -1,10 +1,9 @@
+from whitecanvas.layers.tabular._box_like import WrappedBoxPlot, WrappedViolinPlot
 from whitecanvas.layers.tabular._dataframe import (
     WrappedBars,
-    WrappedBoxPlot,
     WrappedLines,
     WrappedMarkerGroups,
     WrappedMarkers,
-    WrappedViolinPlot,
 )
 
 __all__ = [

@@ -537,16 +537,19 @@ class FaceEdgeMixinEvents(LayerEvents):
 
 
 class _AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
-    face: _NFace
-    edge: _NEdge
-    _face_namespace: _NFace
-    _edge_namespace: _NEdge
     events: FaceEdgeMixinEvents
     _events_class = FaceEdgeMixinEvents
 
-    def __init__(self):
+    def __init__(self, face: _NFace, edge: _NEdge):
+        self._face_namespace = face
+        self._edge_namespace = edge
+
+    def _init_events(self):
         self._face_namespace.events.connect(self.events.face.emit)
         self._edge_namespace.events.connect(self.events.edge.emit)
+        # _face_namespace may change! _make_sure_hatch_visible should connected to
+        # the layer event.
+        self.events.face.connect(self._make_sure_hatch_visible)
 
     @property
     def face(self) -> _NFace:
@@ -558,26 +561,20 @@ class _AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
         """The edge namespace."""
         return self._edge_namespace
 
-
-class FaceEdgeMixin(_AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
-    def __init__(self):
-        self._face_namespace = MonoFace(self)
-        self._edge_namespace = MonoEdge(self)
-
     def with_face(
         self,
-        color: ColorType | None = None,
+        *,
+        color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
-        if color is None:
-            color = self.face.color
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge(
         self,
+        *,
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -585,27 +582,37 @@ class FaceEdgeMixin(_AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
     ) -> Self:
         """Update the edge properties."""
         if color is None:
-            color = self.face.color
+            color = get_theme().foreground_color
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
+
+    def _make_sure_hatch_visible(self):
+        pass
+
+
+class FaceEdgeMixin(_AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
+    def __init__(self):
+        super().__init__(MonoFace(self), MonoEdge(self))
+
+    def _make_sure_hatch_visible(self):
+        if self.edge.width == 0:
+            self.edge.width = 1
+            self.edge.color = get_theme().foreground_color
 
 
 class MultiFaceEdgeMixin(_AbstractFaceEdgeMixin[_NFace, _NEdge]):
     """Mixin for layers with multiple faces and edges."""
 
     def __init__(self):
-        self._face_namespace = ConstFace(self)
-        self._edge_namespace = ConstEdge(self)
+        super().__init__(ConstFace(self), ConstEdge(self))
 
     def with_face(
         self,
-        color: ColorType | None = None,
+        color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
-        if color is None:
-            color = self.face.color
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
@@ -622,7 +629,7 @@ class MultiFaceEdgeMixin(_AbstractFaceEdgeMixin[_NFace, _NEdge]):
     ) -> Self:
         """Update the edge properties."""
         if color is None:
-            color = self.face.color
+            color = get_theme().foreground_color
         if not isinstance(self._edge_namespace, ConstEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = ConstEdge(self)  # type: ignore
@@ -632,12 +639,10 @@ class MultiFaceEdgeMixin(_AbstractFaceEdgeMixin[_NFace, _NEdge]):
 
     def with_face_multi(
         self,
-        color: ColorType | Sequence[ColorType] | None = None,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
-        if color is None:
-            color = self.face.color
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
@@ -654,13 +659,27 @@ class MultiFaceEdgeMixin(_AbstractFaceEdgeMixin[_NFace, _NEdge]):
     ) -> Self:
         """Update the edge properties."""
         if color is None:
-            color = self.face.color
+            color = get_theme().foreground_color
         if not isinstance(self._edge_namespace, MultiEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore
             self._edge_namespace.events.connect(self.events.edge.emit)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
+
+    def _make_sure_hatch_visible(self):
+        _is_no_width = self.edge.width == 0
+        if isinstance(self._edge_namespace, MultiEdge):
+            if np.any(_is_no_width):
+                ec = np.array(get_theme().foreground_color, dtype=np.float32)
+                self.edge.width = np.where(_is_no_width, 1, self.edge.width)
+                ec_old = self.edge.color
+                ec_old[_is_no_width] = ec[np.newaxis]
+                self.edge.color = ec_old
+        else:
+            if _is_no_width:
+                self.edge.width = 1
+                self.edge.color = get_theme().foreground_color
 
 
 class CollectionFace(FaceNamespace):
@@ -701,6 +720,7 @@ class CollectionFace(FaceNamespace):
 
     @property
     def alpha(self) -> float:
+        """Alpha value of the face."""
         return self.color[:, 3]
 
     @alpha.setter
@@ -745,7 +765,7 @@ class CollectionEdge(EdgeNamespace):
 
     @property
     def color(self) -> NDArray[np.floating]:
-        """Face color of the bar."""
+        """Face colors of the collection."""
         cols = [layer.edge.color for layer in self._iter_children()]
         return np.stack(cols, axis=0)
 
@@ -817,35 +837,16 @@ class CollectionEdge(EdgeNamespace):
 
 class CollectionFaceEdgeMixin(_AbstractFaceEdgeMixin[CollectionFace, CollectionEdge]):
     def __init__(self):
-        self._face_namespace = CollectionFace(self)
-        self._edge_namespace = CollectionEdge(self)
+        super().__init__(CollectionFace(self), CollectionEdge(self))
 
-    def with_face(
-        self,
-        *,
-        color: ColorType | None = None,
-        hatch: Hatch | str = Hatch.SOLID,
-        alpha: float = 1,
-    ) -> Self:
-        """Update the face properties."""
-        if color is None:
-            color = self.face.color
-        self.face.update(color=color, hatch=hatch, alpha=alpha)
-        return self
-
-    def with_edge(
-        self,
-        *,
-        color: ColorType | None = None,
-        width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
-    ) -> Self:
-        """Update the edge properties."""
-        if color is None:
-            color = self.face.color
-        self.edge.update(color=color, style=style, width=width, alpha=alpha)
-        return self
+    def _make_sure_hatch_visible(self):
+        _is_no_width = self.edge.width == 0
+        if np.any(_is_no_width):
+            ec = np.array(get_theme().foreground_color, dtype=np.float32)
+            self.edge.width = np.where(_is_no_width, 1, self.edge.width)
+            ec_old = self.edge.color
+            ec_old[_is_no_width] = ec[np.newaxis]
+            self.edge.color = ec_old
 
 
 # just for typing
@@ -1049,13 +1050,11 @@ class TextMixin(
 
     def with_face(
         self,
-        color: ColorType | None = None,
+        color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
-        if color is None:
-            color = self.face.color
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
@@ -1072,7 +1071,7 @@ class TextMixin(
     ) -> Self:
         """Update the edge properties."""
         if color is None:
-            color = self.face.color
+            color = get_theme().foreground_color
         if not isinstance(self._edge_namespace, ConstEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = ConstEdge(self)  # type: ignore
@@ -1082,12 +1081,10 @@ class TextMixin(
 
     def with_face_multi(
         self,
-        color: ColorType | Sequence[ColorType] | None = None,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
     ) -> Self:
-        if color is None:
-            color = self.face.color
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
@@ -1104,7 +1101,7 @@ class TextMixin(
     ) -> Self:
         """Update the edge properties."""
         if color is None:
-            color = self.face.color
+            color = get_theme().foreground_color
         if not isinstance(self._edge_namespace, MultiEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore

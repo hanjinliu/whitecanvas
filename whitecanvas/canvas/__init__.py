@@ -1,5 +1,5 @@
-from ._base import CanvasBase, Canvas
-from ._grid import CanvasGrid, CanvasHGrid, CanvasVGrid, SingleCanvas
+from whitecanvas.canvas._base import Canvas, CanvasBase
+from whitecanvas.canvas._grid import CanvasGrid, CanvasHGrid, CanvasVGrid, SingleCanvas
 
 __all__ = [
     "CanvasBase",

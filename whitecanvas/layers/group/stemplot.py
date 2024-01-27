@@ -3,11 +3,11 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Orientation, XYData, ArrayLike1D
+from whitecanvas.backend import Backend
 from whitecanvas.layers._primitive import Markers, MultiLine
 from whitecanvas.layers.group._collections import LayerContainer
+from whitecanvas.types import ArrayLike1D, Orientation, XYData
 from whitecanvas.utils.normalize import normalize_xy
-from whitecanvas.backend import Backend
 
 
 class StemPlot(LayerContainer):

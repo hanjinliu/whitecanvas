@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Callable, TYPE_CHECKING, Generic
-from typing_extensions import Concatenate, ParamSpec
 import inspect
-
 import math
+from typing import TYPE_CHECKING, Any, Callable, Generic
+
 import numpy as np
+from typing_extensions import Concatenate, ParamSpec
 
 from whitecanvas.backend import Backend
-from whitecanvas.types import LineStyle, ColorType, Rect
-from whitecanvas.protocols import LineProtocol
 from whitecanvas.layers._primitive.line import LineMixin
+from whitecanvas.protocols import LineProtocol
+from whitecanvas.types import ColorType, LineStyle, Rect
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas

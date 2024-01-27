@@ -8,7 +8,7 @@ def test_context():
         theme.foreground_color = "yellow"
         assert_color_equal(theme.foreground_color, "yellow")
         canvas = wc.new_canvas("matplotlib:qt")
-        assert_color_equal(canvas.x.ticks.color, "yellow")
+        assert_color_equal(canvas.x.color, "yellow")
     canvas = wc.new_canvas("matplotlib:qt")
     assert_color_equal(canvas.x.ticks.color, "black")
 

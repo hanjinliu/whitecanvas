@@ -1,1 +1,3 @@
-from ._plot import DataFramePlotter
+from whitecanvas.canvas.dataframe._plot import DataFramePlotter
+
+__all__ = ["DataFramePlotter"]

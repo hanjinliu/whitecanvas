@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from whitecanvas.types import _Void, Symbol, ColorType, Hatch, XYData
-from whitecanvas.layers._primitive import Line, Band, Markers
+from whitecanvas.layers._primitive import Band, Line, Markers
 from whitecanvas.layers.group._collections import LayerContainer
+from whitecanvas.types import ColorType, Hatch, Symbol, XYData, _Void
 
 _void = _Void()
 

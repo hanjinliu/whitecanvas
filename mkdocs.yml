@@ -1,0 +1,75 @@
+site_name: whitecanvas
+site_description: A type safe and backend independent plotting library for Python.
+repo_name: whitecanvas
+repo_url: https://github.com/hanjinliu/whitecanvas
+
+copyright: Copyright (c) 2023 - 2024 Hanjin Liu
+
+theme:
+  name: material
+  features:
+    - content.code.annotate
+    - navigation.sections
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.share
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+nav:
+  - Overview: index.md
+  - Quick Start: quick_start.md
+  - Layers:
+    - Overview: layers/index.md
+    - Line Layers: layers/line_layers.md
+    - Face&Edge Layers: layers/face_layers.md
+    - Layer Groups: layers/layer_groups.md
+  - Canvas:
+    - Overview: canvas/index.md
+    - X/Y Axis: canvas/xy_axis.md
+    - Working with the Backend Objects: canvas/native_objects.md
+  - Categorical Plot:
+    - Overview: categorical/index.md
+    - Categorical Lines and Markers: categorical/lines_and_markers.md
+    - Categorical Axis: categorical/categorical_axis.md
+
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+            - https://docs.python.org/3/objects.inv
+          options:
+            docstring_style: numpy
+            show_source: true
+            show_bases: false
+            show_signature_annotations: true
+  - gen-files:
+      scripts:
+        - docs/_scripts/_screenshots.py
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.keys
+  - pymdownx.arithmatex:
+      generic: true
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+hooks:
+  - docs/_scripts/_hooks.py
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

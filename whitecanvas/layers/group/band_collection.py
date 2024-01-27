@@ -42,6 +42,7 @@ class BandCollection(
         LayerCollectionBase.__init__(self, bands, name=name)
         CollectionFaceEdgeMixin.__init__(self)
         self._orient = orient
+        self._init_events()
 
     @property
     def data(self) -> list[XYYData]:

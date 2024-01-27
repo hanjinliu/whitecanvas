@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from typing import Callable, cast
-from qtpy import QtWidgets as QtW, QtGui, QtCore
-from whitecanvas.canvas import CanvasGrid, CanvasBase
-from whitecanvas._axis import DimAxis, RangeAxis, CategoricalAxis
+
+from qtpy import QtCore, QtGui
+from qtpy import QtWidgets as QtW
+
+from whitecanvas._axis import CategoricalAxis, DimAxis, RangeAxis
+from whitecanvas.canvas import CanvasBase, CanvasGrid
 
 
 class QtCanvas(QtW.QWidget):

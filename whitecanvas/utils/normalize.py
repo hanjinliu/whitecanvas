@@ -98,7 +98,7 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
         else:
             raise ValueError(
                 f"Color array must have shape (3,), (4,), (N={size}, 3), or (N={size},"
-                f" 4) but got {color.shape}"
+                f" 4) but got\n{color!r}"
             )
     arr = np.array(color)
     return as_color_array(arr, size)

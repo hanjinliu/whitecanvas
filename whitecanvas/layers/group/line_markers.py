@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from numpy.typing import ArrayLike
-from whitecanvas.types import ColorType, _Void, Alignment, LineStyle, Orientation
-from whitecanvas.layers._primitive import Line, Markers, Errorbars, Texts
+
+from whitecanvas.layers._primitive import Errorbars, Line, Markers, Texts
 from whitecanvas.layers.group._collections import LayerContainer
+from whitecanvas.types import Alignment, ColorType, LineStyle, Orientation, _Void
 
 if TYPE_CHECKING:
-    from .labeled import LabeledPlot
+    from whitecanvas.layers.group.labeled import LabeledPlot
 
 _void = _Void()
 
@@ -79,8 +80,8 @@ class Plot(LayerContainer):
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> LabeledPlot:
-        from whitecanvas.layers.group.labeled import LabeledPlot
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group.labeled import LabeledPlot
 
         if err_high is None:
             err_high = err
@@ -110,8 +111,8 @@ class Plot(LayerContainer):
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> LabeledPlot:
-        from whitecanvas.layers.group.labeled import LabeledPlot
         from whitecanvas.layers._primitive import Errorbars
+        from whitecanvas.layers.group.labeled import LabeledPlot
 
         if err_high is None:
             err_high = err

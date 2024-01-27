@@ -1,17 +1,17 @@
 from __future__ import annotations
+
 from typing import Any
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
-
+from numpy.typing import ArrayLike
 from psygnal import Signal
-from whitecanvas.layers._base import DataBoundLayer
-from whitecanvas.layers._primitive.line import MultiLine, LineLayerEvents
-from whitecanvas.backend import Backend
-from whitecanvas.protocols.layer_protocols import MultiLineProtocol
-from whitecanvas.types import LineStyle, ColorType, _Void, Orientation, XYYData
-from whitecanvas.utils.normalize import as_array_1d
 
+from whitecanvas.backend import Backend
+from whitecanvas.layers._base import DataBoundLayer
+from whitecanvas.layers._primitive.line import LineLayerEvents, MultiLine
+from whitecanvas.protocols.layer_protocols import MultiLineProtocol
+from whitecanvas.types import ColorType, LineStyle, Orientation, XYYData, _Void
+from whitecanvas.utils.normalize import as_array_1d
 
 _void = _Void()
 
@@ -93,7 +93,7 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
             y1 = as_array_1d(edge_high)
         if x0.size != y0.size or x0.size != y1.size:
             raise ValueError(
-                "Expected data to have the same size, " f"got {x0.size}, {y0.size}"
+                f"Expected data to have the same size, got {x0.size}, {y0.size}"
             )
         return XYYData(x0, y0, y1)
 

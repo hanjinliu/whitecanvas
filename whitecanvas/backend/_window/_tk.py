@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import tkinter as tk
 from tkinter import ttk
 from typing import Callable
-from whitecanvas.canvas import CanvasGrid, CanvasBase
-from whitecanvas._axis import DimAxis, RangeAxis, CategoricalAxis
-from psygnal import Signal
 
-import tkinter as tk
 import numpy as np
 from PIL import Image, ImageTk
+from psygnal import Signal
+
+from whitecanvas._axis import CategoricalAxis, DimAxis, RangeAxis
+from whitecanvas.canvas import CanvasBase, CanvasGrid
 
 
 class TkCanvas(ttk.Frame):
@@ -51,9 +52,17 @@ class TkMainWindow(ttk.Frame):
 class TkSlider(ttk.Scale):
     changed = Signal(int)
 
+    def __init__(self, parent=None, **kwargs):
+        kwargs["command"] = lambda value: self.changed.emit(int(value))
+        super().__init__(parent, **kwargs)
+
 
 class TkComboBox(ttk.Combobox):
     changed = Signal(str)
+
+    def __init__(self, parent=None, **kwargs):
+        kwargs["postcommand"] = lambda: self.changed.emit(self.get())
+        super().__init__(parent, **kwargs)
 
 
 class TkDimSliders(ttk.Frame):
@@ -74,7 +83,6 @@ class TkDimSliders(ttk.Frame):
                     to=axis.size(),
                     value=axis.value(),
                     orient="horizontal",
-                    command=lambda value: slider.changed.emit(int(value)),
                 )
                 slider.pack(fill="both", expand=True)
             elif isinstance(axis, CategoricalAxis):
@@ -83,7 +91,6 @@ class TkDimSliders(ttk.Frame):
                     values=axis.categories(),
                     # state="readonly",
                     textvariable=axis.value(),
-                    postcommand=lambda: slider.changed.emit(slider.get()),
                 )
                 slider.pack(fill="both", expand=True)
             else:

@@ -536,7 +536,7 @@ class FaceEdgeMixinEvents(LayerEvents):
     edge = Signal(object)
 
 
-class _AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
+class AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
     events: FaceEdgeMixinEvents
     _events_class = FaceEdgeMixinEvents
 
@@ -590,7 +590,7 @@ class _AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
         pass
 
 
-class FaceEdgeMixin(_AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
+class FaceEdgeMixin(AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
     def __init__(self):
         super().__init__(MonoFace(self), MonoEdge(self))
 
@@ -600,7 +600,7 @@ class FaceEdgeMixin(_AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
             self.edge.color = get_theme().foreground_color
 
 
-class MultiFaceEdgeMixin(_AbstractFaceEdgeMixin[_NFace, _NEdge]):
+class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
     """Mixin for layers with multiple faces and edges."""
 
     def __init__(self):
@@ -835,7 +835,7 @@ class CollectionEdge(EdgeNamespace):
         return self._layer
 
 
-class CollectionFaceEdgeMixin(_AbstractFaceEdgeMixin[CollectionFace, CollectionEdge]):
+class CollectionFaceEdgeMixin(AbstractFaceEdgeMixin[CollectionFace, CollectionEdge]):
     def __init__(self):
         super().__init__(CollectionFace(self), CollectionEdge(self))
 

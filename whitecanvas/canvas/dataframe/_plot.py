@@ -25,6 +25,7 @@ from whitecanvas.types import (
 
 if TYPE_CHECKING:
     from whitecanvas.canvas._base import CanvasBase
+    from whitecanvas.layers.tabular._box_like import _BoxLikeMixin
     from whitecanvas.layers.tabular._dataframe import DataFrameWrapper
 
 _C = TypeVar("_C", bound="CanvasBase")
@@ -79,6 +80,7 @@ class _Plotter(Generic[_C, _DF]):
 
 
 class DataFramePlotter(_Plotter[_C, _DF]):
+    ### 0-D categorical ###
     def add_line(
         self,
         x: str,
@@ -250,6 +252,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
+    ### 1-D categorical ###
+
     def add_violinplot(
         self,
         offset: tuple[str, ...],
@@ -301,15 +305,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, offset, value, name=name, color=color, hatch=hatch, extent=extent,
             shape=shape, orient=orient, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        elif color is None:
-            layer.with_color(canvas._color_palette.next())
-        if self._update_label:
-            pos, labels, offset_labels = layer._generate_labels()
-            self._update_xy_ticks(pos, labels, orient=orient)
-            self._update_xy_label(offset_labels, value, orient=orient)
-
+        self._post_add_boxlike(layer, color, orient, value)
         return canvas.add_layer(layer)
 
     def add_boxplot(
@@ -363,6 +359,87 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
             capsize=capsize, extent=extent, backend=canvas._get_backend(),
         )  # fmt: skip
+        self._post_add_boxlike(layer, color, orient, value)
+        return canvas.add_layer(layer)
+
+    def add_pointplot(
+        self,
+        offset: tuple[str, ...],
+        value: str,
+        *,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
+        name: str | None = None,
+        orient: _Orientation = Orientation.VERTICAL,
+        capsize: float = 0.1,
+    ) -> _lt.WrappedPointPlot[_DF]:
+        """
+        Add a categorical point plot (markers with error bars).
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat(df).add_pointplot("species", "weight")
+
+        >>> ### Color by column "region" with dodging.
+        >>> offset = ["species", "region"]  # categories that offset will be added
+        >>> canvas.cat(df).add_pointplot(offset, "weight", color="region")
+
+        The default estimator and errors are mean and standard deviation. To change
+        them, use `est_by_*` and `err_by_*` methods.
+
+        >>> ### Use standard error x 2 (~95%) as error bars.
+        >>> canvas.cat(df).add_pointplot("species", "weight").err_by_se(scale=2.0)
+
+        Parameters
+        ----------
+        offset : tuple of str
+            Column name(s) for x-axis.
+        value : str
+            Column name for y-axis.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        capsize : float, default 0.1
+            Length of the caps as a fraction of the width of the box.
+
+        Returns
+        -------
+        WrappedPointPlot
+            Point plot layer.
+        """
+        canvas = self._canvas()
+        layer = _lt.WrappedPointPlot.from_table(
+            self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
+            capsize=capsize, backend=canvas._get_backend(),
+        )  # fmt: skip
+        self._post_add_boxlike(layer, color, orient, value)
+        return canvas.add_layer(layer)
+
+    def add_barplot(
+        self,
+        offset: tuple[str, ...],
+        value: str,
+        *,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
+        name: str | None = None,
+        orient: _Orientation = Orientation.VERTICAL,
+        capsize: float = 0.1,
+    ) -> _lt.WrappedBarPlot[_DF]:
+        canvas = self._canvas()
+        layer = _lt.WrappedBarPlot.from_table(
+            self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
+            capsize=capsize, backend=canvas._get_backend(),
+        )  # fmt: skip
+        self._post_add_boxlike(layer, color, orient, value)
+        return canvas.add_layer(layer)
+
+    def _post_add_boxlike(self, layer: _BoxLikeMixin, color, orient, value: str):
+        canvas = self._canvas()
         if color is not None and not layer._color_by.is_const():
             layer.with_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
@@ -371,8 +448,6 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             pos, labels, offset_labels = layer._generate_labels()
             self._update_xy_ticks(pos, labels, orient=orient)
             self._update_xy_label(offset_labels, value, orient=orient)
-
-        return canvas.add_layer(layer)
 
     def add_stripplot(
         self,
@@ -568,6 +643,18 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if self._update_label:
             self._update_xy_label(offset, "count", orient=orient)
         return canvas.add_layer(layer)
+
+    ### 2-D categorical ###
+    def add_heatmap(
+        self,
+        xoffset: str | tuple[str, ...],
+        yoffset: str | tuple[str, ...],
+        *,
+        cmap="viridis",
+    ):
+        ...
+
+    ### Aggregation ###
 
     def mean(self, orient: _Orientation = "vertical") -> DataFrameAggPlotter[_C, _DF]:
         """Return a mean-plotter."""

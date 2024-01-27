@@ -30,8 +30,8 @@ df = {
 
 ## Non-marker plots
 
-Since plots without markers are more straightforward, we will start with them.
-It includes `add_violinplot` and `add_boxplot`.
+Since plots without data point markers are more straightforward, we will start with
+them. It includes `add_violinplot`, `add_boxplot`, `add_pointplot` and `add_barplot`.
 
 ``` python
 #!name: categorical_axis_violin_0
@@ -98,3 +98,17 @@ canvas
     This is different from the `seaborn` interface, where `hue=` and `dodge=` are used
     to separate groups. As you can see in these examples, this is how `whitecanvas`
     can easily handle more complicated cases without confusion.
+
+`add_boxplot` is very similar to `add_violinplot`.
+
+``` python
+#!name: categorical_axis_boxplot_0
+canvas = new_canvas("matplotlib")
+canvas.cat(df).add_boxplot(
+    offset=["category", "replicate"],
+    value="observation",
+    color="replicate",
+    hatch="category",
+)
+canvas
+```

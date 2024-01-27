@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar
 
 import numpy as np
 from cmap import Color
@@ -24,7 +24,7 @@ from whitecanvas.types import (
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    _FE = _mixin._AbstractFaceEdgeMixin[_mixin.FaceNamespace, _mixin.EdgeNamespace]
+    _FE = _mixin.AbstractFaceEdgeMixin[_mixin.FaceNamespace, _mixin.EdgeNamespace]
 
 _DF = TypeVar("_DF")
 
@@ -289,4 +289,225 @@ class WrappedBoxPlot(
         return self
 
 
-# class WrappedPointPlot
+class _EstimatorMixin(_BoxLikeMixin):
+    orient: Orientation
+
+    def est_by_mean(self) -> Self:
+        """Set estimator to mean."""
+
+        def est_func(x):
+            return np.mean(x)
+
+        return self._update_estimate(est_func)
+
+    def est_by_median(self) -> Self:
+        """Set estimator to median."""
+
+        def est_func(x):
+            return np.median(x)
+
+        return self._update_estimate(est_func)
+
+    def err_by_sd(self, scale: float = 1.0, *, ddof: int = 1) -> Self:
+        """Set error to standard deviation."""
+
+        def err_func(x):
+            _mean = np.mean(x)
+            _sd = np.std(x, ddof=ddof) * scale
+            return _mean - _sd, _mean + _sd
+
+        return self._update_error(err_func)
+
+    def err_by_se(self, scale: float = 1.0, *, ddof: int = 1) -> Self:
+        """Set error to standard error."""
+
+        def err_func(x):
+            _mean = np.mean(x)
+            _er = np.std(x, ddof=ddof) / np.sqrt(len(x)) * scale
+            return _mean - _er, _mean + _er
+
+        return self._update_error(err_func)
+
+    def err_by_quantile(self, low: float = 0.25, high: float | None = None) -> Self:
+        """Set error to quantile."""
+        if low < 0 or low > 1:
+            raise ValueError(f"Quantile must be between 0 and 1, got {low}")
+        if high is None:
+            high = 1 - low
+        elif high < 0 or high > 1:
+            raise ValueError(f"Quantile must be between 0 and 1, got {high}")
+
+        def err_func(x):
+            _qnt = np.quantile(x, [low, high])
+            return _qnt[0], _qnt[1]
+
+        return self._update_error(err_func)
+
+    def _update_estimate(self, est_func: Callable[[np.ndarray], float]) -> Self:
+        arrays, _ = self._generate_datasets()
+        est = [est_func(arr) for arr in arrays]
+        self._set_estimation_values(est)
+        return self
+
+    def _update_error(
+        self,
+        err_func: Callable[[np.ndarray], tuple[float, float]],
+    ) -> Self:
+        arrays, _ = self._generate_datasets()
+        err_low = []
+        err_high = []
+        for arr in arrays:
+            low, high = err_func(arr)
+            err_low.append(low)
+            err_high.append(high)
+        self._set_error_values(err_low, err_high)
+        return self
+
+
+class WrappedPointPlot(
+    _shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], _EstimatorMixin, Generic[_DF]
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        offset: str | tuple[str, ...],
+        value: str,
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        orient: Orientation = Orientation.VERTICAL,
+        capsize: float = 0.1,
+        backend: str | Backend | None = None,
+    ):
+        _BoxLikeMixin.__init__(self, source, offset, value, color, hatch)
+        arrays, self._labels = self._generate_datasets()
+        x = self._offset_by.generate(self._labels, self._splitby)
+        base = _lg.LabeledPlot.from_arrays(
+            x, arrays, name=name, orient=orient, capsize=capsize, backend=backend,
+        )  # fmt: skip
+        super().__init__(base, source)
+        base.with_edge(color=theme.get_theme().foreground_color)
+        self._orient = orient
+        if color is not None:
+            self.with_color(color)
+        if hatch is not None:
+            self.with_hatch(hatch)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: _DF,
+        offset: tuple[str, ...],
+        value: str,
+        color: str | None = None,
+        hatch: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        capsize: float = 0.1,
+        backend: str | Backend | None = None,
+    ) -> WrappedPointPlot[_DF]:
+        src = parse(df)
+        self = WrappedPointPlot(
+            src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
+            capsize=capsize, backend=backend
+        )  # fmt: skip
+        return self
+
+    @property
+    def orient(self) -> Orientation:
+        """Orientation of the violins."""
+        return self._orient
+
+    def with_shift(
+        self,
+        shift: float = 0.0,
+    ) -> Self:
+        base = self._base_layer
+        data = base.data
+        if self._orient.is_vertical:
+            base.set_data(data.x + shift, data.y)
+        else:
+            base.set_data(data.x, data.y + shift)
+        return self
+
+    def _set_estimation_values(self, est):
+        if self.orient.is_vertical:
+            self._base_layer.set_data(ydata=est)
+        else:
+            self._base_layer.set_data(xdata=est)
+
+    def _set_error_values(self, err_low, err_high):
+        mdata = self._base_layer.data
+        if self.orient.is_vertical:
+            self._base_layer.yerr.set_data(mdata.x, err_low, err_high)
+        else:
+            self._base_layer.xerr.set_data(err_low, err_high, mdata.y)
+
+
+class WrappedBarPlot(
+    _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _BoxLikeMixin, Generic[_DF]
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        offset: str | tuple[str, ...],
+        value: str,
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        orient: Orientation = Orientation.VERTICAL,
+        capsize: float = 0.1,
+        backend: str | Backend | None = None,
+    ):
+        _BoxLikeMixin.__init__(self, source, offset, value, color, hatch)
+        arrays, self._labels = self._generate_datasets()
+        x = self._offset_by.generate(self._labels, self._splitby)
+        base = _lg.LabeledBars.from_arrays(
+            x, arrays, name=name, orient=orient, capsize=capsize, backend=backend,
+        )  # fmt: skip
+        super().__init__(base, source)
+        base.with_edge(color=theme.get_theme().foreground_color)
+        self._orient = orient
+        if color is not None:
+            self.with_color(color)
+        if hatch is not None:
+            self.with_hatch(hatch)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: _DF,
+        offset: tuple[str, ...],
+        value: str,
+        color: str | None = None,
+        hatch: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        capsize: float = 0.1,
+        backend: str | Backend | None = None,
+    ) -> WrappedPointPlot[_DF]:
+        src = parse(df)
+        self = WrappedPointPlot(
+            src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
+            capsize=capsize, backend=backend
+        )  # fmt: skip
+        return self
+
+    @property
+    def orient(self) -> Orientation:
+        return self._base_layer.bars.orient
+
+    def _set_estimation_values(self, est):
+        if self.orient.is_vertical:
+            self._base_layer.set_data(ydata=est)
+        else:
+            self._base_layer.set_data(xdata=est)
+
+    def _set_error_values(self, err_low, err_high):
+        mdata = self._base_layer.data
+        if self.orient.is_vertical:
+            self._base_layer.yerr.set_data(mdata.x, err_low, err_high)
+        else:
+            self._base_layer.xerr.set_data(err_low, err_high, mdata.y)

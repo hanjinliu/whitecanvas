@@ -69,6 +69,17 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
             antialias=antialias, capsize=capsize
         )  # fmt: skip
 
+    @property
+    def data(self) -> XYYData:
+        """Data for this layer."""
+        return self._get_layer_data()
+
+    @data.setter
+    def data(self, data):
+        """Set the data for this layer."""
+        self._set_layer_data(self._norm_layer_data(data))
+        self.events.data.emit(data)
+
     @classmethod
     def empty(
         cls,

@@ -4,7 +4,6 @@ from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from psygnal import Signal
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import CollectionFaceEdgeMixin
@@ -12,23 +11,18 @@ from whitecanvas.layers._primitive import Band
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import (
     LayerCollectionBase,
-    LayerContainerEvents,
+    RichContainerEvents,
 )
 from whitecanvas.types import Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
-
-
-class BandCollectionEvents(LayerContainerEvents):
-    face = Signal(object)
-    edge = Signal(object)
 
 
 class BandCollection(
     LayerCollectionBase[Band],
     CollectionFaceEdgeMixin,
 ):
-    events: BandCollectionEvents
-    _events_class = BandCollectionEvents
+    events: RichContainerEvents
+    _events_class = RichContainerEvents
 
     def __init__(
         self,

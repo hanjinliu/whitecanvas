@@ -4,34 +4,35 @@ from typing import Iterable
 
 import numpy as np
 from cmap import Color
-from numpy.typing import ArrayLike, NDArray
-from psygnal import Signal
+from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import (
+    AbstractFaceEdgeMixin,
     EdgeNamespace,
     EnumArray,
     FaceNamespace,
     MonoEdge,
     MultiFace,
-    _AbstractFaceEdgeMixin,
 )
 from whitecanvas.layers._primitive import Bars, MultiLine
 from whitecanvas.layers.group._cat_utils import check_array_input
-from whitecanvas.layers.group._collections import LayerContainer, LayerContainerEvents
+from whitecanvas.layers.group._collections import LayerContainer, RichContainerEvents
 from whitecanvas.theme import get_theme
-from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation, _Void
+from whitecanvas.types import (
+    ArrayLike1D,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+    _Void,
+)
 from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
 
 _void = _Void()
 
 
-class BoxPlotEvents(LayerContainerEvents):
-    face = Signal(object)
-    edge = Signal(object)
-
-
-class BoxPlot(LayerContainer, _AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
+class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
     """
     A group for boxplot.
 
@@ -39,7 +40,6 @@ class BoxPlot(LayerContainer, _AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
     - Bars (boxes)
     - MultiLine (whiskers)
     - MultiLine (median line)
-    - Markers (outliers)
 
      ──┬──  <-- max
        │
@@ -51,8 +51,8 @@ class BoxPlot(LayerContainer, _AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
      ──┴──  <-- min
     """
 
-    events: BoxPlotEvents
-    _events_class = BoxPlotEvents
+    events: RichContainerEvents
+    _events_class = RichContainerEvents
 
     def __init__(
         self,
@@ -65,7 +65,7 @@ class BoxPlot(LayerContainer, _AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         orient: Orientation = Orientation.VERTICAL,
     ):
         super().__init__([boxes, whiskers, medians], name=name)
-        _AbstractFaceEdgeMixin.__init__(self, BoxFace(self), BoxEdge(self))
+        AbstractFaceEdgeMixin.__init__(self, BoxFace(self), BoxEdge(self))
         self._orient = Orientation.parse(orient)
         self._init_events()
 
@@ -88,7 +88,7 @@ class BoxPlot(LayerContainer, _AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
     def from_arrays(
         cls,
         x: list[float],
-        data: list[ArrayLike],
+        data: list[ArrayLike1D],
         *,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
@@ -176,11 +176,11 @@ class BoxPlot(LayerContainer, _AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
 
 
 def _xyy_to_segments(
-    x: ArrayLike,
-    y0: ArrayLike,
-    y1: ArrayLike,
-    y2: ArrayLike,
-    y3: ArrayLike,
+    x: ArrayLike1D,
+    y0: ArrayLike1D,
+    y1: ArrayLike1D,
+    y2: ArrayLike1D,
+    y3: ArrayLike1D,
     capsize: float,
 ):
     """
@@ -209,11 +209,11 @@ def _xyy_to_segments(
 
 
 def _yxx_to_segments(
-    y: ArrayLike,
-    x0: ArrayLike,
-    x1: ArrayLike,
-    x2: ArrayLike,
-    x3: ArrayLike,
+    y: ArrayLike1D,
+    x0: ArrayLike1D,
+    x1: ArrayLike1D,
+    x2: ArrayLike1D,
+    x3: ArrayLike1D,
     capsize: float,
 ):
     """

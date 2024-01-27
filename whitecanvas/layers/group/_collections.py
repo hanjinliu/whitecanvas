@@ -16,6 +16,11 @@ class LayerContainerEvents(LayerEvents):
     reordered = Signal(list)
 
 
+class RichContainerEvents(LayerContainerEvents):
+    face = Signal(object)
+    edge = Signal(object)
+
+
 class LayerContainer(LayerGroup):
     """Layer group that stores children in a list."""
 

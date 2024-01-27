@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,6 +8,7 @@ from psygnal import Signal
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
+from whitecanvas.layers._mixin import EnumArray
 from whitecanvas.layers._primitive.text import Texts
 from whitecanvas.layers._sizehint import xy_size_hint
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol
@@ -22,14 +23,18 @@ from whitecanvas.types import (
     XYData,
     _Void,
 )
-from whitecanvas.utils.normalize import arr_color, as_array_1d, normalize_xy
+from whitecanvas.utils.normalize import (
+    arr_color,
+    as_array_1d,
+    as_color_array,
+    normalize_xy,
+)
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
 
 _void = _Void()
-_Line = TypeVar("_Line", LineProtocol, MultiLineProtocol)
-_T = TypeVar("_T")
+_Line = TypeVar("_Line", bound=LineProtocol)
 
 
 class LineLayerEvents(LayerEvents):
@@ -476,10 +481,17 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         )  # fmt: skip
 
 
-class MultiLine(
-    LineMixin[MultiLineProtocol],
-    DataBoundLayer[LineProtocol, "list[NDArray[np.number]]"],
-):
+class MultiLineEvents(LayerEvents):
+    color = Signal(np.ndarray)
+    width = Signal(float)
+    style = Signal(str)
+    antialias = Signal(bool)
+
+
+class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
+    events: MultiLineEvents
+    _events_class = MultiLineEvents
+
     def __init__(
         self,
         data: list[ArrayLike1D],
@@ -514,6 +526,94 @@ class MultiLine(
     def nlines(self) -> int:
         """Number of lines."""
         return len(self._backend._plt_get_data())
+
+    @property
+    def color(self) -> NDArray[np.floating]:
+        """Color of the line."""
+        if self.nlines == 0:
+            return np.zeros((0, 4), dtype=np.float32)
+        return self._backend._plt_get_edge_color()
+
+    @color.setter
+    def color(self, color: ColorType):
+        col = as_color_array(color, self.nlines)
+        self._backend._plt_set_edge_color(col)
+        self.events.color.emit(col)
+
+    @property
+    def width(self) -> float:
+        """Width of the line."""
+        if self.nlines == 0:
+            return np.zeros(0, dtype=np.float32)
+        return self._backend._plt_get_edge_width()
+
+    @width.setter
+    def width(self, width: float | Sequence[float]):
+        self._backend._plt_set_edge_width(width)
+        self.events.width.emit(width)
+
+    @property
+    def style(self) -> EnumArray[LineStyle]:
+        """Style of the line."""
+        if self.nlines == 0:
+            return np.zeros(0, dtype=object)
+        return np.array(self._backend._plt_get_edge_style(), dtype=object)
+
+    @style.setter
+    def style(self, style: str | LineStyle | Sequence[str | LineStyle]):
+        if isinstance(style, (str, LineStyle)):
+            s = LineStyle(style)
+            self._backend._plt_set_edge_style(s)
+            self.events.style.emit(s)
+        else:
+            styles = [LineStyle(s) for s in style]
+            self._backend._plt_set_edge_style(styles)
+            self.events.style.emit(styles)
+
+    @property
+    def alpha(self) -> NDArray[np.float32]:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        if self.nlines == 0:
+            return
+        col = self.color.copy()
+        col[:, 3] = value
+        self.color = col
+
+    @property
+    def antialias(self) -> bool:
+        """Whether to use antialiasing."""
+        return self._backend._plt_get_antialias()
+
+    @antialias.setter
+    def antialias(self, antialias: bool) -> None:
+        if not isinstance(antialias, bool):
+            raise TypeError(f"Expected antialias to be bool, got {type(antialias)}")
+        self._backend._plt_set_antialias(antialias)
+        self.events.antialias.emit(antialias)
+
+    def update(
+        self,
+        *,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
+        width: float | Sequence[float] | _Void = _void,
+        style: str | LineStyle | Sequence[str | LineStyle] | _Void = _void,
+        alpha: float | Sequence[float] | _Void = _void,
+        antialias: bool | _Void = _void,
+    ):
+        if color is not _void:
+            self.color = color
+        if width is not _void:
+            self.width = width
+        if style is not _void:
+            self.style = style
+        if alpha is not _void:
+            self.alpha = alpha
+        if antialias is not _void:
+            self.antialias = antialias
+        return self
 
 
 def _norm_data(data: list[ArrayLike1D]) -> NDArray[np.number]:

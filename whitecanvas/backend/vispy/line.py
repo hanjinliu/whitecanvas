@@ -6,6 +6,7 @@ from vispy.scene import visuals
 
 from whitecanvas.backend import _not_implemented
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
+from whitecanvas.utils.normalize import as_array_1d, as_color_array
 
 
 @check_protocol(LineProtocol)
@@ -91,27 +92,38 @@ class MultiLine(visuals.Compound):
                 self.add_subvisual(item)
         for item, seg in zip(self._lines, data):
             item.set_data(seg)
+        self._data = data
 
     ##### HasEdges #####
-    def _plt_get_edge_width(self) -> float:
+    def _plt_get_edge_width(self) -> NDArray[np.floating]:
         if len(self._lines) == 0:
-            return 0.0
-        return self._lines[0].width
+            return np.zeros(0, dtype=np.float32)
+        return np.array([line.width for line in self._lines], dtype=np.float32)
 
-    def _plt_set_edge_width(self, width: float):
-        for item in self._lines:
-            item.set_data(width=width)
+    def _plt_set_edge_width(self, width):
+        if isinstance(width, (int, float, np.number)):
+            for item in self._lines:
+                item.set_data(width=width)
+        else:
+            widths = as_array_1d(width)
+            if widths.size != len(self._lines):
+                raise ValueError(
+                    f"width must be a scalar or an array of length {len(self._lines)}"
+                )
+            for item, w in zip(self._lines, widths):
+                item.set_data(width=w)
 
     _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         if len(self._lines) == 0:
-            return np.zeros((4,), dtype=np.float32)
-        return self._lines[0].color
+            return np.zeros((0, 4), dtype=np.float32)
+        return np.stack([line.color for line in self._lines], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        for item in self._lines:
-            item.set_data(color=color)
+        col = as_color_array(color, len(self._lines))
+        for item, c in zip(self._lines, col):
+            item.set_data(color=c)
 
     def _plt_get_antialias(self) -> bool:
         return self._antialias

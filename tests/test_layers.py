@@ -3,7 +3,7 @@ import numpy as np
 from whitecanvas import new_canvas
 from whitecanvas.layers import Layer
 
-from ._utils import assert_color_equal
+from ._utils import assert_color_equal, assert_color_array_equal
 
 
 def _test_visibility(layer: Layer):
@@ -155,11 +155,11 @@ def test_errorbars(backend: str):
     layer = canvas.add_errorbars(np.arange(10), np.zeros(10), np.ones(10))
 
     layer.color = [1.0, 0.0, 0.0, 1.0]
-    assert_color_equal(layer.color, "red")
+    assert_color_array_equal(layer.color, "red")
     layer.style = ":"
-    assert layer.style == ":"
+    assert all(s == ":" for s in layer.style)
     layer.width = 2
-    assert layer.width == 2
+    assert all(w == 2 for w in layer.width)
     _test_visibility(layer)
 
 def test_texts(backend: str):

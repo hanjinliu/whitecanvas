@@ -1,17 +1,25 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
+from whitecanvas.layers._mixin import EnumArray
 from whitecanvas.layers._primitive.line import LineLayerEvents, MultiLine
 from whitecanvas.protocols.layer_protocols import MultiLineProtocol
-from whitecanvas.types import ColorType, LineStyle, Orientation, XYYData, _Void
-from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.types import (
+    ArrayLike1D,
+    ColorType,
+    LineStyle,
+    Orientation,
+    XYYData,
+    _Void,
+)
+from whitecanvas.utils.normalize import as_any_1d_array, as_array_1d, as_color_array
 
 _void = _Void()
 
@@ -28,9 +36,9 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
 
     def __init__(
         self,
-        t: ArrayLike,
-        edge_low: ArrayLike,
-        edge_high: ArrayLike,
+        t: ArrayLike1D,
+        edge_low: ArrayLike1D,
+        edge_high: ArrayLike1D,
         orient: str | Orientation = Orientation.VERTICAL,
         *,
         name: str | None = None,
@@ -119,9 +127,9 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
 
     def set_data(
         self,
-        t: ArrayLike | None = None,
-        edge_low: ArrayLike | None = None,
-        edge_high: ArrayLike | None = None,
+        t: ArrayLike1D | None = None,
+        edge_low: ArrayLike1D | None = None,
+        edge_high: ArrayLike1D | None = None,
     ):
         self.data = t, edge_low, edge_high
 
@@ -149,8 +157,57 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
             self.set_data(*self._data)
         self.events.capsize.emit(capsize)
 
+    @property
+    def color(self) -> NDArray[np.float32]:
+        """Colors of the error bars."""
+        cols = super().color
+        if self._has_caps():
+            return cols[: self.ndata]
+        return cols
+
+    @color.setter
+    def color(self, color: ColorType | Sequence[ColorType]):
+        ndata = self.ndata
+        col = as_color_array(color, ndata)
+        if self._has_caps():
+            col = np.concatenate([col] * 3)
+        MultiLine.color.fset(self, col)
+
+    @property
+    def width(self) -> NDArray[np.float32]:
+        """Widths of the error bars."""
+        widths = super().width
+        if self._has_caps():
+            return widths[: self.ndata]
+        return widths
+
+    @width.setter
+    def width(self, width: float | Sequence[float]):
+        ndata = self.ndata
+        widths = as_any_1d_array(width, ndata, dtype=np.float32)
+        if self._has_caps():
+            widths = np.concatenate([widths] * 3)
+        MultiLine.width.fset(self, widths)
+
+    @property
+    def style(self) -> EnumArray[LineStyle]:
+        """Styles of the error bars."""
+        styles = super().style
+        if self._has_caps():
+            return np.array(styles[: self.ndata], dtype=object)
+        return np.array(styles, dtype=object)
+
+    @style.setter
+    def style(self, style: LineStyle | Sequence[LineStyle]):
+        ndata = self.ndata
+        styles = as_any_1d_array(style, ndata, dtype=object)
+        if self._has_caps():
+            styles = np.concatenate([styles] * 3)
+        MultiLine.style.fset(self, styles)
+
     def update(
         self,
+        *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
         style: str | LineStyle | _Void = _void,
@@ -165,11 +222,14 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
             self.capsize = capsize
         return self
 
+    def _has_caps(self) -> bool:
+        return self.nlines > self.ndata
+
 
 def _xyy_to_segments(
-    x: ArrayLike,
-    y0: ArrayLike,
-    y1: ArrayLike,
+    x: ArrayLike1D,
+    y0: ArrayLike1D,
+    y1: ArrayLike1D,
     capsize: float,
 ):
     """
@@ -186,9 +246,9 @@ def _xyy_to_segments(
 
 
 def _yxx_to_segments(
-    y: ArrayLike,
-    x0: ArrayLike,
-    x1: ArrayLike,
+    y: ArrayLike1D,
+    x0: ArrayLike1D,
+    x1: ArrayLike1D,
     capsize: float,
 ):
     starts = np.stack([x0, y], axis=1)

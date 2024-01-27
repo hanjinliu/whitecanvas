@@ -78,26 +78,36 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         for seg in data:
             xdata.append(seg[:, 0])
             ydata.append(seg[:, 1])
-        self._data = bk_models.ColumnDataSource({"x": xdata, "y": ydata})
+        self._data = bk_models.ColumnDataSource(
+            {
+                "x": xdata,
+                "y": ydata,
+                "edge_color": ["blue"] * len(xdata),
+                "width": [1.0] * len(xdata),
+                "dash": ["solid"] * len(xdata),
+            }
+        )
         self._model = bk_models.MultiLine(
             xs="x",
             ys="y",
-            line_color="blue",
-            line_width=1.0,
-            line_dash="solid",
+            line_color="edge_color",
+            line_width="width",
+            line_dash="dash",
             line_join="round",
             line_cap="round",
         )
         self._visible = True
         self._line_color = "#0000FF"
-        self._width = 1.0
+
+    def _plt_get_ndata(self):
+        return len(self._data.data["x"])
 
     def _plt_get_visible(self) -> bool:
         return self._visible
 
     def _plt_set_visible(self, visible: bool):
         if visible:
-            self._model.line_color = self._line_color
+            self._model.line_color = "edge_color"
         else:
             self._model.line_color = "#00000000"
         self._visible = visible
@@ -115,27 +125,35 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         for seg in data:
             xdata.append(seg[:, 0])
             ydata.append(seg[:, 1])
-        self._data.data = {"x": xdata, "y": ydata}
+        self._data.data["x"] = xdata
+        self._data.data["y"] = ydata
 
-    def _plt_get_edge_width(self) -> float:
-        return self._model.line_width
+    def _plt_get_edge_width(self) -> NDArray[np.floating]:
+        return self._data.data["width"]
 
     def _plt_set_edge_width(self, width: float):
-        self._model.line_width = width
+        if np.isscalar(width):
+            width = np.full(self._plt_get_ndata(), width)
+        self._data.data["width"] = width
 
-    def _plt_get_edge_style(self) -> LineStyle:
-        return from_bokeh_line_style(self._model.line_dash)
+    def _plt_get_edge_style(self) -> list[LineStyle]:
+        return [from_bokeh_line_style(d) for d in self._data.data["style"]]
 
-    def _plt_set_edge_style(self, style: LineStyle):
-        self._model.line_dash = to_bokeh_line_style(style)
+    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
+        if isinstance(style, LineStyle):
+            style = [style] * self._plt_get_ndata()
+        val = [to_bokeh_line_style(s) for s in style]
+        self._data.data["style"] = val
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.array(arr_color(self._line_color))
+        return np.stack([arr_color(c) for c in self._data.data["edge_color"]], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        if self._visible:
-            self._model.line_color = hex_color(color)
-        self._line_color = hex_color(color)
+        if color.ndim == 1:
+            color = [hex_color(color)] * self._plt_get_ndata()
+        else:
+            color = [hex_color(c) for c in color]
+        self._data.data["edge_color"] = color
 
     def _plt_get_antialias(self) -> bool:
         return self._model.line_join == "round"

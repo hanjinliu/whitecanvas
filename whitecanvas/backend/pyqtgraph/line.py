@@ -74,16 +74,17 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
         pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
         pen.setCosmetic(True)
         self._lines: list[pg.PlotCurveItem] = []
+        self._qpens: list[QtGui.QPen] = []
         for seg in data:
             item = pg.PlotCurveItem(seg[:, 0], seg[:, 1], pen=pen, antialias=True)
             self.addItem(item)
             self._lines.append(item)
-        self._qpen = pen
+            self._qpens.append(pen)
         self._data = data
         self._bounding_rect_cache = None
         self._antialias = True
 
-    def boundingRect(self):  # noqa: N802
+    def boundingRect(self):
         if self._bounding_rect_cache is not None:
             return self._bounding_rect_cache
         if len(self._lines) == 0:
@@ -104,40 +105,64 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
             for item in self._lines[ndata:]:
                 scene.removeItem(item)
             self._lines = self._lines[:ndata]
+            self._qpens = self._qpens[:ndata]
         else:
-            pen = self._qpen
+            # pick last pen
+            if nitem > 0:
+                pen = self._qpens[-1]
+            else:
+                pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
             for _ in range(ndata - nitem):
                 item = pg.PlotCurveItem(pen=pen, antialias=True)
                 self.addItem(item)
                 self._lines.append(item)
+                self._qpens.append(pen)
         for item, seg in zip(self._lines, data):
             item.setData(seg[:, 0], seg[:, 1])
+        self._data = data
         self._bounding_rect_cache = None
 
     ##### HasEdges #####
     def _set_pen_to_curves(self):
-        for item in self._lines:
-            item.setPen(self._qpen)
+        for item, pen in zip(self._lines, self._qpens):
+            item.setPen(pen)
 
-    def _plt_get_edge_width(self) -> float:
-        return self._qpen.widthF()
+    def _plt_get_edge_width(self) -> NDArray[np.float32]:
+        return np.array([pen.widthF() for pen in self._qpens], dtype=np.float32)
 
-    def _plt_set_edge_width(self, width: float):
-        self._qpen.setWidthF(width)
+    def _plt_set_edge_width(self, width: float | NDArray[np.float32]):
+        if isinstance(width, (int, float, np.number)):
+            widths: list[float] = [width] * len(self._qpens)
+        else:
+            widths = width
+        for pen, w in zip(self._qpens, widths):
+            pen.setWidthF(w)
         self._set_pen_to_curves()
 
-    def _plt_get_edge_style(self) -> LineStyle:
-        return from_qt_line_style(self._qpen.style())
+    def _plt_get_edge_style(self) -> list[LineStyle]:
+        return [from_qt_line_style(pen.style()) for pen in self._qpens]
 
-    def _plt_set_edge_style(self, style: LineStyle):
-        self._qpen.setStyle(to_qt_line_style(style))
+    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
+        if isinstance(style, LineStyle):
+            styles: list[LineStyle] = [style] * len(self._qpens)
+        else:
+            styles = style
+        for pen, s in zip(self._qpens, styles):
+            pen.setStyle(to_qt_line_style(s))
         self._set_pen_to_curves()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.array(self._qpen.color().getRgbF())
+        return np.array(
+            [pen.color().getRgbF() for pen in self._qpens], dtype=np.float32
+        )
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        self._qpen.setColor(array_to_qcolor(color))
+        if color.ndim == 1:
+            colors = [color] * len(self._qpens)
+        else:
+            colors = color
+        for pen, c in zip(self._qpens, colors):
+            pen.setColor(array_to_qcolor(c))
         self._set_pen_to_curves()
 
     def _plt_get_antialias(self) -> bool:

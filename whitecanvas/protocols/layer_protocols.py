@@ -216,16 +216,16 @@ class MultiLineProtocol(XYDataProtocol, HasEdges, Protocol):
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         """Set the edge color."""
 
-    def _plt_get_edge_width(self) -> float:
+    def _plt_get_edge_width(self) -> NDArray[np.floating]:
         """Return the edge width."""
 
-    def _plt_set_edge_width(self, width: float):
+    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
         """Set the edge width."""
 
-    def _plt_get_edge_style(self) -> LineStyle:
+    def _plt_get_edge_style(self) -> list[LineStyle]:
         """Return the edge style."""
 
-    def _plt_set_edge_style(self, style: LineStyle):
+    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         """Set the edge style."""
 
     def _plt_get_antialias(self) -> bool:

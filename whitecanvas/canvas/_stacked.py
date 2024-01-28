@@ -70,7 +70,7 @@ class StackOverPlotter(Generic[_C, _L]):
                 alpha=alpha,
                 name=name,
                 hatch=hatch,
-                bar_width=layer.bar_width,
+                extent=layer.bar_width,
                 backend=layer._backend_name,
             )
         elif isinstance(layer, Band):
@@ -149,7 +149,7 @@ class StackOverPlotter(Generic[_C, _L]):
             data, bins, density=density, range=(bins.min(), bins.max())
         )
         new_layer = Bars(
-            centers, counts, bottom=layer.top, bar_width=dx * 2, name=name,
+            centers, counts, bottom=layer.top, extent=dx * 2, name=name,
             color=color, alpha=alpha, orient=layer.orient, hatch=hatch,
             backend=layer._backend_name,
         )  # fmt: skip

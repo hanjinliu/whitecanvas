@@ -570,7 +570,7 @@ class CanvasBase(ABC):
         extent = theme._default("bars.extent", extent)
         hatch = theme._default("bars.hatch", hatch)
         layer = _l.Bars(
-            center, height, bottom, bar_width=extent, name=name, orient=orient,
+            center, height, bottom, extent=extent, name=name, orient=orient,
             color=color, alpha=alpha, hatch=hatch, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -1311,6 +1311,8 @@ class CanvasBase(ABC):
         else:
             pad_rel = 0.025
         self._autoscale_for_layer(layer, pad_rel=pad_rel)
+        if isinstance(layer, (_l.LayerGroup, _l.LayerWrapper)):
+            self._cb_reordered()
 
     def _cb_inserted_overlay(self, idx: int, layer: _l.Layer):
         _canvas = self._canvas()
@@ -1340,6 +1342,9 @@ class CanvasBase(ABC):
                 layer_backends.append(layer._backend)
             elif isinstance(layer, _l.LayerGroup):
                 for child in layer.iter_children_recursive():
+                    layer_backends.append(child._backend)
+            elif isinstance(layer, _l.LayerWrapper):
+                for child in _iter_layers(layer):
                     layer_backends.append(child._backend)
             else:
                 raise RuntimeError(f"type {type(layer)} not expected")

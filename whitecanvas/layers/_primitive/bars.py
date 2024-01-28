@@ -72,7 +72,7 @@ class Bars(
         bottom: ArrayLike1D | None = None,
         *,
         orient: str | Orientation = Orientation.VERTICAL,
-        bar_width: float = 0.8,
+        extent: float = 0.8,
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
@@ -81,10 +81,10 @@ class Bars(
     ):
         MultiFaceEdgeMixin.__init__(self)
         ori = Orientation.parse(orient)
-        xxyy, xhint, yhint = _norm_bar_inputs(x, height, bottom, ori, bar_width)
+        xxyy, xhint, yhint = _norm_bar_inputs(x, height, bottom, ori, extent)
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), *xxyy)
-        self._bar_width = bar_width
+        self._bar_width = extent
         self._orient = ori
         self.face.update(color=color, alpha=alpha, hatch=hatch)
         self._x_hint, self._y_hint = xhint, yhint
@@ -114,7 +114,7 @@ class Bars(
         if bar_width is None:
             bar_width = edges[1] - edges[0]
         self = Bars(
-            centers, counts, bar_width=bar_width, name=name, color=color, alpha=alpha,
+            centers, counts, extent=bar_width, name=name, color=color, alpha=alpha,
             orient=orient, hatch=hatch, backend=backend,
         )  # fmt: skip
         if density:

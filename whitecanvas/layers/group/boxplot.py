@@ -108,7 +108,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         agg_arr = np.stack(agg_values, axis=1)
         box = Bars(
             x, agg_arr[3] - agg_arr[1], agg_arr[1], name=name, orient=ori,
-            bar_width=extent, backend=backend,
+            extent=extent, backend=backend,
         ).with_face_multi(
             hatch=hatch, color=color, alpha=alpha,
         ).with_edge(color="black")  # fmt: skip

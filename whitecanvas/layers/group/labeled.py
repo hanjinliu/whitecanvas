@@ -310,7 +310,7 @@ class LabeledBars(
     _mixin.AbstractFaceEdgeMixin["PlotFace", "PlotEdge"],
     Generic[_NFace, _NEdge],
 ):
-    evens: RichContainerEvents
+    events: RichContainerEvents
     _events_class = RichContainerEvents
 
     def __init__(
@@ -330,6 +330,9 @@ class LabeledBars(
     def bars(self) -> Bars:
         """The bars layer."""
         return self._children[0]
+
+    def _main_object_layer(self):
+        return self.bars
 
     def _get_data_xy(self, layer: Bars | None = None) -> tuple[np.ndarray, np.ndarray]:
         if layer is None:
@@ -352,17 +355,12 @@ class LabeledBars(
         color: ColorType | list[ColorType] = "blue",
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
+        extent: float = 0.8,
         backend: str | Backend | None = None,
     ) -> LabeledBars[_mixin.MultiFace, _mixin.MonoEdge]:
         x, height, err_data = _init_mean_sd(x, data, color)
-        bars = Bars(
-            x,
-            height,
-            backend=backend,
-        ).with_face_multi(
-            color=color,
-            hatch=hatch,
-            alpha=alpha,
+        bars = Bars(x, height, extent=extent, backend=backend).with_face_multi(
+            color=color, hatch=hatch, alpha=alpha
         )
         xerr, yerr = _init_error_bars(x, height, err_data, orient, capsize, backend)
         return cls(bars, xerr=xerr, yerr=yerr, name=name)
@@ -404,6 +402,10 @@ class LabeledPlot(
         """The markers layer."""
         return self.plot.markers
 
+    def _main_object_layer(self):
+        """The main layer with face that will be used in PlotFace/PlotEdge."""
+        return self.markers
+
     @classmethod
     def from_arrays(
         cls,
@@ -441,23 +443,23 @@ class PlotFace(_mixin.FaceNamespace):
     @property
     def color(self) -> NDArray[np.floating]:
         """Face color of the bar."""
-        return self._layer.markers.face.color
+        return self._layer._main_object_layer().face.color
 
     @color.setter
     def color(self, color):
-        ndata = self._layer.markers.ndata
+        ndata = self._layer._main_object_layer().ndata
         col = as_color_array(color, ndata)
-        self._layer.markers.with_face_multi(color=col)
+        self._layer._main_object_layer().with_face_multi(color=col)
         self.events.color.emit(col)
 
     @property
     def hatch(self) -> _mixin.EnumArray[Hatch]:
         """Face fill hatch."""
-        return self._layer.markers.face.hatch
+        return self._layer._main_object_layer().face.hatch
 
     @hatch.setter
     def hatch(self, hatch: str | Hatch | Iterable[str | Hatch]):
-        ndata = self._layer.markers.ndata
+        ndata = self._layer._main_object_layer().ndata
         hatches = as_any_1d_array(hatch, ndata, dtype=object)
         self._layer.markers.with_face_multi(hatch=hatches)
         self.events.hatch.emit(hatches)
@@ -502,53 +504,59 @@ class PlotFace(_mixin.FaceNamespace):
 
 
 class PlotEdge(_mixin.EdgeNamespace):
-    _layer: LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]
+    _layer: LabeledPlot[_NFace, _NEdge, float] | LabeledBars[_NFace, _NEdge]
 
     @property
     def color(self) -> NDArray[np.floating]:
         """Edge color of the plot."""
-        return self._layer.markers.edge.color
+        return self._layer._main_object_layer().edge.color
 
     @color.setter
     def color(self, color: ColorType):
-        self._layer.markers.with_edge_multi(color=color)
-        self._layer.xerr.color = color
-        self._layer.yerr.color = color
+        self._layer._main_object_layer().with_edge_multi(color=color)
+        if self._layer.xerr.ndata > 0:
+            self._layer.xerr.color = color
+        if self._layer.yerr.ndata > 0:
+            self._layer.yerr.color = color
         self.events.color.emit(color)
 
     @property
     def width(self) -> NDArray[np.float32]:
         """Edge widths."""
-        return self._layer.markers.edge.width
+        return self._layer._main_object_layer().edge.width
 
     @width.setter
     def width(self, width: float):
-        self._layer.markers.edge.width = width
-        self._layer.xerr.width = width
-        self._layer.yerr.width = width
+        self._layer._main_object_layer().edge.width = width
+        if self._layer.xerr.ndata > 0:
+            self._layer.xerr.width = width
+        if self._layer.yerr.ndata > 0:
+            self._layer.yerr.width = width
         self.events.width.emit(width)
 
     @property
     def style(self) -> _mixin.EnumArray[LineStyle]:
         """Edge styles."""
-        return self._layer.markers.edge.style
+        return self._layer._main_object_layer().edge.style
 
     @style.setter
     def style(self, style: str | LineStyle):
         style = LineStyle(style)
-        self._layer.markers.edge.style = style
-        self._layer.xerr.style = style
-        self._layer.yerr.style = style
+        self._layer._main_object_layer().edge.style = style
+        if self._layer.xerr.ndata > 0:
+            self._layer.xerr.style = style
+        if self._layer.yerr.ndata > 0:
+            self._layer.yerr.style = style
         self.events.style.emit(style)
 
     @property
     def alpha(self) -> float:
-        return self.color[3]
+        return self.color[:, 3]
 
     @alpha.setter
     def alpha(self, value):
         color = self.color.copy()
-        color[3] = value
+        color[:, 3] = value
         self.color = color
 
     def update(

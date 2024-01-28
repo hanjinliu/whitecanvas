@@ -459,13 +459,15 @@ class WrappedBarPlot(
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
+        extent: float = 0.8,
         backend: str | Backend | None = None,
     ):
         _BoxLikeMixin.__init__(self, source, offset, value, color, hatch)
         arrays, self._labels = self._generate_datasets()
         x = self._offset_by.generate(self._labels, self._splitby)
         base = _lg.LabeledBars.from_arrays(
-            x, arrays, name=name, orient=orient, capsize=capsize, backend=backend,
+            x, arrays, name=name, orient=orient, capsize=capsize, extent=extent,
+            backend=backend,
         )  # fmt: skip
         super().__init__(base, source)
         base.with_edge(color=theme.get_theme().foreground_color)
@@ -486,12 +488,13 @@ class WrappedBarPlot(
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
+        extent: float = 0.8,
         backend: str | Backend | None = None,
-    ) -> WrappedPointPlot[_DF]:
+    ) -> WrappedBarPlot[_DF]:
         src = parse(df)
-        self = WrappedPointPlot(
+        self = WrappedBarPlot(
             src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
-            capsize=capsize, backend=backend
+            capsize=capsize, extent=extent, backend=backend,
         )  # fmt: skip
         return self
 

@@ -125,8 +125,33 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         for seg in data:
             xdata.append(seg[:, 0])
             ydata.append(seg[:, 1])
-        self._data.data["x"] = xdata
-        self._data.data["y"] = ydata
+        ndata = self._plt_get_ndata()
+        edge_color = self._data.data["edge_color"]
+        width = self._data.data["width"]
+        dash = self._data.data["dash"]
+        if len(data) < ndata:
+            loss = ndata - len(data)
+            edge_color = edge_color[:-loss]
+            width = width[:-loss]
+            dash = dash[:-loss]
+        elif len(data) > ndata:
+            if ndata == 0:
+                edge_color = ["blue"] * len(data)
+                width = [1.0] * len(data)
+                dash = ["solid"] * len(data)
+            else:
+                gain = len(data) - ndata
+                edge_color = edge_color + edge_color[-1] * gain
+                width = width + width[-1] * gain
+                dash = dash + dash[-1] * gain
+        data = {
+            "x": xdata,
+            "y": ydata,
+            "edge_color": edge_color,
+            "width": width,
+            "dash": dash,
+        }
+        self._data.data.update(data)
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
         return self._data.data["width"]
@@ -137,13 +162,13 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         self._data.data["width"] = width
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
-        return [from_bokeh_line_style(d) for d in self._data.data["style"]]
+        return [from_bokeh_line_style(d) for d in self._data.data["dash"]]
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         if isinstance(style, LineStyle):
             style = [style] * self._plt_get_ndata()
         val = [to_bokeh_line_style(s) for s in style]
-        self._data.data["style"] = val
+        self._data.data["dash"] = val
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return np.stack([arr_color(c) for c in self._data.data["edge_color"]], axis=0)

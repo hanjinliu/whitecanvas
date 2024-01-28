@@ -429,11 +429,12 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         name: str | None = None,
         orient: _Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
+        extent: float = 0.8,
     ) -> _lt.WrappedBarPlot[_DF]:
         canvas = self._canvas()
         layer = _lt.WrappedBarPlot.from_table(
             self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
-            capsize=capsize, backend=canvas._get_backend(),
+            capsize=capsize, extent=extent, backend=canvas._get_backend(),
         )  # fmt: skip
         self._post_add_boxlike(layer, color, orient, value)
         return canvas.add_layer(layer)

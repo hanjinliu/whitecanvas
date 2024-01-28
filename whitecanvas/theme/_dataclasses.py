@@ -82,7 +82,7 @@ class Font(_BaseModel):
 class Line(_BaseModel):
     """Line style."""
 
-    width: float = _field(1.0)
+    width: float = _field(2.0)
     style: LineStyle = _field(LineStyle.SOLID)
 
 
@@ -107,7 +107,7 @@ class Bars(_BaseModel):
 class ErrorBars(_BaseModel):
     """Error bar style."""
 
-    width: float = _field(1.0)
+    width: float = _field(2.0)
     style: LineStyle = _field(LineStyle.SOLID)
 
 

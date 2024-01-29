@@ -100,7 +100,7 @@ class Bars(
         density: bool = False,
         range: tuple[float, float] | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        bar_width: float | None = None,
+        extent: float | None = None,
         name: str | None = None,
         color: ColorType = "blue",
         alpha: float = 1.0,
@@ -111,10 +111,10 @@ class Bars(
         data = as_array_1d(data)
         counts, edges = np.histogram(data, bins, density=density, range=range)
         centers = (edges[:-1] + edges[1:]) / 2
-        if bar_width is None:
-            bar_width = edges[1] - edges[0]
+        if extent is None:
+            extent = edges[1] - edges[0]
         self = Bars(
-            centers, counts, extent=bar_width, name=name, color=color, alpha=alpha,
+            centers, counts, extent=extent, name=name, color=color, alpha=alpha,
             orient=orient, hatch=hatch, backend=backend,
         )  # fmt: skip
         if density:

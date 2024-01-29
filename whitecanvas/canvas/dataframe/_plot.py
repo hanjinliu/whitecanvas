@@ -17,6 +17,7 @@ from whitecanvas.canvas.dataframe._utils import PlotArg
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular._dataframe import parse
 from whitecanvas.types import (
+    ArrayLike1D,
     ColorType,
     Hatch,
     Orientation,
@@ -250,6 +251,125 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
+        return canvas.add_layer(layer)
+
+    def add_line_hist(
+        self,
+        x: str,
+        *,
+        bins: int | ArrayLike1D = 10,
+        range: tuple[float, float] | None = None,
+        density: bool = False,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        color: NStr | None = None,
+        width: str | None = None,
+        style: NStr | None = None,
+    ):
+        """
+        Add lines representing histograms.
+
+        >>> ### Use "value" column as x-axis
+        >>> canvas.cat(df).add_line_hist("value", bins=8, density=True)
+
+        >>> ### Multiple histograms colored by column "group"
+        >>> canvas.cat(df).add_line_hist("value", color="group")
+
+        Parameters
+        ----------
+        x : str
+            Column name for x-axis.
+        bins : int or array-like, default 10
+            If an integer, the number of bins. If an array, the bin edges.
+        range : (float, float), default None
+            If provided, the lower and upper range of the bins.
+        density : bool, default False
+            If True, the total area of the histogram will be normalized to 1.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        width : str, optional
+            Column name for line width. Must be numerical.
+        style : str or sequence of str, optional
+            Column name(s) for styling the lines. Must be categorical.
+
+        Returns
+        -------
+        WrappedLines
+            Line collection layer.
+        """
+        canvas = self._canvas()
+        layer = _lt.WrappedLines.build_hist(
+            self._df, x, bins=bins, range=range, density=density, name=name,
+            orient=orient, color=color, width=width, style=style,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        if color is not None and not layer._color_by.is_const():
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        elif color is None:
+            layer.with_color(canvas._color_palette.next())
+        if self._update_label:
+            y = "density" if density else "count"
+            self._update_xy_label(x, y, orient)
+        return canvas.add_layer(layer)
+
+    def add_kde(
+        self,
+        value: str,
+        *,
+        band_width: float | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        color: NStr | None = None,
+        width: str | None = None,
+        style: NStr | None = None,
+    ):
+        """
+        Add lines representing kernel density estimation.
+
+        >>> ### Use "value" column as x-axis
+        >>> canvas.cat(df).add_kde("value")
+
+        >>> ### Multiple KDEs colored by column "group"
+        >>> canvas.cat(df).add_kde("value", color="group")
+
+        Parameters
+        ----------
+        value : str
+            Column name for x-axis.
+        band_width : float, default None
+            Bandwidth of the kernel density estimation. If None, use Scott's rule.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        width : str, optional
+            Column name for line width. Must be numerical.
+        style : str or sequence of str, optional
+            Column name(s) for styling the lines. Must be categorical.
+
+        Returns
+        -------
+        WrappedLines
+            Line collection layer.
+        """
+        canvas = self._canvas()
+        layer = _lt.WrappedLines.build_kde(
+            self._df, value, band_width=band_width, name=name,
+            orient=orient, color=color, width=width, style=style,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        if color is not None and not layer._color_by.is_const():
+            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+        elif color is None:
+            layer.with_color(canvas._color_palette.next())
+        if self._update_label:
+            self._update_xy_label(value, "density", orient)
         return canvas.add_layer(layer)
 
     ### 1-D categorical ###
@@ -644,16 +764,6 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if self._update_label:
             self._update_xy_label(offset, "count", orient=orient)
         return canvas.add_layer(layer)
-
-    ### 2-D categorical ###
-    def add_heatmap(
-        self,
-        xoffset: str | tuple[str, ...],
-        yoffset: str | tuple[str, ...],
-        *,
-        cmap="viridis",
-    ):
-        ...
 
     ### Aggregation ###
 

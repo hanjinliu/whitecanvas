@@ -1,5 +1,5 @@
 from whitecanvas.layers.group._collections import LayerTuple
-from whitecanvas.layers.group.band_collection import ViolinPlot
+from whitecanvas.layers.group.band_collection import BandCollection, ViolinPlot
 from whitecanvas.layers.group.boxplot import BoxPlot
 from whitecanvas.layers.group.graph import Graph
 from whitecanvas.layers.group.labeled import (
@@ -18,6 +18,7 @@ from whitecanvas.layers.group.textinfo import BracketText, Panel
 __all__ = [
     "Plot",
     "LineBand",
+    "BandCollection",
     "BracketText",
     "Panel",
     "LabeledLine",

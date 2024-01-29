@@ -15,6 +15,7 @@ from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 from whitecanvas.types import (
+    ArrayLike1D,
     ColormapType,
     ColorType,
     Hatch,
@@ -36,8 +37,8 @@ class WrappedLines(
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
-        x: str,
-        y: str,
+        segs: list[np.ndarray],
+        labels: list[tuple[Any, ...]],
         color: _Cols | None = None,
         width: str | None = None,
         style: _Cols | None = None,
@@ -45,16 +46,10 @@ class WrappedLines(
         backend: str | Backend | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
-        segs = []
-        unique_sl: list[tuple[Any, ...]] = []
-        for sl, df in source.group_by(splitby):
-            unique_sl.append(sl)
-            segs.append(np.column_stack([df[x], df[y]]))
-
         self._color_by = _p.ColorPlan.default()
         self._width_by = _p.WidthPlan.default()
         self._style_by = _p.StylePlan.default()
-        self._labels = unique_sl
+        self._labels = labels
         self._splitby = splitby
         base = _lg.LineCollection(segs, name=name, backend=backend)
         super().__init__(base, source)
@@ -78,16 +73,95 @@ class WrappedLines(
         backend: str | Backend | None = None,
     ) -> WrappedLines[_DF]:
         src = parse(df)
+        splitby = _shared.join_columns(color, style, source=src)
+        segs = []
+        labels: list[tuple[Any, ...]] = []
+        for sl, df in src.group_by(splitby):
+            labels.append(sl)
+            segs.append(np.column_stack([df[x], df[y]]))
         return WrappedLines(
-            src,
-            x,
-            y,
-            name=name,
-            color=color,
-            width=width,
-            style=style,
+            src, segs, labels, name=name, color=color, width=width, style=style,
             backend=backend,
-        )
+        )  # fmt: skip
+
+    @classmethod
+    def build_kde(
+        cls,
+        df: _DF,
+        value: str,
+        band_width: float | None = None,
+        color: str | None = None,
+        width: str | None = None,
+        style: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> WrappedLines[_DF]:
+        from whitecanvas.utils.kde import gaussian_kde
+
+        src = parse(df)
+        splitby = _shared.join_columns(color, style, source=src)
+        ori = Orientation.parse(orient)
+        segs = []
+        labels: list[tuple[Any, ...]] = []
+        for sl, df in src.group_by(splitby):
+            labels.append(sl)
+            each = df[value]
+            kde = gaussian_kde(each, bw_method=band_width)
+            sigma = np.sqrt(kde.covariance[0, 0])
+            pad = sigma * 2.5
+            x = np.linspace(each.min() - pad, each.max() + pad, 100)
+            y = kde(x)
+            if ori.is_vertical:
+                segs.append(np.column_stack([x, y]))
+            else:
+                segs.append(np.column_stack([y, x]))
+        return WrappedLines(
+            src, segs, labels, name=name, color=color, width=width, style=style,
+            backend=backend,
+        )  # fmt: skip
+
+    @classmethod
+    def build_hist(
+        cls,
+        df: _DF,
+        value: str,
+        bins: int | ArrayLike1D = 10,
+        density: bool = False,
+        range: tuple[float, float] | None = None,
+        color: str | None = None,
+        width: str | None = None,
+        style: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> WrappedLines[_DF]:
+        src = parse(df)
+        splitby = _shared.join_columns(color, style, source=src)
+        ori = Orientation.parse(orient)
+        segs = []
+        labels: list[tuple[Any, ...]] = []
+        for sl, df in src.group_by(splitby):
+            labels.append(sl)
+            each = df[value]
+            counts, edges = np.histogram(each, bins=bins, density=density, range=range)
+            x = np.empty(2 * counts.size + 2, dtype=np.float32)
+            y = np.empty(2 * counts.size + 2, dtype=np.float32)
+            x[0] = edges[0]
+            x[-1] = edges[-1]
+            y[0] = y[-1] = 0
+            x[1:-1:2] = edges[:-1]
+            x[2:-1:2] = edges[1:]
+            y[1:-1:2] = counts
+            y[2:-1:2] = counts
+            if ori.is_vertical:
+                segs.append(np.column_stack([x, y]))
+            else:
+                segs.append(np.column_stack([y, x]))
+        return WrappedLines(
+            src, segs, labels, name=name, color=color, width=width, style=style,
+            backend=backend,
+        )  # fmt: skip
 
     @property
     def color(self) -> _p.ColorPlan:

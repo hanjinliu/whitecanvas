@@ -60,6 +60,31 @@ class BandCollection(
         """Orientation of the bands."""
         return self._orient
 
+    @classmethod
+    def from_arrays(
+        cls,
+        y: list[float],
+        data: list[XYYData],
+        *,
+        band_width: float | None = None,
+        name: str | None = None,
+        orient: Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ):
+        from whitecanvas.utils.kde import gaussian_kde
+
+        input_ = []
+        for bottom, each in zip(y, data):
+            _each = as_array_1d(each)
+            kde = gaussian_kde(_each, bw_method=band_width)
+            sigma = np.sqrt(kde.covariance[0, 0])
+            pad = sigma * 2.5
+            x = np.linspace(_each.min() - pad, _each.max() + pad, 100)
+            y1 = kde(x)
+            y0 = np.full_like(y1, bottom)
+            input_.append(XYYData(x, y0, y1))
+        return cls(input_, name=name, orient=orient.transpose(), backend=backend)
+
 
 class ViolinPlot(BandCollection):
     def __init__(

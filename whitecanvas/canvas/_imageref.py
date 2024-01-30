@@ -118,8 +118,14 @@ class ImageRef(Generic[_C]):
         xdata: list[float] = []
         ydata: list[float] = []
         colors: list[np.ndarray] = []
+        # normalize fmt
         if fmt:
-            fmt_style = "{:" + fmt + "}"
+            if fmt.startswith(":"):
+                fmt_style = "{" + fmt + "}"
+            elif fmt.startswith("{") and fmt.endswith("}"):
+                fmt_style = fmt
+            else:
+                fmt_style = "{:" + fmt + "}"
         else:
             fmt_style = "{}"
         for iy, y in enumerate(ys):

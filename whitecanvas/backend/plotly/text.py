@@ -140,13 +140,13 @@ def _to_plotly_alignment(a: Alignment) -> str:
 
 
 _ALIGNMENT_MAP = {
-    "top": Alignment.BOTTOM,
-    "bottom": Alignment.TOP,
-    "left": Alignment.RIGHT,
-    "right": Alignment.LEFT,
-    "center": Alignment.CENTER,
+    "top center": Alignment.BOTTOM,
     "top left": Alignment.BOTTOM_RIGHT,
     "top right": Alignment.BOTTOM_LEFT,
+    "middle center": Alignment.CENTER,
+    "middle left": Alignment.RIGHT,
+    "middle right": Alignment.LEFT,
+    "bottom center": Alignment.TOP,
     "bottom left": Alignment.TOP_RIGHT,
     "bottom right": Alignment.TOP_LEFT,
 }

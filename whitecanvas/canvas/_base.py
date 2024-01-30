@@ -365,6 +365,12 @@ class CanvasBase(ABC):
 
     def imref(self, layer: _l.Image) -> ImageRef[Self]:
         """The Image reference namespace."""
+        while isinstance(layer, _l.LayerWrapper):
+            layer = layer._base_layer
+        if not isinstance(layer, _l.Image):
+            raise TypeError(
+                f"Expected an Image layer or its wrapper, got {type(layer)}."
+            )
         return ImageRef(self, layer)
 
     def fit(self, layer: _l.DataBoundLayer[_P]) -> FitPlotter[Self, _P]:

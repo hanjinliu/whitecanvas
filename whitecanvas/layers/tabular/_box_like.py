@@ -128,6 +128,12 @@ class _BoxLikeMixin:
                 _nagged += 1
             else:
                 break
+
+        # If all the offset columns are redundantly categorized by color or hatch,
+        # then all the labels should be shown.
+        if _nagged == len(self._offset_by.by):
+            _nagged = 0
+
         # group positions by aggregated labels
         label_to_pos: dict[str, list[float]] = {}
         for p, lbl in self._offset_by.iter_ticks(self._labels, self._splitby):
@@ -147,7 +153,7 @@ class _BoxLikeMixin:
         return pos, labels, offset_labels
 
 
-class WrappedViolinPlot(
+class DFViolinPlot(
     _shared.DataFrameLayerWrapper[_lg.ViolinPlot, _DF],
     _BoxLikeMixin,
     Generic[_DF],
@@ -194,9 +200,9 @@ class WrappedViolinPlot(
         extent: float = 0.8,
         shape: str = "both",
         backend: str | Backend | None = None,
-    ) -> WrappedViolinPlot[_DF]:
+    ) -> DFViolinPlot[_DF]:
         src = parse(df)
-        self = WrappedViolinPlot(
+        self = DFViolinPlot(
             src, offset, value, orient=orient, name=name, extent=extent,
             color=color, hatch=hatch, shape=shape, backend=backend
         )  # fmt: skip
@@ -219,7 +225,7 @@ class WrappedViolinPlot(
         return self
 
 
-class WrappedBoxPlot(
+class DFBoxPlot(
     _shared.DataFrameLayerWrapper[_lg.BoxPlot, _DF], _BoxLikeMixin, Generic[_DF]
 ):
     def __init__(
@@ -268,9 +274,9 @@ class WrappedBoxPlot(
         capsize: float = 0.1,
         extent: float = 0.8,
         backend: str | Backend | None = None,
-    ) -> WrappedBoxPlot[_DF]:
+    ) -> DFBoxPlot[_DF]:
         src = parse(df)
-        self = WrappedBoxPlot(
+        self = DFBoxPlot(
             src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
             capsize=capsize, extent=extent, backend=backend
         )  # fmt: skip
@@ -364,7 +370,7 @@ class _EstimatorMixin(_BoxLikeMixin):
         return self
 
 
-class WrappedPointPlot(
+class DFPointPlot(
     _shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], _EstimatorMixin, Generic[_DF]
 ):
     def __init__(
@@ -406,9 +412,9 @@ class WrappedPointPlot(
         orient: str | Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
         backend: str | Backend | None = None,
-    ) -> WrappedPointPlot[_DF]:
+    ) -> DFPointPlot[_DF]:
         src = parse(df)
-        self = WrappedPointPlot(
+        self = DFPointPlot(
             src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
             capsize=capsize, backend=backend
         )  # fmt: skip
@@ -445,7 +451,7 @@ class WrappedPointPlot(
             self._base_layer.xerr.set_data(err_low, err_high, mdata.y)
 
 
-class WrappedBarPlot(
+class DFBarPlot(
     _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _BoxLikeMixin, Generic[_DF]
 ):
     def __init__(
@@ -490,9 +496,9 @@ class WrappedBarPlot(
         capsize: float = 0.1,
         extent: float = 0.8,
         backend: str | Backend | None = None,
-    ) -> WrappedBarPlot[_DF]:
+    ) -> DFBarPlot[_DF]:
         src = parse(df)
-        self = WrappedBarPlot(
+        self = DFBarPlot(
             src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
             capsize=capsize, extent=extent, backend=backend,
         )  # fmt: skip

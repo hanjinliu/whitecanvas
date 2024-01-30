@@ -182,7 +182,7 @@ unfixable = [
   # Don't touch unused imports
   "F401",
 ]
-exclude = ["tests", "docs"]
+exclude = ["tests", "docs", "examples"]
 
 [tool.ruff.isort]
 known-first-party = ["whitecanvas"]

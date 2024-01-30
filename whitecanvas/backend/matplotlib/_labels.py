@@ -199,13 +199,12 @@ class XTicks(SupportsText):
 
 
 class YTicks(SupportsText):
-    def _plt_get_text(self) -> tuple[list[float], list[str]]:
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         axes = self._canvas()._axes
         return axes.get_yticks(), [x.get_text() for x in axes.get_yticklabels()]
 
-    def _plt_set_text(self, text: tuple[list[float], list[str]]):
-        pos, texts = text
-        self._canvas()._axes.set_yticks(pos, texts)
+    def _plt_override_labels(self, pos: list[float], labels: list[str]):
+        self._canvas()._axes.set_yticks(pos, labels)
 
     def _plt_reset_override(self):
         self._canvas()._axes.set_yticks([])

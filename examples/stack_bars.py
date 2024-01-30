@@ -10,7 +10,7 @@ def main():
     b0 = canvas.add_bars(x, y0)
     b1 = canvas.stack_over(b0).add(y1)
     b2 = canvas.stack_over(b1).add(y2)
-    print(f"stacked {b2} over {b1} over {b0}.")  # noqa: T201
+    print(f"stacked {b2} over {b1} over {b0}.")
     canvas.show(block=True)
 
 if __name__ == "__main__":

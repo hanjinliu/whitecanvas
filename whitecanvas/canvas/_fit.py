@@ -77,8 +77,8 @@ class FitPlotter(Generic[_C, _P]):
             ys1 = y.sum()
             xs2 = (x**2).sum()
             xydot = np.dot(x, y)
-            a = (xydot - ys1 * xs1() / n) / (xs2 - xs1() ** 2 / n)
-            b = (ys1 - a * xs1()) / n
+            a = (xydot - ys1 * xs1 / n) / (xs2 - xs1**2 / n)
+            b = (ys1 - a * xs1) / n
             return a, b
 
         a, b = _reg(data.x, data.y)
@@ -87,7 +87,7 @@ class FitPlotter(Generic[_C, _P]):
         style = theme._default("line.style", style)
         new = InfLine(
             (0, b), angle=np.rad2deg(np.arctan(a)), color=color, width=width,
-            style=style, backend=canvas._get_backend(),
+            style=style, name=f"Fit<{layer.name}>", backend=canvas._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(new)
 
@@ -131,6 +131,7 @@ class FitPlotter(Generic[_C, _P]):
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
         new = InfCurve(
-            poly, color=color, width=width, style=style, backend=canvas._get_backend(),
+            poly, color=color, width=width, style=style, name=f"Fit<{layer.name}>",
+            backend=canvas._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(new)

@@ -2,8 +2,10 @@ import numpy as np
 
 from whitecanvas import new_canvas
 from ._utils import assert_color_array_equal
+import pytest
 
-def test_cat_plots(backend: str):
+@pytest.mark.parametrize("orient", ["v", "h"])
+def test_cat_plots(backend: str, orient: str):
     canvas = new_canvas(backend=backend)
     df = {
         "x": np.arange(30),
@@ -11,11 +13,11 @@ def test_cat_plots(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
 
-    canvas.cat(df).add_stripplot("label", "y")
-    canvas.cat(df).add_swarmplot("label", "y")
-    canvas.cat(df).add_boxplot("label", "y")
-    canvas.cat(df).add_violinplot("label", "y")
-    canvas.cat(df).add_countplot("label")
+    canvas.cat(df).add_stripplot("label", "y", orient=orient)
+    canvas.cat(df).add_swarmplot("label", "y", orient=orient)
+    canvas.cat(df).add_boxplot("label", "y", orient=orient)
+    canvas.cat(df).add_violinplot("label", "y", orient=orient)
+    canvas.cat(df).add_countplot("label", orient=orient)
 
 def test_colored_plots(backend: str):
     canvas = new_canvas(backend=backend)
@@ -58,3 +60,25 @@ def test_markers(backend: str):
     assert_color_array_equal(out._base_layer.face.color, "black")
 
     out = _c.add_markers("x", "y", color="transparent").with_edge_colormap("size")
+
+def test_heatmap(backend: str):
+    canvas = new_canvas(backend=backend)
+    df = {
+        "x": ["A", "B", "A", "B", "A", "B"],
+        "y": ["P", "P", "Q", "Q", "R", "R"],
+        "z": [1, 2, 3, 4, 5, 6],
+    }
+    im = canvas.cat(df).add_heatmap("x", "y", value="z")
+    canvas.imref(im).add_text()
+
+    df = {
+        "x": ["A", "A", "A", "B", "A", "B"],
+        "y": ["P", "Q", "Q", "Q", "P", "Q"],
+        "z": [1.1, 2.1, 3.4, 6.4, 1.1, 6.8],
+    }
+    with pytest.raises(ValueError):
+        # has duplication
+        canvas.cat(df).add_heatmap("x", "y", value="z")
+    im = canvas.cat(df).mean().add_heatmap("x", "y", value="z", fill=-1)
+    canvas.imref(im).add_text(fmt=".1f")
+    assert im.clim == (1.1, 6.6)

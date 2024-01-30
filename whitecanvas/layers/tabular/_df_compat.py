@@ -85,6 +85,11 @@ class DataFrameWrapper(ABC, Generic[_T]):
     def value_count(self, by: tuple[str, ...]) -> Self:
         ...
 
+    @property
+    def columns(self) -> list[str]:
+        """Column names of the data frame."""
+        return list(self.iter_keys())
+
 
 class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
     def __getitem__(self, item: str) -> np.ndarray:

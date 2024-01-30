@@ -18,6 +18,7 @@ from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular._dataframe import parse
 from whitecanvas.types import (
     ArrayLike1D,
+    ColormapType,
     ColorType,
     Hatch,
     Orientation,
@@ -91,7 +92,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         color: NStr | None = None,
         width: str | None = None,
         style: NStr | None = None,
-    ) -> _lt.WrappedLines[_DF]:
+    ) -> _lt.DFLines[_DF]:
         """
         Add a categorical line plot.
 
@@ -125,7 +126,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Line collection layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedLines.from_table(
+        layer = _lt.DFLines.from_table(
             self._df, x, y, name=name, color=color, width=width, style=style,
             backend=canvas._get_backend(),
         )  # fmt: skip
@@ -147,7 +148,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         hatch: NStr | None = None,
         size: str | None = None,
         symbol: NStr | None = None,
-    ) -> _lt.WrappedMarkers[_DF]:
+    ) -> _lt.DFMarkers[_DF]:
         """
         Add a categorical marker plot.
 
@@ -186,7 +187,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Marker collection layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedMarkers.from_table(
+        layer = _lt.DFMarkers.from_table(
             self._df, x, y, name=name, color=color, hatch=hatch, size=size,
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -207,7 +208,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         color: NStr | None = None,
         hatch: NStr | None = None,
         extent: float = 0.8,
-    ) -> _lt.WrappedBars[_DF]:
+    ) -> _lt.DFBars[_DF]:
         """
         Add a categorical bar plot.
 
@@ -241,7 +242,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Bar collection layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedBars.from_table(
+        layer = _lt.DFBars.from_table(
             self._df, x, y, name=name, color=color, hatch=hatch, extent=extent,
             backend=canvas._get_backend(),
         )  # fmt: skip
@@ -302,7 +303,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Line collection layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedLines.build_hist(
+        layer = _lt.DFLines.build_hist(
             self._df, x, bins=bins, range=range, density=density, name=name,
             orient=orient, color=color, width=width, style=style,
             backend=canvas._get_backend(),
@@ -359,7 +360,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Line collection layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedLines.build_kde(
+        layer = _lt.DFLines.build_kde(
             self._df, value, band_width=band_width, name=name,
             orient=orient, color=color, width=width, style=style,
             backend=canvas._get_backend(),
@@ -370,6 +371,27 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(value, "density", orient)
+        return canvas.add_layer(layer)
+
+    def add_hist2d(
+        self,
+        x: str,
+        y: str,
+        *,
+        cmap: ColormapType = "inferno",
+        name: str | None = None,
+        bins: int | tuple[int, int] = 10,
+        range: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        density: bool = False,
+    ):
+        """Add 2-D histogram of given columns."""
+        canvas = self._canvas()
+        layer = _lt.DFHeatmap.build_hist(
+            self._df, x, y, cmap=cmap, name=name, bins=bins, range=range,
+            density=density, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if self._update_label:
+            self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
     ### 1-D categorical ###
@@ -385,7 +407,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         shape: str = "both",
         name: str | None = None,
         orient: _Orientation = Orientation.VERTICAL,
-    ) -> _lt.WrappedViolinPlot[_DF]:
+    ) -> _lt.DFViolinPlot[_DF]:
         """
         Add a categorical violin plot.
 
@@ -421,7 +443,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Violin plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedViolinPlot.from_table(
+        orient = Orientation.parse(orient)
+        layer = _lt.DFViolinPlot.from_table(
             self._df, offset, value, name=name, color=color, hatch=hatch, extent=extent,
             shape=shape, orient=orient, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -439,7 +462,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         orient: _Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
         extent: float = 0.8,
-    ) -> _lt.WrappedBoxPlot[_DF]:
+    ) -> _lt.DFBoxPlot[_DF]:
         """
         Add a categorical box plot.
 
@@ -475,7 +498,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Box plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedBoxPlot.from_table(
+        orient = Orientation.parse(orient)
+        layer = _lt.DFBoxPlot.from_table(
             self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
             capsize=capsize, extent=extent, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -492,7 +516,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         name: str | None = None,
         orient: _Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
-    ) -> _lt.WrappedPointPlot[_DF]:
+    ) -> _lt.DFPointPlot[_DF]:
         """
         Add a categorical point plot (markers with error bars).
 
@@ -532,7 +556,8 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Point plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.WrappedPointPlot.from_table(
+        orient = Orientation.parse(orient)
+        layer = _lt.DFPointPlot.from_table(
             self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
             capsize=capsize, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -550,9 +575,50 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         orient: _Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
         extent: float = 0.8,
-    ) -> _lt.WrappedBarPlot[_DF]:
+    ) -> _lt.DFBarPlot[_DF]:
+        """
+        Add a categorical bar plot (bars with error bars).
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat(df).add_barplot("species", "weight")
+
+        >>> ### Color by column "region" with dodging.
+        >>> offset = ["species", "region"]  # categories that offset will be added
+        >>> canvas.cat(df).add_barplot(offset, "weight", color="region")
+
+        The default estimator and errors are mean and standard deviation. To change
+        them, use `est_by_*` and `err_by_*` methods.
+
+        >>> ### Use standard error x 2 (~95%) as error bars.
+        >>> canvas.cat(df).add_barplot("species", "weight").err_by_se(scale=2.0)
+
+        Parameters
+        ----------
+        offset : tuple of str
+            Column name(s) for x-axis.
+        value : str
+            Column name for y-axis.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        name : str, optional
+            Name of the layer.
+        orient : str, default "vertical"
+            Orientation of the violins. Can be "vertical" or "horizontal".
+        capsize : float, default 0.1
+            Length of the caps as a fraction of the width of the box.
+        extent : float, default 0.8
+            Width of the violins. Usually in range (0, 1].
+
+        Returns
+        -------
+        WrappedBarPlot
+            Bar plot layer.
+        """
         canvas = self._canvas()
-        layer = _lt.WrappedBarPlot.from_table(
+        orient = Orientation.parse(orient)
+        layer = _lt.DFBarPlot.from_table(
             self._df, offset, value, name=name, color=color, hatch=hatch, orient=orient,
             capsize=capsize, extent=extent, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -583,7 +649,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         orient: _Orientation = Orientation.VERTICAL,
         extent: float = 0.5,
         seed: int | None = 0,
-    ) -> _lt.WrappedMarkerGroups[_DF]:
+    ) -> _lt.DFMarkerGroups[_DF]:
         """
         Add a categorical strip plot.
 
@@ -626,7 +692,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         orient = Orientation.parse(orient)
         symbol = theme._default("markers.symbol", symbol)
         size = theme._default("markers.size", size)
-        layer = _lt.WrappedMarkers.build_stripplot(
+        layer = _lt.DFMarkers.build_stripplot(
             self._df, offset, value, name=name, color=color, hatch=hatch, symbol=symbol,
             size=size, orient=orient, extent=extent, seed=seed,
             backend=canvas._get_backend(),
@@ -654,7 +720,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         orient: _Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         sort: bool = False,
-    ) -> _lt.WrappedMarkerGroups[_DF]:
+    ) -> _lt.DFMarkerGroups[_DF]:
         """
         Add a categorical swarm plot.
 
@@ -694,9 +760,10 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             Marker collection layer.
         """
         canvas = self._canvas()
+        orient = Orientation.parse(orient)
         symbol = theme._default("markers.symbol", symbol)
         size = theme._default("markers.size", size)
-        layer = _lt.WrappedMarkers.build_swarmplot(
+        layer = _lt.DFMarkers.build_swarmplot(
             self._df, offset, value, name=name, color=color, hatch=hatch, symbol=symbol,
             size=size, orient=orient, extent=extent, sort=sort,
             backend=canvas._get_backend(),
@@ -720,7 +787,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         name: str | None = None,
         orient: _Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
-    ) -> _lt.WrappedBars[_DF]:
+    ) -> _lt.DFBars[_DF]:
         """
         Add a categorical count plot.
 
@@ -753,7 +820,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         """
         canvas = self._canvas()
         orient = Orientation.parse(orient)
-        layer = _lt.WrappedBars.build_count(
+        layer = _lt.DFBars.build_count(
             self._df, offset, color=color, hatch=hatch, orient=orient, extent=extent,
             name=name, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -764,6 +831,44 @@ class DataFramePlotter(_Plotter[_C, _DF]):
         if self._update_label:
             self._update_xy_label(offset, "count", orient=orient)
         return canvas.add_layer(layer)
+
+    ### 2-D categorical ###
+
+    def add_heatmap(
+        self,
+        x: str,
+        y: str,
+        value: str,
+        *,
+        cmap: ColormapType = "inferno",
+        clim: tuple[float, float] | None = None,
+        name: str | None = None,
+        fill: float = 0,
+    ) -> _lt.DFHeatmap[_DF]:
+        canvas = self._canvas()
+        layer = _lt.DFHeatmap.build_heatmap(
+            self._df, x, y, value, cmap=cmap, clim=clim, name=name, fill=fill,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        if self._update_label:
+            self._update_xy_label(x, y)
+            canvas.x.ticks.set_labels(*layer._generate_xticks())
+            canvas.y.ticks.set_labels(*layer._generate_yticks())
+        return canvas.add_layer(layer)
+
+    # TODO: implement this
+    # def add_2dpointplot(
+    #     self,
+    #     x: str,
+    #     y: str,
+    #     value: str,
+    #     *,
+    #     name: str | None = None,
+    #     color: NStr | None = None,
+    #     width: str | None = None,
+    #     style: NStr | None = None,
+    # ):
+    #     ...
 
     ### Aggregation ###
 
@@ -827,7 +932,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         color: NStr | None = None,
         width: str | None = None,
         style: NStr | None = None,
-    ) -> _lt.WrappedLines[_DF]:
+    ) -> _lt.DFLines[_DF]:
         """
         Add line that connect the aggregated values.
 
@@ -859,7 +964,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         _color = PlotArg.from_color(keys, color)
         _style = PlotArg.from_style(keys, style)
         df_agg = self._aggregate(df, self._concat_tuple(x, y, _color, _style), y)
-        layer = _lt.WrappedLines.from_table(
+        layer = _lt.DFLines.from_table(
             df_agg, x, y, name=name, color=color, width=width, style=style,
             backend=canvas._get_backend(),
         )  # fmt: skip
@@ -881,7 +986,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         hatch: NStr | Hatch | None = None,
         size: np.str_ | float | None = None,
         symbol: NStr | Symbol | None = None,
-    ) -> _lt.WrappedMarkers[_DF]:
+    ) -> _lt.DFMarkers[_DF]:
         """
         Add markers that represent the aggregated values.
 
@@ -918,7 +1023,7 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
         df_agg = self._aggregate(
             df, self._concat_tuple(x, y, _color, _hatch, _symbol), y
         )
-        layer = _lt.WrappedMarkers.from_table(
+        layer = _lt.DFMarkers.from_table(
             df_agg, x, y, name=name, color=color, hatch=hatch, size=size,
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -928,6 +1033,30 @@ class DataFrameAggPlotter(_Plotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
             self._update_xy_label(x, y)
+        return canvas.add_layer(layer)
+
+    def add_heatmap(
+        self,
+        x: str,
+        y: str,
+        value: str,
+        *,
+        cmap: ColormapType = "inferno",
+        clim: tuple[float, float] | None = None,
+        name: str | None = None,
+        fill: float = 0,
+    ) -> _lt.DFHeatmap[_DF]:
+        canvas = self._canvas()
+        df = parse(self._df)
+        df_agg = self._aggregate(df, (x, y), value)
+        layer = _lt.DFHeatmap.build_heatmap(
+            df_agg, x, y, value, cmap=cmap, clim=clim, name=name, fill=fill,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        if self._update_label:
+            self._update_xy_label(x, y)
+            canvas.x.ticks.set_labels(*layer._generate_xticks())
+            canvas.y.ticks.set_labels(*layer._generate_yticks())
         return canvas.add_layer(layer)
 
     def _aggregate(

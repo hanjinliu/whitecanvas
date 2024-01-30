@@ -14,6 +14,7 @@ from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
+from whitecanvas.layers.tabular._utils import unique
 from whitecanvas.types import (
     ArrayLike1D,
     ColormapType,
@@ -33,9 +34,7 @@ _Cols = Union[str, "tuple[str, ...]"]
 _void = _Void()
 
 
-class WrappedLines(
-    _shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF]
-):
+class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
@@ -73,7 +72,7 @@ class WrappedLines(
         style: str | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
-    ) -> WrappedLines[_DF]:
+    ) -> DFLines[_DF]:
         src = parse(df)
         splitby = _shared.join_columns(color, style, source=src)
         segs = []
@@ -81,7 +80,7 @@ class WrappedLines(
         for sl, df in src.group_by(splitby):
             labels.append(sl)
             segs.append(np.column_stack([df[x], df[y]]))
-        return WrappedLines(
+        return DFLines(
             src, segs, labels, name=name, color=color, width=width, style=style,
             backend=backend,
         )  # fmt: skip
@@ -98,7 +97,7 @@ class WrappedLines(
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
-    ) -> WrappedLines[_DF]:
+    ) -> DFLines[_DF]:
         from whitecanvas.utils.kde import gaussian_kde
 
         src = parse(df)
@@ -118,7 +117,7 @@ class WrappedLines(
                 segs.append(np.column_stack([x, y]))
             else:
                 segs.append(np.column_stack([y, x]))
-        return WrappedLines(
+        return DFLines(
             src, segs, labels, name=name, color=color, width=width, style=style,
             backend=backend,
         )  # fmt: skip
@@ -137,7 +136,7 @@ class WrappedLines(
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
-    ) -> WrappedLines[_DF]:
+    ) -> DFLines[_DF]:
         src = parse(df)
         splitby = _shared.join_columns(color, style, source=src)
         ori = Orientation.parse(orient)
@@ -160,7 +159,7 @@ class WrappedLines(
                 segs.append(np.column_stack([x, y]))
             else:
                 segs.append(np.column_stack([y, x]))
-        return WrappedLines(
+        return DFLines(
             src, segs, labels, name=name, color=color, width=width, style=style,
             backend=backend,
         )  # fmt: skip
@@ -245,7 +244,7 @@ class WrappedLines(
         return self
 
 
-class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
+class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
@@ -284,7 +283,7 @@ class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
 
     def _generate_labels(self):
         pos, labels = self._x.generate_labels(self._source)
-        return pos, ["\n".join(lbl) for lbl in labels]
+        return pos, ["\n".join(str(_l) for _l in lbl) for lbl in labels]
 
     @property
     def symbol(self) -> _p.SymbolPlan:
@@ -319,11 +318,11 @@ class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         size: str | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
-    ) -> WrappedMarkers[_DF]:
+    ) -> DFMarkers[_DF]:
         src = parse(df)
         xj = _jitter.identity_or_categorical(src, x)
         yj = _jitter.identity_or_categorical(src, y)
-        return WrappedMarkers(
+        return DFMarkers(
             src, xj, yj, name=name, color=color, hatch=hatch, symbol=symbol,
             size=size, backend=backend,
         )  # fmt: skip
@@ -344,13 +343,13 @@ class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         extent: float = 0.8,
         seed: int | None = 0,
         backend: str | Backend | None = None,
-    ) -> WrappedMarkerGroups[_DF]:
+    ) -> DFMarkerGroups[_DF]:
         src = parse(df)
         xj = _jitter.UniformJitter(label, extent=extent, seed=seed)
         yj = _jitter.identity_or_categorical(src, value)
         if not Orientation.parse(orient).is_vertical:
             xj, yj = yj, xj
-        return WrappedMarkerGroups(
+        return DFMarkerGroups(
             src, xj, yj, name=name, color=color, hatch=hatch, orient=orient,
             symbol=symbol, size=size, backend=backend,
         )  # fmt: skip
@@ -371,7 +370,7 @@ class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         extent: float = 0.8,
         sort: bool = False,
         backend: str | Backend | None = None,
-    ) -> WrappedMarkerGroups[_DF]:
+    ) -> DFMarkerGroups[_DF]:
         src = parse(df)
         if sort:
             src = src.sort(value)
@@ -380,7 +379,7 @@ class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         yj = _jitter.identity_or_categorical(src, value)
         if not Orientation.parse(orient).is_vertical:
             xj, yj = yj, xj
-        return WrappedMarkerGroups(
+        return DFMarkerGroups(
             src, xj, yj, name=name, color=color, hatch=hatch, orient=orient,
             symbol=symbol, size=size, backend=backend,
         )  # fmt: skip
@@ -542,7 +541,7 @@ class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         return self
 
 
-class WrappedMarkerGroups(WrappedMarkers):
+class DFMarkerGroups(DFMarkers):
     def __init__(self, *args, orient: Orientation = Orientation.VERTICAL, **kwargs):
         super().__init__(*args, **kwargs)
         self._orient = Orientation.parse(orient)
@@ -564,7 +563,7 @@ class WrappedMarkerGroups(WrappedMarkers):
         return self
 
 
-class WrappedBars(
+class DFBars(
     _shared.DataFrameLayerWrapper[_l.Bars[_mixin.MultiFace, _mixin.MultiEdge], _DF],
     Generic[_DF],
 ):
@@ -621,9 +620,9 @@ class WrappedBars(
         name: str | None = None,
         extent: float = 0.8,
         backend: str | Backend | None = None,
-    ) -> WrappedBars[_DF]:
+    ) -> DFBars[_DF]:
         src = parse(df)
-        return WrappedBars(
+        return DFBars(
             src, x, y, name=name, color=color, hatch=hatch, extent=extent,
             backend=backend
         )  # fmt: skip
@@ -640,11 +639,11 @@ class WrappedBars(
         orient: str | Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         backend: str | Backend | None = None,
-    ) -> WrappedBars[_DF]:
+    ) -> DFBars[_DF]:
         src = parse(df)
         splitby = _shared.join_columns(offset, color, hatch, source=src)
         new_src = src.value_count(splitby)
-        return WrappedBars(
+        return DFBars(
             new_src, offset, "size", name=name, color=color, hatch=hatch,
             orient=orient, extent=extent, backend=backend
         )  # fmt: skip
@@ -682,3 +681,112 @@ class WrappedBars(
         self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
         self._hatch_by = hatch_by
         return self
+
+
+class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
+    def __init__(
+        self,
+        base: _l.Image,
+        source: DataFrameWrapper[_DF],
+        xticks: list[str] | None = None,
+        yticks: list[str] | None = None,
+    ):
+        super().__init__(base, source)
+        self._xticks = xticks
+        self._yticks = yticks
+
+    @property
+    def cmap(self) -> Colormap:
+        return self._base_layer.cmap
+
+    @cmap.setter
+    def cmap(self, cmap: ColormapType):
+        self._base_layer.cmap = Colormap(cmap)
+
+    @property
+    def clim(self) -> tuple[float, float]:
+        return self._base_layer.clim
+
+    @clim.setter
+    def clim(self, clim: tuple[float, float]):
+        self._base_layer.clim = clim
+
+    @classmethod
+    def build_hist(
+        cls,
+        df: _DF,
+        x: str,
+        y: str,
+        name: str | None = None,
+        cmap: ColormapType = "gray",
+        bins: int | tuple[int, int] = 10,
+        range=None,
+        density: bool = False,
+        backend: Backend | str | None = None,
+    ) -> Self:
+        src = parse(df)
+        xdata = src[x]
+        ydata = src[y]
+        if xdata.dtype.kind not in "fiub":
+            raise ValueError(f"Column {x!r} is not numeric.")
+        if ydata.dtype.kind not in "fiub":
+            raise ValueError(f"Column {y!r} is not numeric.")
+        base = _l.Image.build_hist(
+            xdata, ydata, name=name, cmap=cmap, bins=bins, range=range,
+            density=density, backend=backend,
+        )  # fmt: skip
+        return cls(base, src)
+
+    @classmethod
+    def build_heatmap(
+        cls,
+        df: _DF,
+        x: str,
+        y: str,
+        value: str,
+        name: str | None = None,
+        cmap: ColormapType = "gray",
+        clim: tuple[float | None, float | None] | None = None,
+        fill=0,
+        backend: Backend | str | None = None,
+    ) -> Self:
+        src = parse(df)
+        xnunique = unique(src[x], axis=None)
+        ynunique = unique(src[y], axis=None)
+        dtype = src[value].dtype
+        if dtype.kind not in "fiub":
+            raise ValueError(f"Column {value!r} is not numeric.")
+        arr = np.full((ynunique.size, xnunique.size), fill, dtype=dtype)
+        xmap = {x: i for i, x in enumerate(xnunique)}
+        ymap = {y: i for i, y in enumerate(ynunique)}
+        for sl, sub in src.group_by((x, y)):
+            xval, yval = sl
+            vals = sub[value]
+            if vals.size == 1:
+                arr[ymap[yval], xmap[xval]] = sub[value][0]
+            else:
+                raise ValueError(f"More than one value found for {sl!r}.")
+        if clim is None:
+            # `fill` may be outside the range of the data, so calculate clim here.
+            clim = src[value].min(), src[value].max()
+        base = _l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend)
+        return cls(
+            base,
+            src,
+            xticks=[str(_x) for _x in xnunique],
+            yticks=[str(_y) for _y in ynunique],
+        )
+
+    def _generate_xticks(self):
+        if self._xticks is None:
+            return None
+        return np.arange(len(self._xticks)), self._xticks
+
+    def _generate_yticks(self):
+        if self._yticks is None:
+            return None
+        return np.arange(len(self._yticks)), self._yticks
+
+
+class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):
+    ...

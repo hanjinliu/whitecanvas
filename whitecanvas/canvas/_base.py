@@ -33,6 +33,7 @@ from whitecanvas.canvas import (
 from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._dims import Dims
 from whitecanvas.canvas._fit import FitPlotter
+from whitecanvas.canvas._imageref import ImageRef
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.layers import _mixin
@@ -362,6 +363,10 @@ class CanvasBase(ABC):
     def between(self, l0, l1) -> BetweenPlotter[Self]:
         return BetweenPlotter(self, l0, l1)
 
+    def imref(self, layer: _l.Image) -> ImageRef[Self]:
+        """The Image reference namespace."""
+        return ImageRef(self, layer)
+
     def fit(self, layer: _l.DataBoundLayer[_P]) -> FitPlotter[Self, _P]:
         """The fit plotter namespace."""
         return FitPlotter(self, layer)
@@ -634,6 +639,173 @@ class CanvasBase(ABC):
         layer = _l.Bars.from_histogram(
             data, bins=bins, range=range, density=density, name=name, color=color,
             orient=orient, alpha=alpha, hatch=hatch, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_hist_line(
+        self,
+        data: ArrayLike1D,
+        *,
+        bins: int | ArrayLike1D = 10,
+        range: tuple[float, float] | None = None,
+        density: bool = False,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        color: ColorType | None = None,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.Line:
+        """
+        Add a line plot of the histogram.
+
+        >>> canvas.add_hist_line(np.random.normal(size=100), bins=12)
+
+        Parameters
+        ----------
+        data : array-like
+            1D Array of data.
+        bins : int or 1D array-like, default 10
+            Bins of the histogram. This parameter will directly be passed
+            to `np.histogram`.
+        range : (float, float), optional
+            Range in which histogram will be built. This parameter will
+            directly be passed to `np.histogram`.
+        density : bool, default False
+            If True, heights of bars will be normalized so that the total
+            area of the histogram will be 1. This parameter will directly
+            be passed to `np.histogram`.
+        name : str, optional
+            Name of the layer.
+        orient : str or Orientation, default Orientation.VERTICAL
+            Orientation of the bars.
+        color : color-like, optional
+            Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
+            Alpha channel of the line.
+        antialias : bool, default True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        Line
+            The line layer that represents the histogram.
+        """
+        name = self._coerce_name("histogram", name)
+        color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
+        layer = _l.Line.build_hist(
+            data, bins=bins, density=density, range=range, orient=orient, name=name,
+            color=color, width=width, style=style, alpha=alpha, antialias=antialias,
+            backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_hist2d(
+        self,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        *,
+        cmap: ColormapType = "inferno",
+        name: str | None = None,
+        bins: int | tuple[int, int] = 10,
+        range: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        density: bool = False,
+    ) -> _l.Image:
+        """
+        Add a 2D histogram of given X/Y data.
+
+        >>> x = np.random.normal(size=100)
+        >>> y = np.random.normal(size=200)
+        >>> canvas.add_hist2d(x, y)
+
+        Note that unlike `add_image()` method, this method does not lock the aspect
+        ratio and flip the canvas by default.
+
+        Parameters
+        ----------
+        x : array-like
+            1D Array of X data.
+        y : array-like
+            1D Array of Y data.
+        cmap : ColormapType, default "gray"
+            Colormap used for the image.
+        name : str, optional
+            Name of the layer.
+        bins : int or tuple[int, int], optional
+            Bins of the histogram of X/Y dimension respectively. If an integer is given,
+            it will be used for both dimensions.
+        range : (2, 2) array-like, optional
+            Range in which histogram will be built.
+        density : bool, default False
+            If True, values of the histogram will be normalized so that the total
+            intensity of the histogram will be 1.
+
+        Returns
+        -------
+        Image
+            Image layer representing the 2D histogram.
+        """
+        layer = _l.Image.build_hist(
+            x, y, bins=bins, range=range, density=density, name=name, cmap=cmap,
+            backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_cdf(
+        self,
+        data: ArrayLike1D,
+        *,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        color: ColorType | None = None,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.Line:
+        """
+        Add a empirical cumulative distribution function (CDF) plot.
+
+        >>> canvas.add_cdf(np.random.normal(size=100))
+
+        Parameters
+        ----------
+        data : array-like
+            1D Array of data.
+        name : str, optional
+            Name of the layer.
+        orient : str or Orientation, default Orientation.VERTICAL
+            Orientation of the bars.
+        color : color-like, optional
+            Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
+            Alpha channel of the line.
+        antialias : bool, default True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        Line
+            The line layer that represents the CDF.
+        """
+        name = self._coerce_name("histogram", name)
+        color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
+        layer = _l.Line.build_cdf(
+            data, orient=orient, name=name, color=color, width=width, style=style,
+            alpha=alpha, antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

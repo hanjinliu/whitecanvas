@@ -116,8 +116,9 @@ class Canvas:
             self._axes.add_container(layer)
         elif isinstance(layer, whitecanvasText):
             layer.set_transform(self._axes.transData)
-            for child in layer._children:
+            for child in layer.get_children():
                 self._axes._add_text(child)
+                child.set_clip_path(self._axes.patch)
         elif isinstance(layer, whitecanvasImage):
             self._axes.add_artist(layer)
         else:

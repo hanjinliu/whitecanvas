@@ -1134,9 +1134,9 @@ class TextMixin(
         """Update the face properties."""
         if color is None:
             color = self.font.color
-        if not isinstance(self._font_namespace, MultiFace):
+        if not isinstance(self._font_namespace, MultiFont):
             self._font_namespace.events.disconnect()
-            self._font_namespace = MultiFace(self)  # type: ignore
+            self._font_namespace = MultiFont(self)  # type: ignore
             self._font_namespace.events.connect(self.events.font.emit)
         self.font.update(color=color, size=size, family=family)
         return self

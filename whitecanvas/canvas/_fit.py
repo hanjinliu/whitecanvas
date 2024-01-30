@@ -65,7 +65,7 @@ class FitPlotter(Generic[_C, _P]):
         Returns
         -------
         InfLine
-            _description_
+            Infinite line representing the linear regression result.
         """
         layer = self._layer()
         canvas = self._canvas()
@@ -99,6 +99,28 @@ class FitPlotter(Generic[_C, _P]):
         width: float | None = None,
         style: str | LineStyle | None = None,
     ) -> InfCurve:
+        """
+        Add a polynomial regression result of any degree of the X/Y data.
+
+        >>> layer = canvas.add_markers(x, y)  # add markers
+        >>> canvas.fit(layer).polynomial(degree=2)  # fit to x^2 + bx + c
+
+        Parameters
+        ----------
+        degree : int
+            Degree of the polynomial.
+        color : color-like, optional
+            Color of the output line.
+        width : float, optional
+            Width of the output line.
+        style : str or LineStyle, optional
+            Line style of the output line.
+
+        Returns
+        -------
+        InfLine
+            Infinite line representing the linear regression result.
+        """
         layer = self._layer()
         canvas = self._canvas()
         data = layer.data

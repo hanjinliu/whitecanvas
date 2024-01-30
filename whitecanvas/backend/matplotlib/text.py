@@ -22,7 +22,7 @@ class Texts(Artist, MplLayer):
             self._children.append(
                 mplText(
                     x0, y0, text0, verticalalignment="baseline",
-                    horizontalalignment="left", clip_on=False,
+                    horizontalalignment="left", clip_on=True,
                     color=np.array([0, 0, 0, 1], dtype=np.float32),
                 )  # fmt: skip
             )

@@ -253,7 +253,7 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             self._update_xy_label(x, y)
         return canvas.add_layer(layer)
 
-    def add_line_hist(
+    def add_hist_line(
         self,
         x: str,
         *,

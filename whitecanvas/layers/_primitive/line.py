@@ -427,7 +427,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         )
 
     @classmethod
-    def from_histogram(
+    def build_hist(
         cls,
         data: ArrayLike1D,
         *,
@@ -440,6 +440,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         alpha: float = 1.0,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
         backend: Backend | str | None = None,
     ):
         """Construct a line from a histogram."""
@@ -451,11 +452,11 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
             xdata, ydata = ydata, xdata
         return Line(
             xdata, ydata, name=name, color=color, alpha=alpha, width=width,
-            style=style, backend=backend,
+            style=style, antialias=antialias, backend=backend,
         )  # fmt: skip
 
     @classmethod
-    def from_cdf(
+    def build_cdf(
         cls,
         data: ArrayLike1D,
         *,

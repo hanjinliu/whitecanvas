@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, overload
 
 import numpy as np
 from cmap import Colormap
@@ -10,7 +10,8 @@ from psygnal import Signal
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer, LayerEvents
 from whitecanvas.protocols import ImageProtocol
-from whitecanvas.types import ColormapType, Origin, _Void
+from whitecanvas.types import ArrayLike1D, ColormapType, Origin, _Void
+from whitecanvas.utils.normalize import as_array_1d
 
 _void = _Void()
 
@@ -59,10 +60,10 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         self._origin = Origin.CORNER
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), img)
-        if img.ndim == 2:
+        if img.ndim == 3:
             cmap = clim = _void
+        self._x_hint = self._y_hint = None
         self.update(cmap=cmap, clim=clim, shift=shift, scale=scale)
-        self._x_hint, self._y_hint = _hint_for((img.shape[1], img.shape[0]))
 
     def _get_layer_data(self) -> NDArray[np.number]:
         """Current image data of the layer."""
@@ -105,20 +106,50 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         self.events.clim.emit((low, high))
 
     @property
+    def shape(self) -> tuple[int, int]:
+        """The visual shape of the image (shape without the color axis)."""
+        if self.is_rgba:
+            return self.data.shape[:2]
+        else:
+            return self.data.shape
+
+    @property
+    def data_mapped(self) -> NDArray[np.number]:
+        """The colored image data (N, M, 4) mapped by the colormap."""
+        if self.is_rgba:
+            return self.data
+        # normalize data to [0, 1]
+        cmin, cmax = self.clim
+        data_norm = (self.data - cmin) / (cmax - cmin)
+        return self.cmap(data_norm)
+
+    @property
     def shift(self) -> tuple[float, float]:
         """Current shift from the origin."""
-        return self._backend._plt_get_translation()
+        shift = self._backend._plt_get_translation()
+        sx, sy = self.scale
+        if self.origin is Origin.EDGE:
+            shift = shift[0] - 0.5 * sx, shift[1] - 0.5 * sy
+        elif self.origin is Origin.CORNER:
+            pass
+        elif self.origin is Origin.CENTER:
+            sizex, sizey = self.data.shape[:2]
+            shift = shift[0] + (sizex - 1) / 2 * sx, shift[1] + (sizey - 1) / 2 * sy
+        else:
+            raise RuntimeError("Unreachable")
+        return shift
 
     @shift.setter
     def shift(self, shift: tuple[float, float]):
         img = self.data
+        sx, sy = self.scale
         if self.origin is Origin.EDGE:
-            shift = shift[0] + 0.5, shift[1] + 0.5
+            shift = shift[0] + 0.5 * sx, shift[1] + 0.5 * sy
         elif self.origin is Origin.CORNER:
             pass
         elif self.origin is Origin.CENTER:
             sizex, sizey = img.shape[:2]
-            shift = shift[0] - (sizex - 1) / 2, shift[1] - (sizey - 1) / 2
+            shift = shift[0] - (sizex - 1) / 2 * sx, shift[1] - (sizey - 1) / 2 * sy
         else:
             raise RuntimeError("Unreachable")
         self._backend._plt_set_translation(shift)
@@ -126,6 +157,11 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             (img.shape[1], img.shape[0]), shift=shift, scale=self.scale
         )
         self.events.shift.emit(shift)
+
+    @property
+    def shift_raw(self) -> tuple[float, float]:
+        """Current shift from the origin as a raw data."""
+        return self._backend._plt_get_translation()
 
     @property
     def scale(self) -> tuple[float, float]:
@@ -181,9 +217,22 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             self.scale = scale
         return self
 
-    def fit_to(self, bbox: tuple[float, float, float, float]) -> Image:
+    @overload
+    def fit_to(self, bbox: tuple[float, float, float, float], /) -> Image:
+        ...
+
+    @overload
+    def fit_to(self, x0, y0, x1, y1, /) -> Image:
+        ...
+
+    def fit_to(self, *args) -> Image:
         """Fit the image to the given bounding box."""
-        x0, y0, x1, y1 = bbox
+        if len(args) == 1:
+            x0, y0, x1, y1 = args[0]
+        elif len(args) == 4:
+            x0, y0, x1, y1 = args
+        else:
+            raise TypeError("fit_to() takes 1 or 4 positional arguments.")
         dx, dy = x1 - x0, y1 - y0
         self.shift = (x0 + 0.5, y0 + 0.5)
         self.scale = (dx / self.data.shape[0], dy / self.data.shape[1])
@@ -193,6 +242,36 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
     def is_rgba(self) -> bool:
         """Whether the image is RGBA."""
         return self.data.ndim == 3
+
+    @classmethod
+    def build_hist(
+        cls,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        bins: int | tuple[int, int] = 10,
+        range=None,
+        name: str | None = None,
+        density: bool = False,
+        cmap: ColormapType = "inferno",
+        backend: Backend | str | None = None,
+    ):
+        _x = as_array_1d(x)
+        _y = as_array_1d(y)
+        if _x.size != _y.size:
+            raise ValueError("x and y must have the same size.")
+        if hasattr(bins, "__index__"):
+            bins = (bins, bins)
+        hist, xedges, yedges = np.histogram2d(
+            _x, _y, bins=bins, range=range, density=density
+        )
+        hist_t = hist.T
+        shift = (xedges[0], yedges[0])
+        scale = (xedges[1] - xedges[0], yedges[1] - yedges[0])
+        self = cls(
+            hist_t, name=name, cmap=cmap, shift=shift, scale=scale, backend=backend
+        )
+        self.origin = Origin.EDGE
+        return self
 
 
 def _normalize_image(image):
@@ -221,4 +300,4 @@ def _hint_for(
 ) -> tuple[float, float]:
     xhint = np.array([-0.5, shape[0] - 0.5]) * scale[0] + shift[0]
     yhint = np.array([-0.5, shape[1] - 0.5]) * scale[1] + shift[1]
-    return tuple(xhint - 0.5), tuple(yhint - 0.5)
+    return tuple(xhint), tuple(yhint)

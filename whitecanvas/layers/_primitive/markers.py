@@ -131,7 +131,10 @@ class Markers(
     def _set_layer_data(self, data: XYData):
         x0, y0 = data
         self._backend._plt_set_data(x0, y0)
-        pad_r = self.size / 400
+        if self._size_is_array:
+            pad_r = self.size.mean() / 400
+        else:
+            pad_r = self.size / 400
         self._x_hint, self._y_hint = xy_size_hint(x0, y0, pad_r, pad_r)
 
     def set_data(

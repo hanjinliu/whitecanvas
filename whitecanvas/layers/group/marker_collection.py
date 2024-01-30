@@ -19,6 +19,7 @@ from whitecanvas.layers.group._collections import (
     LayerCollectionBase,
     LayerContainerEvents,
 )
+from whitecanvas.theme import get_theme
 from whitecanvas.types import (
     ArrayLike1D,
     ColorType,
@@ -248,14 +249,15 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
     @property
     def data(self) -> XYData:
         """All the data of the markers."""
-        xs = np.empty(self.ndata, dtype=np.float32)
-        ys = np.empty(self.ndata, dtype=np.float32)
+        ndata = self.ndata
+        xs = np.empty(ndata, dtype=np.float32)
+        ys = np.empty(ndata, dtype=np.float32)
         for i, layer in enumerate(self):
             data = layer.data
             sl = self._slices[i]
             xs[sl] = data.x
             ys[sl] = data.y
-        return XYData(np.concatenate(xs), np.concatenate(ys))
+        return XYData(xs, ys)
 
     @data.setter
     def data(self, data: XYData):
@@ -352,13 +354,11 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
     def with_face(
         self,
         *,
-        color: ColorType | None = None,
+        color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
     ) -> MarkerCollection:
         """Update the face properties."""
-        if color is None:
-            color = self.face.color
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
@@ -372,7 +372,7 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
     ) -> MarkerCollection:
         """Update the edge properties."""
         if color is None:
-            color = self.face.color
+            color = get_theme().foreground_color
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 

@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 from numpy.typing import NDArray
-from psygnal import Signal
 from vispy import use as vispy_use
 from vispy.scene import PanZoomCamera, SceneCanvas, ViewBox, visuals
 from vispy.util import keys
@@ -21,21 +20,13 @@ if TYPE_CHECKING:
     from vispy.visuals import Visual
 
 
-class Camera(PanZoomCamera):
-    resized = Signal()
-
-    def viewbox_resize_event(self, event):
-        super().viewbox_resize_event(event)
-        self.resized.emit()
-
-
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
     def __init__(self, viewbox: ViewBox):
         self._outer_viewbox = viewbox
         grid = cast("Grid", viewbox.add_grid())
         grid.spacing = 0
-        _viewbox = grid.add_view(row=1, col=1, camera=Camera())
+        _viewbox = grid.add_view(row=1, col=1, camera=PanZoomCamera())
         self._viewbox: ViewBox = _viewbox
 
         title = TextLabel("")
@@ -123,7 +114,7 @@ class Canvas:
             scene.update()
 
     @property
-    def _camera(self) -> Camera:
+    def _camera(self) -> PanZoomCamera:
         return self._viewbox.camera
 
     def _plt_get_aspect_ratio(self) -> float | None:
@@ -173,12 +164,16 @@ class Canvas:
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        self._camera.resized.connect(lambda: callback(self._xaxis._plt_get_limits()))
+        self._viewbox.scene.transform.changed.connect(
+            lambda _: callback(self._xaxis._plt_get_limits())
+        )
 
     def _plt_connect_ylim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        self._camera.resized.connect(lambda: callback(self._yaxis._plt_get_limits()))
+        self._viewbox.scene.transform.changed.connect(
+            lambda _: callback(self._yaxis._plt_get_limits())
+        )
 
     def _plt_draw(self):
         pass  # vispy has its own draw mechanism

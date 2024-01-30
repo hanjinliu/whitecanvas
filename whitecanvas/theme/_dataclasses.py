@@ -90,7 +90,7 @@ class Line(_BaseModel):
 class Markers(_BaseModel):
     """Markers of points."""
 
-    size: int = _field(12)
+    size: int = _field(8)
     hatch: Hatch = _field(Hatch.SOLID)
     symbol: Symbol = _field(Symbol.CIRCLE)
 

@@ -22,6 +22,7 @@ from whitecanvas.types import (
     LineStyle,
     Orientation,
     Symbol,
+    _Void,
 )
 
 if TYPE_CHECKING:
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
 
 _DF = TypeVar("_DF")
 _Cols = Union[str, "tuple[str, ...]"]
+_void = _Void()
 
 
 class WrappedLines(
@@ -514,7 +516,7 @@ class WrappedMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
             width_by = _p.WidthPlan.from_range(by, limits=limits)
         else:
             width_by = _p.WidthPlan.from_const(float(by))
-        self._base_layer.with_edge(width=width_by.map(self._source))
+        self._base_layer.with_edge(color=_void, width=width_by.map(self._source))
         self._width_by = width_by
         return self
 

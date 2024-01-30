@@ -32,6 +32,7 @@ from whitecanvas.canvas import (
 )
 from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._dims import Dims
+from whitecanvas.canvas._fit import FitPlotter
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.layers import _mixin
@@ -360,6 +361,10 @@ class CanvasBase(ABC):
 
     def between(self, l0, l1) -> BetweenPlotter[Self]:
         return BetweenPlotter(self, l0, l1)
+
+    def fit(self, layer: _l.DataBoundLayer[_P]) -> FitPlotter[Self, _P]:
+        """The fit plotter namespace."""
+        return FitPlotter(self, layer)
 
     @overload
     def add_line(

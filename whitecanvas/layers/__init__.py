@@ -1,4 +1,10 @@
-from whitecanvas.layers._base import Layer, LayerGroup, LayerWrapper, PrimitiveLayer
+from whitecanvas.layers._base import (
+    DataBoundLayer,
+    Layer,
+    LayerGroup,
+    LayerWrapper,
+    PrimitiveLayer,
+)
 from whitecanvas.layers._ndim import LayerStack
 from whitecanvas.layers._primitive import (
     Band,
@@ -18,6 +24,7 @@ from whitecanvas.layers._primitive import (
 __all__ = [
     "Layer",
     "PrimitiveLayer",
+    "DataBoundLayer",
     "LayerGroup",
     "LayerWrapper",
     "LayerStack",

@@ -28,7 +28,7 @@ df = {
 }
 ```
 
-## Non-marker plots
+## Non-marker-type Plots
 
 Since plots without data point markers are more straightforward, we will start with
 them. It includes `add_violinplot`, `add_boxplot`, `add_pointplot` and `add_barplot`.
@@ -99,7 +99,7 @@ canvas
     to separate groups. As you can see in these examples, this is how `whitecanvas`
     can easily handle more complicated cases without confusion.
 
-`add_boxplot` is very similar to `add_violinplot`.
+`add_boxplot`, `add_pointplot` and `add_barplot` is very similar to `add_violinplot`.
 
 ``` python
 #!name: categorical_axis_boxplot_0
@@ -112,3 +112,29 @@ canvas.cat(df).add_boxplot(
 )
 canvas
 ```
+
+``` python
+#!name: categorical_axis_pointplot_0
+canvas = new_canvas("matplotlib")
+canvas.cat(df).add_pointplot(
+    offset=["category", "replicate"],
+    value="observation",
+    color="replicate",
+    hatch="category",
+)
+canvas
+```
+
+``` python
+#!name: categorical_axis_boxplot_0
+canvas = new_canvas("matplotlib")
+canvas.cat(df).add_barplot(
+    offset=["category", "replicate"],
+    value="observation",
+    color="replicate",
+    hatch="category",
+)
+canvas
+```
+
+## Marker-type Plots

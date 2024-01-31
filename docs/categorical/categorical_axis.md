@@ -126,7 +126,7 @@ canvas
 ```
 
 ``` python
-#!name: categorical_axis_boxplot_0
+#!name: categorical_axis_barplot_0
 canvas = new_canvas("matplotlib")
 canvas.cat(df).add_barplot(
     offset=["category", "replicate"],

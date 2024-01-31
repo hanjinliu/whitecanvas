@@ -856,19 +856,25 @@ class DataFramePlotter(_Plotter[_C, _DF]):
             canvas.y.ticks.set_labels(*layer._generate_yticks())
         return canvas.add_layer(layer)
 
-    # TODO: implement this
-    # def add_2dpointplot(
-    #     self,
-    #     x: str,
-    #     y: str,
-    #     value: str,
-    #     *,
-    #     name: str | None = None,
-    #     color: NStr | None = None,
-    #     width: str | None = None,
-    #     style: NStr | None = None,
-    # ):
-    #     ...
+    def add_pointplot2d(
+        self,
+        x: str,
+        y: str,
+        *,
+        name: str | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
+        size: float | None = None,
+        capsize: float = 0.15,
+    ):
+        canvas = self._canvas()
+        layer = _lt.DFPointPlot2D(
+            parse(self._df), x, y, name=name, color=color, hatch=hatch, size=size,
+            capsize=capsize, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if self._update_label:
+            self._update_xy_label(x, y)
+        return canvas.add_layer(layer)
 
     ### Aggregation ###
 

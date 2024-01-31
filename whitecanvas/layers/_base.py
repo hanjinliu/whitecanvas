@@ -278,6 +278,11 @@ class LayerWrapper(Layer, Generic[_L]):
     def name(self, name: str):
         self._base_layer.name = name
 
+    @property
+    def base(self) -> _L:
+        """The base layer."""
+        return self._base_layer
+
     def bbox_hint(self) -> NDArray[np.floating]:
         """Return the bounding box hint using the base layer."""
         return self._base_layer.bbox_hint()

@@ -789,4 +789,28 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
 
 
 class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):
-    ...
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        x: str,
+        y: str,
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        size: float | None = None,
+        capsize: float = 0.15,
+        name: str | None = None,
+        backend: str | Backend | None = None,
+    ):
+        cols = _shared.join_columns(color, hatch, source=source)
+        xdata = []
+        ydata = []
+        for _, sub in source.group_by(cols):
+            xdata.append(sub[x])
+            ydata.append(sub[y])
+        base = _lg.LabeledPlot.from_arrays_2d(
+            xdata, ydata, name=name, capsize=capsize, backend=backend
+        )
+        if size is not None:
+            base.markers.size = size
+        super().__init__(base, source)

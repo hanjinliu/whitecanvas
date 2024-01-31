@@ -257,11 +257,7 @@ class LabeledMarkers(_LabeledLayerBase, Generic[_NFace, _NEdge, _Size]):
         return self._children[0]
 
 
-def _init_mean_sd(
-    x,
-    data,
-    color,
-) -> tuple[NDArray[np.floating], NDArray[np.floating], NDArray[np.floating]]:
+def _init_mean_sd(x, data, color):
     x, data = check_array_input(x, data)
     color = as_color_array(color, len(x))
 
@@ -436,6 +432,59 @@ class LabeledPlot(
         xerr, yerr = _init_error_bars(x, y, err_data, orient, capsize, backend)
         return cls(plot, xerr=xerr, yerr=yerr, name=name)
 
+    @classmethod
+    def from_arrays_2d(
+        cls,
+        xdata: list[ArrayLike1D],
+        ydata: list[ArrayLike1D],
+        *,
+        name: str | None = None,
+        capsize: float = 0.15,
+        color: ColorType | list[ColorType] = "blue",
+        alpha: float = 1.0,
+        hatch: str | Hatch = Hatch.SOLID,
+        backend: str | Backend | None = None,
+    ) -> LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]:
+        def _estimate(arrs: list[NDArray[np.number]]):
+            _mean = []
+            _sd = []
+            for arr in arrs:
+                _mean.append(np.mean(arr))
+                _sd.append(np.std(arr, ddof=1))
+            return np.array(_mean), np.array(_sd)
+
+        xmean, xsd = _estimate(xdata)
+        ymean, ysd = _estimate(ydata)
+        markers = Markers(
+            xmean,
+            ymean,
+            backend=backend,
+        ).with_face_multi(
+            color=color,
+            hatch=hatch,
+            alpha=alpha,
+        )
+        lines = Line(xmean, ymean, backend=backend)
+        plot = Plot(lines, markers)
+        lines.visible = False
+        xerr = Errorbars(
+            ymean,
+            xmean - xsd,
+            xmean + xsd,
+            orient=Orientation.HORIZONTAL,
+            capsize=capsize,
+            backend=backend,
+        )
+        yerr = Errorbars(
+            xmean,
+            ymean - ysd,
+            ymean + ysd,
+            orient=Orientation.VERTICAL,
+            capsize=capsize,
+            backend=backend,
+        )
+        return cls(plot, xerr=xerr, yerr=yerr, name=name)
+
 
 class PlotFace(_mixin.FaceNamespace):
     _layer: LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]
@@ -461,7 +510,7 @@ class PlotFace(_mixin.FaceNamespace):
     def hatch(self, hatch: str | Hatch | Iterable[str | Hatch]):
         ndata = self._layer._main_object_layer().ndata
         hatches = as_any_1d_array(hatch, ndata, dtype=object)
-        self._layer.markers.with_face_multi(hatch=hatches)
+        self._layer._main_object_layer().with_face_multi(hatch=hatches)
         self.events.hatch.emit(hatches)
 
     @property

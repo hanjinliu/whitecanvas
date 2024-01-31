@@ -10,6 +10,7 @@ from whitecanvas.layers.tabular._dataframe import (
     DFLines,
     DFMarkerGroups,
     DFMarkers,
+    DFPointPlot2D,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "DFBars",
     "DFBoxPlot",
     "DFHeatmap",
+    "DFPointPlot2D",
 ]

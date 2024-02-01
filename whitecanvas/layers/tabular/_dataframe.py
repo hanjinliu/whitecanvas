@@ -64,24 +64,31 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
     @classmethod
     def from_table(
         cls,
-        df: _DF,
-        x: str,
-        y: str,
+        df: DataFrameWrapper[_DF],
+        x: str | _jitter.JitterBase,
+        y: str | _jitter.JitterBase,
         color: str | None = None,
         width: str | None = None,
         style: str | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
     ) -> DFLines[_DF]:
-        src = parse(df)
-        splitby = _shared.join_columns(color, style, source=src)
+        splitby = _shared.join_columns(color, style, source=df)
         segs = []
         labels: list[tuple[Any, ...]] = []
-        for sl, df in src.group_by(splitby):
+        if isinstance(x, _jitter.JitterBase):
+            xj = x
+        else:
+            xj = _jitter.IdentityJitter(x)
+        if isinstance(y, _jitter.JitterBase):
+            yj = y
+        else:
+            yj = _jitter.IdentityJitter(y)
+        for sl, sub in df.group_by(splitby):
             labels.append(sl)
-            segs.append(np.column_stack([df[x], df[y]]))
+            segs.append(np.column_stack([xj.map(sub), yj.map(sub)]))
         return DFLines(
-            src, segs, labels, name=name, color=color, width=width, style=style,
+            df, segs, labels, name=name, color=color, width=width, style=style,
             backend=backend,
         )  # fmt: skip
 
@@ -280,109 +287,6 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
             self.with_symbol(symbol)
         if size is not None:
             self.with_size(size)
-
-    def _generate_labels(self):
-        pos, labels = self._x.generate_labels(self._source)
-        return pos, ["\n".join(str(_l) for _l in lbl) for lbl in labels]
-
-    @property
-    def symbol(self) -> _p.SymbolPlan:
-        return self._symbol_by
-
-    @property
-    def size(self) -> _p.SizePlan:
-        return self._size_by
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        return self._color_by
-
-    @property
-    def hatch(self) -> _p.HatchPlan:
-        return self._hatch_by
-
-    @property
-    def width(self) -> _p.WidthPlan:
-        return self._width_by
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        x: str,
-        y: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        symbol: str | tuple[str, ...] | None = None,
-        size: str | None = None,
-        name: str | None = None,
-        backend: str | Backend | None = None,
-    ) -> DFMarkers[_DF]:
-        src = parse(df)
-        xj = _jitter.identity_or_categorical(src, x)
-        yj = _jitter.identity_or_categorical(src, y)
-        return DFMarkers(
-            src, xj, yj, name=name, color=color, hatch=hatch, symbol=symbol,
-            size=size, backend=backend,
-        )  # fmt: skip
-
-    @classmethod
-    def build_stripplot(
-        cls,
-        df: _DF,
-        label: str,
-        value: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        symbol: str | tuple[str, ...] | None = None,
-        size: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        seed: int | None = 0,
-        backend: str | Backend | None = None,
-    ) -> DFMarkerGroups[_DF]:
-        src = parse(df)
-        xj = _jitter.UniformJitter(label, extent=extent, seed=seed)
-        yj = _jitter.identity_or_categorical(src, value)
-        if not Orientation.parse(orient).is_vertical:
-            xj, yj = yj, xj
-        return DFMarkerGroups(
-            src, xj, yj, name=name, color=color, hatch=hatch, orient=orient,
-            symbol=symbol, size=size, backend=backend,
-        )  # fmt: skip
-
-    @classmethod
-    def build_swarmplot(
-        cls,
-        df: _DF,
-        label: str,
-        value: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        symbol: str | tuple[str, ...] | None = None,
-        size: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        sort: bool = False,
-        backend: str | Backend | None = None,
-    ) -> DFMarkerGroups[_DF]:
-        src = parse(df)
-        if sort:
-            src = src.sort(value)
-        lims = src[value].min(), src[value].max()
-        xj = _jitter.SwarmJitter(label, value, limits=lims, extent=extent)
-        yj = _jitter.identity_or_categorical(src, value)
-        if not Orientation.parse(orient).is_vertical:
-            xj, yj = yj, xj
-        return DFMarkerGroups(
-            src, xj, yj, name=name, color=color, hatch=hatch, orient=orient,
-            symbol=symbol, size=size, backend=backend,
-        )  # fmt: skip
 
     @overload
     def with_color(self, value: ColorType) -> Self:

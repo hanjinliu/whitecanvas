@@ -8,6 +8,7 @@ from typing import (
     Iterable,
     Iterator,
     Literal,
+    Sequence,
     TypeVar,
     overload,
 )
@@ -56,6 +57,7 @@ if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec, Self
 
     _P = ParamSpec("_P")
+    _DF = TypeVar("_DF")
 
 _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
@@ -307,7 +309,14 @@ class CanvasBase(ABC):
             self.y.label.color = color
         return self
 
-    def cat(self, data, update_labels: bool = True) -> _df.DataFramePlotter:
+    def cat(
+        self,
+        data: _DF,
+        *,
+        x: str | None = None,
+        y: str | None = None,
+        update_labels: bool = True,
+    ) -> _df.FeatureCatPlotter[Self, _DF]:
         """
         Categorize input data for plotting.
 
@@ -328,8 +337,42 @@ class CanvasBase(ABC):
         CategorizedPlot
             Plotter object.
         """
-        plotter = _df.DataFramePlotter(self, data, update_label=update_labels)
+        plotter = _df.FeatureCatPlotter(self, data, x, y, update_label=update_labels)
         return plotter
+
+    def cat_x(
+        self,
+        data: _DF,
+        *,
+        x: str | Sequence[str] | None = None,
+        y: str | None = None,
+        update_labels: bool = True,
+    ) -> _df.OneAxisCatPlotter[Self, _DF]:
+        return _df.OneAxisCatPlotter(
+            self, data, x, y, Orientation.VERTICAL, update_labels
+        )
+
+    def cat_y(
+        self,
+        data: _DF,
+        *,
+        x: str | None = None,
+        y: str | Sequence[str] | None = None,
+        update_labels: bool = True,
+    ) -> _df.OneAxisCatPlotter[Self, _DF]:
+        return _df.OneAxisCatPlotter(
+            self, data, y, x, Orientation.HORIZONTAL, update_labels
+        )
+
+    def cat_xy(
+        self,
+        data: _DF,
+        *,
+        x: str | Sequence[str] | None = None,
+        y: str | Sequence[str] | None = None,
+        update_labels: bool = True,
+    ) -> _df.BothAxesCatPlotter[Self, _DF]:
+        return _df.BothAxesCatPlotter(self, data, x, y, update_labels)
 
     def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
         """

@@ -73,7 +73,9 @@ def join_columns(
             continue
         cv = ColumnOrValue(obj, source)
         if cv.is_column:
-            out.extend(cv.columns)
+            for each in cv.columns:
+                if each not in out:
+                    out.append(each)
     return tuple(out)
 
 

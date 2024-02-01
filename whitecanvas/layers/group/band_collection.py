@@ -114,45 +114,10 @@ class ViolinPlot(BandCollection):
         kde_band_width: float | str = "scott",
         backend: str | Backend | None = None,
     ):
-        from whitecanvas.utils.kde import gaussian_kde
-
         ori = Orientation.parse(orient)
-        if extent <= 0:
-            raise ValueError(f"extent must be positive, got {extent}")
-        x, data = check_array_input(x, data)
-        xyy_values: list[XYYData] = []
-        for offset, values in zip(x, data):
-            arr = as_array_1d(values)
-            kde = gaussian_kde(arr, bw_method=kde_band_width)
-
-            sigma = np.sqrt(kde.covariance[0, 0])
-            pad = sigma * 2.5
-            x_ = np.linspace(arr.min() - pad, arr.max() + pad, 100)
-            y = kde(x_)
-            if shape in ("both", "left"):
-                y0 = -y + offset
-            else:
-                y0 = np.zeros_like(y) + offset
-            if shape in ("both", "right"):
-                y1 = y + offset
-            else:
-                y1 = np.zeros_like(y) + offset
-
-            data = XYYData(x_, y0, y1)
-            xyy_values.append(data)
-
-        half_widths: list[float] = []
-        for xyy in xyy_values:
-            half_width = np.max(np.abs(xyy.ydiff))
-            if shape == "both":
-                half_width /= 2
-            half_widths.append(half_width)
-        factor = extent / np.max(half_widths) / 2
-        new_vals: list[XYYData] = []
-        for xyy, xoffset in zip(xyy_values, x):
-            y0 = (xyy.y0 - xoffset) * factor + xoffset
-            y1 = (xyy.y1 - xoffset) * factor + xoffset
-            new_vals.append(XYYData(xyy.x, y0, y1))
+        new_vals = cls._convert_data(
+            x, data, shape=shape, extent=extent, kde_band_width=kde_band_width
+        )
         return cls(
             new_vals,
             name=name,
@@ -256,3 +221,51 @@ class ViolinPlot(BandCollection):
             y0 = (xyy.y0 - xoffset) * factor + xoffset
             y1 = (xyy.y1 - xoffset) * factor + xoffset
             band.data = XYYData(xyy.x, y0, y1)
+
+    @staticmethod
+    def _convert_data(
+        x: list[float],
+        data: list[ArrayLike],
+        shape: Literal["both", "left", "right"] = "both",
+        extent: float = 0.5,
+        kde_band_width: float | str = "scott",
+    ):
+        from whitecanvas.utils.kde import gaussian_kde
+
+        if extent <= 0:
+            raise ValueError(f"extent must be positive, got {extent}")
+        x, data = check_array_input(x, data)
+        xyy_values: list[XYYData] = []
+        for offset, values in zip(x, data):
+            arr = as_array_1d(values)
+            kde = gaussian_kde(arr, bw_method=kde_band_width)
+
+            sigma = np.sqrt(kde.covariance[0, 0])
+            pad = sigma * 2.5
+            x_ = np.linspace(arr.min() - pad, arr.max() + pad, 100)
+            y = kde(x_)
+            if shape in ("both", "left"):
+                y0 = -y + offset
+            else:
+                y0 = np.zeros_like(y) + offset
+            if shape in ("both", "right"):
+                y1 = y + offset
+            else:
+                y1 = np.zeros_like(y) + offset
+
+            data = XYYData(x_, y0, y1)
+            xyy_values.append(data)
+
+        half_widths: list[float] = []
+        for xyy in xyy_values:
+            half_width = np.max(np.abs(xyy.ydiff))
+            if shape == "both":
+                half_width /= 2
+            half_widths.append(half_width)
+        factor = extent / np.max(half_widths) / 2
+        new_vals: list[XYYData] = []
+        for xyy, xoffset in zip(xyy_values, x):
+            y0 = (xyy.y0 - xoffset) * factor + xoffset
+            y1 = (xyy.y1 - xoffset) * factor + xoffset
+            new_vals.append(XYYData(xyy.x, y0, y1))
+        return new_vals

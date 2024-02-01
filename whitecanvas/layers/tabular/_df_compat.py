@@ -24,7 +24,7 @@ class DataFrameWrapper(ABC, Generic[_T]):
         return f"{type(self).__name__} of {self._data!r}"
 
     def __len__(self) -> int:
-        such_as = next(iter(self.iter_values()), None)
+        such_as = next(self.iter_values(), None)
         if such_as is None:
             return 0
         else:
@@ -32,11 +32,11 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
     @property
     def shape(self) -> tuple[int, int]:
-        such_as = next(iter(self.iter_values()), None)
+        such_as = next(self.iter_values(), None)
         if such_as is None:
             return 0, 0
         else:
-            return such_as.size, len(self.iter_keys())
+            return such_as.size, len(self.columns)
 
     def get_native(self) -> _T:
         return self._data
@@ -44,6 +44,9 @@ class DataFrameWrapper(ABC, Generic[_T]):
     @abstractmethod
     def __getitem__(self, item: str) -> NDArray[np.generic]:
         ...
+
+    def __contains__(self, item: str) -> bool:
+        return item in self.iter_keys()
 
     @abstractmethod
     def iter_keys(self) -> Iterator[str]:

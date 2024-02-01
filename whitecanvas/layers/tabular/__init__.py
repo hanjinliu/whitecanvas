@@ -12,6 +12,7 @@ from whitecanvas.layers.tabular._dataframe import (
     DFMarkers,
     DFPointPlot2D,
 )
+from whitecanvas.layers.tabular._df_compat import parse
 
 __all__ = [
     "DFBarPlot",
@@ -24,4 +25,5 @@ __all__ = [
     "DFBoxPlot",
     "DFHeatmap",
     "DFPointPlot2D",
+    "parse",
 ]

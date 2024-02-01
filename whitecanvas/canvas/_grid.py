@@ -251,6 +251,16 @@ class CanvasGrid:
                 return file_obj.read()
         return None
 
+    def _ipython_display_(self, *args: Any, **kwargs: Any) -> Any:
+        if hasattr(self._backend_object, "_ipython_display_"):
+            return self._backend_object._ipython_display_(*args, **kwargs)
+        raise NotImplementedError()
+
+    def _repr_mimebundle_(self, *args: Any, **kwargs: Any) -> dict:
+        if hasattr(self._backend_object, "_repr_mimebundle_"):
+            return self._backend_object._repr_mimebundle_(*args, **kwargs)
+        raise NotImplementedError()
+
 
 class CanvasVGrid(CanvasGrid):
     @override

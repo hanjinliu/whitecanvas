@@ -1,3 +1,5 @@
-from whitecanvas.canvas.dataframe._plot import DataFramePlotter
+from whitecanvas.canvas.dataframe._both_cat import BothAxesCatPlotter
+from whitecanvas.canvas.dataframe._feature_cat import FeatureCatPlotter
+from whitecanvas.canvas.dataframe._one_cat import OneAxisCatPlotter
 
-__all__ = ["DataFramePlotter"]
+__all__ = ["FeatureCatPlotter", "BothAxesCatPlotter", "OneAxisCatPlotter"]

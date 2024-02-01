@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, TypeVar
 
 import numpy as np
 from cmap import Color
@@ -13,7 +13,7 @@ from whitecanvas.layers import _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular import _shared
-from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
+from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
 from whitecanvas.types import (
     ColorType,
     Hatch,
@@ -24,9 +24,50 @@ from whitecanvas.types import (
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+    from whitecanvas.canvas.dataframe._base import CatIterator
+
     _FE = _mixin.AbstractFaceEdgeMixin[_mixin.FaceNamespace, _mixin.EdgeNamespace]
 
 _DF = TypeVar("_DF")
+
+
+def _splitby_dodge(
+    source: DataFrameWrapper[_DF],
+    offset: str | tuple[str, ...],
+    color: str | tuple[str, ...] | None = None,
+    hatch: str | tuple[str, ...] | None = None,
+    dodge: str | tuple[str, ...] | bool | None = None,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if isinstance(offset, str):
+        offset = (offset,)
+    if isinstance(dodge, bool) and dodge:
+        dodge = _shared.join_columns(color, hatch, source=source)
+    elif isinstance(dodge, str):
+        dodge = (dodge,)
+    splitby = _shared.join_columns(offset, color, hatch, dodge, source=source)
+    return splitby, dodge
+
+
+def _norm_color_hatch(
+    color,
+    hatch,
+    cat: CatIterator[_DF],
+) -> tuple[_p.ColorPlan, _p.HatchPlan]:
+    color_cov = _shared.ColumnOrValue(color, cat.df)
+    if color_cov.is_column:
+        color_by = _p.ColorPlan.from_palette(color_cov.columns)
+    elif color_cov.value is not None:
+        color_by = _p.ColorPlan.from_const(Color(color_cov.value))
+    else:
+        color_by = _p.ColorPlan.default()
+    hatch_cov = _shared.ColumnOrValue(hatch, cat.df)
+    if hatch_cov.is_column:
+        hatch_by = _p.HatchPlan.new(hatch_cov.columns)
+    elif hatch_cov.value is not None:
+        hatch_by = _p.HatchPlan.from_const(Hatch(hatch_cov.value))
+    else:
+        hatch_by = _p.HatchPlan.default()
+    return color_by, hatch_by
 
 
 class _BoxLikeMixin:
@@ -34,69 +75,47 @@ class _BoxLikeMixin:
 
     def __init__(
         self,
-        source: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
-        value: str,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
+        categories: list[tuple],
+        splitby: tuple[str, ...],
+        color_by: _p.ColorPlan,
+        hatch_by: _p.HatchPlan,
     ):
-        if isinstance(offset, str):
-            offset = (offset,)
-        splitby = _shared.join_columns(offset, color, hatch, source=source)
-        self._y = value
         self._splitby = splitby
-        self._color_by = _p.ColorPlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._offset_by = _p.OffsetPlan.default().more_by(*offset)
-        self._source = source
-
-    @property
-    def color(self) -> _p.ColorPlan | _p.ColormapPlan:
-        """Return the object describing how the plot is colored."""
-        return self._color_by
-
-    @property
-    def hatch(self) -> _p.HatchPlan:
-        """Return the object describing how the plot is hatched."""
-        return self._hatch_by
+        self._categories = categories
+        self._color_by = color_by
+        self._hatch_by = hatch_by
+        self._get_base().face.color = color_by.generate(self._categories, self._splitby)
+        self._get_base().face.hatch = hatch_by.generate(self._categories, self._splitby)
 
     def _get_base(self) -> _FE:
         """Just for typing."""
         return self._base_layer
 
-    def with_color(self, by: str | Iterable[str], palette=None) -> Self:
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            other_by = _shared.unique_tuple(self._offset_by.by, self._hatch_by.by)
-            by_all = _shared.unique_tuple(cov.columns, other_by)
-            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
-            self._splitby = by_all
-            _, self._labels = self._generate_datasets()
-        else:
-            color_by = _p.ColorPlan.from_const(Color(cov.value))
-        self._get_base().face.color = color_by.generate(self._labels, self._splitby)
+    def with_color_palette(self, palette) -> Self:
+        if self._color_by.is_const():
+            raise ValueError("Cannot redraw color for a constant color")
+        color_by = _p.ColorPlan.from_palette(self._color_by.by, palette=palette)
+        self._get_base().face.color = color_by.generate(self._categories, self._splitby)
         self._color_by = color_by
         return self
 
-    def with_hatch(
-        self,
-        by: str | Iterable[str],
-        choices=None,
-    ) -> Self:
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            other_by = _shared.unique_tuple(self._offset_by.by, self._color_by.by)
-            by_all = _shared.unique_tuple(other_by, cov.columns)
-            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
-            self._splitby = by_all
-            _, self._labels = self._generate_datasets()
-        else:
-            hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
-        self._get_base().face.hatch = hatch_by.generate(self._labels, self._splitby)
+    def with_color(self, color: ColorType) -> Self:
+        color_by = _p.ColorPlan.from_const(Color(color))
+        self._get_base().face.color = color_by.generate(self._categories, self._splitby)
+        self._color_by = color_by
+        return self
+
+    def with_hatch_palette(self, choices) -> Self:
+        if self._hatch_by.is_const():
+            raise ValueError("Cannot redraw hatch for a constant hatch")
+        hatch_by = _p.HatchPlan.new(self._hatch_by.by, values=choices)
+        self._get_base().face.hatch = hatch_by.generate(self._categories, self._splitby)
+        self._hatch_by = hatch_by
+        return self
+
+    def with_hatch(self, hatch: str | Hatch) -> Self:
+        hatch_by = _p.HatchPlan.from_const(Hatch(hatch))
+        self._get_base().face.hatch = hatch_by.generate(self._categories, self._splitby)
         self._hatch_by = hatch_by
         return self
 
@@ -111,47 +130,6 @@ class _BoxLikeMixin:
         self._get_base().with_edge(color=color, width=width, style=style, alpha=alpha)
         return self
 
-    def _generate_datasets(self) -> tuple[list[np.ndarray], list[tuple[Any, ...]]]:
-        datasets = []
-        unique_sl: list[tuple[Any, ...]] = []
-        for sl, df in self._source.group_by(self._splitby):
-            unique_sl.append(sl)
-            datasets.append(df[self._y])
-        return datasets, unique_sl
-
-    def _generate_labels(self):
-        """Generate the tick positions, labels and the axis label."""
-        _agged_by = _shared.unique_tuple(self._color_by.by, self._hatch_by.by)
-        _nagged = 0
-        for each in reversed(self._offset_by.by):
-            if each in _agged_by:
-                _nagged += 1
-            else:
-                break
-
-        # If all the offset columns are redundantly categorized by color or hatch,
-        # then all the labels should be shown.
-        if _nagged == len(self._offset_by.by):
-            _nagged = 0
-
-        # group positions by aggregated labels
-        label_to_pos: dict[str, list[float]] = {}
-        for p, lbl in self._offset_by.iter_ticks(self._labels, self._splitby):
-            label_agged = "\n".join(lbl[: len(lbl) - _nagged])
-            if label_agged in label_to_pos:
-                label_to_pos[label_agged].append(p)
-            else:
-                label_to_pos[label_agged] = [p]
-        # compute the mean position for each aggregated label
-        pos: list[float] = []
-        labels: list[str] = []
-        for label, pos_list in label_to_pos.items():
-            pos.append(np.mean(pos_list))
-            labels.append(label)
-
-        offset_labels = self._offset_by.by[: len(self._offset_by.by) - _nagged]
-        return pos, labels, offset_labels
-
 
 class DFViolinPlot(
     _shared.DataFrameLayerWrapper[_lg.ViolinPlot, _DF],
@@ -160,53 +138,27 @@ class DFViolinPlot(
 ):
     def __init__(
         self,
-        source: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
+        cat: CatIterator[_DF],
         value: str,
-        *,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
+        dodge: str | tuple[str, ...] | bool | None = None,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         shape: str = "both",
         backend: str | Backend | None = None,
     ):
-        if isinstance(offset, str):
-            offset = (offset,)
-        _BoxLikeMixin.__init__(self, source, offset, value, color, hatch)
-        arrays, self._labels = self._generate_datasets()
-        x = self._offset_by.generate(self._labels, self._splitby)
+        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
+        _extent = cat.zoom_factor(dodge=dodge) * extent
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
         base = _lg.ViolinPlot.from_arrays(
-            x, arrays, name=name, orient=orient, shape=shape, extent=extent,
+            x, arr, name=name, orient=orient, shape=shape, extent=_extent,
             backend=backend,
         )  # fmt: skip
-        super().__init__(base, source)
-        if color is not None:
-            self.with_color(color)
-        if hatch is not None:
-            self.with_hatch(hatch)
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        offset: tuple[str, ...],
-        value: str,
-        color: str | None = None,
-        hatch: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        shape: str = "both",
-        backend: str | Backend | None = None,
-    ) -> DFViolinPlot[_DF]:
-        src = parse(df)
-        self = DFViolinPlot(
-            src, offset, value, orient=orient, name=name, extent=extent,
-            color=color, hatch=hatch, shape=shape, backend=backend
-        )  # fmt: skip
-        return self
+        super().__init__(base, cat.df)
+        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
 
     @property
     def orient(self) -> Orientation:
@@ -230,57 +182,28 @@ class DFBoxPlot(
 ):
     def __init__(
         self,
-        source: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
+        cat: CatIterator[_DF],
         value: str,
-        *,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
+        dodge: str | tuple[str, ...] | bool | None = None,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
-        capsize: float = 0.1,
         extent: float = 0.8,
+        capsize: float = 0.1,
         backend: str | Backend | None = None,
     ):
-        _BoxLikeMixin.__init__(self, source, offset, value, color, hatch)
-        arrays, self._labels = self._generate_datasets()
-        x = self._offset_by.generate(self._labels, self._splitby)
+        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
+        _extent = cat.zoom_factor(dodge=dodge) * extent
+        _capsize = cat.zoom_factor(dodge=dodge) * capsize
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
         base = _lg.BoxPlot.from_arrays(
-            x,
-            arrays,
-            name=name,
-            orient=orient,
-            capsize=capsize,
-            extent=extent,
+            x, arr, name=name, orient=orient, capsize=_capsize, extent=_extent,
             backend=backend,
-        )
-        super().__init__(base, source)
-        base.with_edge(color=theme.get_theme().foreground_color)
-        if color is not None:
-            self.with_color(color)
-        if hatch is not None:
-            self.with_hatch(hatch)
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        offset: tuple[str, ...],
-        value: str,
-        color: str | None = None,
-        hatch: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        capsize: float = 0.1,
-        extent: float = 0.8,
-        backend: str | Backend | None = None,
-    ) -> DFBoxPlot[_DF]:
-        src = parse(df)
-        self = DFBoxPlot(
-            src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
-            capsize=capsize, extent=extent, backend=backend
         )  # fmt: skip
-        return self
+        super().__init__(base, cat.df)
+        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
 
     @property
     def orient(self) -> Orientation:
@@ -350,7 +273,7 @@ class _EstimatorMixin(_BoxLikeMixin):
         return self._update_error(err_func)
 
     def _update_estimate(self, est_func: Callable[[np.ndarray], float]) -> Self:
-        arrays, _ = self._generate_datasets()
+        arrays = self._get_arrays()
         est = [est_func(arr) for arr in arrays]
         self._set_estimation_values(est)
         return self
@@ -359,7 +282,7 @@ class _EstimatorMixin(_BoxLikeMixin):
         self,
         err_func: Callable[[np.ndarray], tuple[float, float]],
     ) -> Self:
-        arrays, _ = self._generate_datasets()
+        arrays = self._get_arrays()
         err_low = []
         err_high = []
         for arr in arrays:
@@ -375,50 +298,28 @@ class DFPointPlot(
 ):
     def __init__(
         self,
-        source: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
+        cat: CatIterator[_DF],
         value: str,
-        *,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
+        dodge: str | tuple[str, ...] | bool | None = None,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
         backend: str | Backend | None = None,
     ):
-        _BoxLikeMixin.__init__(self, source, offset, value, color, hatch)
-        arrays, self._labels = self._generate_datasets()
-        x = self._offset_by.generate(self._labels, self._splitby)
+        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
+        _capsize = cat.zoom_factor(dodge=dodge) * capsize
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
         base = _lg.LabeledPlot.from_arrays(
-            x, arrays, name=name, orient=orient, capsize=capsize, backend=backend,
+            x, arr, name=name, orient=orient, capsize=_capsize, backend=backend,
         )  # fmt: skip
-        super().__init__(base, source)
+        self._arrays = arr
+        super().__init__(base, cat.df)
+        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
         base.with_edge(color=theme.get_theme().foreground_color)
         self._orient = orient
-        if color is not None:
-            self.with_color(color)
-        if hatch is not None:
-            self.with_hatch(hatch)
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        offset: tuple[str, ...],
-        value: str,
-        color: str | None = None,
-        hatch: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        capsize: float = 0.1,
-        backend: str | Backend | None = None,
-    ) -> DFPointPlot[_DF]:
-        src = parse(df)
-        self = DFPointPlot(
-            src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
-            capsize=capsize, backend=backend
-        )  # fmt: skip
-        return self
 
     @property
     def orient(self) -> Orientation:
@@ -436,6 +337,9 @@ class DFPointPlot(
         else:
             base.set_data(data.x, data.y + shift)
         return self
+
+    def _get_arrays(self) -> list[np.ndarray]:
+        return self._arrays
 
     def _set_estimation_values(self, est):
         if self.orient.is_vertical:
@@ -456,57 +360,38 @@ class DFBarPlot(
 ):
     def __init__(
         self,
-        source: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
+        cat: CatIterator[_DF],
         value: str,
-        *,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
+        dodge: str | tuple[str, ...] | bool | None = None,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
         extent: float = 0.8,
         backend: str | Backend | None = None,
     ):
-        _BoxLikeMixin.__init__(self, source, offset, value, color, hatch)
-        arrays, self._labels = self._generate_datasets()
-        x = self._offset_by.generate(self._labels, self._splitby)
+        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
+        _extent = cat.zoom_factor(dodge=dodge) * extent
+        _capsize = cat.zoom_factor(dodge=dodge) * capsize
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
         base = _lg.LabeledBars.from_arrays(
-            x, arrays, name=name, orient=orient, capsize=capsize, extent=extent,
+            x, arr, name=name, orient=orient, capsize=_capsize, extent=_extent,
             backend=backend,
         )  # fmt: skip
-        super().__init__(base, source)
+        self._arrays = arr
+        super().__init__(base, cat.df)
+        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
         base.with_edge(color=theme.get_theme().foreground_color)
         self._orient = orient
-        if color is not None:
-            self.with_color(color)
-        if hatch is not None:
-            self.with_hatch(hatch)
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        offset: tuple[str, ...],
-        value: str,
-        color: str | None = None,
-        hatch: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        capsize: float = 0.1,
-        extent: float = 0.8,
-        backend: str | Backend | None = None,
-    ) -> DFBarPlot[_DF]:
-        src = parse(df)
-        self = DFBarPlot(
-            src, offset, value, orient=orient, name=name, color=color, hatch=hatch,
-            capsize=capsize, extent=extent, backend=backend,
-        )  # fmt: skip
-        return self
 
     @property
     def orient(self) -> Orientation:
         return self._base_layer.bars.orient
+
+    def _get_arrays(self) -> list[np.ndarray]:
+        return self._arrays
 
     def _set_estimation_values(self, est):
         if self.orient.is_vertical:

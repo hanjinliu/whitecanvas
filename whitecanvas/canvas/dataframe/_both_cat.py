@@ -19,7 +19,7 @@ _C = TypeVar("_C", bound="CanvasBase")
 _DF = TypeVar("_DF")
 
 
-class BothAxesCatPlotter(BaseCatPlotter[_C, _DF]):
+class XYCatPlotter(BaseCatPlotter[_C, _DF]):
     def __init__(
         self,
         canvas: _C,

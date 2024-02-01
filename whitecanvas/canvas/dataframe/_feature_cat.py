@@ -8,7 +8,7 @@ from typing import (
 
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
-from whitecanvas.layers.tabular._dataframe import parse
+from whitecanvas.layers.tabular import _jitter
 from whitecanvas.types import ArrayLike1D, ColormapType, Orientation
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ _C = TypeVar("_C", bound="CanvasBase")
 _DF = TypeVar("_DF")
 
 
-class FeatureCatPlotter(BaseCatPlotter[_C, _DF]):
+class CatPlotter(BaseCatPlotter[_C, _DF]):
     """
     Categorical plotter that categorizes the data by features (color, style etc.)
     """
@@ -33,7 +33,7 @@ class FeatureCatPlotter(BaseCatPlotter[_C, _DF]):
         y: str | None,
         update_label: bool = False,
     ):
-        super().__init__(canvas, df, update_label)
+        super().__init__(canvas, df)
         self._x = x
         self._y = y
         self._update_label = update_label
@@ -58,12 +58,12 @@ class FeatureCatPlotter(BaseCatPlotter[_C, _DF]):
         if isinstance(y, str):
             canvas.y.label.text = y
 
-    def along_x(self) -> FeatureCatPlotter[_C, _DF]:
+    def along_x(self) -> CatPlotter[_C, _DF]:
         return self.__class__(
             self._canvas(), self._df, self._get_x(), None, self._update_label
         )
 
-    def along_y(self) -> FeatureCatPlotter[_C, _DF]:
+    def along_y(self) -> CatPlotter[_C, _DF]:
         return self.__class__(
             self._canvas(), self._df, None, self._get_y(), self._update_label
         )
@@ -162,9 +162,10 @@ class FeatureCatPlotter(BaseCatPlotter[_C, _DF]):
             Marker collection layer.
         """
         canvas = self._canvas()
-        df = parse(self._df)
+        xj = _jitter.IdentityJitter(self._get_x())
+        yj = _jitter.IdentityJitter(self._get_y())
         layer = _lt.DFMarkers(
-            df, self._get_x(), self._get_y(), name=name, color=color, hatch=hatch,
+            self._df, xj, yj, name=name, color=color, hatch=hatch,
             size=size, symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
@@ -252,7 +253,7 @@ class FeatureCatPlotter(BaseCatPlotter[_C, _DF]):
     ):
         canvas = self._canvas()
         layer = _lt.DFPointPlot2D(
-            parse(self._df), self._get_x(), self._get_y(), name=name, color=color,
+            self._df, self._get_x(), self._get_y(), name=name, color=color,
             hatch=hatch, size=size, capsize=capsize, backend=canvas._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(layer)
@@ -267,6 +268,7 @@ class FeatureCatPlotter(BaseCatPlotter[_C, _DF]):
         color: NStr | None = None,
         hatch: NStr | None = None,
     ):
+        # TODO: implement this
         raise NotImplementedError
 
     def add_hist_line(

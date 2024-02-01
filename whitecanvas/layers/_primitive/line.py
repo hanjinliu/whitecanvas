@@ -144,7 +144,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         width: float = 1,
         alpha: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = False,
+        antialias: bool = True,
         backend: Backend | str | None = None,
     ):
         xdata, ydata = normalize_xy(xdata, ydata)

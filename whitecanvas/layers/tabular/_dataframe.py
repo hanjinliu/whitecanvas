@@ -8,6 +8,7 @@ import numpy as np
 from cmap import Color, Colormap
 
 from whitecanvas import layers as _l
+from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _mixin
 from whitecanvas.layers import group as _lg
@@ -287,6 +288,8 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
             self.with_symbol(symbol)
         if size is not None:
             self.with_size(size)
+        else:
+            self.with_size(theme.get_theme().markers.size)
 
     @overload
     def with_color(self, value: ColorType) -> Self:
@@ -359,10 +362,10 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         self._edge_color_by = color_by
         return self
 
-    def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
+    def with_hatch(self, by: str | Iterable[str], palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
-            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
+            hatch_by = _p.HatchPlan.new(cov.columns, values=palette)
         else:
             hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
         hatches = hatch_by.map(self._source)
@@ -474,9 +477,38 @@ class DFBars(
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
-        offset: str,
+        x,
+        y,
+        labels: list[tuple[Any, ...]],
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        orient: Orientation = Orientation.VERTICAL,
+        extent: float = 0.8,
+        backend: str | Backend | None = None,
+    ):
+        splitby = _shared.join_columns(color, hatch, source=source)
+        self._color_by = _p.ColorPlan.default()
+        self._width_by = _p.WidthPlan.default()
+        self._style_by = _p.StylePlan.default()
+        self._labels = labels
+        self._splitby = splitby
+
+        base = _l.Bars(
+            x, y, name=name, orient=orient, extent=extent, backend=backend
+        ).with_face_multi()
+        super().__init__(base, source)
+        if color is not None:
+            self.with_color(color)
+        if hatch is not None:
+            self.with_hatch(hatch)
+
+    @classmethod
+    def from_cat(
+        cls,
+        df: DataFrameWrapper[_DF],
+        offset: str | tuple[str, ...],
         value: str,
-        *,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
         name: str | None = None,
@@ -486,38 +518,26 @@ class DFBars(
     ):
         if isinstance(offset, str):
             offset = (offset,)
-        splitby = _shared.join_columns(offset, color, hatch, source=source)
-        unique_sl: list[tuple[Any, ...]] = []
+        splitby = _shared.join_columns(offset, color, hatch, source=df)
+        labels: list[tuple[Any, ...]] = []
         values = []
-        for sl, df in source.group_by(splitby):
-            unique_sl.append(sl)
-            series = df[value]
+        for sl, sub in df.group_by(splitby):
+            labels.append(sl)
+            series = sub[value]
             if len(series) != 1:
                 raise ValueError(f"More than one value found for category {sl!r}.")
             values.append(series[0])
-
-        self._color_by = _p.ColorPlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._offset_by = _p.OffsetPlan.default().more_by(*offset)
-        self._labels = unique_sl
-        self._splitby = splitby
-
-        x = self._offset_by.generate(self._labels, splitby)
-        base = _l.Bars(
-            x, values, name=name, orient=orient, extent=extent, backend=backend
-        ).with_face_multi()
-        super().__init__(base, source)
-        if color is not None:
-            self.with_color(color)
-        if hatch is not None:
-            self.with_hatch(hatch)
+        return cls(
+            df, offset, value, labels, name=name, color=color, hatch=hatch,
+            orient=orient, extent=extent, backend=backend
+        )  # fmt: skip
 
     @classmethod
     def from_table(
         cls,
-        df: _DF,
-        x: str,
-        y: str,
+        df: DataFrameWrapper[_DF],
+        x: str | _jitter.JitterBase,
+        y: str | _jitter.JitterBase,
         *,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
@@ -525,42 +545,28 @@ class DFBars(
         extent: float = 0.8,
         backend: str | Backend | None = None,
     ) -> DFBars[_DF]:
-        src = parse(df)
+        splitby = _shared.join_columns(color, hatch, source=df)
+        labels: list[tuple[Any, ...]] = []
+        if isinstance(x, _jitter.JitterBase):
+            xj = x
+        else:
+            xj = _jitter.IdentityJitter(x)
+        if isinstance(y, _jitter.JitterBase):
+            yj = y
+        else:
+            yj = _jitter.IdentityJitter(y)
+        xs = []
+        ys = []
+        for sl, sub in df.group_by(splitby):
+            labels.append(sl)
+            xs.append(xj.map(sub))
+            ys.append(yj.map(sub))
+        x0 = np.concatenate(xs)
+        y0 = np.concatenate(ys)
         return DFBars(
-            src, x, y, name=name, color=color, hatch=hatch, extent=extent,
+            df, x0, y0, labels, name=name, color=color, hatch=hatch, extent=extent,
             backend=backend
         )  # fmt: skip
-
-    @classmethod
-    def build_count(
-        cls,
-        df: _DF,
-        offset: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        backend: str | Backend | None = None,
-    ) -> DFBars[_DF]:
-        src = parse(df)
-        splitby = _shared.join_columns(offset, color, hatch, source=src)
-        new_src = src.value_count(splitby)
-        return DFBars(
-            new_src, offset, "size", name=name, color=color, hatch=hatch,
-            orient=orient, extent=extent, backend=backend
-        )  # fmt: skip
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        """Return the color plan object."""
-        return self._color_by
-
-    @property
-    def hatch(self) -> _p.HatchPlan:
-        """Return the hatch plan object."""
-        return self._hatch_by
 
     def with_color(self, by: str | Iterable[str] | ColorType, palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
@@ -570,7 +576,7 @@ class DFBars(
             color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
             color_by = _p.ColorPlan.from_const(Color(cov.value))
-        self._base_layer.face.color = color_by.generate(self._labels, self._splitby)
+        self._base_layer.face.color = color_by.map(self._source)
         self._color_by = color_by
         return self
 
@@ -582,7 +588,7 @@ class DFBars(
             hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
         else:
             hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
-        self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
+        self._base_layer.face.hatch = hatch_by.map(self._source)
         self._hatch_by = hatch_by
         return self
 

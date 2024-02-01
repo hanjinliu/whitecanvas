@@ -11,16 +11,14 @@ def main():
 
     url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
     df = pd.read_csv(url)
-    x = "species"
-    y = "sepal_width"
-    cat_plt = canvas.cat(df)
+    cat_plt = canvas.cat_x(df, x="species", y="sepal_width")
     cat_plt.add_stripplot(
-        x, y, color=x, extent=0.3
+        color="species", extent=0.3
     ).with_edge(color="#3F3F00").with_shift(-0.3)
-    cat_plt.add_boxplot(x, y, color=x, extent=0.3)
-    cat_plt.mean().add_markers(x, y, color="black", size=10, symbol="+")
+    cat_plt.add_boxplot(color="species", extent=0.3)
+    cat_plt.mean().add_markers(color="black", size=10, symbol="+")
     cat_plt.add_violinplot(
-        x, y, color=x, extent=0.3, shape="right"
+        color="species", extent=0.3, shape="right"
     ).with_edge(color="#3F3F00").with_shift(0.2)
 
     canvas.show(block=True)

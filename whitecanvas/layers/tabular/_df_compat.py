@@ -126,6 +126,9 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
         return DictWrapper({k: v[sl] for k, v in self._data.items()})
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         observed = set()
         for row in zip(*[self._data[b] for b in by]):
             if row in observed:
@@ -181,6 +184,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         return PandasWrapper(self._data[sers])
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         for sl, sub in self._data.groupby(list(by), observed=True):
             yield sl, PandasWrapper(sub)
 
@@ -228,6 +234,9 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         return PolarsWrapper(df)
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PolarsWrapper(sub)
 
@@ -238,7 +247,7 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(expr))
 
     def value_count(self, by: tuple[str, ...]) -> Self:
-        return (
+        return PolarsWrapper(
             self._data.group_by(by, maintain_order=True)
             .count()
             .rename({"count": "size"})
@@ -270,6 +279,9 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
         return PyArrowWrapper(df)
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PyArrowWrapper(sub)
 
@@ -284,7 +296,7 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
         )
 
     def value_count(self, by: tuple[str, ...]) -> Self:
-        return (
+        return PyArrowWrapper(
             self._data.group_by(by, maintain_order=True)
             .count()
             .rename_columns([*by, "size"])

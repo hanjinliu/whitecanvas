@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, TypeVar
+from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
 
 from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import AggMethods, BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
-from whitecanvas.layers.tabular import _jitter, _shared, parse
+from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.types import ColorType, Hatch, Orientation, Symbol
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.canvas._base import CanvasBase
     from whitecanvas.layers.tabular._box_like import _BoxLikeMixin
     from whitecanvas.layers.tabular._dataframe import DataFrameWrapper
@@ -19,23 +21,84 @@ _C = TypeVar("_C", bound="CanvasBase")
 _DF = TypeVar("_DF")
 
 
+class _Aggregator(Generic[_C, _DF]):
+    def __init__(self, method: str, plotter: OneAxisCatPlotter[_C, _DF] = None):
+        self._method = method
+        self._plotter = plotter
+
+    def __get__(self, ins: _C, owner) -> Self:
+        return _Aggregator(self._method, ins)
+
+    def __repr__(self) -> str:
+        return f"Aggregator<{self._method}>"
+
+    def __call__(self) -> OneAxisCatAggPlotter[_C, _DF]:
+        """Aggregate the values before plotting it."""
+        plotter = self._plotter
+        if plotter is None:
+            raise TypeError("Cannot call this method from a class.")
+        if self._method == "size":
+            value = "size"
+        elif plotter._value is None:
+            raise ValueError("Value column is not specified.")
+        else:
+            value = plotter._value
+        return OneAxisCatAggPlotter(
+            plotter._canvas(),
+            plotter._cat_iter,
+            offset=plotter._offset,
+            value=value,
+            method=self._method,
+            orient=plotter._orient,
+        )
+
+
+class _GroupAggregator(Generic[_C, _DF]):
+    def __init__(self, method: str, plotter: OneAxisCatPlotter[_C, _DF] = None):
+        self._method = method
+        self._plotter = plotter
+
+    def __get__(self, ins: _C, owner) -> Self:
+        return _GroupAggregator(self._method, ins)
+
+    def __repr__(self) -> str:
+        return f"GroupAggregator<{self._method}>"
+
+    def __call__(self, by: str | tuple[str, ...]) -> OneAxisCatPlotter[_C, _DF]:
+        """Aggregate the values for each group before plotting it."""
+        plotter = self._plotter
+        if isinstance(by, str):
+            by = (by,)
+        elif len(by) == 0:
+            raise ValueError("No column is specified for grouping.")
+        return type(plotter)(
+            plotter._canvas(),
+            plotter._df.agg_by((*plotter._offset, *by), plotter._value, self._method),
+            offset=plotter._offset,
+            value=plotter._value,
+            update_label=plotter._update_label,
+        )
+
+
 class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
+    _orient: Orientation
+
     def __init__(
         self,
         canvas: _C,
         df: _DF,
-        offset: str | tuple[str, ...],
+        offset: str | tuple[str, ...] | None,
         value: str | None,
-        orient: Orientation,
         update_label: bool = False,
     ):
         super().__init__(canvas, df)
         if isinstance(offset, str):
             offset = (offset,)
+        elif offset is None:
+            offset = ()
         self._offset = offset
-        self._cat_iter = CatIterator(parse(df), offset)
+        self._cat_iter = CatIterator(self._df, offset)
         self._value = value
-        self._orient = orient
         self._update_label = update_label
         if update_label:
             if value is not None:
@@ -84,7 +147,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         name: str | None = None,
         color: NStr | None = None,
         hatch: NStr | None = None,
-        dodge: NStr | bool | None = None,
+        dodge: NStr | bool = True,
         extent: float = 0.8,
         shape: str = "both",
     ) -> _lt.DFViolinPlot[_DF]:
@@ -131,7 +194,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         color: NStr | None = None,
         hatch: NStr | None = None,
-        dodge: NStr | bool | None = None,
+        dodge: NStr | bool = True,
         name: str | None = None,
         capsize: float = 0.1,
         extent: float = 0.8,
@@ -184,7 +247,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         color: NStr | None = None,
         hatch: NStr | None = None,
-        dodge: NStr | bool | None = None,
+        dodge: NStr | bool = True,
         name: str | None = None,
         capsize: float = 0.1,
     ) -> _lt.DFPointPlot[_DF]:
@@ -240,7 +303,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         color: NStr | None = None,
         hatch: NStr | None = None,
-        dodge: NStr | bool | None = None,
+        dodge: NStr | bool = True,
         name: str | None = None,
         capsize: float = 0.1,
         extent: float = 0.8,
@@ -302,7 +365,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         hatch: NStr | None = None,
         symbol: NStr | None = None,
         size: str | None = None,
-        dodge: NStr | bool | None = None,
+        dodge: NStr | bool = False,
         name: str | None = None,
         extent: float = 0.5,
         seed: int | None = 0,
@@ -343,7 +406,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         symbol = theme._default("markers.symbol", symbol)
         size = theme._default("markers.size", size)
 
-        df = parse(self._df)
+        df = self._df
         splitby, dodge = _splitby_dodge(df, self._offset, color, hatch, dodge)
         _map = self._cat_iter.prep_position_map(splitby, dodge)
         _extent = self._cat_iter.zoom_factor(dodge) * extent
@@ -361,6 +424,21 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
+    def add_markers(
+        self,
+        *,
+        name: str | None = None,
+        color: NStr | None = None,
+        hatch: NStr | None = None,
+        symbol: NStr | None = None,
+        size: str | None = None,
+        dodge: NStr | bool = False,
+    ) -> _lt.DFMarkerGroups[_DF]:
+        return self.add_stripplot(
+            color=color, hatch=hatch, symbol=symbol, size=size, dodge=dodge,
+            extent=0, seed=0, name=name,
+        )  # fmt: skip
+
     def add_swarmplot(
         self,
         *,
@@ -368,7 +446,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         hatch: NStr | None = None,
         symbol: NStr | None = None,
         size: str | None = None,
-        dodge: NStr | bool | None = None,
+        dodge: NStr | bool = False,
         name: str | None = None,
         extent: float = 0.8,
         sort: bool = False,
@@ -408,7 +486,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         canvas = self._canvas()
         symbol = theme._default("markers.symbol", symbol)
         size = theme._default("markers.size", size)
-        df = parse(self._df)
+        df = self._df
         splitby, dodge = _splitby_dodge(df, self._offset, color, hatch, dodge)
         _map = self._cat_iter.prep_position_map(splitby, dodge)
         _extent = self._cat_iter.zoom_factor(dodge) * extent
@@ -431,62 +509,20 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
-    def add_countplot(
-        self,
-        *,
-        color: NStr | None = None,
-        hatch: NStr | None = None,
-        name: str | None = None,
-        extent: float = 0.8,
-    ) -> _lt.DFBars[_DF]:
-        """
-        Add a categorical count plot.
+    mean = _Aggregator("mean")
+    median = _Aggregator("median")
+    min = _Aggregator("min")
+    max = _Aggregator("max")
+    std = _Aggregator("std")
+    sum = _Aggregator("sum")
+    count = _Aggregator("size")
 
-        >>> ### Count for each category in column "species".
-        >>> canvas.cat(df).add_countplot("species")
-
-        >>> ### Color by column "region" with dodging.
-        >>> offset = ["species", "region"]  # categories that offset will be added
-        >>> canvas.cat(df).add_countplot(offset, color="region")
-
-        Parameters
-        ----------
-        color : str or sequence of str, optional
-            Column name(s) for coloring the lines. Must be categorical.
-        hatch : str or sequence of str, optional
-            Column name(s) for hatches. Must be categorical.
-        name : str, optional
-            Name of the layer.
-        extent : float, default 0.8
-            Width of the violins. Usually in range (0, 1].
-
-        Returns
-        -------
-        WrappedBars
-            Bar collection layer.
-        """
-        canvas = self._canvas()
-        layer = _lt.DFBars.build_count(
-            self._df, self._offset, color=color, hatch=hatch, orient=self._orient,
-            extent=extent, name=name, backend=canvas._get_backend(),
-        )  # fmt: skip
-        if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        elif color is None:
-            layer.with_color(canvas._color_palette.next())
-        if self._update_label:
-            self._update_axis_labels("count")
-        return canvas.add_layer(layer)
-
-    def agg(self, method: AggMethods = "mean") -> OneAxisCatAggPlotter[_C, _DF]:
-        return OneAxisCatAggPlotter(
-            self._canvas(),
-            self._df,
-            offset=self._offset,
-            value=self._get_value(),
-            method=method,
-            orient=self._orient,
-        )
+    mean_for_each = _GroupAggregator("mean")
+    median_for_each = _GroupAggregator("median")
+    min_for_each = _GroupAggregator("min")
+    max_for_each = _GroupAggregator("max")
+    std_for_each = _GroupAggregator("std")
+    sum_for_each = _GroupAggregator("sum")
 
 
 class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
@@ -536,7 +572,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             Line collection layer.
         """
         canvas = self._canvas()
-        df = parse(self._df)
+        df = self._df
         _joined = _shared.join_columns(self._offset, color, style, source=df)
         df_agg = self._aggregate(df, _joined, self._value)
         xj = _jitter.CategoricalJitter(self._offset, self._cat_iter.category_map())
@@ -590,7 +626,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             Marker collection layer.
         """
         canvas = self._canvas()
-        df = parse(self._df)
+        df = self._df
         _joined = _shared.join_columns(self._offset, color, hatch, symbol, source=df)
         df_agg = self._aggregate(df, _joined, self._value)
         xj = _jitter.CategoricalJitter(self._offset, self._cat_iter.category_map())
@@ -607,13 +643,77 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
+    def add_bars(
+        self,
+        *,
+        name: str | None = None,
+        color: NStr | ColorType | None = None,
+        hatch: NStr | Hatch | None = None,
+        extent: float = 0.8,
+    ) -> _lt.DFBars[_DF]:
+        """
+        Add bars that represent the aggregated values.
+
+        >>> canvas.cat(df).mean().add_bars("time", "value")
+
+        Parameters
+        ----------
+        x : str
+            Column name for x-axis.
+        y : str
+            Column name for y-axis.
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        width : str, optional
+            Column name for bar width. Must be numerical.
+
+        Returns
+        -------
+        WrappedBars
+            Bar collection layer.
+        """
+        canvas = self._canvas()
+        df = self._df
+        _joined = _shared.join_columns(self._offset, color, hatch, source=df)
+        df_agg = self._aggregate(df, _joined, self._value)
+        xj = _jitter.CategoricalJitter(self._offset, self._cat_iter.category_map())
+        yj = _jitter.IdentityJitter(self._value).check(df_agg)
+        if not self._orient.is_vertical:
+            xj, yj = yj, xj
+        layer = _lt.DFBars.from_table(
+            df_agg, xj, yj, name=name, color=color, hatch=hatch, extent=extent,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        if color is not None and not layer._color_by.is_const():
+            layer.with_color(color, palette=canvas._color_palette)
+        elif color is None:
+            layer.with_color(canvas._color_palette.next())
+        return canvas.add_layer(layer)
+
     def _aggregate(
         self,
         df: DataFrameWrapper,
         by: tuple[str, ...],
         on: str,
     ) -> DataFrameWrapper[_DF]:
-        return df.agg_by(by, on, self._agg_method)
+        if self._agg_method == "size":
+            return df.value_count(by)
+        else:
+            if on is None:
+                raise ValueError("Value column is not specified.")
+            return df.agg_by(by, on, self._agg_method)
+
+
+class XCatPlotter(OneAxisCatPlotter[_C, _DF]):
+    _orient = Orientation.VERTICAL
+
+
+class YCatPlotter(OneAxisCatPlotter[_C, _DF]):
+    _orient = Orientation.HORIZONTAL
 
 
 def _splitby_dodge(
@@ -621,13 +721,19 @@ def _splitby_dodge(
     offset: str | tuple[str, ...],
     color: str | tuple[str, ...] | None = None,
     hatch: str | tuple[str, ...] | None = None,
-    dodge: str | tuple[str, ...] | bool | None = None,
+    dodge: str | tuple[str, ...] | bool = False,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     if isinstance(offset, str):
         offset = (offset,)
-    if isinstance(dodge, bool) and dodge:
-        dodge = _shared.join_columns(color, hatch, source=source)
+    if isinstance(dodge, bool):
+        if dodge:
+            _all = _shared.join_columns(color, hatch, source=source)
+            dodge = tuple(c for c in _all if c not in offset)
+        else:
+            dodge = ()
     elif isinstance(dodge, str):
         dodge = (dodge,)
+    else:
+        dodge = tuple(dodge)
     splitby = _shared.join_columns(offset, dodge, source=source)
     return splitby, dodge

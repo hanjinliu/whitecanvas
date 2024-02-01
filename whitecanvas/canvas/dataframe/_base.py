@@ -15,7 +15,7 @@ from typing import (
 import numpy as np
 
 from whitecanvas._exceptions import ReferenceDeletedError
-from whitecanvas.layers.tabular import _utils
+from whitecanvas.layers.tabular import _utils, parse
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -36,7 +36,7 @@ class BaseCatPlotter(Generic[_C, _DF]):
         df: _DF,
     ):
         self._canvas_ref = weakref.ref(canvas)
-        self._df = df
+        self._df = parse(df)
 
     def _canvas(self) -> _C:
         canvas = self._canvas_ref()

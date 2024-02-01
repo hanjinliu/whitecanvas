@@ -316,7 +316,7 @@ class CanvasBase(ABC):
         x: str | None = None,
         y: str | None = None,
         update_labels: bool = True,
-    ) -> _df.FeatureCatPlotter[Self, _DF]:
+    ) -> _df.CatPlotter[Self, _DF]:
         """
         Categorize input data for plotting.
 
@@ -337,7 +337,7 @@ class CanvasBase(ABC):
         CategorizedPlot
             Plotter object.
         """
-        plotter = _df.FeatureCatPlotter(self, data, x, y, update_label=update_labels)
+        plotter = _df.CatPlotter(self, data, x, y, update_label=update_labels)
         return plotter
 
     def cat_x(
@@ -347,10 +347,8 @@ class CanvasBase(ABC):
         x: str | Sequence[str] | None = None,
         y: str | None = None,
         update_labels: bool = True,
-    ) -> _df.OneAxisCatPlotter[Self, _DF]:
-        return _df.OneAxisCatPlotter(
-            self, data, x, y, Orientation.VERTICAL, update_labels
-        )
+    ) -> _df.XCatPlotter[Self, _DF]:
+        return _df.XCatPlotter(self, data, x, y, update_labels)
 
     def cat_y(
         self,
@@ -359,10 +357,8 @@ class CanvasBase(ABC):
         x: str | None = None,
         y: str | Sequence[str] | None = None,
         update_labels: bool = True,
-    ) -> _df.OneAxisCatPlotter[Self, _DF]:
-        return _df.OneAxisCatPlotter(
-            self, data, y, x, Orientation.HORIZONTAL, update_labels
-        )
+    ) -> _df.YCatPlotter[Self, _DF]:
+        return _df.YCatPlotter(self, data, y, x, update_labels)
 
     def cat_xy(
         self,
@@ -371,8 +367,8 @@ class CanvasBase(ABC):
         x: str | Sequence[str] | None = None,
         y: str | Sequence[str] | None = None,
         update_labels: bool = True,
-    ) -> _df.BothAxesCatPlotter[Self, _DF]:
-        return _df.BothAxesCatPlotter(self, data, x, y, update_labels)
+    ) -> _df.XYCatPlotter[Self, _DF]:
+        return _df.XYCatPlotter(self, data, x, y, update_labels)
 
     def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
         """

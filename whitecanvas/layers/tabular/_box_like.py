@@ -36,14 +36,20 @@ def _splitby_dodge(
     offset: str | tuple[str, ...],
     color: str | tuple[str, ...] | None = None,
     hatch: str | tuple[str, ...] | None = None,
-    dodge: str | tuple[str, ...] | bool | None = None,
+    dodge: str | tuple[str, ...] | bool = False,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     if isinstance(offset, str):
         offset = (offset,)
-    if isinstance(dodge, bool) and dodge:
-        dodge = _shared.join_columns(color, hatch, source=source)
+    if isinstance(dodge, bool):
+        if dodge:
+            _all = _shared.join_columns(color, hatch, source=source)
+            dodge = tuple(c for c in _all if c not in offset)
+        else:
+            dodge = ()
     elif isinstance(dodge, str):
         dodge = (dodge,)
+    else:
+        dodge = tuple(dodge)
     splitby = _shared.join_columns(offset, color, hatch, dodge, source=source)
     return splitby, dodge
 

@@ -86,7 +86,11 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
     @abstractmethod
     def value_count(self, by: tuple[str, ...]) -> Self:
-        ...
+        """Return the count of each group."""
+
+    @abstractmethod
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        """Return the first value of a column for each group."""
 
     @property
     def columns(self) -> list[str]:
@@ -155,6 +159,14 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
             out["size"].append(len(sub[by[0]]))
         return DictWrapper({k: np.array(v) for k, v in out.items()})
 
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        out = {k: [] for k in [*by, on]}
+        for sl, sub in self.group_by(by):
+            for b, s in zip(by, sl):
+                out[b].append(s)
+            out[on].append(sub[on][0])
+        return DictWrapper({k: np.array(v) for k, v in out.items()})
+
 
 class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def __getitem__(self, item: str) -> np.ndarray:
@@ -200,6 +212,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         for sl, sub in self._data.groupby(list(by), observed=True):
             rows.append((*sl, len(sub)))
         return PandasWrapper(pd.DataFrame(rows, columns=[*by, "size"]))
+
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        return PandasWrapper(self._data.groupby(list(by)).first().reset_index())
 
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
@@ -253,6 +268,9 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
             .rename({"count": "size"})
         )
 
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        return PolarsWrapper(self._data.group_by(by, maintain_order=True).first())
+
 
 class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
     def __getitem__(self, item: str) -> np.ndarray:
@@ -301,6 +319,9 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
             .count()
             .rename_columns([*by, "size"])
         )
+
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        return PyArrowWrapper(self._data.group_by(by, maintain_order=True).first())
 
 
 def parse(data: Any) -> DataFrameWrapper:

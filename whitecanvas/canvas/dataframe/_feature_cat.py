@@ -59,14 +59,17 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             canvas.y.label.text = y
 
     def along_x(self) -> CatPlotter[_C, _DF]:
-        return self.__class__(
-            self._canvas(), self._df, self._get_x(), None, self._update_label
-        )
+        """Return the same plotter but with only x-axis set."""
+        return self._copy_like(self._get_x(), None, self._update_label)
 
     def along_y(self) -> CatPlotter[_C, _DF]:
-        return self.__class__(
-            self._canvas(), self._df, None, self._get_y(), self._update_label
-        )
+        """Return the same plotter but with only y-axis set."""
+        return self._copy_like(None, self._get_y(), self._update_label)
+
+    def _copy_like(self, x, y, update_label):
+        out = self.__class__(self._canvas(), self._df, x, y, False)
+        out._update_label = update_label
+        return out
 
     def add_line(
         self,
@@ -80,13 +83,13 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         Add a categorical line plot.
 
         >>> ### Use "time" column as x-axis and "value" column as y-axis
-        >>> canvas.cat(df).add_line("time", "value")
+        >>> canvas.cat(df, "time", "value").add_line()
 
         >>> ### Multiple lines colored by column "group"
-        >>> canvas.cat(df).add_line("time", "value", color="group")
+        >>> canvas.cat(df, "time", "value").add_line(color="group")
 
         >>> ### Multiple lines styled by column "group"
-        >>> canvas.cat(df).add_line("time", "value", style="group")
+        >>> canvas.cat(df, "time", "value").add_line(style="group")
 
         Parameters
         ----------
@@ -101,7 +104,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedLines
+        DFLines
             Line collection layer.
         """
         canvas = self._canvas()
@@ -128,23 +131,22 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         Add a categorical marker plot.
 
         >>> ### Use "time" column as x-axis and "value" column as y-axis
-        >>> canvas.cat(df).add_markers("time", "value")
+        >>> canvas.cat(df, "time", "value").add_markers()
 
         >>> ### Multiple markers colored by column "group"
-        >>> canvas.cat(df).add_markers("time", "value", color="group")
+        >>> canvas.cat(df, "time", "value").add_markers(color="group")
+
+        >>> ### Change marker size according to "weight" column
+        >>> canvas.cat(df, "time", "value").add_markers(size="weight")
 
         >>> ### Multiple markers with hatches determined by column "group"
-        >>> canvas.cat(df).add_markers("time", "value", style="group")
+        >>> canvas.cat(df, "time", "value").add_markers(hatch="group")
 
         >>> ### Multiple markers with symbols determined by "group"
-        >>> canvas.cat(df).add_markers("time", "value", symbol="group")
+        >>> canvas.cat(df, "time", "value").add_markers(symbol="group")
 
         Parameters
         ----------
-        x : str
-            Column name for x-axis.
-        y : str
-            Column name for y-axis.
         name : str, optional
             Name of the layer.
         color : str or sequence of str, optional
@@ -158,7 +160,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedMarkers
+        DFMarkers
             Marker collection layer.
         """
         canvas = self._canvas()
@@ -174,71 +176,48 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
-    def add_bar(
-        self,
-        *,
-        name: str | None = None,
-        color: NStr | None = None,
-        hatch: NStr | None = None,
-        extent: float = 0.8,
-    ) -> _lt.DFBars[_DF]:
-        """
-        Add a categorical bar plot.
-
-        >>> ### Use "time" column as x-axis and "value" column as y-axis
-        >>> canvas.cat(df).add_bar("time", "value")
-
-        >>> ### Multiple bars colored by column "group"
-        >>> canvas.cat(df).add_bar("time", "value", color="group")
-
-        >>> ### Multiple bars with hatches determined by column "group"
-        >>> canvas.cat(df).add_bar("time", "value", hatch="group")
-
-        Parameters
-        ----------
-        x : str
-            Column name for x-axis.
-        y : str
-            Column name for y-axis.
-        name : str, optional
-            Name of the layer.
-        color : str or sequence of str, optional
-            Column name(s) for coloring the lines. Must be categorical.
-        hatch : str or sequence of str, optional
-            Column name(s) for hatches. Must be categorical.
-        extent : float, optional
-            Width of the bars. Usually in range (0, 1].
-
-        Returns
-        -------
-        WrappedBars
-            Bar collection layer.
-        """
-        canvas = self._canvas()
-        layer = _lt.DFBars.from_table(
-            self._df, self._get_x(), self._get_y(), name=name, color=color, hatch=hatch,
-            extent=extent, backend=canvas._get_backend(),
-        )  # fmt: skip
-        if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
-        elif color is None:
-            layer.with_color(canvas._color_palette.next())
-        return canvas.add_layer(layer)
-
     def add_hist2d(
         self,
         *,
         cmap: ColormapType = "inferno",
         name: str | None = None,
         bins: int | tuple[int, int] = 10,
-        range: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        rangex: tuple[float, float] | None = None,
+        rangey: tuple[float, float] | None = None,
         density: bool = False,
     ):
-        """Add 2-D histogram of given columns."""
+        """
+        Add 2-D histogram of given x/y columns.
+
+        >>> ### Use "tip" column as x-axis and "total_bill" column as y-axis
+        >>> canvas.cat(df, "tip", "total_bill").add_hist2d()
+
+        Parameters
+        ----------
+        cmap : colormap-like, default "inferno"
+            Colormap to use for the heatmap.
+        name : str, optional
+            Name of the layer.
+        bins : int or tuple[int, int], default 10
+            If int, the number of bins for both x and y. If tuple, the number of bins
+            for x and y respectively.
+        rangex : (float, float), optional
+            Range of x values in which histogram will be built.
+        rangey : (float, float), optional
+            Range of y values in which histogram will be built.
+        density : bool, default False
+            If True, the result is the value of the probability density function at the
+            bin, normalized such that the integral over the range is 1.
+
+        Returns
+        -------
+        DFHeatmap
+            Dataframe bound heatmap layer.
+        """
         canvas = self._canvas()
         layer = _lt.DFHeatmap.build_hist(
             self._df, self._get_x(), self._get_y(), cmap=cmap, name=name, bins=bins,
-            range=range, density=density, backend=canvas._get_backend(),
+            range=(rangex, rangey), density=density, backend=canvas._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(layer)
 
@@ -251,6 +230,36 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         size: float | None = None,
         capsize: float = 0.15,
     ):
+        """
+        Add 2-D point plot.
+
+        >>> ### Use "time" column as x-axis and "value" column as y-axis
+        >>> canvas.cat(df, "time", "value").add_pointplot()
+
+        >>> ### Multiple point plots colored by column "group"
+        >>> canvas.cat(df, "time", "value").add_pointplot(color="group")
+
+        >>> ### Multiple point plots with hatches determined by column "group"
+        >>> canvas.cat(df, "time", "value").add_pointplot(hatch="group")
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        size : float, optional
+            Size of the points.
+        capsize : float, default 0.15
+            Size of the cap on the error bars.
+
+        Returns
+        -------
+        DFPointPlot2D
+            Point plot layer.
+        """
         canvas = self._canvas()
         layer = _lt.DFPointPlot2D(
             self._df, self._get_x(), self._get_y(), name=name, color=color,
@@ -286,10 +295,10 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         Add lines representing histograms.
 
         >>> ### Use "value" column as x-axis
-        >>> canvas.cat(df).add_line_hist("value", bins=8, density=True)
+        >>> canvas.cat(df, x="value").add_line_hist(bins=8, density=True)
 
         >>> ### Multiple histograms colored by column "group"
-        >>> canvas.cat(df).add_line_hist("value", color="group")
+        >>> canvas.cat(df, x="value").add_line_hist(color="group")
 
         Parameters
         ----------
@@ -345,10 +354,10 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         Add lines representing kernel density estimation.
 
         >>> ### Use "value" column as x-axis
-        >>> canvas.cat(df).add_kde("value")
+        >>> canvas.cat(df, x="value").add_kde()
 
         >>> ### Multiple KDEs colored by column "group"
-        >>> canvas.cat(df).add_kde("value", color="group")
+        >>> canvas.cat(df, x="value).add_kde(color="group")
 
         Parameters
         ----------
@@ -398,5 +407,5 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             return self._y, Orientation.HORIZONTAL
 
 
-class FeatureCatAggPlotter:
+class CatAggPlotter:
     ...

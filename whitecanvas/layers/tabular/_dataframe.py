@@ -15,7 +15,6 @@ from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
-from whitecanvas.layers.tabular._utils import unique
 from whitecanvas.types import (
     ArrayLike1D,
     ColormapType,
@@ -479,7 +478,6 @@ class DFBars(
         source: DataFrameWrapper[_DF],
         x,
         y,
-        labels: list[tuple[Any, ...]],
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
         name: str | None = None,
@@ -489,9 +487,7 @@ class DFBars(
     ):
         splitby = _shared.join_columns(color, hatch, source=source)
         self._color_by = _p.ColorPlan.default()
-        self._width_by = _p.WidthPlan.default()
         self._style_by = _p.StylePlan.default()
-        self._labels = labels
         self._splitby = splitby
 
         base = _l.Bars(
@@ -504,35 +500,6 @@ class DFBars(
             self.with_hatch(hatch)
 
     @classmethod
-    def from_cat(
-        cls,
-        df: DataFrameWrapper[_DF],
-        offset: str | tuple[str, ...],
-        value: str,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        name: str | None = None,
-        orient: Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        backend: str | Backend | None = None,
-    ):
-        if isinstance(offset, str):
-            offset = (offset,)
-        splitby = _shared.join_columns(offset, color, hatch, source=df)
-        labels: list[tuple[Any, ...]] = []
-        values = []
-        for sl, sub in df.group_by(splitby):
-            labels.append(sl)
-            series = sub[value]
-            if len(series) != 1:
-                raise ValueError(f"More than one value found for category {sl!r}.")
-            values.append(series[0])
-        return cls(
-            df, offset, value, labels, name=name, color=color, hatch=hatch,
-            orient=orient, extent=extent, backend=backend
-        )  # fmt: skip
-
-    @classmethod
     def from_table(
         cls,
         df: DataFrameWrapper[_DF],
@@ -543,10 +510,10 @@ class DFBars(
         hatch: str | tuple[str, ...] | None = None,
         name: str | None = None,
         extent: float = 0.8,
+        orient: Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
     ) -> DFBars[_DF]:
         splitby = _shared.join_columns(color, hatch, source=df)
-        labels: list[tuple[Any, ...]] = []
         if isinstance(x, _jitter.JitterBase):
             xj = x
         else:
@@ -557,16 +524,31 @@ class DFBars(
             yj = _jitter.IdentityJitter(y)
         xs = []
         ys = []
-        for sl, sub in df.group_by(splitby):
-            labels.append(sl)
+        for _, sub in df.group_by(splitby):
             xs.append(xj.map(sub))
             ys.append(yj.map(sub))
         x0 = np.concatenate(xs)
         y0 = np.concatenate(ys)
         return DFBars(
-            df, x0, y0, labels, name=name, color=color, hatch=hatch, extent=extent,
-            backend=backend
+            df, x0, y0, name=name, color=color, hatch=hatch, extent=extent,
+            orient=orient, backend=backend,
         )  # fmt: skip
+
+    @classmethod
+    def build_hist(
+        cls,
+        df: DataFrameWrapper[_DF],
+        bins: int | ArrayLike1D,
+        density: bool = False,
+        range: tuple[float, float] | None = None,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        extent: float = 0.8,
+        orient: Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFBars[_DF]:
+        ...
 
     def with_color(self, by: str | Iterable[str] | ColorType, palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
@@ -594,17 +576,6 @@ class DFBars(
 
 
 class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
-    def __init__(
-        self,
-        base: _l.Image,
-        source: DataFrameWrapper[_DF],
-        xticks: list[str] | None = None,
-        yticks: list[str] | None = None,
-    ):
-        super().__init__(base, source)
-        self._xticks = xticks
-        self._yticks = yticks
-
     @property
     def cmap(self) -> Colormap:
         return self._base_layer.cmap
@@ -648,54 +619,16 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
         return cls(base, src)
 
     @classmethod
-    def build_heatmap(
+    def from_array(
         cls,
-        df: _DF,
-        x: str,
-        y: str,
-        value: str,
+        src: DataFrameWrapper[_DF],
+        arr: np.ndarray,
         name: str | None = None,
         cmap: ColormapType = "gray",
         clim: tuple[float | None, float | None] | None = None,
-        fill=0,
         backend: Backend | str | None = None,
-    ) -> Self:
-        src = parse(df)
-        xnunique = unique(src[x], axis=None)
-        ynunique = unique(src[y], axis=None)
-        dtype = src[value].dtype
-        if dtype.kind not in "fiub":
-            raise ValueError(f"Column {value!r} is not numeric.")
-        arr = np.full((ynunique.size, xnunique.size), fill, dtype=dtype)
-        xmap = {x: i for i, x in enumerate(xnunique)}
-        ymap = {y: i for i, y in enumerate(ynunique)}
-        for sl, sub in src.group_by((x, y)):
-            xval, yval = sl
-            vals = sub[value]
-            if vals.size == 1:
-                arr[ymap[yval], xmap[xval]] = sub[value][0]
-            else:
-                raise ValueError(f"More than one value found for {sl!r}.")
-        if clim is None:
-            # `fill` may be outside the range of the data, so calculate clim here.
-            clim = src[value].min(), src[value].max()
-        base = _l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend)
-        return cls(
-            base,
-            src,
-            xticks=[str(_x) for _x in xnunique],
-            yticks=[str(_y) for _y in ynunique],
-        )
-
-    def _generate_xticks(self):
-        if self._xticks is None:
-            return None
-        return np.arange(len(self._xticks)), self._xticks
-
-    def _generate_yticks(self):
-        if self._yticks is None:
-            return None
-        return np.arange(len(self._yticks)), self._yticks
+    ) -> DFHeatmap[_DF]:
+        return cls(_l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend), src)
 
 
 class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):

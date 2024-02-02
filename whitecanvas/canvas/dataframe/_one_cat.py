@@ -6,7 +6,7 @@ from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import AggMethods, BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter, _shared
-from whitecanvas.types import ColorType, Hatch, Orientation, Symbol
+from whitecanvas.types import ColormapType, ColorType, Hatch, Orientation, Symbol
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -96,7 +96,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             offset = (offset,)
         elif offset is None:
             offset = ()
-        self._offset = offset
+        self._offset: tuple[str, ...] = offset
         self._cat_iter = CatIterator(self._df, offset)
         self._value = value
         self._update_label = update_label
@@ -509,6 +509,15 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             layer.with_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
+    def add_hist_heatmap(
+        self,
+        cmap: ColormapType = "inferno",
+        clim: tuple[float, float] | None = None,
+    ) -> _lt.DFHeatmap[_DF]:
+        # TODO: implement this
+        raise NotImplementedError
+
+    # aggregators and group aggregators
     mean = _Aggregator("mean")
     median = _Aggregator("median")
     min = _Aggregator("min")
@@ -516,6 +525,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     std = _Aggregator("std")
     sum = _Aggregator("sum")
     count = _Aggregator("size")
+    first = _Aggregator("first")
 
     mean_for_each = _GroupAggregator("mean")
     median_for_each = _GroupAggregator("median")
@@ -523,6 +533,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     max_for_each = _GroupAggregator("max")
     std_for_each = _GroupAggregator("std")
     sum_for_each = _GroupAggregator("sum")
+    first_for_each = _GroupAggregator("first")
 
 
 class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
@@ -702,6 +713,8 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
     ) -> DataFrameWrapper[_DF]:
         if self._agg_method == "size":
             return df.value_count(by)
+        elif self._agg_method == "first":
+            return df.value_first(by, on)
         else:
             if on is None:
                 raise ValueError("Value column is not specified.")

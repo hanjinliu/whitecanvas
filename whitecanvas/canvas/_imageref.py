@@ -61,6 +61,7 @@ class ImageRef(Generic[_C]):
         size: int = 8,
         color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
         fmt: str = "",
+        text_invalid: str | None = None,
     ) -> Texts[_mixin.MonoFace, _mixin.MonoEdge, _mixin.MultiFont]:
         """
         Add text annotation to each pixel of the image.
@@ -130,14 +131,18 @@ class ImageRef(Generic[_C]):
             fmt_style = "{}"
         for iy, y in enumerate(ys):
             for ix, x in enumerate(xs):
-                texts.append(fmt_style.format(img_data[iy, ix]))
+                if np.isfinite(img_data[iy, ix]):
+                    text = fmt_style.format(img_data[iy, ix])
+                else:
+                    if text_invalid is None:
+                        text = repr(img_data[iy, ix])
+                    else:
+                        text = text_invalid
+                texts.append(text)
                 xdata.append(x)
                 ydata.append(y)
                 colors.append(_color_rule(img_color[iy, ix]))
-        return canvas.add_text(
-            xdata,
-            ydata,
-            texts,
-            size=size,
-            anchor="center",
-        ).with_font_multi(color=np.stack(colors, axis=0))
+        return (
+            canvas.add_text(xdata, ydata, texts, size=size, anchor="center")
+            .with_font_multi(color=np.stack(colors, axis=0))
+        )  # fmt: skip

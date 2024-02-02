@@ -6,10 +6,18 @@ support for high-level categorical plotting methods that use DataFrame objects a
 In `whitecanvas`, similar functions are provided, but these methods do not depend on
 any external plotting libraries or DataFrames, and are more flexible in some cases.
 
-## The `cat` Method
+## The Categorical Plotters
 
-The `cat` method converts a tabular data into a categorical plotter. Currently,
-following objects are allowed as input:
+Methods starting with "cat" return categorical plotters. Methods include:
+
+- `cat` ... plotter for numerical data in x/y-axis categorized by such as color.
+- `cat_x` ... plotter for categorical data in x-axis.
+- `cat_y` ... plotter for categorical data in y-axis.
+- `cat_xy` ... plotter for categorical data in both x- and y-axis.
+
+These methods need a tabular data and the names of the columns that will be used as the
+x and y values.
+Currently, following objects are allowed as the tabular data input:
 
 - `dict` of array-like objects
 - `pandas.DataFrame`
@@ -32,6 +40,6 @@ df = {
     "value": rng.normal(size=130),
 }
 
-canvas.cat(df).add_stripplot("label", "value").with_edge(color="black")
+canvas.cat_x(df, x="label", y="value").add_stripplot().with_edge(color="black")
 canvas.show()
 ```

@@ -1,4 +1,4 @@
-# Categorical Axis
+# Categorical &times; Numerical Data
 
 There are several plots that use categorical axis. Examples are:
 

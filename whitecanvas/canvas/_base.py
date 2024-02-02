@@ -312,9 +312,9 @@ class CanvasBase(ABC):
     def cat(
         self,
         data: _DF,
-        *,
         x: str | None = None,
         y: str | None = None,
+        *,
         update_labels: bool = True,
     ) -> _df.CatPlotter[Self, _DF]:
         """
@@ -343,9 +343,9 @@ class CanvasBase(ABC):
     def cat_x(
         self,
         data: _DF,
-        *,
         x: str | Sequence[str] | None = None,
         y: str | None = None,
+        *,
         update_labels: bool = True,
     ) -> _df.XCatPlotter[Self, _DF]:
         return _df.XCatPlotter(self, data, x, y, update_labels)
@@ -353,9 +353,9 @@ class CanvasBase(ABC):
     def cat_y(
         self,
         data: _DF,
-        *,
         x: str | None = None,
         y: str | Sequence[str] | None = None,
+        *,
         update_labels: bool = True,
     ) -> _df.YCatPlotter[Self, _DF]:
         return _df.YCatPlotter(self, data, y, x, update_labels)
@@ -363,9 +363,9 @@ class CanvasBase(ABC):
     def cat_xy(
         self,
         data: _DF,
+        x: str | Sequence[str],
+        y: str | Sequence[str],
         *,
-        x: str | Sequence[str] | None = None,
-        y: str | Sequence[str] | None = None,
         update_labels: bool = True,
     ) -> _df.XYCatPlotter[Self, _DF]:
         return _df.XYCatPlotter(self, data, x, y, update_labels)
@@ -760,7 +760,8 @@ class CanvasBase(ABC):
         cmap: ColormapType = "inferno",
         name: str | None = None,
         bins: int | tuple[int, int] = 10,
-        range: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        rangex: tuple[float, float] | None = None,
+        rangey: tuple[float, float] | None = None,
         density: bool = False,
     ) -> _l.Image:
         """
@@ -786,8 +787,10 @@ class CanvasBase(ABC):
         bins : int or tuple[int, int], optional
             Bins of the histogram of X/Y dimension respectively. If an integer is given,
             it will be used for both dimensions.
-        range : (2, 2) array-like, optional
-            Range in which histogram will be built.
+        rangex : (float, float), optional
+            Range of x values in which histogram will be built.
+        rangey : (float, float), optional
+            Range of y values in which histogram will be built.
         density : bool, default False
             If True, values of the histogram will be normalized so that the total
             intensity of the histogram will be 1.
@@ -798,8 +801,8 @@ class CanvasBase(ABC):
             Image layer representing the 2D histogram.
         """
         layer = _l.Image.build_hist(
-            x, y, bins=bins, range=range, density=density, name=name, cmap=cmap,
-            backend=self._get_backend(),
+            x, y, bins=bins, range=(rangex, rangey), density=density, name=name,
+            cmap=cmap, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

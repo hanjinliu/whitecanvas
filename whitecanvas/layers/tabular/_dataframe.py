@@ -25,6 +25,7 @@ from whitecanvas.types import (
     Symbol,
     _Void,
 )
+from whitecanvas.utils.hist import histograms
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -41,14 +42,13 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         segs: list[np.ndarray],
         labels: list[tuple[Any, ...]],
         color: _Cols | None = None,
-        width: str | None = None,
+        width: float = 1.0,
         style: _Cols | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
-        self._width_by = _p.WidthPlan.default()
         self._style_by = _p.StylePlan.default()
         self._labels = labels
         self._splitby = splitby
@@ -56,8 +56,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         super().__init__(base, source)
         if color is not None:
             self.with_color(color)
-        if isinstance(width, str):
-            self.with_width(width)
+        self.with_width(width)
         if style is not None:
             self.with_style(style)
 
@@ -68,7 +67,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         x: str | _jitter.JitterBase,
         y: str | _jitter.JitterBase,
         color: str | None = None,
-        width: str | None = None,
+        width: float | None = None,
         style: str | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
@@ -129,60 +128,6 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
             backend=backend,
         )  # fmt: skip
 
-    @classmethod
-    def build_hist(
-        cls,
-        df: _DF,
-        value: str,
-        bins: int | ArrayLike1D = 10,
-        density: bool = False,
-        range: tuple[float, float] | None = None,
-        color: str | None = None,
-        width: str | None = None,
-        style: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        backend: str | Backend | None = None,
-    ) -> DFLines[_DF]:
-        src = parse(df)
-        splitby = _shared.join_columns(color, style, source=src)
-        ori = Orientation.parse(orient)
-        segs = []
-        labels: list[tuple[Any, ...]] = []
-        for sl, df in src.group_by(splitby):
-            labels.append(sl)
-            each = df[value]
-            counts, edges = np.histogram(each, bins=bins, density=density, range=range)
-            x = np.empty(2 * counts.size + 2, dtype=np.float32)
-            y = np.empty(2 * counts.size + 2, dtype=np.float32)
-            x[0] = edges[0]
-            x[-1] = edges[-1]
-            y[0] = y[-1] = 0
-            x[1:-1:2] = edges[:-1]
-            x[2:-1:2] = edges[1:]
-            y[1:-1:2] = counts
-            y[2:-1:2] = counts
-            if ori.is_vertical:
-                segs.append(np.column_stack([x, y]))
-            else:
-                segs.append(np.column_stack([y, x]))
-        return DFLines(
-            src, segs, labels, name=name, color=color, width=width, style=style,
-            backend=backend,
-        )  # fmt: skip
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        return self._color_by
-
-    @property
-    def width(self) -> _p.WidthPlan:
-        return self._width_by
-
-    @property
-    def style(self) -> _p.StylePlan:
-        return self._style_by
-
     @overload
     def with_color(self, value: ColorType) -> Self:
         ...
@@ -207,21 +152,8 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self._color_by = color_by
         return self
 
-    @overload
     def with_width(self, value: float) -> Self:
-        ...
-
-    @overload
-    def with_width(self, by: str, limits=None) -> Self:
-        ...
-
-    def with_width(self, by, /, limits=None) -> Self:
-        if isinstance(by, str):
-            width_by = _p.WidthPlan.from_range(by, limits=limits)
-        else:
-            width_by = _p.WidthPlan.from_const(float(by))
-        self._base_layer.width = width_by.map(self._source)
-        self._width_by = width_by
+        self._base_layer.width = value
         return self
 
     def with_style(self, by: str | Iterable[str], styles=None) -> Self:
@@ -534,22 +466,6 @@ class DFBars(
             orient=orient, backend=backend,
         )  # fmt: skip
 
-    @classmethod
-    def build_hist(
-        cls,
-        df: DataFrameWrapper[_DF],
-        bins: int | ArrayLike1D,
-        density: bool = False,
-        range: tuple[float, float] | None = None,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        name: str | None = None,
-        extent: float = 0.8,
-        orient: Orientation = Orientation.VERTICAL,
-        backend: str | Backend | None = None,
-    ) -> DFBars[_DF]:
-        ...
-
     def with_color(self, by: str | Iterable[str] | ColorType, palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
@@ -657,3 +573,115 @@ class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic
         if size is not None:
             base.markers.size = size
         super().__init__(base, source)
+
+
+class DFHistograms(
+    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_lg.Histogram], _DF],
+    Generic[_DF],
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        base: _lg.LayerCollectionBase[_lg.Histogram],
+        labels: list[tuple[Any, ...]],
+        color: _Cols | None = None,
+        width: str | None = None,
+        style: _Cols | None = None,
+    ):
+        splitby = _shared.join_columns(color, style, source=source)
+        self._color_by = _p.ColorPlan.default()
+        self._width_by = _p.WidthPlan.default()
+        self._style_by = _p.StylePlan.default()
+        self._labels = labels
+        self._splitby = splitby
+        super().__init__(base, source)
+        if color is not None:
+            self.with_color(color)
+        if isinstance(width, str):
+            self.with_width(width)
+        if style is not None:
+            self.with_style(style)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: DataFrameWrapper[_DF],
+        value: str,
+        bins: int | ArrayLike1D,
+        limits: tuple[float, float] | None = None,
+        kind="count",
+        shape="bars",
+        color: str | None = None,
+        width: float = 1.0,
+        style: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFHistograms[_DF]:
+        splitby = _shared.join_columns(color, style, source=df)
+        ori = Orientation.parse(orient)
+        arrays: list[np.ndarray] = []
+        labels: list[tuple] = []
+        for sl, sub in df.group_by(splitby):
+            labels.append(sl)
+            arrays.append(sub[value])
+        hist = histograms(arrays, bins, limits)
+
+        layers = []
+        for arr in arrays:
+            each_layer = _lg.Histogram.from_array(
+                arr,
+                kind=kind,
+                bins=hist.edges,
+                limits=limits,
+                width=width,
+                orient=ori,
+                shape=shape,
+                backend=backend,
+            )
+            layers.append(each_layer)
+        base = _lg.LayerCollectionBase(layers, name=name)
+        return cls(df, base, labels, color=color, width=width, style=style)
+
+    @overload
+    def with_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def with_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def with_color(self, by, /, palette=None):
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot color by a column other than {self._splitby}")
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
+        else:
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
+        for i, col in enumerate(color_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].color = col
+        self._color_by = color_by
+        return self
+
+    def with_width(self, value: float) -> Self:
+        for hist in self._base_layer:
+            hist.line.width = value
+        return self
+
+    def with_style(self, by: str | Iterable[str], styles=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot style by a column other than {self._splitby}")
+            style_by = _p.StylePlan.new(cov.columns, values=styles)
+        else:
+            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
+        for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].style = st
+        self._style_by = style_by
+        return self

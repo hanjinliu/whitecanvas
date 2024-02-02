@@ -635,14 +635,15 @@ class CanvasBase(ABC):
         data: ArrayLike1D,
         *,
         bins: int | ArrayLike1D = 10,
-        range: tuple[float, float] | None = None,
-        density: bool = False,
+        limits: tuple[float, float] | None = None,
         name: str | None = None,
+        shape: Literal["step", "polygon", "bars"] = "bars",
+        kind: Literal["count", "density", "frequency", "percent"] = "count",
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
-        alpha: float = 1.0,
-        hatch: str | Hatch | None = None,
-    ) -> _l.Bars:
+        width: float | None = None,
+        style: LineStyle | str | None = None,
+    ) -> _lg.Histogram:
         """
         Add data as a histogram.
 
@@ -655,9 +656,9 @@ class CanvasBase(ABC):
         bins : int or 1D array-like, default 10
             Bins of the histogram. This parameter will directly be passed
             to `np.histogram`.
-        range : (float, float), optional
-            Range in which histogram will be built. This parameter will
-            directly be passed to `np.histogram`.
+        limits : (float, float), optional
+            Limits in which histogram will be built. This parameter will equivalent to
+            the `range` paraneter of `np.histogram`.
         density : bool, default False
             If True, heights of bars will be normalized so that the total
             area of the histogram will be 1. This parameter will directly
@@ -668,10 +669,6 @@ class CanvasBase(ABC):
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
-        alpha : float, default 1.0
-            Alpha channel of the bars.
-        hatch : str or FacePattern, optional
-            Pattern of the bar faces. Use the theme default if not specified.
 
         Returns
         -------
@@ -680,74 +677,11 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name("histogram", name)
         color = self._generate_colors(color)
-        hatch = theme._default("bars.hatch", hatch)
-        layer = _l.Bars.from_histogram(
-            data, bins=bins, range=range, density=density, name=name, color=color,
-            orient=orient, alpha=alpha, hatch=hatch, backend=self._get_backend(),
-        )  # fmt: skip
-        return self.add_layer(layer)
-
-    def add_hist_line(
-        self,
-        data: ArrayLike1D,
-        *,
-        bins: int | ArrayLike1D = 10,
-        range: tuple[float, float] | None = None,
-        density: bool = False,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        color: ColorType | None = None,
-        width: float | None = None,
-        style: LineStyle | str | None = None,
-        alpha: float = 1.0,
-        antialias: bool = True,
-    ) -> _l.Line:
-        """
-        Add a line plot of the histogram.
-
-        >>> canvas.add_hist_line(np.random.normal(size=100), bins=12)
-
-        Parameters
-        ----------
-        data : array-like
-            1D Array of data.
-        bins : int or 1D array-like, default 10
-            Bins of the histogram. This parameter will directly be passed
-            to `np.histogram`.
-        range : (float, float), optional
-            Range in which histogram will be built. This parameter will
-            directly be passed to `np.histogram`.
-        density : bool, default False
-            If True, heights of bars will be normalized so that the total
-            area of the histogram will be 1. This parameter will directly
-            be passed to `np.histogram`.
-        name : str, optional
-            Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
-            Orientation of the bars.
-        color : color-like, optional
-            Color of the bars.
-        width : float, optional
-            Line width. Use the theme default if not specified.
-        style : str or LineStyle, optional
-            Line style. Use the theme default if not specified.
-        alpha : float, default 1.0
-            Alpha channel of the line.
-        antialias : bool, default True
-            Antialiasing of the line.
-
-        Returns
-        -------
-        Line
-            The line layer that represents the histogram.
-        """
-        name = self._coerce_name("histogram", name)
-        color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
-        layer = _l.Line.build_hist(
-            data, bins=bins, density=density, range=range, orient=orient, name=name,
-            color=color, width=width, style=style, alpha=alpha, antialias=antialias,
+        layer = _lg.Histogram.from_array(
+            data, bins=bins, limits=limits, shape=shape, kind=kind, name=name,
+            color=color, width=width, style=style, orient=orient,
             backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)

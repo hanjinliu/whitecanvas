@@ -427,35 +427,6 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         )
 
     @classmethod
-    def build_hist(
-        cls,
-        data: ArrayLike1D,
-        *,
-        bins: int | ArrayLike1D = 10,
-        density: bool = False,
-        range: tuple[float, float] | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        name: str | None = None,
-        color: ColorType = "blue",
-        alpha: float = 1.0,
-        width: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = True,
-        backend: Backend | str | None = None,
-    ):
-        """Construct a line from a histogram."""
-        data = as_array_1d(data)
-        counts, edges = np.histogram(data, bins, density=density, range=range)
-        xdata = np.concatenate(list(zip(edges[:-1], edges[1:])))
-        ydata = np.concatenate(list(zip(counts, counts)))
-        if not Orientation.parse(orient).is_vertical:
-            xdata, ydata = ydata, xdata
-        return Line(
-            xdata, ydata, name=name, color=color, alpha=alpha, width=width,
-            style=style, antialias=antialias, backend=backend,
-        )  # fmt: skip
-
-    @classmethod
     def build_cdf(
         cls,
         data: ArrayLike1D,

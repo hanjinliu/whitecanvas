@@ -6,6 +6,7 @@ from typing import (
     TypeVar,
 )
 
+from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
@@ -108,6 +109,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             Line collection layer.
         """
         canvas = self._canvas()
+        width = theme._default("line.width", width)
         layer = _lt.DFLines.from_table(
             self._df, self._get_x(), self._get_y(), name=name, color=color, width=width,
             style=style, backend=canvas._get_backend(),
@@ -271,61 +273,19 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         self,
         *,
         bins: int | ArrayLike1D = 10,
-        range: tuple[float, float] | None = None,
-        density: bool = False,
+        limits: tuple[float, float] | None = None,
+        kind: str = "count",
+        shape: str = "bars",
         name: str | None = None,
         color: NStr | None = None,
-        hatch: NStr | None = None,
-    ):
-        # TODO: implement this
-        raise NotImplementedError
-
-    def add_hist_line(
-        self,
-        *,
-        bins: int | ArrayLike1D = 10,
-        range: tuple[float, float] | None = None,
-        density: bool = False,
-        name: str | None = None,
-        color: NStr | None = None,
-        width: str | None = None,
+        width: float | None = None,
         style: NStr | None = None,
     ):
-        """
-        Add lines representing histograms.
-
-        >>> ### Use "value" column as x-axis
-        >>> canvas.cat(df, x="value").add_line_hist(bins=8, density=True)
-
-        >>> ### Multiple histograms colored by column "group"
-        >>> canvas.cat(df, x="value").add_line_hist(color="group")
-
-        Parameters
-        ----------
-        bins : int or array-like, default 10
-            If an integer, the number of bins. If an array, the bin edges.
-        range : (float, float), default None
-            If provided, the lower and upper range of the bins.
-        density : bool, default False
-            If True, the total area of the histogram will be normalized to 1.
-        name : str, optional
-            Name of the layer.
-        color : str or sequence of str, optional
-            Column name(s) for coloring the lines. Must be categorical.
-        width : str, optional
-            Column name for line width. Must be numerical.
-        style : str or sequence of str, optional
-            Column name(s) for styling the lines. Must be categorical.
-
-        Returns
-        -------
-        WrappedLines
-            Line collection layer.
-        """
         canvas = self._canvas()
+        width = theme._default("line.width", width)
         x0, orient = self._column_and_orient()
-        layer = _lt.DFLines.build_hist(
-            self._df, x0, bins=bins, range=range, density=density, name=name,
+        layer = _lt.DFHistograms.from_table(
+            self._df, x0, bins=bins, limits=limits, kind=kind, shape=shape, name=name,
             orient=orient, color=color, width=width, style=style,
             backend=canvas._get_backend(),
         )  # fmt: skip
@@ -334,11 +294,11 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         elif color is None:
             layer.with_color(canvas._color_palette.next())
         if self._update_label:
-            ax_label = "density" if density else "count"
             if orient.is_vertical:
-                canvas.y.label.text = ax_label
+                canvas.y.label.text = kind
             else:
-                canvas.x.label.text = ax_label
+                canvas.x.label.text = kind
+
         return canvas.add_layer(layer)
 
     def add_kde(

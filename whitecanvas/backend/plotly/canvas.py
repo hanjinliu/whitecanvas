@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import warnings
 import weakref
 from typing import Callable
 
@@ -76,7 +77,26 @@ class Canvas:
     def _plt_reorder_layers(self, layers: list[PlotlyLayer]):
         model_to_idx_map = {id(layer._props): i for i, layer in enumerate(layers)}
         first, *data = self._fig._data
-        self._fig._data = [first] + [data[model_to_idx_map[id(r)]] for r in data]
+        try:
+            self._fig._data = [first] + [data[model_to_idx_map[id(r)]] for r in data]
+        except KeyError:
+            # sometimes fails, so just warn
+            not_found = []
+            for r in data:
+                if id(r) not in model_to_idx_map:
+                    not_found.append(r)
+            keys = list(model_to_idx_map.keys())
+            warnings.warn(
+                f"Layers {not_found!r} not found in the ID keys {keys!r}.",
+                UserWarning,
+                stacklevel=2,
+            )
+        if len(self._fig._data) != len(data) + 1:
+            warnings.warn(
+                "Number of layers changed",
+                UserWarning,
+                stacklevel=2,
+            )
 
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""

@@ -338,8 +338,9 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             Line collection layer.
         """
         canvas = self._canvas()
+        width = theme._default("line.width", width)
         x0, orient = self._column_and_orient()
-        layer = _lt.DFLines.build_kde(
+        layer = _lt.DFKde.from_table(
             self._df, x0, band_width=band_width, name=name,
             orient=orient, color=color, width=width, style=style,
             backend=canvas._get_backend(),

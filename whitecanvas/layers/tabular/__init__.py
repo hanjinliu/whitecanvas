@@ -8,6 +8,7 @@ from whitecanvas.layers.tabular._dataframe import (
     DFBars,
     DFHeatmap,
     DFHistograms,
+    DFKde,
     DFLines,
     DFMarkerGroups,
     DFMarkers,
@@ -26,6 +27,7 @@ __all__ = [
     "DFBoxPlot",
     "DFHeatmap",
     "DFHistograms",
+    "DFKde",
     "DFPointPlot2D",
     "parse",
 ]

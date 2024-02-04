@@ -682,6 +682,106 @@ class DFHistograms(
         else:
             style_by = _p.StylePlan.from_const(LineStyle(cov.value))
         for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
-            self._base_layer[i].style = st
+            self._base_layer[i].line.style = st
+        self._style_by = style_by
+        return self
+
+
+class DFKde(
+    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_lg.Kde], _DF],
+    Generic[_DF],
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        base: _lg.LayerCollectionBase[_lg.Kde],
+        labels: list[tuple[Any, ...]],
+        color: _Cols | None = None,
+        width: str | None = None,
+        style: _Cols | None = None,
+    ):
+        splitby = _shared.join_columns(color, style, source=source)
+        self._color_by = _p.ColorPlan.default()
+        self._width_by = _p.WidthPlan.default()
+        self._style_by = _p.StylePlan.default()
+        self._labels = labels
+        self._splitby = splitby
+        super().__init__(base, source)
+        if color is not None:
+            self.with_color(color)
+        if isinstance(width, str):
+            self.with_width(width)
+        if style is not None:
+            self.with_style(style)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: DataFrameWrapper[_DF],
+        value: str,
+        band_width: float | None = None,
+        color: str | None = None,
+        width: float = 1.0,
+        style: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFHistograms[_DF]:
+        splitby = _shared.join_columns(color, style, source=df)
+        ori = Orientation.parse(orient)
+        arrays: list[np.ndarray] = []
+        labels: list[tuple] = []
+        for sl, sub in df.group_by(splitby):
+            labels.append(sl)
+            arrays.append(sub[value])
+        layers = []
+        for arr in arrays:
+            each_layer = _lg.Kde.from_array(
+                arr, width=width, band_width=band_width, orient=ori, backend=backend,
+            )  # fmt: skip
+            layers.append(each_layer)
+        base = _lg.LayerCollectionBase(layers, name=name)
+        return cls(df, base, labels, color=color, width=width, style=style)
+
+    @overload
+    def with_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def with_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def with_color(self, by, /, palette=None):
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot color by a column other than {self._splitby}")
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
+        else:
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
+        for i, col in enumerate(color_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].color = col
+        self._color_by = color_by
+        return self
+
+    def with_width(self, value: float) -> Self:
+        for hist in self._base_layer:
+            hist.line.width = value
+        return self
+
+    def with_style(self, by: str | Iterable[str], styles=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot style by a column other than {self._splitby}")
+            style_by = _p.StylePlan.new(cov.columns, values=styles)
+        else:
+            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
+        for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].line.style = st
         self._style_by = style_by
         return self

@@ -18,10 +18,10 @@ def test_cat(backend: str):
     canvas.cat(df, "x", "y").add_markers(color="label")
     canvas.cat(df, "x", "y").add_markers(hatch="label")
     canvas.cat(df, "x", "y").add_hist2d(bins=(5, 4))
-    # canvas.cat(df, "x", "y").along_x().add_hist(bins=5)
-    # canvas.cat(df, "x", "y").along_x().add_hist(bins=5, color="label")
-    # canvas.cat(df, "x", "y").along_y().add_hist(bins=6)
-    # canvas.cat(df, "x", "y").along_y().add_hist(bins=6, color="label")
+    canvas.cat(df, "x", "y").along_x().add_hist(bins=5)
+    canvas.cat(df, "x", "y").along_x().add_hist(bins=5, color="label")
+    canvas.cat(df, "x", "y").along_y().add_hist(bins=6)
+    canvas.cat(df, "x", "y").along_y().add_hist(bins=6, color="label")
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_cat_plots(backend: str, orient: str):

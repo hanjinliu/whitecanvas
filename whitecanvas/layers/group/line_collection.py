@@ -53,7 +53,7 @@ class LineCollection(LayerCollectionBase[Line]):
             _width = [width] * len(self)
         else:
             _width = np.asarray(width, dtype=np.float32)
-        if len(width) != len(self):
+        if len(_width) != len(self):
             raise ValueError(
                 f"width must be a float or a sequence of length {len(self)}"
             )

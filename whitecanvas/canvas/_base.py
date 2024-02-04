@@ -1156,8 +1156,8 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         band_width: float | Literal["scott", "silverman"] = "scott",
         color: ColorType | None = None,
-        alpha: float = 1.0,
-        hatch: str | Hatch = Hatch.SOLID,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
     ) -> _l.Band:
         """
         Add data as a band layer representing kernel density estimation (KDE).
@@ -1184,23 +1184,19 @@ class CanvasBase(ABC):
 
         Returns
         -------
-        Band
-            The band layer representing KDE.
+        Kde
+            The KDE layer.
         """
         name = self._coerce_name(_l.Band, name)
         color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
 
-        layer = _l.Band.from_kde(
-            data,
-            bottom,
-            name=name,
-            band_width=band_width,
-            orient=orient,
-            color=color,
-            alpha=alpha,
-            hatch=hatch,
+        layer = _lg.Kde.from_array(
+            data, bottom=bottom, scale=1, band_width=band_width, name=name,
+            orient=orient, color=color, width=width, style=style,
             backend=self._get_backend(),
-        )
+        )  # fmt: skip
         return self.add_layer(layer)
 
     @overload

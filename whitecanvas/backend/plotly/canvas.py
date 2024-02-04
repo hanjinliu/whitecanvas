@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import sys
-import warnings
 import weakref
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from plotly import graph_objects as go
@@ -14,6 +13,9 @@ from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.plotly.markers import Markers
 from whitecanvas.types import MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
+
+if TYPE_CHECKING:
+    from plotly._subplots import SubplotXY
 
 
 class Canvas:
@@ -43,7 +45,7 @@ class Canvas:
         )
         self._fig.add_trace(self._scatter)
 
-    def _subplot_layout(self):
+    def _subplot_layout(self) -> SubplotXY:
         try:
             layout = self._fig.get_subplot(**self._loc.asdict())
         except Exception:  # manually wrapped backend are not created with subplots
@@ -77,26 +79,15 @@ class Canvas:
     def _plt_reorder_layers(self, layers: list[PlotlyLayer]):
         model_to_idx_map = {id(layer._props): i for i, layer in enumerate(layers)}
         first, *data = self._fig._data
-        try:
-            self._fig._data = [first] + [data[model_to_idx_map[id(r)]] for r in data]
-        except KeyError:
-            # sometimes fails, so just warn
-            not_found = []
-            for r in data:
-                if id(r) not in model_to_idx_map:
-                    not_found.append(r)
-            keys = list(model_to_idx_map.keys())
-            warnings.warn(
-                f"Layers {not_found!r} not found in the ID keys {keys!r}.",
-                UserWarning,
-                stacklevel=2,
-            )
-        if len(self._fig._data) != len(data) + 1:
-            warnings.warn(
-                "Number of layers changed",
-                UserWarning,
-                stacklevel=2,
-            )
+        ordered_data = []
+        data_in_other = []
+        for _data in data:
+            data_id = id(_data)
+            if data_id in model_to_idx_map:
+                ordered_data.append(data[model_to_idx_map[data_id]])
+            else:
+                data_in_other.append(_data)
+        self._fig._data = [first, *ordered_data, *data_in_other]
 
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""
@@ -200,6 +191,9 @@ class Canvas:
         kwargs = self._loc.asdict()
         kwargs["secondary_y"] = True
         return Canvas(self._fig, **kwargs)
+
+    def _repr_mimebundle_(self, *args, **kwargs):
+        return self._fig._repr_mimebundle_(*args, **kwargs)
 
 
 def _convert_cb(cb):

@@ -261,6 +261,11 @@ class CanvasGrid:
             return self._backend_object._repr_mimebundle_(*args, **kwargs)
         raise NotImplementedError()
 
+    def _repr_html_(self, *args: Any, **kwargs: Any) -> str:
+        if hasattr(self._backend_object, "_repr_html_"):
+            return self._backend_object._repr_html_(*args, **kwargs)
+        raise NotImplementedError()
+
 
 class CanvasVGrid(CanvasGrid):
     @override
@@ -393,3 +398,12 @@ class SingleCanvas(CanvasBase):
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         return self._grid._repr_png_()
+
+    def _repr_mimebundle_(self, *args: Any, **kwargs: Any) -> dict:
+        return self._grid._repr_mimebundle_(*args, **kwargs)
+
+    def _ipython_display_(self, *args: Any, **kwargs: Any) -> Any:
+        return self._grid._ipython_display_(*args, **kwargs)
+
+    def _repr_html_(self, *args: Any, **kwargs: Any) -> str:
+        return self._grid._repr_html_(*args, **kwargs)

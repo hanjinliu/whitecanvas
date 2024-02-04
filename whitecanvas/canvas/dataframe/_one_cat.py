@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
 
+import numpy as np
+
 from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import AggMethods, BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
@@ -106,8 +108,10 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             pos, label = self._cat_iter.axis_ticks()
             if self._orient.is_vertical:
                 canvas.x.ticks.set_labels(pos, label)
+                canvas.x.lim = (np.min(pos) - 0.5, np.max(pos) + 0.5)
             else:
                 canvas.y.ticks.set_labels(pos, label)
+                canvas.y.lim = (np.min(pos) - 0.5, np.max(pos) + 0.5)
 
     def __repr__(self) -> str:
         return (

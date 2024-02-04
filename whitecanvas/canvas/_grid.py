@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,6 +12,9 @@ from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
 from whitecanvas.theme import get_theme
 from whitecanvas.utils.normalize import arr_color
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class GridEvents(SignalGroup):
@@ -55,8 +58,6 @@ class CanvasGrid:
         nrows: int = 1,
         ncols: int = 1,
         *,
-        link_x: bool = False,
-        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> CanvasGrid:
         """
@@ -71,10 +72,7 @@ class CanvasGrid:
         backend : backend-like, optional
             The backend to use for the grid.
         """
-        return CanvasGrid(
-            [10] * nrows, [10] * ncols, link_x=link_x, link_y=link_y,
-            backend=backend,
-        )  # fmt: skip
+        return CanvasGrid([10] * nrows, [10] * ncols, backend=backend)
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -88,16 +86,7 @@ class CanvasGrid:
 
     @x_linked.setter
     def x_linked(self, value: bool):
-        value = bool(value)
-        if value == self._x_linked:
-            return
-        if value:
-            for _, canvas in self.iter_canvas():
-                canvas.x.events.lim.connect(self._align_xlims, unique=True)
-        else:
-            for _, canvas in self.iter_canvas():
-                canvas.x.events.lim.disconnect(self._align_xlims)
-        self._x_linked = value
+        self.link_x() if value else self.unlink_x()
 
     @property
     def y_linked(self) -> bool:
@@ -106,16 +95,65 @@ class CanvasGrid:
 
     @y_linked.setter
     def y_linked(self, value: bool):
-        value = bool(value)
-        if value == self._y_linked:
-            return
-        if value:
+        self.link_y() if value else self.unlink_y()
+
+    def link_x(self, future: bool = True) -> Self:
+        """
+        Link all the x-axes of the canvases in the grid.
+
+        >>> from whitecanvas import grid
+        >>> g = grid(2, 2).link_x()  # link x-axes of all canvases
+
+        Parameters
+        ----------
+        future : bool, default True
+            If Ture, all the canvases added in the future will also be linked. Only link
+            the existing canvases if False.
+        """
+        if not self._x_linked:
+            for _, canvas in self.iter_canvas():
+                canvas.x.events.lim.connect(self._align_xlims, unique=True)
+            if future:
+                self._x_linked = True
+        return self
+
+    def link_y(self, future: bool = True) -> Self:
+        """
+        Link all the y-axes of the canvases in the grid.
+
+        >>> from whitecanvas import grid
+        >>> g = grid(2, 2).link_y()  # link y-axes of all canvases
+
+        Parameters
+        ----------
+        future : bool, default True
+            If Ture, all the canvases added in the future will also be linked. Only link
+            the existing canvases if False.
+        """
+        if not self._y_linked:
             for _, canvas in self.iter_canvas():
                 canvas.y.events.lim.connect(self._align_ylims, unique=True)
-        else:
+            if future:
+                self._y_linked = True
+        return self
+
+    def unlink_x(self, future: bool = True) -> Self:
+        """Unlink all the x-axes of the canvases in the grid."""
+        if self._x_linked:
+            for _, canvas in self.iter_canvas():
+                canvas.x.events.lim.disconnect(self._align_xlims)
+            if future:
+                self._x_linked = False
+        return self
+
+    def unlink_y(self, future: bool = True) -> Self:
+        """Unlink all the y-axes of the canvases in the grid."""
+        if self._y_linked:
             for _, canvas in self.iter_canvas():
                 canvas.y.events.lim.disconnect(self._align_ylims)
-        self._y_linked = value
+            if future:
+                self._y_linked = False
+        return self
 
     def __repr__(self) -> str:
         cname = type(self).__name__
@@ -273,11 +311,9 @@ class CanvasVGrid(CanvasGrid):
         self,
         heights: list[int],
         *,
-        link_x: bool = False,
-        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> None:
-        super().__init__(heights, [1], link_x=link_x, link_y=link_y, backend=backend)
+        super().__init__(heights, [1], backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:
@@ -292,11 +328,9 @@ class CanvasVGrid(CanvasGrid):
         cls,
         nrows: int = 1,
         *,
-        link_x: bool = False,
-        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> CanvasVGrid:
-        return CanvasVGrid([1] * nrows, link_x=link_x, link_y=link_y, backend=backend)
+        return CanvasVGrid([1] * nrows, backend=backend)
 
     @override
     def add_canvas(self, row: int, **kwargs) -> Canvas:
@@ -309,11 +343,9 @@ class CanvasHGrid(CanvasGrid):
         self,
         widths: list[int],
         *,
-        link_x: bool = False,
-        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> None:
-        super().__init__([1], widths, link_x=link_x, link_y=link_y, backend=backend)
+        super().__init__([1], widths, backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:
@@ -328,11 +360,9 @@ class CanvasHGrid(CanvasGrid):
         cls,
         ncols: int = 1,
         *,
-        link_x: bool = False,
-        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> CanvasHGrid:
-        return CanvasHGrid([1] * ncols, link_x=link_x, link_y=link_y, backend=backend)
+        return CanvasHGrid([1] * ncols, backend=backend)
 
     @override
     def add_canvas(self, col: int, **kwargs) -> Canvas:

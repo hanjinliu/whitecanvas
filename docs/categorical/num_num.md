@@ -90,8 +90,18 @@ the plotter which axis to use, call `along_x()` or `along_y()` to restrict the
 dimension.
 
 ``` python
+#!name: cat_hist_along_x
 canvas = new_canvas("matplotlib")
 # canvas.cat(df, x="label", y="value").add_hist(bins=10)  # This will raise an error
-canvas.cat(df, x="label", y="value").along_x().add_hist(bins=10)
+canvas.cat(df, x="label", y="value").along_y().add_hist(bins=10)
+canvas.show()
+```
+
+KDE can be similarly added.
+
+``` python
+#!name: cat_kde_x
+canvas = new_canvas("matplotlib")
+canvas.cat(df, x="value").add_kde()
 canvas.show()
 ```

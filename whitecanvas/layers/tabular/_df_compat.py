@@ -24,7 +24,7 @@ class DataFrameWrapper(ABC, Generic[_T]):
         return f"{type(self).__name__} of {self._data!r}"
 
     def __len__(self) -> int:
-        such_as = next(iter(self.iter_values()), None)
+        such_as = next(self.iter_values(), None)
         if such_as is None:
             return 0
         else:
@@ -32,11 +32,11 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
     @property
     def shape(self) -> tuple[int, int]:
-        such_as = next(iter(self.iter_values()), None)
+        such_as = next(self.iter_values(), None)
         if such_as is None:
             return 0, 0
         else:
-            return such_as.size, len(self.iter_keys())
+            return such_as.size, len(self.columns)
 
     def get_native(self) -> _T:
         return self._data
@@ -44,6 +44,9 @@ class DataFrameWrapper(ABC, Generic[_T]):
     @abstractmethod
     def __getitem__(self, item: str) -> NDArray[np.generic]:
         ...
+
+    def __contains__(self, item: str) -> bool:
+        return item in self.iter_keys()
 
     @abstractmethod
     def iter_keys(self) -> Iterator[str]:
@@ -83,7 +86,11 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
     @abstractmethod
     def value_count(self, by: tuple[str, ...]) -> Self:
-        ...
+        """Return the count of each group."""
+
+    @abstractmethod
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        """Return the first value of a column for each group."""
 
     @property
     def columns(self) -> list[str]:
@@ -123,6 +130,9 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
         return DictWrapper({k: v[sl] for k, v in self._data.items()})
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         observed = set()
         for row in zip(*[self._data[b] for b in by]):
             if row in observed:
@@ -147,6 +157,14 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
             for b, s in zip(by, sl):
                 out[b].append(s)
             out["size"].append(len(sub[by[0]]))
+        return DictWrapper({k: np.array(v) for k, v in out.items()})
+
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        out = {k: [] for k in [*by, on]}
+        for sl, sub in self.group_by(by):
+            for b, s in zip(by, sl):
+                out[b].append(s)
+            out[on].append(sub[on][0])
         return DictWrapper({k: np.array(v) for k, v in out.items()})
 
 
@@ -178,6 +196,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         return PandasWrapper(self._data[sers])
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         for sl, sub in self._data.groupby(list(by), observed=True):
             yield sl, PandasWrapper(sub)
 
@@ -191,6 +212,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         for sl, sub in self._data.groupby(list(by), observed=True):
             rows.append((*sl, len(sub)))
         return PandasWrapper(pd.DataFrame(rows, columns=[*by, "size"]))
+
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        return PandasWrapper(self._data.groupby(list(by)).first().reset_index())
 
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
@@ -225,6 +249,9 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         return PolarsWrapper(df)
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PolarsWrapper(sub)
 
@@ -235,11 +262,14 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(expr))
 
     def value_count(self, by: tuple[str, ...]) -> Self:
-        return (
+        return PolarsWrapper(
             self._data.group_by(by, maintain_order=True)
             .count()
             .rename({"count": "size"})
         )
+
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        return PolarsWrapper(self._data.group_by(by, maintain_order=True).first())
 
 
 class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
@@ -267,6 +297,9 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
         return PyArrowWrapper(df)
 
     def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
+        if by == ():
+            yield (), self
+            return
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PyArrowWrapper(sub)
 
@@ -281,11 +314,14 @@ class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
         )
 
     def value_count(self, by: tuple[str, ...]) -> Self:
-        return (
+        return PyArrowWrapper(
             self._data.group_by(by, maintain_order=True)
             .count()
             .rename_columns([*by, "size"])
         )
+
+    def value_first(self, by: tuple[str, ...], on: str) -> Self:
+        return PyArrowWrapper(self._data.group_by(by, maintain_order=True).first())
 
 
 def parse(data: Any) -> DataFrameWrapper:

@@ -49,11 +49,11 @@ class LineCollection(LayerCollectionBase[Line]):
 
     @width.setter
     def width(self, width: float | Sequence[float]):
-        if isinstance(width, float):
+        if isinstance(width, (int, float, np.number)):
             _width = [width] * len(self)
         else:
             _width = np.asarray(width, dtype=np.float32)
-        if len(width) != len(self):
+        if len(_width) != len(self):
             raise ValueError(
                 f"width must be a float or a sequence of length {len(self)}"
             )

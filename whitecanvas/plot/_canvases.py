@@ -30,12 +30,10 @@ def subplots(
     nrows: int = 1,
     ncols: int = 1,
     *,
-    link_x: bool = False,
-    link_y: bool = False,
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
     """Create a new grid of subplots."""
-    out = grid(nrows, ncols, link_x=link_x, link_y=link_y, backend=backend)
+    out = grid(nrows, ncols, backend=backend)
     for i in range(nrows):
         for j in range(ncols):
             out.add_canvas(i, j)

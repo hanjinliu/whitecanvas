@@ -386,7 +386,7 @@ class Bars(
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | _Void = _void,
-        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
         alpha: float = 1,
     ) -> Bars[MultiFace, _Edge]:
         return super().with_face_multi(color, hatch, alpha)

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
-
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import FaceEdgeMixin
@@ -90,34 +88,3 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         edge_high: ArrayLike1D | None = None,
     ):
         self.data = t, edge_low, edge_high
-
-    @classmethod
-    def from_kde(
-        cls,
-        data: ArrayLike1D,
-        bottom: float = 0.0,
-        *,
-        name: str | None = None,
-        band_width: float | None = None,
-        color: ColorType = "blue",
-        alpha: float = 1.0,
-        hatch: str | Hatch = Hatch.SOLID,
-        orient: str | Orientation = Orientation.VERTICAL,
-        backend: Backend | str | None = None,
-    ):
-        from whitecanvas.utils.kde import gaussian_kde
-
-        data = as_array_1d(data)
-        kde = gaussian_kde(data, bw_method=band_width)
-
-        sigma = np.sqrt(kde.covariance[0, 0])
-        pad = sigma * 2.5
-        x = np.linspace(data.min() - pad, data.max() + pad, 100)
-        y1 = kde(x)
-        y0 = np.full_like(y1, bottom)
-        self = cls(
-            x, y0, y1, name=name, orient=orient, color=color, alpha=alpha,
-            hatch=hatch, backend=backend,
-        )  # fmt: skip
-        self._band_type = "kde"
-        return self

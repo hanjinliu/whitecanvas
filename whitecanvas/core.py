@@ -18,8 +18,7 @@ def grid(
     nrows: int = 1,
     ncols: int = 1,
     *,
-    link_x: bool = False,
-    link_y: bool = False,
+    size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
     """
@@ -27,14 +26,12 @@ def grid(
 
     Parameters
     ----------
-    nrows : int, optional
-        Number of rows, by default 1
-    ncols : int, optional
-        Number of columns, by default 1
-    link_x : bool, optional
-        Whether to link x axes, by default False
-    link_y : bool, optional
-        Whether to link y axes, by default False
+    nrows : int, default 1
+        Number of rows.
+    ncols : int, default 1
+        Number of columns.
+    size : (int, int), optional
+        Size of the grid.
     backend : Backend or str, optional
         Backend name.
 
@@ -43,60 +40,71 @@ def grid(
     CanvasGrid
         Grid of empty canvases.
     """
-    return CanvasGrid.uniform(
-        nrows, ncols, link_x=link_x, link_y=link_y, backend=backend
-    )
+    g = CanvasGrid.uniform(nrows, ncols, backend=backend)
+    if size is not None:
+        g.size = size
+    return g
 
 
 def grid_nonuniform(
     heights: list[int],
     widths: list[int],
     *,
-    link_x: bool = False,
-    link_y: bool = False,
+    size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
-    return CanvasGrid(heights, widths, link_x=link_x, link_y=link_y, backend=backend)
+    g = CanvasGrid(heights, widths, backend=backend)
+    if size is not None:
+        g.size = size
+    return g
 
 
 def vgrid(
     nrows: int = 1,
     *,
-    link_x: bool = False,
-    link_y: bool = False,
+    size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasVGrid:
-    return CanvasVGrid.uniform(nrows, link_x=link_x, link_y=link_y, backend=backend)
+    g = CanvasVGrid.uniform(nrows, backend=backend)
+    if size is not None:
+        g.size = size
+    return g
 
 
 def vgrid_nonuniform(
     heights: list[int],
     *,
-    link_x: bool = False,
-    link_y: bool = False,
+    size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasVGrid:
-    return CanvasVGrid(heights, link_x=link_x, link_y=link_y, backend=backend)
+    g = CanvasVGrid(heights, backend=backend)
+    if size is not None:
+        g.size = size
+    return g
 
 
 def hgrid(
     ncols: int = 1,
     *,
-    link_x: bool = False,
-    link_y: bool = False,
+    size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasHGrid:
-    return CanvasHGrid.uniform(ncols, link_x=link_x, link_y=link_y, backend=backend)
+    g = CanvasHGrid.uniform(ncols, backend=backend)
+    if size is not None:
+        g.size = size
+    return g
 
 
 def hgrid_nonuniform(
     widths: list[int],
     *,
-    link_x: bool = False,
-    link_y: bool = False,
+    size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasHGrid:
-    return CanvasHGrid(widths, link_x=link_x, link_y=link_y, backend=backend)
+    g = CanvasHGrid(widths, backend=backend)
+    if size is not None:
+        g.size = size
+    return g
 
 
 def new_canvas(

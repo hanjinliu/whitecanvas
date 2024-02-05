@@ -640,7 +640,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
     def with_face_multi(
         self,
         color: ColorType | Sequence[ColorType] | _Void = _void,
-        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
         alpha: float = 1,
     ) -> Self:
         if not isinstance(self._face_namespace, MultiFace):

@@ -53,7 +53,7 @@ class OffsetPolicy(ABC):
 
     @abstractmethod
     def get(self, interval: int) -> float:
-        """Get 1D array for offsets"""
+        """Get increment of position for given interval from the previous position."""
 
     def with_shift(self, val: float) -> CompositeOffsetPolicy:
         return CompositeOffsetPolicy([self, ConstOffset(val)])
@@ -269,7 +269,7 @@ class CyclicPlan(CategoricalPlan[_V]):
 
     def is_const(self) -> bool:
         """Return True if the plan is a constant plan."""
-        return len(self.values) == 1
+        return len(self.by) == 0
 
     def generate(
         self,

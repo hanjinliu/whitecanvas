@@ -616,7 +616,7 @@ class Markers(
         self,
         *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
-        hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
+        hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
         alpha: float = 1,
     ) -> Markers[MultiFace, _Edge, _Size]:
         """

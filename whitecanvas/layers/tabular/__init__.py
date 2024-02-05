@@ -7,11 +7,14 @@ from whitecanvas.layers.tabular._box_like import (
 from whitecanvas.layers.tabular._dataframe import (
     DFBars,
     DFHeatmap,
+    DFHistograms,
+    DFKde,
     DFLines,
     DFMarkerGroups,
     DFMarkers,
     DFPointPlot2D,
 )
+from whitecanvas.layers.tabular._df_compat import parse
 
 __all__ = [
     "DFBarPlot",
@@ -23,5 +26,8 @@ __all__ = [
     "DFBars",
     "DFBoxPlot",
     "DFHeatmap",
+    "DFHistograms",
+    "DFKde",
     "DFPointPlot2D",
+    "parse",
 ]

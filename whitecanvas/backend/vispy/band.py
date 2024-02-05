@@ -20,7 +20,10 @@ class Band(visuals.Polygon):
             bw = np.stack([ydata1[::-1], t[::-1]], axis=1)
         verts = np.concatenate([fw, bw], axis=0)
         self._edge_style = LineStyle.SOLID
-        super().__init__(verts, border_width=0)
+        try:
+            super().__init__(verts, border_width=0)
+        except Exception:
+            super().__init__(verts, border_width=0, triangulate=False)
         self.unfreeze()
         self._t = t
         self._y0 = ydata0

@@ -8,13 +8,13 @@ import numpy as np
 from cmap import Color, Colormap
 
 from whitecanvas import layers as _l
+from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
-from whitecanvas.layers.tabular._utils import unique
 from whitecanvas.types import (
     ArrayLike1D,
     ColormapType,
@@ -25,6 +25,7 @@ from whitecanvas.types import (
     Symbol,
     _Void,
 )
+from whitecanvas.utils.hist import histograms
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -41,14 +42,13 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         segs: list[np.ndarray],
         labels: list[tuple[Any, ...]],
         color: _Cols | None = None,
-        width: str | None = None,
+        width: float = 1.0,
         style: _Cols | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
-        self._width_by = _p.WidthPlan.default()
         self._style_by = _p.StylePlan.default()
         self._labels = labels
         self._splitby = splitby
@@ -56,125 +56,40 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         super().__init__(base, source)
         if color is not None:
             self.with_color(color)
-        if isinstance(width, str):
-            self.with_width(width)
+        self.with_width(width)
         if style is not None:
             self.with_style(style)
 
     @classmethod
     def from_table(
         cls,
-        df: _DF,
-        x: str,
-        y: str,
+        df: DataFrameWrapper[_DF],
+        x: str | _jitter.JitterBase,
+        y: str | _jitter.JitterBase,
         color: str | None = None,
-        width: str | None = None,
+        width: float | None = None,
         style: str | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
     ) -> DFLines[_DF]:
-        src = parse(df)
-        splitby = _shared.join_columns(color, style, source=src)
+        splitby = _shared.join_columns(color, style, source=df)
         segs = []
         labels: list[tuple[Any, ...]] = []
-        for sl, df in src.group_by(splitby):
+        if isinstance(x, _jitter.JitterBase):
+            xj = x
+        else:
+            xj = _jitter.IdentityJitter(x)
+        if isinstance(y, _jitter.JitterBase):
+            yj = y
+        else:
+            yj = _jitter.IdentityJitter(y)
+        for sl, sub in df.group_by(splitby):
             labels.append(sl)
-            segs.append(np.column_stack([df[x], df[y]]))
+            segs.append(np.column_stack([xj.map(sub), yj.map(sub)]))
         return DFLines(
-            src, segs, labels, name=name, color=color, width=width, style=style,
+            df, segs, labels, name=name, color=color, width=width, style=style,
             backend=backend,
         )  # fmt: skip
-
-    @classmethod
-    def build_kde(
-        cls,
-        df: _DF,
-        value: str,
-        band_width: float | None = None,
-        color: str | None = None,
-        width: str | None = None,
-        style: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        backend: str | Backend | None = None,
-    ) -> DFLines[_DF]:
-        from whitecanvas.utils.kde import gaussian_kde
-
-        src = parse(df)
-        splitby = _shared.join_columns(color, style, source=src)
-        ori = Orientation.parse(orient)
-        segs = []
-        labels: list[tuple[Any, ...]] = []
-        for sl, df in src.group_by(splitby):
-            labels.append(sl)
-            each = df[value]
-            kde = gaussian_kde(each, bw_method=band_width)
-            sigma = np.sqrt(kde.covariance[0, 0])
-            pad = sigma * 2.5
-            x = np.linspace(each.min() - pad, each.max() + pad, 100)
-            y = kde(x)
-            if ori.is_vertical:
-                segs.append(np.column_stack([x, y]))
-            else:
-                segs.append(np.column_stack([y, x]))
-        return DFLines(
-            src, segs, labels, name=name, color=color, width=width, style=style,
-            backend=backend,
-        )  # fmt: skip
-
-    @classmethod
-    def build_hist(
-        cls,
-        df: _DF,
-        value: str,
-        bins: int | ArrayLike1D = 10,
-        density: bool = False,
-        range: tuple[float, float] | None = None,
-        color: str | None = None,
-        width: str | None = None,
-        style: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        backend: str | Backend | None = None,
-    ) -> DFLines[_DF]:
-        src = parse(df)
-        splitby = _shared.join_columns(color, style, source=src)
-        ori = Orientation.parse(orient)
-        segs = []
-        labels: list[tuple[Any, ...]] = []
-        for sl, df in src.group_by(splitby):
-            labels.append(sl)
-            each = df[value]
-            counts, edges = np.histogram(each, bins=bins, density=density, range=range)
-            x = np.empty(2 * counts.size + 2, dtype=np.float32)
-            y = np.empty(2 * counts.size + 2, dtype=np.float32)
-            x[0] = edges[0]
-            x[-1] = edges[-1]
-            y[0] = y[-1] = 0
-            x[1:-1:2] = edges[:-1]
-            x[2:-1:2] = edges[1:]
-            y[1:-1:2] = counts
-            y[2:-1:2] = counts
-            if ori.is_vertical:
-                segs.append(np.column_stack([x, y]))
-            else:
-                segs.append(np.column_stack([y, x]))
-        return DFLines(
-            src, segs, labels, name=name, color=color, width=width, style=style,
-            backend=backend,
-        )  # fmt: skip
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        return self._color_by
-
-    @property
-    def width(self) -> _p.WidthPlan:
-        return self._width_by
-
-    @property
-    def style(self) -> _p.StylePlan:
-        return self._style_by
 
     @overload
     def with_color(self, value: ColorType) -> Self:
@@ -200,21 +115,8 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self._color_by = color_by
         return self
 
-    @overload
     def with_width(self, value: float) -> Self:
-        ...
-
-    @overload
-    def with_width(self, by: str, limits=None) -> Self:
-        ...
-
-    def with_width(self, by, /, limits=None) -> Self:
-        if isinstance(by, str):
-            width_by = _p.WidthPlan.from_range(by, limits=limits)
-        else:
-            width_by = _p.WidthPlan.from_const(float(by))
-        self._base_layer.width = width_by.map(self._source)
-        self._width_by = width_by
+        self._base_layer.width = value
         return self
 
     def with_style(self, by: str | Iterable[str], styles=None) -> Self:
@@ -280,109 +182,8 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
             self.with_symbol(symbol)
         if size is not None:
             self.with_size(size)
-
-    def _generate_labels(self):
-        pos, labels = self._x.generate_labels(self._source)
-        return pos, ["\n".join(str(_l) for _l in lbl) for lbl in labels]
-
-    @property
-    def symbol(self) -> _p.SymbolPlan:
-        return self._symbol_by
-
-    @property
-    def size(self) -> _p.SizePlan:
-        return self._size_by
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        return self._color_by
-
-    @property
-    def hatch(self) -> _p.HatchPlan:
-        return self._hatch_by
-
-    @property
-    def width(self) -> _p.WidthPlan:
-        return self._width_by
-
-    @classmethod
-    def from_table(
-        cls,
-        df: _DF,
-        x: str,
-        y: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        symbol: str | tuple[str, ...] | None = None,
-        size: str | None = None,
-        name: str | None = None,
-        backend: str | Backend | None = None,
-    ) -> DFMarkers[_DF]:
-        src = parse(df)
-        xj = _jitter.identity_or_categorical(src, x)
-        yj = _jitter.identity_or_categorical(src, y)
-        return DFMarkers(
-            src, xj, yj, name=name, color=color, hatch=hatch, symbol=symbol,
-            size=size, backend=backend,
-        )  # fmt: skip
-
-    @classmethod
-    def build_stripplot(
-        cls,
-        df: _DF,
-        label: str,
-        value: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        symbol: str | tuple[str, ...] | None = None,
-        size: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        seed: int | None = 0,
-        backend: str | Backend | None = None,
-    ) -> DFMarkerGroups[_DF]:
-        src = parse(df)
-        xj = _jitter.UniformJitter(label, extent=extent, seed=seed)
-        yj = _jitter.identity_or_categorical(src, value)
-        if not Orientation.parse(orient).is_vertical:
-            xj, yj = yj, xj
-        return DFMarkerGroups(
-            src, xj, yj, name=name, color=color, hatch=hatch, orient=orient,
-            symbol=symbol, size=size, backend=backend,
-        )  # fmt: skip
-
-    @classmethod
-    def build_swarmplot(
-        cls,
-        df: _DF,
-        label: str,
-        value: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        symbol: str | tuple[str, ...] | None = None,
-        size: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        sort: bool = False,
-        backend: str | Backend | None = None,
-    ) -> DFMarkerGroups[_DF]:
-        src = parse(df)
-        if sort:
-            src = src.sort(value)
-        lims = src[value].min(), src[value].max()
-        xj = _jitter.SwarmJitter(label, value, limits=lims, extent=extent)
-        yj = _jitter.identity_or_categorical(src, value)
-        if not Orientation.parse(orient).is_vertical:
-            xj, yj = yj, xj
-        return DFMarkerGroups(
-            src, xj, yj, name=name, color=color, hatch=hatch, orient=orient,
-            symbol=symbol, size=size, backend=backend,
-        )  # fmt: skip
+        else:
+            self.with_size(theme.get_theme().markers.size)
 
     @overload
     def with_color(self, value: ColorType) -> Self:
@@ -455,10 +256,10 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         self._edge_color_by = color_by
         return self
 
-    def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
+    def with_hatch(self, by: str | Iterable[str], palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
-            hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
+            hatch_by = _p.HatchPlan.new(cov.columns, values=palette)
         else:
             hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
         hatches = hatch_by.map(self._source)
@@ -540,6 +341,28 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
+    def as_edge_only(
+        self,
+        width: float = 3.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Self:
+        """
+        Convert the markers to edge-only mode.
+
+        This method will set the face color to transparent and the edge color to the
+        current face color.
+
+        Parameters
+        ----------
+        width : float, default 3.0
+            Width of the edge.
+        style : str or LineStyle, default LineStyle.SOLID
+            Line style of the edge.
+        """
+        for layer in self.base.iter_children():
+            layer.as_edge_only(width=width, style=style)
+        return self
+
 
 class DFMarkerGroups(DFMarkers):
     def __init__(self, *args, orient: Orientation = Orientation.VERTICAL, **kwargs):
@@ -570,9 +393,8 @@ class DFBars(
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
-        offset: str,
-        value: str,
-        *,
+        x,
+        y,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
         name: str | None = None,
@@ -580,27 +402,13 @@ class DFBars(
         extent: float = 0.8,
         backend: str | Backend | None = None,
     ):
-        if isinstance(offset, str):
-            offset = (offset,)
-        splitby = _shared.join_columns(offset, color, hatch, source=source)
-        unique_sl: list[tuple[Any, ...]] = []
-        values = []
-        for sl, df in source.group_by(splitby):
-            unique_sl.append(sl)
-            series = df[value]
-            if len(series) != 1:
-                raise ValueError(f"More than one value found for category {sl!r}.")
-            values.append(series[0])
-
+        splitby = _shared.join_columns(color, hatch, source=source)
         self._color_by = _p.ColorPlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._offset_by = _p.OffsetPlan.default().more_by(*offset)
-        self._labels = unique_sl
+        self._style_by = _p.StylePlan.default()
         self._splitby = splitby
 
-        x = self._offset_by.generate(self._labels, splitby)
         base = _l.Bars(
-            x, values, name=name, orient=orient, extent=extent, backend=backend
+            x, y, name=name, orient=orient, extent=extent, backend=backend
         ).with_face_multi()
         super().__init__(base, source)
         if color is not None:
@@ -611,52 +419,41 @@ class DFBars(
     @classmethod
     def from_table(
         cls,
-        df: _DF,
-        x: str,
-        y: str,
+        df: DataFrameWrapper[_DF],
+        x: str | _jitter.JitterBase,
+        y: str | _jitter.JitterBase,
         *,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
         name: str | None = None,
         extent: float = 0.8,
+        orient: Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
     ) -> DFBars[_DF]:
-        src = parse(df)
+        splitby = _shared.join_columns(color, hatch, source=df)
+        if isinstance(x, _jitter.JitterBase):
+            xj = x
+        else:
+            xj = _jitter.IdentityJitter(x)
+        if isinstance(y, _jitter.JitterBase):
+            yj = y
+        else:
+            yj = _jitter.IdentityJitter(y)
+        xs: list[np.ndarray] = []
+        ys: list[np.ndarray] = []
+        for _, sub in df.group_by(splitby):
+            xcur = xj.map(sub)
+            ycur = yj.map(sub)
+            order = np.argsort(xcur)
+            xs.append(xcur[order])
+            ys.append(ycur[order])
+        # BUG: order of coloring and x/y do not match
+        x0 = np.concatenate(xs)
+        y0 = np.concatenate(ys)
         return DFBars(
-            src, x, y, name=name, color=color, hatch=hatch, extent=extent,
-            backend=backend
+            df, x0, y0, name=name, color=color, hatch=hatch, extent=extent,
+            orient=orient, backend=backend,
         )  # fmt: skip
-
-    @classmethod
-    def build_count(
-        cls,
-        df: _DF,
-        offset: str,
-        *,
-        color: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float = 0.8,
-        backend: str | Backend | None = None,
-    ) -> DFBars[_DF]:
-        src = parse(df)
-        splitby = _shared.join_columns(offset, color, hatch, source=src)
-        new_src = src.value_count(splitby)
-        return DFBars(
-            new_src, offset, "size", name=name, color=color, hatch=hatch,
-            orient=orient, extent=extent, backend=backend
-        )  # fmt: skip
-
-    @property
-    def color(self) -> _p.ColorPlan:
-        """Return the color plan object."""
-        return self._color_by
-
-    @property
-    def hatch(self) -> _p.HatchPlan:
-        """Return the hatch plan object."""
-        return self._hatch_by
 
     def with_color(self, by: str | Iterable[str] | ColorType, palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
@@ -666,7 +463,7 @@ class DFBars(
             color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
             color_by = _p.ColorPlan.from_const(Color(cov.value))
-        self._base_layer.face.color = color_by.generate(self._labels, self._splitby)
+        self._base_layer.face.color = color_by.map(self._source)
         self._color_by = color_by
         return self
 
@@ -678,23 +475,12 @@ class DFBars(
             hatch_by = _p.HatchPlan.new(cov.columns, values=choices)
         else:
             hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
-        self._base_layer.face.hatch = hatch_by.generate(self._labels, self._splitby)
+        self._base_layer.face.hatch = hatch_by.map(self._source)
         self._hatch_by = hatch_by
         return self
 
 
 class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
-    def __init__(
-        self,
-        base: _l.Image,
-        source: DataFrameWrapper[_DF],
-        xticks: list[str] | None = None,
-        yticks: list[str] | None = None,
-    ):
-        super().__init__(base, source)
-        self._xticks = xticks
-        self._yticks = yticks
-
     @property
     def cmap(self) -> Colormap:
         return self._base_layer.cmap
@@ -738,54 +524,16 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
         return cls(base, src)
 
     @classmethod
-    def build_heatmap(
+    def from_array(
         cls,
-        df: _DF,
-        x: str,
-        y: str,
-        value: str,
+        src: DataFrameWrapper[_DF],
+        arr: np.ndarray,
         name: str | None = None,
         cmap: ColormapType = "gray",
         clim: tuple[float | None, float | None] | None = None,
-        fill=0,
         backend: Backend | str | None = None,
-    ) -> Self:
-        src = parse(df)
-        xnunique = unique(src[x], axis=None)
-        ynunique = unique(src[y], axis=None)
-        dtype = src[value].dtype
-        if dtype.kind not in "fiub":
-            raise ValueError(f"Column {value!r} is not numeric.")
-        arr = np.full((ynunique.size, xnunique.size), fill, dtype=dtype)
-        xmap = {x: i for i, x in enumerate(xnunique)}
-        ymap = {y: i for i, y in enumerate(ynunique)}
-        for sl, sub in src.group_by((x, y)):
-            xval, yval = sl
-            vals = sub[value]
-            if vals.size == 1:
-                arr[ymap[yval], xmap[xval]] = sub[value][0]
-            else:
-                raise ValueError(f"More than one value found for {sl!r}.")
-        if clim is None:
-            # `fill` may be outside the range of the data, so calculate clim here.
-            clim = src[value].min(), src[value].max()
-        base = _l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend)
-        return cls(
-            base,
-            src,
-            xticks=[str(_x) for _x in xnunique],
-            yticks=[str(_y) for _y in ynunique],
-        )
-
-    def _generate_xticks(self):
-        if self._xticks is None:
-            return None
-        return np.arange(len(self._xticks)), self._xticks
-
-    def _generate_yticks(self):
-        if self._yticks is None:
-            return None
-        return np.arange(len(self._yticks)), self._yticks
+    ) -> DFHeatmap[_DF]:
+        return cls(_l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend), src)
 
 
 class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):
@@ -814,3 +562,215 @@ class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic
         if size is not None:
             base.markers.size = size
         super().__init__(base, source)
+
+
+class DFHistograms(
+    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_lg.Histogram], _DF],
+    Generic[_DF],
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        base: _lg.LayerCollectionBase[_lg.Histogram],
+        labels: list[tuple[Any, ...]],
+        color: _Cols | None = None,
+        width: str | None = None,
+        style: _Cols | None = None,
+    ):
+        splitby = _shared.join_columns(color, style, source=source)
+        self._color_by = _p.ColorPlan.default()
+        self._width_by = _p.WidthPlan.default()
+        self._style_by = _p.StylePlan.default()
+        self._labels = labels
+        self._splitby = splitby
+        super().__init__(base, source)
+        if color is not None:
+            self.with_color(color)
+        if isinstance(width, str):
+            self.with_width(width)
+        if style is not None:
+            self.with_style(style)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: DataFrameWrapper[_DF],
+        value: str,
+        bins: int | ArrayLike1D,
+        limits: tuple[float, float] | None = None,
+        kind="count",
+        shape="bars",
+        color: str | None = None,
+        width: float = 1.0,
+        style: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFHistograms[_DF]:
+        splitby = _shared.join_columns(color, style, source=df)
+        ori = Orientation.parse(orient)
+        arrays: list[np.ndarray] = []
+        labels: list[tuple] = []
+        for sl, sub in df.group_by(splitby):
+            labels.append(sl)
+            arrays.append(sub[value])
+        hist = histograms(arrays, bins, limits)
+
+        layers = []
+        for arr in arrays:
+            each_layer = _lg.Histogram.from_array(
+                arr,
+                kind=kind,
+                bins=hist.edges,
+                limits=limits,
+                width=width,
+                orient=ori,
+                shape=shape,
+                backend=backend,
+            )
+            layers.append(each_layer)
+        base = _lg.LayerCollectionBase(layers, name=name)
+        return cls(df, base, labels, color=color, width=width, style=style)
+
+    @overload
+    def with_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def with_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def with_color(self, by, /, palette=None):
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot color by a column other than {self._splitby}")
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
+        else:
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
+        for i, col in enumerate(color_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].color = col
+        self._color_by = color_by
+        return self
+
+    def with_width(self, value: float) -> Self:
+        for hist in self._base_layer:
+            hist.line.width = value
+        return self
+
+    def with_style(self, by: str | Iterable[str], styles=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot style by a column other than {self._splitby}")
+            style_by = _p.StylePlan.new(cov.columns, values=styles)
+        else:
+            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
+        for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].line.style = st
+        self._style_by = style_by
+        return self
+
+
+class DFKde(
+    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_lg.Kde], _DF],
+    Generic[_DF],
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        base: _lg.LayerCollectionBase[_lg.Kde],
+        labels: list[tuple[Any, ...]],
+        color: _Cols | None = None,
+        width: str | None = None,
+        style: _Cols | None = None,
+    ):
+        splitby = _shared.join_columns(color, style, source=source)
+        self._color_by = _p.ColorPlan.default()
+        self._width_by = _p.WidthPlan.default()
+        self._style_by = _p.StylePlan.default()
+        self._labels = labels
+        self._splitby = splitby
+        super().__init__(base, source)
+        if color is not None:
+            self.with_color(color)
+        if isinstance(width, str):
+            self.with_width(width)
+        if style is not None:
+            self.with_style(style)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: DataFrameWrapper[_DF],
+        value: str,
+        band_width: float | None = None,
+        color: str | None = None,
+        width: float = 1.0,
+        style: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFHistograms[_DF]:
+        splitby = _shared.join_columns(color, style, source=df)
+        ori = Orientation.parse(orient)
+        arrays: list[np.ndarray] = []
+        labels: list[tuple] = []
+        for sl, sub in df.group_by(splitby):
+            labels.append(sl)
+            arrays.append(sub[value])
+        layers = []
+        for arr in arrays:
+            each_layer = _lg.Kde.from_array(
+                arr, width=width, band_width=band_width, orient=ori, backend=backend,
+            )  # fmt: skip
+            layers.append(each_layer)
+        base = _lg.LayerCollectionBase(layers, name=name)
+        return cls(df, base, labels, color=color, width=width, style=style)
+
+    @overload
+    def with_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def with_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def with_color(self, by, /, palette=None):
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot color by a column other than {self._splitby}")
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
+        else:
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
+        for i, col in enumerate(color_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].color = col
+        self._color_by = color_by
+        return self
+
+    def with_width(self, value: float) -> Self:
+        for hist in self._base_layer:
+            hist.line.width = value
+        return self
+
+    def with_style(self, by: str | Iterable[str], styles=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot style by a column other than {self._splitby}")
+            style_by = _p.StylePlan.new(cov.columns, values=styles)
+        else:
+            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
+        for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].line.style = st
+        self._style_by = style_by
+        return self

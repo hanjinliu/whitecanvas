@@ -8,6 +8,7 @@ from typing import (
     Iterable,
     Iterator,
     Literal,
+    Sequence,
     TypeVar,
     overload,
 )
@@ -56,6 +57,7 @@ if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec, Self
 
     _P = ParamSpec("_P")
+    _DF = TypeVar("_DF")
 
 _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
@@ -307,7 +309,34 @@ class CanvasBase(ABC):
             self.y.label.color = color
         return self
 
-    def cat(self, data, update_labels: bool = True) -> _df.DataFramePlotter:
+    def update_labels(
+        self,
+        title: str | None = None,
+        x: str | None = None,
+        y: str | None = None,
+    ) -> Self:
+        """
+        Helper function to update the title, x, and y labels.
+
+        >>> from whitecanvas import new_canvas
+        >>> canvas = new_canvas("matplotlib").update_labels("Title", "X", "Y")
+        """
+        if title is not None:
+            self.title.text = title
+        if x is not None:
+            self.x.label.text = x
+        if y is not None:
+            self.y.label.text = y
+        return self
+
+    def cat(
+        self,
+        data: _DF,
+        x: str | None = None,
+        y: str | None = None,
+        *,
+        update_labels: bool = True,
+    ) -> _df.CatPlotter[Self, _DF]:
         """
         Categorize input data for plotting.
 
@@ -328,8 +357,38 @@ class CanvasBase(ABC):
         CategorizedPlot
             Plotter object.
         """
-        plotter = _df.DataFramePlotter(self, data, update_label=update_labels)
+        plotter = _df.CatPlotter(self, data, x, y, update_label=update_labels)
         return plotter
+
+    def cat_x(
+        self,
+        data: _DF,
+        x: str | Sequence[str] | None = None,
+        y: str | None = None,
+        *,
+        update_labels: bool = True,
+    ) -> _df.XCatPlotter[Self, _DF]:
+        return _df.XCatPlotter(self, data, x, y, update_labels)
+
+    def cat_y(
+        self,
+        data: _DF,
+        x: str | None = None,
+        y: str | Sequence[str] | None = None,
+        *,
+        update_labels: bool = True,
+    ) -> _df.YCatPlotter[Self, _DF]:
+        return _df.YCatPlotter(self, data, y, x, update_labels)
+
+    def cat_xy(
+        self,
+        data: _DF,
+        x: str | Sequence[str],
+        y: str | Sequence[str],
+        *,
+        update_labels: bool = True,
+    ) -> _df.XYCatPlotter[Self, _DF]:
+        return _df.XYCatPlotter(self, data, x, y, update_labels)
 
     def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
         """
@@ -596,14 +655,15 @@ class CanvasBase(ABC):
         data: ArrayLike1D,
         *,
         bins: int | ArrayLike1D = 10,
-        range: tuple[float, float] | None = None,
-        density: bool = False,
+        limits: tuple[float, float] | None = None,
         name: str | None = None,
+        shape: Literal["step", "polygon", "bars"] = "bars",
+        kind: Literal["count", "density", "frequency", "percent"] = "count",
         orient: str | Orientation = Orientation.VERTICAL,
         color: ColorType | None = None,
-        alpha: float = 1.0,
-        hatch: str | Hatch | None = None,
-    ) -> _l.Bars:
+        width: float | None = None,
+        style: LineStyle | str | None = None,
+    ) -> _lg.Histogram:
         """
         Add data as a histogram.
 
@@ -616,9 +676,9 @@ class CanvasBase(ABC):
         bins : int or 1D array-like, default 10
             Bins of the histogram. This parameter will directly be passed
             to `np.histogram`.
-        range : (float, float), optional
-            Range in which histogram will be built. This parameter will
-            directly be passed to `np.histogram`.
+        limits : (float, float), optional
+            Limits in which histogram will be built. This parameter will equivalent to
+            the `range` paraneter of `np.histogram`.
         density : bool, default False
             If True, heights of bars will be normalized so that the total
             area of the histogram will be 1. This parameter will directly
@@ -629,10 +689,6 @@ class CanvasBase(ABC):
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
-        alpha : float, default 1.0
-            Alpha channel of the bars.
-        hatch : str or FacePattern, optional
-            Pattern of the bar faces. Use the theme default if not specified.
 
         Returns
         -------
@@ -641,74 +697,11 @@ class CanvasBase(ABC):
         """
         name = self._coerce_name("histogram", name)
         color = self._generate_colors(color)
-        hatch = theme._default("bars.hatch", hatch)
-        layer = _l.Bars.from_histogram(
-            data, bins=bins, range=range, density=density, name=name, color=color,
-            orient=orient, alpha=alpha, hatch=hatch, backend=self._get_backend(),
-        )  # fmt: skip
-        return self.add_layer(layer)
-
-    def add_hist_line(
-        self,
-        data: ArrayLike1D,
-        *,
-        bins: int | ArrayLike1D = 10,
-        range: tuple[float, float] | None = None,
-        density: bool = False,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        color: ColorType | None = None,
-        width: float | None = None,
-        style: LineStyle | str | None = None,
-        alpha: float = 1.0,
-        antialias: bool = True,
-    ) -> _l.Line:
-        """
-        Add a line plot of the histogram.
-
-        >>> canvas.add_hist_line(np.random.normal(size=100), bins=12)
-
-        Parameters
-        ----------
-        data : array-like
-            1D Array of data.
-        bins : int or 1D array-like, default 10
-            Bins of the histogram. This parameter will directly be passed
-            to `np.histogram`.
-        range : (float, float), optional
-            Range in which histogram will be built. This parameter will
-            directly be passed to `np.histogram`.
-        density : bool, default False
-            If True, heights of bars will be normalized so that the total
-            area of the histogram will be 1. This parameter will directly
-            be passed to `np.histogram`.
-        name : str, optional
-            Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
-            Orientation of the bars.
-        color : color-like, optional
-            Color of the bars.
-        width : float, optional
-            Line width. Use the theme default if not specified.
-        style : str or LineStyle, optional
-            Line style. Use the theme default if not specified.
-        alpha : float, default 1.0
-            Alpha channel of the line.
-        antialias : bool, default True
-            Antialiasing of the line.
-
-        Returns
-        -------
-        Line
-            The line layer that represents the histogram.
-        """
-        name = self._coerce_name("histogram", name)
-        color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
-        layer = _l.Line.build_hist(
-            data, bins=bins, density=density, range=range, orient=orient, name=name,
-            color=color, width=width, style=style, alpha=alpha, antialias=antialias,
+        layer = _lg.Histogram.from_array(
+            data, bins=bins, limits=limits, shape=shape, kind=kind, name=name,
+            color=color, width=width, style=style, orient=orient,
             backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -721,7 +714,8 @@ class CanvasBase(ABC):
         cmap: ColormapType = "inferno",
         name: str | None = None,
         bins: int | tuple[int, int] = 10,
-        range: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        rangex: tuple[float, float] | None = None,
+        rangey: tuple[float, float] | None = None,
         density: bool = False,
     ) -> _l.Image:
         """
@@ -747,8 +741,10 @@ class CanvasBase(ABC):
         bins : int or tuple[int, int], optional
             Bins of the histogram of X/Y dimension respectively. If an integer is given,
             it will be used for both dimensions.
-        range : (2, 2) array-like, optional
-            Range in which histogram will be built.
+        rangex : (float, float), optional
+            Range of x values in which histogram will be built.
+        rangey : (float, float), optional
+            Range of y values in which histogram will be built.
         density : bool, default False
             If True, values of the histogram will be normalized so that the total
             intensity of the histogram will be 1.
@@ -759,8 +755,8 @@ class CanvasBase(ABC):
             Image layer representing the 2D histogram.
         """
         layer = _l.Image.build_hist(
-            x, y, bins=bins, range=range, density=density, name=name, cmap=cmap,
-            backend=self._get_backend(),
+            x, y, bins=bins, range=(rangex, rangey), density=density, name=name,
+            cmap=cmap, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 
@@ -1180,8 +1176,8 @@ class CanvasBase(ABC):
         orient: str | Orientation = Orientation.VERTICAL,
         band_width: float | Literal["scott", "silverman"] = "scott",
         color: ColorType | None = None,
-        alpha: float = 1.0,
-        hatch: str | Hatch = Hatch.SOLID,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
     ) -> _l.Band:
         """
         Add data as a band layer representing kernel density estimation (KDE).
@@ -1208,23 +1204,19 @@ class CanvasBase(ABC):
 
         Returns
         -------
-        Band
-            The band layer representing KDE.
+        Kde
+            The KDE layer.
         """
         name = self._coerce_name(_l.Band, name)
         color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
 
-        layer = _l.Band.from_kde(
-            data,
-            bottom,
-            name=name,
-            band_width=band_width,
-            orient=orient,
-            color=color,
-            alpha=alpha,
-            hatch=hatch,
+        layer = _lg.Kde.from_array(
+            data, bottom=bottom, scale=1, band_width=band_width, name=name,
+            orient=orient, color=color, width=width, style=style,
             backend=self._get_backend(),
-        )
+        )  # fmt: skip
         return self.add_layer(layer)
 
     @overload

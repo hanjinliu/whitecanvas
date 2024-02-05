@@ -73,10 +73,57 @@ def join_columns(
             continue
         cv = ColumnOrValue(obj, source)
         if cv.is_column:
-            out.extend(cv.columns)
+            for each in cv.columns:
+                if each not in out:
+                    out.append(each)
     return tuple(out)
 
 
 def unique_tuple(a: tuple[str, ...], b: tuple[str, ...]) -> tuple[str, ...]:
     b_filt = tuple(x for x in b if x not in a)
     return a + b_filt
+
+
+def norm_dodge(
+    source: DataFrameWrapper[_DF],
+    offset: str | tuple[str, ...],
+    *args: str | tuple[str, ...] | None,
+    dodge: str | tuple[str, ...] | bool = False,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if isinstance(offset, str):
+        offset = (offset,)
+    if isinstance(dodge, bool):
+        if dodge:
+            _all = join_columns(*args, source=source)
+            dodge = tuple(c for c in _all if c not in offset)
+        else:
+            dodge = ()
+    elif isinstance(dodge, str):
+        dodge = (dodge,)
+    else:
+        dodge = tuple(dodge)
+    splitby = join_columns(offset, *args, dodge, source=source)
+    return splitby, dodge
+
+
+def norm_dodge_markers(
+    source: DataFrameWrapper[_DF],
+    offset: str | tuple[str, ...],
+    color: str | tuple[str, ...] | None = None,
+    hatch: str | tuple[str, ...] | None = None,
+    dodge: str | tuple[str, ...] | bool = False,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if isinstance(offset, str):
+        offset = (offset,)
+    if isinstance(dodge, bool):
+        if dodge:
+            _all = join_columns(color, hatch, source=source)
+            dodge = tuple(c for c in _all if c not in offset)
+        else:
+            dodge = ()
+    elif isinstance(dodge, str):
+        dodge = (dodge,)
+    else:
+        dodge = tuple(dodge)
+    splitby = join_columns(offset, dodge, source=source)
+    return splitby, dodge

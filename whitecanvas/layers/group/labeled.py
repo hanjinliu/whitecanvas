@@ -323,7 +323,7 @@ class LabeledBars(
         self._init_events()
 
     @property
-    def bars(self) -> Bars:
+    def bars(self) -> Bars[_NFace, _NEdge]:
         """The bars layer."""
         return self._children[0]
 

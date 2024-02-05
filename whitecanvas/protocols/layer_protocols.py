@@ -203,30 +203,12 @@ class LineProtocol(XYDataProtocol, HasEdges, Protocol):
 
 
 @runtime_checkable
-class MultiLineProtocol(XYDataProtocol, HasEdges, Protocol):
+class MultiLineProtocol(XYDataProtocol, HasMultiEdges, Protocol):
     def _plt_get_data(self) -> list[NDArray[np.number]]:
         """Return the x and y array."""
 
     def _plt_set_data(self, data: list[NDArray[np.number]]):
         """Set the x and y array."""
-
-    def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        """Return the edge color."""
-
-    def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        """Set the edge color."""
-
-    def _plt_get_edge_width(self) -> NDArray[np.floating]:
-        """Return the edge width."""
-
-    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        """Set the edge width."""
-
-    def _plt_get_edge_style(self) -> list[LineStyle]:
-        """Return the edge style."""
-
-    def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
-        """Set the edge style."""
 
     def _plt_get_antialias(self) -> bool:
         """Return the anti alias."""

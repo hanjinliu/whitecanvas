@@ -99,7 +99,9 @@ class Bars(BarContainer, MplLayer):
         return np.array([patch.get_linewidth() for patch in self.patches])
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if np.isscalar(width):
-            width = [width] * len(self.patches)
-        for patch, w in zip(self.patches, width):
+        if isinstance(width, (int, float, np.number)):
+            _width = [width] * len(self.patches)
+        else:
+            _width = width
+        for patch, w in zip(self.patches, _width):
             patch.set_linewidth(w)

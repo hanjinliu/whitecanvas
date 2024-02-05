@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 if TYPE_CHECKING:
     import pandas as pd  # noqa: F401
     import polars as pl  # noqa: F401
-    import pyarrow as pa  # noqa: F401
     from typing_extensions import Self
 
 _T = TypeVar("_T")
@@ -272,58 +271,6 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         return PolarsWrapper(self._data.group_by(by, maintain_order=True).first())
 
 
-class PyArrowWrapper(DataFrameWrapper["pa.Table"]):
-    def __getitem__(self, item: str) -> np.ndarray:
-        if not isinstance(item, str):
-            raise TypeError(f"Unsupported type: {type(item)}")
-        return self._data[item].to_numpy()
-
-    def iter_keys(self) -> Iterator[str]:
-        return iter(self._data.column_names)
-
-    def select(self, columns: list[str]) -> Self:
-        return PyArrowWrapper(self._data.select(columns))
-
-    def sort(self, by: str) -> Self:
-        return PyArrowWrapper(self._data.sort_by(by))
-
-    def filter(
-        self,
-        by: tuple[str, ...],
-        values: tuple[Any, ...],
-    ) -> Self:
-        kwargs = dict(zip(by, values))
-        df = self._data.filter(**kwargs)
-        return PyArrowWrapper(df)
-
-    def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
-        if by == ():
-            yield (), self
-            return
-        for sl, sub in self._data.group_by(by, maintain_order=True):
-            yield sl, PyArrowWrapper(sub)
-
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
-        import pyarrow as pa
-
-        if method == "size":
-            method = "count"
-        expr = getattr(pa.field(on), method)()
-        return PyArrowWrapper(
-            self._data.group_by(by, maintain_order=True).aggregate(expr)
-        )
-
-    def value_count(self, by: tuple[str, ...]) -> Self:
-        return PyArrowWrapper(
-            self._data.group_by(by, maintain_order=True)
-            .count()
-            .rename_columns([*by, "size"])
-        )
-
-    def value_first(self, by: tuple[str, ...], on: str) -> Self:
-        return PyArrowWrapper(self._data.group_by(by, maintain_order=True).first())
-
-
 def parse(data: Any) -> DataFrameWrapper:
     """Parse a data object into a DataFrameWrapper."""
     if isinstance(data, DataFrameWrapper):
@@ -338,8 +285,6 @@ def parse(data: Any) -> DataFrameWrapper:
         return PandasWrapper(data)
     elif _is_polars_dataframe(data):
         return PolarsWrapper(data)
-    elif _is_pyarrow_table(data):
-        return PyArrowWrapper(data)
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")
 
@@ -368,16 +313,3 @@ def _is_polars_dataframe(df) -> bool:
     import polars as pl
 
     return isinstance(df, pl.DataFrame)
-
-
-def _is_pyarrow_table(df) -> bool:
-    typ = type(df)
-    if (
-        typ.__name__ != "Table"
-        or "pyarrow" not in sys.modules
-        or typ.__module__.split(".")[0] != "pyarrow"
-    ):
-        return False
-    import pyarrow as pa
-
-    return isinstance(df, pa.Table)

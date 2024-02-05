@@ -22,7 +22,6 @@ Currently, following objects are allowed as the tabular data input:
 - `dict` of array-like objects
 - `pandas.DataFrame`
 - `polars.DataFrame`
-- `pyarrow.Table`
 
 Following example shows how to make a strip plot.
 

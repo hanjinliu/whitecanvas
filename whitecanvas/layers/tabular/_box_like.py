@@ -31,42 +31,19 @@ if TYPE_CHECKING:
 _DF = TypeVar("_DF")
 
 
-def _splitby_dodge(
-    source: DataFrameWrapper[_DF],
-    offset: str | tuple[str, ...],
-    color: str | tuple[str, ...] | None = None,
-    hatch: str | tuple[str, ...] | None = None,
-    dodge: str | tuple[str, ...] | bool = False,
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    if isinstance(offset, str):
-        offset = (offset,)
-    if isinstance(dodge, bool):
-        if dodge:
-            _all = _shared.join_columns(color, hatch, source=source)
-            dodge = tuple(c for c in _all if c not in offset)
-        else:
-            dodge = ()
-    elif isinstance(dodge, str):
-        dodge = (dodge,)
-    else:
-        dodge = tuple(dodge)
-    splitby = _shared.join_columns(offset, color, hatch, dodge, source=source)
-    return splitby, dodge
-
-
 def _norm_color_hatch(
     color,
     hatch,
-    cat: CatIterator[_DF],
+    df: DataFrameWrapper[_DF],
 ) -> tuple[_p.ColorPlan, _p.HatchPlan]:
-    color_cov = _shared.ColumnOrValue(color, cat.df)
+    color_cov = _shared.ColumnOrValue(color, df)
     if color_cov.is_column:
         color_by = _p.ColorPlan.from_palette(color_cov.columns)
     elif color_cov.value is not None:
         color_by = _p.ColorPlan.from_const(Color(color_cov.value))
     else:
         color_by = _p.ColorPlan.default()
-    hatch_cov = _shared.ColumnOrValue(hatch, cat.df)
+    hatch_cov = _shared.ColumnOrValue(hatch, df)
     if hatch_cov.is_column:
         hatch_by = _p.HatchPlan.new(hatch_cov.columns)
     elif hatch_cov.value is not None:
@@ -155,10 +132,12 @@ class DFViolinPlot(
         shape: str = "both",
         backend: str | Backend | None = None,
     ):
-        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        _splitby, dodge = _shared.norm_dodge(
+            cat.df, cat.offsets, color, hatch, dodge=dodge
+        )  # fmt: skip
         x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
         _extent = cat.zoom_factor(dodge=dodge) * extent
-        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat.df)
         base = _lg.ViolinPlot.from_arrays(
             x, arr, name=name, orient=orient, shape=shape, extent=_extent,
             backend=backend,
@@ -171,10 +150,7 @@ class DFViolinPlot(
         """Orientation of the violins."""
         return self._base_layer.orient
 
-    def with_shift(
-        self,
-        shift: float = 0.0,
-    ) -> Self:
+    def with_shift(self, shift: float = 0.0) -> Self:
         for layer in self._base_layer:
             _old = layer.data
             layer.set_data(edge_low=_old.y0 + shift, edge_high=_old.y1 + shift)
@@ -199,11 +175,13 @@ class DFBoxPlot(
         capsize: float = 0.1,
         backend: str | Backend | None = None,
     ):
-        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        _splitby, dodge = _shared.norm_dodge(
+            cat.df, cat.offsets, color, hatch, dodge=dodge,
+        )  # fmt: skip
         x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
         _extent = cat.zoom_factor(dodge=dodge) * extent
         _capsize = cat.zoom_factor(dodge=dodge) * capsize
-        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat.df)
         base = _lg.BoxPlot.from_arrays(
             x, arr, name=name, orient=orient, capsize=_capsize, extent=_extent,
             backend=backend,
@@ -314,10 +292,12 @@ class DFPointPlot(
         capsize: float = 0.1,
         backend: str | Backend | None = None,
     ):
-        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        _splitby, dodge = _shared.norm_dodge(
+            cat.df, cat.offsets, color, hatch, dodge=dodge,
+        )  # fmt: skip
         x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
         _capsize = cat.zoom_factor(dodge=dodge) * capsize
-        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat.df)
         base = _lg.LabeledPlot.from_arrays(
             x, arr, name=name, orient=orient, capsize=_capsize, backend=backend,
         )  # fmt: skip
@@ -362,7 +342,7 @@ class DFPointPlot(
 
 
 class DFBarPlot(
-    _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _BoxLikeMixin, Generic[_DF]
+    _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _EstimatorMixin, Generic[_DF]
 ):
     def __init__(
         self,
@@ -377,11 +357,13 @@ class DFBarPlot(
         extent: float = 0.8,
         backend: str | Backend | None = None,
     ):
-        _splitby, dodge = _splitby_dodge(cat.df, cat.offsets, color, hatch, dodge)
+        _splitby, dodge = _shared.norm_dodge(
+            cat.df, cat.offsets, color, hatch, dodge=dodge,
+        )  # fmt: skip
         x, arr, categories = cat.prep_arrays(_splitby, value, dodge=dodge)
         _extent = cat.zoom_factor(dodge=dodge) * extent
         _capsize = cat.zoom_factor(dodge=dodge) * capsize
-        color_by, hatch_by = _norm_color_hatch(color, hatch, cat)
+        color_by, hatch_by = _norm_color_hatch(color, hatch, cat.df)
         base = _lg.LabeledBars.from_arrays(
             x, arr, name=name, orient=orient, capsize=_capsize, extent=_extent,
             backend=backend,

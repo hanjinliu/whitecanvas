@@ -394,7 +394,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         size = theme._default("markers.size", size)
 
         df = self._df
-        splitby, dodge = _splitby_dodge(df, self._offset, color, hatch, dodge)
+        splitby, dodge = _shared.norm_dodge_markers(
+            df, self._offset, color, hatch, dodge
+        )  # fmt: skip
         _map = self._cat_iter.prep_position_map(splitby, dodge)
         _extent = self._cat_iter.zoom_factor(dodge) * extent
         xj = _jitter.UniformJitter(splitby, _map, extent=_extent, seed=seed)
@@ -474,7 +476,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         symbol = theme._default("markers.symbol", symbol)
         size = theme._default("markers.size", size)
         df = self._df
-        splitby, dodge = _splitby_dodge(df, self._offset, color, hatch, dodge)
+        splitby, dodge = _shared.norm_dodge_markers(
+            df, self._offset, color, hatch, dodge
+        )  # fmt: skip
         _map = self._cat_iter.prep_position_map(splitby, dodge)
         _extent = self._cat_iter.zoom_factor(dodge) * extent
 
@@ -545,8 +549,9 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
-        width: str | None = None,
+        width: float | None = None,
         style: NStr | None = None,
+        dodge: NStr | bool = False,
     ) -> _lt.DFLines[_DF]:
         """
         Add line that connect the aggregated values.
@@ -559,8 +564,8 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
-        width : str, optional
-            Column name for line width. Must be numerical.
+        width : float, optional
+            Line width.
         style : str or sequence of str, optional
             Column name(s) for styling the lines. Must be categorical.
 
@@ -569,11 +574,16 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         DFLines
             Line collection layer.
         """
+        # TODO: support width: str
         canvas = self._canvas()
         df = self._df
-        _joined = _shared.join_columns(self._offset, color, style, source=df)
-        df_agg = self._aggregate(df, _joined, self._value)
-        xj = _jitter.CategoricalJitter(self._offset, self._cat_iter.category_map())
+        width = theme._default("line.width", width)
+
+        _splitby, _dodge = _shared.norm_dodge(df, self._offset, color, dodge=dodge)
+        df_agg = self._aggregate(df, _splitby, self._value)
+        _pos_map = self._cat_iter.prep_position_map(_splitby, dodge=_dodge)
+
+        xj = _jitter.CategoricalJitter(_splitby, _pos_map)
         yj = _jitter.IdentityJitter(self._value).check(df_agg)
         if not self._orient.is_vertical:
             xj, yj = yj, xj
@@ -595,6 +605,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         hatch: NStr | Hatch | None = None,
         size: str | float | None = None,
         symbol: NStr | Symbol | None = None,
+        dodge: NStr | bool = False,
     ) -> _lt.DFMarkers[_DF]:
         """
         Add markers that represent the aggregated values.
@@ -625,9 +636,13 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         canvas = self._canvas()
         df = self._df
-        _joined = _shared.join_columns(self._offset, color, hatch, symbol, source=df)
-        df_agg = self._aggregate(df, _joined, self._value)
-        xj = _jitter.CategoricalJitter(self._offset, self._cat_iter.category_map())
+        _splitby, _dodge = _shared.norm_dodge(
+            df, self._offset, color, hatch, symbol, dodge=dodge
+        )  # fmt: skip
+        df_agg = self._aggregate(df, _splitby, self._value)
+        _pos_map = self._cat_iter.prep_position_map(_splitby, dodge=_dodge)
+
+        xj = _jitter.CategoricalJitter(_splitby, _pos_map)
         yj = _jitter.IdentityJitter(self._value).check(df_agg)
         if not self._orient.is_vertical:
             xj, yj = yj, xj
@@ -648,6 +663,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         color: NStr | ColorType | None = None,
         hatch: NStr | Hatch | None = None,
         extent: float = 0.8,
+        dodge: NStr | bool = True,
     ) -> _lt.DFBars[_DF]:
         """
         Add bars that represent the aggregated values.
@@ -676,14 +692,20 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         canvas = self._canvas()
         df = self._df
-        _joined = _shared.join_columns(self._offset, color, hatch, source=df)
-        df_agg = self._aggregate(df, _joined, self._value)
-        xj = _jitter.CategoricalJitter(self._offset, self._cat_iter.category_map())
+        _splitby, _dodge = _shared.norm_dodge(
+            df, self._offset, color, hatch, dodge=dodge
+        )  # fmt: skip
+        df_agg = self._aggregate(df, _splitby, self._value)
+        _pos_map = self._cat_iter.prep_position_map(_splitby, dodge=_dodge)
+
+        xj = _jitter.CategoricalJitter(_splitby, _pos_map)
         yj = _jitter.IdentityJitter(self._value).check(df_agg)
+
+        _extent = self._cat_iter.zoom_factor(_dodge) * extent
         if not self._orient.is_vertical:
             xj, yj = yj, xj
         layer = _lt.DFBars.from_table(
-            df_agg, xj, yj, name=name, color=color, hatch=hatch, extent=extent,
+            df_agg, xj, yj, name=name, color=color, hatch=hatch, extent=_extent,
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
@@ -714,26 +736,3 @@ class XCatPlotter(OneAxisCatPlotter[_C, _DF]):
 
 class YCatPlotter(OneAxisCatPlotter[_C, _DF]):
     _orient = Orientation.HORIZONTAL
-
-
-def _splitby_dodge(
-    source: DataFrameWrapper[_DF],
-    offset: str | tuple[str, ...],
-    color: str | tuple[str, ...] | None = None,
-    hatch: str | tuple[str, ...] | None = None,
-    dodge: str | tuple[str, ...] | bool = False,
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    if isinstance(offset, str):
-        offset = (offset,)
-    if isinstance(dodge, bool):
-        if dodge:
-            _all = _shared.join_columns(color, hatch, source=source)
-            dodge = tuple(c for c in _all if c not in offset)
-        else:
-            dodge = ()
-    elif isinstance(dodge, str):
-        dodge = (dodge,)
-    else:
-        dodge = tuple(dodge)
-    splitby = _shared.join_columns(offset, dodge, source=source)
-    return splitby, dodge

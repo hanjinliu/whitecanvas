@@ -91,43 +91,6 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
             backend=backend,
         )  # fmt: skip
 
-    @classmethod
-    def build_kde(
-        cls,
-        df: _DF,
-        value: str,
-        band_width: float | None = None,
-        color: str | None = None,
-        width: str | None = None,
-        style: str | None = None,
-        name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        backend: str | Backend | None = None,
-    ) -> DFLines[_DF]:
-        from whitecanvas.utils.kde import gaussian_kde
-
-        src = parse(df)
-        splitby = _shared.join_columns(color, style, source=src)
-        ori = Orientation.parse(orient)
-        segs = []
-        labels: list[tuple[Any, ...]] = []
-        for sl, df in src.group_by(splitby):
-            labels.append(sl)
-            each = df[value]
-            kde = gaussian_kde(each, bw_method=band_width)
-            sigma = np.sqrt(kde.covariance[0, 0])
-            pad = sigma * 2.5
-            x = np.linspace(each.min() - pad, each.max() + pad, 100)
-            y = kde(x)
-            if ori.is_vertical:
-                segs.append(np.column_stack([x, y]))
-            else:
-                segs.append(np.column_stack([y, x]))
-        return DFLines(
-            src, segs, labels, name=name, color=color, width=width, style=style,
-            backend=backend,
-        )  # fmt: skip
-
     @overload
     def with_color(self, value: ColorType) -> Self:
         ...
@@ -476,11 +439,15 @@ class DFBars(
             yj = y
         else:
             yj = _jitter.IdentityJitter(y)
-        xs = []
-        ys = []
+        xs: list[np.ndarray] = []
+        ys: list[np.ndarray] = []
         for _, sub in df.group_by(splitby):
-            xs.append(xj.map(sub))
-            ys.append(yj.map(sub))
+            xcur = xj.map(sub)
+            ycur = yj.map(sub)
+            order = np.argsort(xcur)
+            xs.append(xcur[order])
+            ys.append(ycur[order])
+        # BUG: order of coloring and x/y do not match
         x0 = np.concatenate(xs)
         y0 = np.concatenate(ys)
         return DFBars(

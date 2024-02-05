@@ -10,7 +10,7 @@ rng = np.random.default_rng(12345)
 df = {
     "category": ["A"] * 40 + ["B"] * 50,
     "observation": np.concatenate([rng.random(40), rng.random(50) + 1.3]),
-    "replicate": [0] * 20 + [1] * 20 + [0] * 25 + [1] * 25,
+    "replicate": [0] * 23 + [1] * 17 + [0] * 22 + [1] * 28,
     "temperature": rng.normal(scale=2.8, size=90) + 22.0,
 }
 ```
@@ -182,12 +182,13 @@ canvas = new_canvas("matplotlib")
 As for the `Markers` layer, `as_edge_only` will convert the face features to the edge features.
 
 ``` python
-#!name: categorical_axis_stripplot_dodge
+#!name: categorical_axis_stripplot_dodge_edge_only
 canvas = new_canvas("matplotlib")
 (
     canvas
     .cat_x(df, x="category", y="observation")
     .add_stripplot(color="replicate", dodge=True)
+    .as_edge_only(width=2)
 )
 ```
 
@@ -218,14 +219,30 @@ canvas = new_canvas("matplotlib")
 )
 ```
 
-## Aggregation
-
-Showing both all the data points and the aggregated data is a common way to efficiently
-visualize the data. This task is usually done by the module specific group-by methods,
-but `whitecanvas` provides a built-in method to simplify the process.
+Swarm plot is another way to visualize all the data points with markers.
 
 ``` python
-#!name: categorical_axis_stripplot_and_agg
+#!name: categorical_axis_swarmplot
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_swarmplot(sort=True)
+    .with_colormap("temperature", cmap="coolwarm")
+)
+```
+
+## Aggregation
+
+Showing the aggregated data is a common way to efficiently visualize a lot of data. This
+task is usually done by the module specific group-by methods, but `whitecanvas` provides
+a built-in method to simplify the process.
+
+In following example, `mean()` is used to prepare a mean-aggregated plotter, which has
+`add_markers` method to add the mean markers to the plotter.
+
+``` python
+#!name: categorical_axis_stripplot_and_agg_mean
 canvas = new_canvas("matplotlib")
 
 # create a categorical plotter
@@ -239,7 +256,24 @@ cat_plt.mean().add_markers(color="category", size=20)
 canvas.show()
 ```
 
-Count plot.
+Similar `add_*` methods include `add_line()` and `add_bars()`.
+
+``` python
+#!name: categorical_axis_stripplot_and_agg_line
+canvas = new_canvas("matplotlib")
+
+# create a categorical plotter
+cat_plt = canvas.cat_x(df, x="category", y="observation")
+
+# plot all the data
+cat_plt.add_stripplot(color="category")
+# plot the mean
+cat_plt.mean().add_line(width=3, color="black")
+
+canvas.show()
+```
+
+Count plot is a special case of the aggregation. Use `count()` to make the plotter.
 
 ``` python
 #!name: categorical_axis_countplot

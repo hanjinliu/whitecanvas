@@ -26,8 +26,6 @@ def on_page_markdown(md: str, page: Page, **kwargs: Any) -> str:
             return "```python\n" + other + "\n```"
 
         code, name = _get_image_name(code)
-        dest = f"_images/{name}.png"
-
         code, width = _get_image_width(code)
 
         reldepth = "../" * page.file.src_path.count(os.sep)
@@ -36,7 +34,7 @@ def on_page_markdown(md: str, page: Page, **kwargs: Any) -> str:
         new_md = "```python\n" + code + "\n```" + link
         return new_md
 
-    md = re.sub("``` ?python\n([^`]*)```", _add_images, md, re.DOTALL)
+    md = re.sub("``` ?python\n([^`]*)```", _add_images, md, flags=re.DOTALL)
 
     return md
 

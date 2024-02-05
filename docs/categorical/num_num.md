@@ -62,26 +62,36 @@ rng = np.random.default_rng(12345)
 # sample data
 df = {
     "label": ["A"] * 60 + ["B"] * 30 + ["C"] * 40,
-    "value": rng.normal(size=130),
+    "X": rng.normal(loc=0.0, size=130),
+    "Y": rng.normal(loc=1.0, size=130),
 }
 ```
 
-`x="value"` means that the x-axis being "value" and the y-axis being the count.
+`x="X"` means that the x-axis being "X" and the y-axis being the count.
 Arguments forwards to the `histogram` method of `numpy`.
 
 ``` python
 #!name: cat_hist_x
 canvas = new_canvas("matplotlib")
-canvas.cat(df, x="value").add_hist(bins=10)
+canvas.cat(df, x="X").add_hist(bins=10)
 canvas.show()
 ```
 
-To transpose the histogram, use `y="value"`.
+To transpose the histogram, use `y="X"`.
 
 ``` python
 #!name: cat_hist_y
 canvas = new_canvas("matplotlib")
-canvas.cat(df, y="value").add_hist(bins=10)
+canvas.cat(df, y="X").add_hist(bins=10)
+canvas.show()
+```
+
+Histograms can be grouped by color.
+
+``` python
+#!name: cat_hist_x_colored
+canvas = new_canvas("matplotlib")
+canvas.cat(df, x="X").add_hist(bins=10, color="label")
 canvas.show()
 ```
 
@@ -92,8 +102,8 @@ dimension.
 ``` python
 #!name: cat_hist_along_x
 canvas = new_canvas("matplotlib")
-# canvas.cat(df, x="label", y="value").add_hist(bins=10)  # This will raise an error
-canvas.cat(df, x="label", y="value").along_y().add_hist(bins=10)
+# canvas.cat(df, x="label", y="X").add_hist(bins=10)  # This will raise an error
+canvas.cat(df, x="label", y="X").along_y().add_hist(bins=10)
 canvas.show()
 ```
 
@@ -102,6 +112,20 @@ KDE can be similarly added.
 ``` python
 #!name: cat_kde_x
 canvas = new_canvas("matplotlib")
-canvas.cat(df, x="value").add_kde()
+canvas.cat(df, x="X").add_kde(color="label")
 canvas.show()
 ```
+
+2-dimensional histogram can be added by `add_hist2d`.
+
+``` python
+#!name: cat_hist2d
+canvas = new_canvas("matplotlib")
+canvas.cat(df, x="X", y="Y").add_hist2d(cmap=["white", "blue"], bins=(8, 10))
+canvas.show()
+```
+
+!!! note
+    `add_hist` and `add_hist2d` returns completely different objects (histogram and
+    heatmap) and they are configured by different arguments. That's why `whitecanvas`
+    split them into two different methods.

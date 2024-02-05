@@ -162,8 +162,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         >>> canvas.cat_x(df, x="species", y="weight").add_violinplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> offset = ["species", "region"]  # categories that offset will be added
-        >>> canvas.cat(df).add_violinplot(offset, "weight", color="region")
+        >>> canvas.cat_x(df, "region", "weight").add_violinplot(dodge=True)
 
         Parameters
         ----------
@@ -181,7 +180,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedViolinPlot
+        DFViolinPlot
             Violin plot layer.
         """
         canvas = self._canvas()
@@ -207,26 +206,19 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         Add a categorical box plot.
 
         >>> ### Use "species" column as categories and "weight" column as values.
-        >>> canvas.cat(df).add_boxplot("species", "weight")
+        >>> canvas.cat_x(df, x="species", y="weight").add_boxplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> offset = ["species", "region"]  # categories that offset will be added
-        >>> canvas.cat(df).add_boxplot(offset, "weight", color="region")
+        >>> canvas.cat_x(df, "region", "weight").add_boxplot(dodge=True)
 
         Parameters
         ----------
-        offset : tuple of str
-            Column name(s) for x-axis.
-        value : str
-            Column name for y-axis.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         name : str, optional
             Name of the layer.
-        orient : str, default "vertical"
-            Orientation of the violins. Can be "vertical" or "horizontal".
         capsize : float, default 0.1
             Length of the caps as a fraction of the width of the box.
         extent : float, default 0.8
@@ -234,7 +226,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedBoxPlot
+        DFBoxPlot
             Box plot layer.
         """
         canvas = self._canvas()
@@ -259,38 +251,31 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         Add a categorical point plot (markers with error bars).
 
         >>> ### Use "species" column as categories and "weight" column as values.
-        >>> canvas.cat(df).add_pointplot("species", "weight")
+        >>> canvas.cat_x(df, x="species", y="weight").add_pointplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> offset = ["species", "region"]  # categories that offset will be added
-        >>> canvas.cat(df).add_pointplot(offset, "weight", color="region")
+        >>> canvas.cat_x(df, "region", "weight").add_pointplot(dodge=True)
 
         The default estimator and errors are mean and standard deviation. To change
         them, use `est_by_*` and `err_by_*` methods.
 
         >>> ### Use standard error x 2 (~95%) as error bars.
-        >>> canvas.cat(df).add_pointplot("species", "weight").err_by_se(scale=2.0)
+        >>> canvas.cat_x(df, "species", "weight").add_pointplot().err_by_se(scale=2.0)
 
         Parameters
         ----------
-        offset : tuple of str
-            Column name(s) for x-axis.
-        value : str
-            Column name for y-axis.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         name : str, optional
             Name of the layer.
-        orient : str, default "vertical"
-            Orientation of the violins. Can be "vertical" or "horizontal".
         capsize : float, default 0.1
             Length of the caps as a fraction of the width of the box.
 
         Returns
         -------
-        WrappedPointPlot
+        DFPointPlot
             Point plot layer.
         """
         canvas = self._canvas()
@@ -316,17 +301,16 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         Add a categorical bar plot (bars with error bars).
 
         >>> ### Use "species" column as categories and "weight" column as values.
-        >>> canvas.cat(df).add_barplot("species", "weight")
+        >>> canvas.cat_x(df, x="species", y="weight").add_barplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> offset = ["species", "region"]  # categories that offset will be added
-        >>> canvas.cat(df).add_barplot(offset, "weight", color="region")
+        >>> canvas.cat_x(df, "region", "weight").add_barplot(dodge=True)
 
         The default estimator and errors are mean and standard deviation. To change
         them, use `est_by_*` and `err_by_*` methods.
 
         >>> ### Use standard error x 2 (~95%) as error bars.
-        >>> canvas.cat(df).add_barplot("species", "weight").err_by_se(scale=2.0)
+        >>> canvas.cat_x(df, "species", "weight").add_barplot().err_by_se(scale=2.0)
 
         Parameters
         ----------
@@ -343,7 +327,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedBarPlot
+        DFBarPlot
             Bar plot layer.
         """
         canvas = self._canvas()
@@ -378,11 +362,10 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         Add a categorical strip plot.
 
         >>> ### Use "species" column as categories and "weight" column as values.
-        >>> canvas.cat(df).add_stripplot("species", "weight")
+        >>> canvas.cat_x(df, x="species", y="weight").add_stripplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> offset = ["species", "region"]  # categories that offset will be added
-        >>> canvas.cat(df).add_stripplot(offset, "weight", color="region")
+        >>> canvas.cat_x(df, "region", "weight").add_stripplot(dodge=True)
 
         Parameters
         ----------
@@ -403,7 +386,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedMarkerGroups
+        DFMarkerGroups
             Marker collection layer.
         """
         canvas = self._canvas()
@@ -438,6 +421,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         size: str | None = None,
         dodge: NStr | bool = False,
     ) -> _lt.DFMarkerGroups[_DF]:
+        """Alias of `add_stripplot` with no jittering."""
         return self.add_stripplot(
             color=color, hatch=hatch, symbol=symbol, size=size, dodge=dodge,
             extent=0, seed=0, name=name,
@@ -459,11 +443,10 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         Add a categorical swarm plot.
 
         >>> ### Use "species" column as categories and "weight" column as values.
-        >>> canvas.cat(df).add_swarmplot("species", "weight")
+        >>> canvas.cat_x(df, x="species", y="weight").add_swarmplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> offset = ["species", "region"]  # categories that offset will be added
-        >>> canvas.cat(df).add_swarmplot(offset, "weight", color="region")
+        >>> canvas.cat_x(df, "region", "weight").add_swarmplot(dodge=True)
 
         Parameters
         ----------
@@ -484,7 +467,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedMarkerGroups
+        DFMarkerGroups
             Marker collection layer.
         """
         canvas = self._canvas()
@@ -568,7 +551,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         Add line that connect the aggregated values.
 
-        >>> canvas.cat(df).mean().add_line("time", "value")
+        >>> canvas.cat_x(df).mean().add_line("time", "value")
 
         Parameters
         ----------
@@ -583,7 +566,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedLines
+        DFLines
             Line collection layer.
         """
         canvas = self._canvas()
@@ -616,7 +599,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         Add markers that represent the aggregated values.
 
-        >>> canvas.cat(df).mean().add_markers("time", "value")
+        >>> canvas.cat_x(df).mean().add_markers("time", "value")
 
         Parameters
         ----------
@@ -637,7 +620,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedMarkers
+        DFMarkers
             Marker collection layer.
         """
         canvas = self._canvas()
@@ -669,7 +652,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         Add bars that represent the aggregated values.
 
-        >>> canvas.cat(df).mean().add_bars("time", "value")
+        >>> canvas.cat_x(df).mean().add_bars("time", "value")
 
         Parameters
         ----------
@@ -688,7 +671,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedBars
+        DFBars
             Bar collection layer.
         """
         canvas = self._canvas()

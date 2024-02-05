@@ -94,27 +94,41 @@ class SwarmJitter(CategoricalLikeJitter):
         self._extent = extent
         self._limits = limits
 
+    def _get_bins(self, src: DataFrameWrapper[_DF]) -> int:
+        return 25  # just for now
+
     def map(self, src: DataFrameWrapper[_DF]) -> NDArray[np.floating]:
         values = src[self._value]
         vmin, vmax = self._limits
-        nbin = 25
+        nbin = self._get_bins(src)
         dv = (vmax - vmin) / nbin
+        # bin index that each value belongs to
         v_indices = np.floor((values - vmin) / dv).astype(np.int32)
         v_indices[v_indices == nbin] = nbin - 1
+
+        args = [src[b] for b in self._by]
+        offset_pre = np.zeros(len(src), dtype=np.float32)
+        for row in self._mapping.keys():
+            sl = np.all(np.column_stack([a == r for a, r in zip(args, row)]), axis=1)
+            offset_pre[sl] = self._map_one(v_indices[sl], nbin)
+
+        offset_max = np.abs(offset_pre).max()
+        width_default = dv * offset_max
+        offsets = offset_pre / offset_max * min(self._extent / 2, width_default)
+        out = self._map(src) + offsets
+        return out
+
+    def _map_one(self, indices: NDArray[np.int32], nbin: int) -> NDArray[np.floating]:
         offset_count = np.zeros(nbin, dtype=np.int32)
-        offset_pre = np.zeros_like(values, dtype=np.int32)
-        for i, idx in enumerate(v_indices):
+        offset_pre = np.zeros_like(indices, dtype=np.int32)
+        for i, idx in enumerate(indices):
             c = offset_count[idx]
             if c % 2 == 0:
                 offset_pre[i] = c / 2
             else:
                 offset_pre[i] = -(c + 1) / 2
             offset_count[idx] += 1
-        offset_max = np.abs(offset_pre).max()
-        width_default = dv * offset_max
-        offsets = offset_pre / offset_max * min(self._extent / 2, width_default)
-        out = self._map(src) + offsets
-        return out
+        return offset_pre
 
 
 def _tuple(x) -> tuple[str, ...]:

@@ -378,6 +378,28 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
+    def as_edge_only(
+        self,
+        width: float = 3.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Self:
+        """
+        Convert the markers to edge-only mode.
+
+        This method will set the face color to transparent and the edge color to the
+        current face color.
+
+        Parameters
+        ----------
+        width : float, default 3.0
+            Width of the edge.
+        style : str or LineStyle, default LineStyle.SOLID
+            Line style of the edge.
+        """
+        for layer in self.base.iter_children():
+            layer.as_edge_only(width=width, style=style)
+        return self
+
 
 class DFMarkerGroups(DFMarkers):
     def __init__(self, *args, orient: Orientation = Orientation.VERTICAL, **kwargs):

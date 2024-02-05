@@ -159,6 +159,96 @@ canvas.show()
 
 ## Marker-type Plots
 
-TODO
+``` python
+#!name: categorical_axis_stripplot
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_stripplot(color="replicate")
+)
+```
+
+``` python
+#!name: categorical_axis_stripplot_dodge
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_stripplot(color="replicate", dodge=True)
+)
+```
+
+As for the `Markers` layer, `as_edge_only` will convert the face features to the edge features.
+
+``` python
+#!name: categorical_axis_stripplot_dodge
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_stripplot(color="replicate", dodge=True)
+)
+```
+
+Each marker size can represent a numerical value. `with_size` will map the numerical
+values of a column to the size of the markers.
+
+``` python
+#!name: categorical_axis_stripplot_by_size
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_stripplot()
+    .with_size("temperature")
+)
+```
+
+Similarly, each marker color can represent a numerical value. `with_colormap` will map the value with an arbitrary colormap.
+
+``` python
+#!name: categorical_axis_stripplot_by_color
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_stripplot()
+    .with_colormap("temperature", cmap="coolwarm")
+)
+```
 
 ## Aggregation
+
+Showing both all the data points and the aggregated data is a common way to efficiently
+visualize the data. This task is usually done by the module specific group-by methods,
+but `whitecanvas` provides a built-in method to simplify the process.
+
+``` python
+#!name: categorical_axis_stripplot_and_agg
+canvas = new_canvas("matplotlib")
+
+# create a categorical plotter
+cat_plt = canvas.cat_x(df, x="category", y="observation")
+
+# plot all the data
+cat_plt.add_stripplot(color="category")
+# plot the mean
+cat_plt.mean().add_markers(color="category", size=20)
+
+canvas.show()
+```
+
+Count plot.
+
+``` python
+#!name: categorical_axis_countplot
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category")
+    .count()
+    .add_bars(color="replicate", dodge=True)
+)
+canvas.show()
+```

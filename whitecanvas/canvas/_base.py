@@ -309,6 +309,26 @@ class CanvasBase(ABC):
             self.y.label.color = color
         return self
 
+    def update_labels(
+        self,
+        title: str | None = None,
+        x: str | None = None,
+        y: str | None = None,
+    ) -> Self:
+        """
+        Helper function to update the title, x, and y labels.
+
+        >>> from whitecanvas import new_canvas
+        >>> canvas = new_canvas("matplotlib").update_labels("Title", "X", "Y")
+        """
+        if title is not None:
+            self.title.text = title
+        if x is not None:
+            self.x.label.text = x
+        if y is not None:
+            self.y.label.text = y
+        return self
+
     def cat(
         self,
         data: _DF,

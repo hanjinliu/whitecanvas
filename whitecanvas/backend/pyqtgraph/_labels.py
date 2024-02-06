@@ -37,7 +37,8 @@ class Title(_CanvasComponent):
         self._canvas()._plot_item.setTitle(text)
 
     def _plt_get_color(self):
-        return self._canvas()._plot_item.titleLabel.opts["color"]
+        qcolor = self._canvas()._plot_item.titleLabel.opts["color"]
+        return np.array(qcolor.getRgbF(), dtype=np.float32)
 
     def _plt_set_color(self, color):
         qcolor = array_to_qcolor(color)

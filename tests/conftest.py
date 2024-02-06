@@ -6,13 +6,8 @@ import pytest
     scope="function",
     params=["mock", "matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
 )
-def backend(request):
-    try:
-        yield request.param
-    except Exception:
-        if request.param == "mock":
-            pytest.skip("failed in mock backend")
-        else:
-            raise
+def backend(request: pytest.FixtureRequest):
+    yield request.param
+    # TODO: how to skip tests if failed in mock backend?
     if request.param == "matplotlib":
         plt.close("all")

@@ -774,3 +774,59 @@ class DFKde(
             self._base_layer[i].line.style = st
         self._style_by = style_by
         return self
+
+
+class DFRug(
+    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_l.Rug], _DF],
+    Generic[_DF],
+):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        base: _lg.LayerCollectionBase[_l.Rug],
+        labels: list[tuple[Any, ...]],
+        color: _Cols | None = None,
+        width: str | None = None,
+        style: _Cols | None = None,
+    ):
+        splitby = _shared.join_columns(color, style, source=source)
+        self._color_by = _p.ColorPlan.default()
+        self._width_by = _p.WidthPlan.default()
+        self._style_by = _p.StylePlan.default()
+        self._labels = labels
+        self._splitby = splitby
+        super().__init__(base, source)
+        if color is not None:
+            self.with_color(color)
+        if isinstance(width, str):
+            self.with_width(width)
+        if style is not None:
+            self.with_style(style)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: DataFrameWrapper[_DF],
+        value: str,
+        color: str | None = None,
+        width: float = 1.0,
+        style: str | None = None,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFRug[_DF]:
+        splitby = _shared.join_columns(color, style, source=df)
+        ori = Orientation.parse(orient)
+        arrays: list[np.ndarray] = []
+        labels: list[tuple] = []
+        for sl, sub in df.group_by(splitby):
+            labels.append(sl)
+            arrays.append(sub[value])
+        layers = []
+        for arr in arrays:
+            each_layer = _l.Rug(
+                arr, width=width, orient=ori, backend=backend,
+            )  # fmt: skip
+            layers.append(each_layer)
+        base = _lg.LayerCollectionBase(layers, name=name)
+        return cls(df, base, labels, color=color, width=width, style=style)

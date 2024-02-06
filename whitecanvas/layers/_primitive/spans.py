@@ -37,9 +37,9 @@ class Spans(
 
     Attributes
     ----------
-    face : :class:`~whitecanvas.layers._mixin.FaceNamespace`
+    face : `whitecanvas.layers._mixin.FaceNamespace`
         Face properties of the spans.
-    edge : :class:`~whitecanvas.layers._mixin.EdgeNamespace`
+    edge : `whitecanvas.layers._mixin.EdgeNamespace`
         Edge properties of the spans.
     """
 
@@ -120,6 +120,7 @@ class Spans(
 
     def _connect_canvas(self, canvas: Canvas):
         canvas.events.lims.connect(self._recalculate_spans)
+        self._force_update_spans()
         return super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
@@ -138,6 +139,9 @@ class Spans(
             return
         self._low_lim = _min - 1e10
         self._high_lim = _max + 1e10
+        self._force_update_spans()
+
+    def _force_update_spans(self):
         x0, x1, y0, y1 = self._backend._plt_get_data()
         _min_arr = np.full_like(x0, self._low_lim)
         _max_arr = np.full_like(x0, self._high_lim)

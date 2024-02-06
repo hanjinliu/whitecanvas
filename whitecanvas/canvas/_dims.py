@@ -27,7 +27,7 @@ _T = TypeVar("_T")
 
 
 class DimsEvents(SignalGroup):
-    """Event signals for :class:`Dims`."""
+    """Event signals for `Dims`."""
 
     indices = Signal(dict)
     axis_names = Signal(list)

@@ -4,7 +4,7 @@ import numpy as np
 from whitecanvas import new_canvas
 
 def main():
-    canvas = new_canvas(backend="vispy:qt")
+    canvas = new_canvas(backend="matplotlib:qt")
     x = np.linspace(-1, 1, 100)
     y = x ** 2 / 2 + 1 + np.random.normal(0, 0.1, 100)
     markers = canvas.add_markers(x, y, color="lightgray")

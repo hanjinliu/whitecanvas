@@ -1323,7 +1323,8 @@ class CanvasBase(ABC):
         """
         Add an image layer to the canvas.
 
-        This method automatically flips the image vertically by default.
+        This method automatically flips the image vertically by default. `add_heatmap`
+        does the similar thing with slightly different default settings.
 
         Parameters
         ----------
@@ -1333,11 +1334,13 @@ class CanvasBase(ABC):
         cmap : ColormapType, default "gray"
             Colormap used for the image.
         clim : (float or None, float or None) or None
-            Contrast limits. If None, the limits are automatically determined by
-            min and max of the data. You can also pass None separately to either
-            limit to use the default behavior.
+            Contrast limits. If None, the limits are automatically determined by min and
+            max of the data. You can also pass None separately to either limit to use
+            the default behavior.
         flip_canvas : bool, default True
             If True, flip the canvas vertically so that the image looks normal.
+        lock_aspect : bool, default True
+            If True, lock the aspect ratio of the canvas to 1:1.
 
         Returns
         -------
@@ -1352,6 +1355,47 @@ class CanvasBase(ABC):
             self.y.flipped = True
         if lock_aspect:
             self.aspect_ratio = 1.0
+        return layer
+
+    def add_heatmap(
+        self,
+        image: ArrayLike,
+        *,
+        name: str | None = None,
+        cmap: ColormapType = "inferno",
+        clim: tuple[float | None, float | None] | None = None,
+        flip_canvas: bool = False,
+    ) -> _l.Image:
+        """
+        Add an image layer to the canvas as a heatmap.
+
+        Use `add_image` to add the layer as an image.
+
+        Parameters
+        ----------
+        image : ArrayLike
+            Image data. Must be 2D or 3D array. If 3D, the last dimension must be
+            RGB(A). Note that the first dimension is the vertical axis.
+        cmap : ColormapType, default "gray"
+            Colormap used for the image.
+        clim : (float or None, float or None) or None
+            Contrast limits. If None, the limits are automatically determined by min and
+            max of the data. You can also pass None separately to either limit to use
+            the default behavior.
+        flip_canvas : bool, default False
+            If True, flip the canvas vertically so that the image looks normal.
+
+        Returns
+        -------
+        Image
+            The image layer.
+        """
+        layer = _l.Image(
+            image, name=name, cmap=cmap, clim=clim, backend=self._get_backend()
+        )
+        self.add_layer(layer)
+        if flip_canvas and not self.y.flipped:
+            self.y.flipped = True
         return layer
 
     def add_layer(

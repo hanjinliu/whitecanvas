@@ -56,9 +56,9 @@ class Bars(
 
     Attributes
     ----------
-    face : :class:`~whitecanvas.layers._mixin.FaceNamespace`
+    face : `whitecanvas.layers._mixin.FaceNamespace`
         Face properties of the bars.
-    edge : :class:`~whitecanvas.layers._mixin.EdgeNamespace`
+    edge : `whitecanvas.layers._mixin.EdgeNamespace`
         Edge properties of the bars.
     """
 

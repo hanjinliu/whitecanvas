@@ -3,7 +3,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/whitecanvas.svg)](https://pypi.org/project/whitecanvas)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/whitecanvas.svg)](https://pypi.org/project/whitecanvas)
 
-A type safe and backend independent plotting library for Python.
+A type safe and backend independent plotting library for Python, aiming at not the simplest, but the tidiest API.
 
 &rarr; [Documentation](https://hanjinliu.github.io/whitecanvas/)
 
@@ -37,6 +37,7 @@ canvas = new_canvas()  # make a new canvas
 N = 10
 xdata = np.linspace(0, np.pi * 2, N)
 ydata = np.sin(xdata)
+yerr = np.ones(N) / 3
 
 # add layer
 layer = (
@@ -44,7 +45,7 @@ layer = (
     .add_line(xdata, ydata, color="blue")
     .with_markers(color="violet", symbol="s")
     .with_edge(color="blue")
-    .with_yerr(np.ones(N) / 3, capsize=0.2, color="black")
+    .with_yerr(yerr, capsize=0.2, color="black")
 )
 
 canvas.show()  # show canvas

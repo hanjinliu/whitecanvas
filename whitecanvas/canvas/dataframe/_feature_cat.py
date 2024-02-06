@@ -357,6 +357,18 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
                 canvas.x.label.text = ax_label
         return canvas.add_layer(layer)
 
+    def add_rug(
+        self,
+        *,
+        name: str | None = None,
+        color: NStr | None = None,
+        low: float = 0.0,
+        high: float = 1.0,
+        style: NStr | None = None,
+    ):
+        # TODO: implement this
+        raise NotImplementedError
+
     def _column_and_orient(self) -> tuple[str, Orientation]:
         if self._x is None and self._y is None:
             raise ValueError("Column for either x- or y-axis must be set")

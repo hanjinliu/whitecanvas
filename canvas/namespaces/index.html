@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../basics/">
       
       
-        <link rel="next" href="../cat_num/">
+        <link rel="next" href="../grid/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Numerical × Numerical Data - whitecanvas</title>
+        <title>Namespaces - whitecanvas</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#numerical-numerical-data" class="md-skip">
+        <a href="#namespaces" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Numerical &times; Numerical Data
+              Namespaces
             
           </span>
         </div>
@@ -263,6 +263,8 @@
       
   
   
+    
+  
   
   
     
@@ -287,17 +289,17 @@
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../canvas/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -314,7 +316,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Canvas
@@ -330,7 +332,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/basics/" class="md-nav__link">
+      <a href="../basics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -348,10 +350,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../canvas/namespaces/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Namespaces
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -360,6 +382,53 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Labels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ticks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ticks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#title" class="md-nav__link">
+    <span class="md-ellipsis">
+      Title
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -372,7 +441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/grid/" class="md-nav__link">
+      <a href="../grid/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -393,7 +462,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/native_objects/" class="md-nav__link">
+      <a href="../native_objects/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -573,8 +642,6 @@
       
   
   
-    
-  
   
   
     
@@ -595,17 +662,17 @@
       
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../categorical/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -622,7 +689,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Categorical Plot
@@ -635,30 +702,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Numerical &times; Numerical Data
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../categorical/num_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -667,44 +714,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#categorical-lines-and-markers" class="md-nav__link">
-    <span class="md-ellipsis">
-      Categorical Lines and Markers
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#distribution-of-numerical-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      Distribution of Numerical Data
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -717,7 +726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cat_num/" class="md-nav__link">
+      <a href="../../categorical/cat_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -992,18 +1001,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#categorical-lines-and-markers" class="md-nav__link">
+  <a href="#labels" class="md-nav__link">
     <span class="md-ellipsis">
-      Categorical Lines and Markers
+      Labels
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#distribution-of-numerical-data" class="md-nav__link">
+  <a href="#ticks" class="md-nav__link">
     <span class="md-ellipsis">
-      Distribution of Numerical Data
+      Ticks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#title" class="md-nav__link">
+    <span class="md-ellipsis">
+      Title
     </span>
   </a>
   
@@ -1027,103 +1045,77 @@
   
 
 
-<h1 id="numerical-numerical-data">Numerical &times; Numerical Data</h1>
-<h2 id="categorical-lines-and-markers">Categorical Lines and Markers</h2>
-<p>Line plot and scatter plot use numerical values for both x and y axes. In this case,
-the plot is categorized by such as color, marker symbol, etc.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<h1 id="namespaces">Namespaces</h1>
+<p>Each canvas has several namespaces to control the appearance of the canvas. First of
+all, the x/y-axis properties are controlled by the <code>x</code> and <code>y</code> namespaces.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
-<span class="c1"># sample data</span>
-<span class="n">df</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">,</span>
-    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
-    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>By setting <code>color=</code> to one of the column name, lines are split by the column and
-different colors are used for each group.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/categorical_add_line_color.png" width="360px" /></p>
-<p>By setting <code>style=</code>, different line styles are used instead. In the following example,
-<code>color="black"</code> means that all the lines should be the same color (black).</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/categorical_add_line_style.png" width="360px" /></p>
-<p>In the case of markers, you can use symbols to distinguish groups.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/categorical_add_markers_symbol.png" width="360px" /></p>
-<h2 id="distribution-of-numerical-data">Distribution of Numerical Data</h2>
-<p>There are several ways to visualize the distribution of numerical data.</p>
-<ul>
-<li>Histogram</li>
-<li>Kernel Density Estimation (KDE)</li>
-</ul>
-<p>These representations only use one array of numerical data. Therefore, either <code>x</code> or <code>y</code> should be empty in the <code>cat</code> method.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
-<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">lim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">flipped</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">set_gridlines</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/xy_axis_properties.png" width="360px" /></p>
+<h2 id="labels">Labels</h2>
+<p>You can set x/y labels using the <code>label</code> property.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
-<span class="c1"># sample data</span>
-<span class="n">df</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">30</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">40</span><span class="p">,</span>
-    <span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">130</span><span class="p">),</span>
-    <span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">130</span><span class="p">),</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><code>x="X"</code> means that the x-axis being "X" and the y-axis being the count.
-Arguments forwards to the <code>histogram</code> method of <code>numpy</code>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_hist</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;X axis&quot;</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Y axis&quot;</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/cat_hist_x.png" width="360px" /></p>
-<p>To transpose the histogram, use <code>y="X"</code>.</p>
+<img alt="" loading="lazy," src="../../_images/xy_axis_0.png" width="360px" /></p>
+<p>The <code>label</code> property is actually another namespace. You can specify the text, font size,
+etc. separately.</p>
 <p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_hist</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;X axis&quot;</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="s2">&quot;Arial&quot;</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/cat_hist_y.png" width="360px" /></p>
-<p>Histograms can be grouped by color.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_hist</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
+<img alt="" loading="lazy," src="../../_images/xy_axis_1.png" width="360px" /></p>
+<h2 id="ticks">Ticks</h2>
+<p>The tick properties can be set via <code>ticks</code> property.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="s2">&quot;Arial&quot;</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">rotation</span> <span class="o">=</span> <span class="mi">45</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/cat_hist_x_colored.png" width="360px" /></p>
-<p>If both <code>x</code> and <code>y</code> are set, the plotter cannot determine which axis to use. To tell
-the plotter which axis to use, call <code>along_x()</code> or <code>along_y()</code> to restrict the
-dimension.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="c1"># canvas.cat(df, x=&quot;label&quot;, y=&quot;X&quot;).add_hist(bins=10)  # This will raise an error</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">along_y</span><span class="p">()</span><span class="o">.</span><span class="n">add_hist</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<img alt="" loading="lazy," src="../../_images/xy_axis_2.png" width="360px" /></p>
+<p>You can also override or reset the tick labels.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">set_labels</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;zero&quot;</span><span class="p">,</span> <span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;two&quot;</span><span class="p">])</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">reset_labels</span><span class="p">()</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/cat_hist_along_x.png" width="360px" /></p>
-<p>KDE can be similarly added.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_kde</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
+<img alt="" loading="lazy," src="../../_images/xy_axis_3.png" width="360px" /></p>
+<h2 id="title">Title</h2>
+<p>Canvas title can be set via the <code>title</code> namespace.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;teal&quot;</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="s2">&quot;Times New Roman&quot;</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/cat_kde_x.png" width="360px" /></p>
-<p>2-dimensional histogram can be added by <code>add_hist2d</code>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_hist2d</span><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/cat_hist2d.png" width="360px" /></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code>add_hist</code> and <code>add_hist2d</code> returns completely different objects (histogram and
-heatmap) and they are configured by different arguments. That's why <code>whitecanvas</code>
-split them into two different methods.</p>
-</div>
+<img alt="" loading="lazy," src="../../_images/xy_axis_2.png" width="360px" /></p>
 
 
 
@@ -1153,7 +1145,7 @@ split them into two different methods.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+          <a href="../basics/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Basics">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -1163,20 +1155,20 @@ split them into two different methods.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Overview
+                Basics
               </div>
             </div>
           </a>
         
         
           
-          <a href="../cat_num/" class="md-footer__link md-footer__link--next" aria-label="Next: Categorical &amp;times; Numerical Data">
+          <a href="../grid/" class="md-footer__link md-footer__link--next" aria-label="Next: Canvas Grid">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Categorical &times; Numerical Data
+                Canvas Grid
               </div>
             </div>
             <div class="md-footer__button md-icon">

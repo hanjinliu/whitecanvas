@@ -11,22 +11,22 @@
       
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../categorical/cat_num/">
       
       
-        <link rel="next" href="../native_objects/">
+        <link rel="next" href="canvas_events/">
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.2">
     
     
       
-        <title>X/Y Axis - whitecanvas</title>
+        <title>Overview - whitecanvas</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.50c56a3b.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
       
       
 
@@ -45,9 +45,9 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#customize-xy-axis" class="md-skip">
+        <a href="#event-handling" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="whitecanvas" class="md-header__button md-logo" aria-label="whitecanvas" data-md-component="logo">
+    <a href=".." title="whitecanvas" class="md-header__button md-logo" aria-label="whitecanvas" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              X/Y Axis
+              Overview
             
           </span>
         </div>
@@ -196,7 +196,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="whitecanvas" class="md-nav__button md-logo" aria-label="whitecanvas" data-md-component="logo">
+    <a href=".." title="whitecanvas" class="md-nav__button md-logo" aria-label="whitecanvas" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -226,7 +226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -246,7 +246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../quick_start/" class="md-nav__link">
+      <a href="../quick_start/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -278,6 +278,8 @@
       
         
       
+        
+      
     
     
     
@@ -295,11 +297,11 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../layers/" class="md-nav__link ">
+            <a href="../canvas/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
-    Layers
+    Canvas
   </span>
   
 
@@ -315,7 +317,7 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
-            Layers
+            Canvas
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -328,11 +330,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../layers/line_layers/" class="md-nav__link">
+      <a href="../canvas/basics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Line Layers
+    Basics
   </span>
   
 
@@ -349,11 +351,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../layers/face_layers/" class="md-nav__link">
+      <a href="../canvas/namespaces/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Face&Edge Layers
+    Namespaces
   </span>
   
 
@@ -370,11 +372,32 @@
   
   
     <li class="md-nav__item">
-      <a href="../../layers/layer_groups/" class="md-nav__link">
+      <a href="../canvas/grid/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Layer Groups
+    Canvas Grid
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../canvas/native_objects/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Working with the Backend Objects
   </span>
   
 
@@ -395,8 +418,6 @@
       
   
   
-    
-  
   
   
     
@@ -410,6 +431,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -417,21 +442,21 @@
       
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../layers/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
-    Canvas
+    Layers
   </span>
   
 
@@ -444,10 +469,10 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
-            Canvas
+            Layers
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -457,76 +482,18 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    X/Y Axis
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../layers/lines/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    X/Y Axis
+    Lines
   </span>
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#labels" class="md-nav__link">
-    <span class="md-ellipsis">
-      Labels
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ticks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Ticks
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -539,11 +506,53 @@
   
   
     <li class="md-nav__item">
-      <a href="../native_objects/" class="md-nav__link">
+      <a href="../layers/markers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Working with the Backend Objects
+    Markers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layers/face_layers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Face&Edge Layers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layers/layer_groups/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Layer Groups
   </span>
   
 
@@ -594,7 +603,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../categorical/" class="md-nav__link ">
+            <a href="../categorical/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -627,7 +636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../categorical/num_num/" class="md-nav__link">
+      <a href="../categorical/num_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -648,11 +657,240 @@
   
   
     <li class="md-nav__item">
-      <a href="../../categorical/cat_num/" class="md-nav__link">
+      <a href="../categorical/cat_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     Categorical &times; Numerical Data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  <span class="md-ellipsis">
+    Event Handling
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Event Handling
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="canvas_events/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Canvas Events
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="layer_events/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Layer Events
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mouse_events/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Mouse Events
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/core/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    whitecanvas.core
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/canvas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    whitecanvas.canvas
   </span>
   
 
@@ -689,32 +927,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#labels" class="md-nav__link">
-    <span class="md-ellipsis">
-      Labels
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ticks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Ticks
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -731,65 +943,27 @@
   
 
 
-<h1 id="customize-xy-axis">Customize X/Y axis</h1>
-<p>Properties related to the X/Y axis can be customized using the <code>x</code> and <code>y</code> namespaces.
-Axis limits, color etc. can be set via the namespace.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<h1 id="event-handling">Event Handling</h1>
+<p>Listening to the changes in the canvas or layer states is a common task in interactive
+plotting. Although different backend plotting libraries implement their own event
+handling systems, <code>whitecanvas</code> provides a unified system using the
+<a href="https://psygnal.readthedocs.io">psygnal</a> library.</p>
+<p>The common syntax is to use <code>connect</code> function to connect callback function to the
+event handler.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">()</span>
 
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">lim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">flipped</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">set_gridlines</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="c1"># connect callback function</span>
+<span class="nd">@canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">lim</span><span class="o">.</span><span class="n">connect</span>
+<span class="k">def</span> <span class="nf">_xlim_changed</span><span class="p">(</span><span class="n">lim</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;canvas.x.lim changed to </span><span class="si">{</span><span class="n">lim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/xy_axis_properties.png" width="360px" /></p>
-<h2 id="labels">Labels</h2>
-<p>You can set x/y labels using the <code>label</code> property.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;X axis&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Y axis&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/xy_axis_0.png" width="360px" /></p>
-<p>The <code>label</code> property is actually another namespace. You can specify the text, font size,
-etc. separately.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;X axis&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="s2">&quot;Arial&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/xy_axis_1.png" width="360px" /></p>
-<h2 id="ticks">Ticks</h2>
-<p>The tick properties can be set via <code>ticks</code> property.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mi">12</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="s2">&quot;Arial&quot;</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">rotation</span> <span class="o">=</span> <span class="mi">45</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/xy_axis_2.png" width="360px" /></p>
-<p>You can also override or reset the tick labels.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">set_labels</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;zero&quot;</span><span class="p">,</span> <span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;two&quot;</span><span class="p">])</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ticks</span><span class="o">.</span><span class="n">reset_labels</span><span class="p">()</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<img alt="" loading="lazy," src="../../_images/xy_axis_3.png" width="360px" /></p>
+<ul>
+<li><a href="canvas_events/">Canvas Events</a></li>
+<li><a href="layer_events/">Layer Events</a></li>
+<li><a href="mouse_events/">Mouse Events</a></li>
+</ul>
 
 
 
@@ -819,7 +993,7 @@ etc. separately.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+          <a href="../categorical/cat_num/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Categorical &amp;times; Numerical Data">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -829,20 +1003,20 @@ etc. separately.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Overview
+                Categorical &times; Numerical Data
               </div>
             </div>
           </a>
         
         
           
-          <a href="../native_objects/" class="md-footer__link md-footer__link--next" aria-label="Next: Working with the Backend Objects">
+          <a href="canvas_events/" class="md-footer__link md-footer__link--next" aria-label="Next: Canvas Events">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Working with the Backend Objects
+                Canvas Events
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -880,10 +1054,10 @@ etc. separately.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate", "navigation.sections", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "navigation.sections", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
       
         <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
       

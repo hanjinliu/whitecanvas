@@ -1,6 +1,7 @@
 .vscode/
 main.py
 *.ipynb
+examples/*.html
 _docs_temp/
 
 # Byte-compiled / optimized / DLL files

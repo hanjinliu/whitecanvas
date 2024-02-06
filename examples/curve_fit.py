@@ -6,28 +6,38 @@ from scipy.optimize import curve_fit
 from whitecanvas import new_canvas
 
 
-def sample_data():
-    x = np.arange(20)
-    y = 3.7 * np.exp(-x * 0.27) + np.random.normal(size=20, scale=0.4) + 0.3
+def sample_data(tau: float, a: float, b: float, size: int = 40):
+    x = np.arange(size)
+    y = a * np.exp(-x / tau) + np.random.normal(size=size, scale=a*0.1) + b
     return x, y
 
 def main():
-    canvas = new_canvas(backend="matplotlib:qt")
+    np.random.seed(1462)
+    canvas = new_canvas(backend="pyqtgraph:qt")
 
-    # add raw data
-    x, y = sample_data()
-    canvas.add_markers(x, y, color="gray", name="raw data")
+    # tau, a, b, size
+    params_true = [
+        (9.1, 3.6, 0.46, 40),
+        (6.8, 3.0, 0.21, 48),
+        (7.6, 4.0, 0.58, 32)
+    ]
 
-    # fitting
+    # fitting model
     def model(x, a, tau, b):
         return a * np.exp(-x / tau) + b
 
-    params, _ = curve_fit(model, x, y, p0=[2, 1, 0])
+    for p in params_true:
+        # add raw data
+        x, y = sample_data(*p)
+        line = canvas.add_line(x, y, alpha=0.25)
 
-    # add the fitting curve
-    canvas.add_infcurve(model, color="red", name="fit", width=2).with_params(*params)
+        # add the fitting curve
+        params, _ = curve_fit(model, x, y, p0=[2, 1, 0])
+        canvas.add_infcurve(model, color=line.color, alpha=1).with_params(*params)
 
-    canvas.show(block=True)
+    canvas.update_labels(
+        x="time [sec]", y="intensity", title="Fitting results"
+    ).show(block=True)
 
 if __name__ == "__main__":
     main()

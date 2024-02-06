@@ -71,7 +71,9 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         ydata = self._model(xdata, *args, **kwargs)
         self._backend._plt_set_data(xdata, ydata)
         self._args, self._kwargs = args, kwargs
-        self._params_ready = True
+        if not self._params_ready:
+            self._params_ready = True
+            self._canvas().x.events.lim.emit(self._canvas().x.lim)
 
     @property
     def params(self) -> tuple[tuple, dict[str, Any]]:
@@ -104,7 +106,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
             if self._params_ready:
                 ydata = self._model(xdata, *self._args, **self._kwargs)
             else:
-                ydata = self._backend._plt_get_data()[1]
+                return
         self._backend._plt_set_data(xdata, ydata)
 
 

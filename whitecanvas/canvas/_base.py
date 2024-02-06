@@ -323,10 +323,13 @@ class CanvasBase(ABC):
         """
         if title is not None:
             self.title.text = title
+            self.title.visible = True
         if x is not None:
             self.x.label.text = x
+            self.x.label.visible = True
         if y is not None:
             self.y.label.text = y
+            self.y.label.visible = True
         return self
 
     def cat(
@@ -924,6 +927,7 @@ class CanvasBase(ABC):
         color: ColorType | None = None,
         width: float | None = None,
         style: str | LineStyle | None = None,
+        alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.InfCurve[_P]:
         """

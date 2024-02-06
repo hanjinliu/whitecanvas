@@ -40,7 +40,8 @@ class Title(_CanvasComponent):
         return self._canvas()._plot_item.titleLabel.opts["color"]
 
     def _plt_set_color(self, color):
-        self._canvas()._plot_item.setTitle(self._plt_get_text(), color=color)
+        qcolor = array_to_qcolor(color)
+        self._canvas()._plot_item.setTitle(self._plt_get_text(), color=qcolor)
 
     def _plt_get_size(self) -> int:
         pt = self._canvas()._plot_item.titleLabel.opts["size"]

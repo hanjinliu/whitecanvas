@@ -16,7 +16,7 @@ def main():
         "replicate": [1] * 15 + [2] * 20 + [3] * 15 + [1] * 15 + [2] * 20 + [3] * 15,
     }
 
-    canvas = new_canvas("matplotlib:qt")
+    canvas = new_canvas("matplotlib:qt", palette="colorbrewer:Pastel1")
     cat_plt = canvas.cat_x(data, x="label", y="value")
 
     # plot all the raw data
@@ -28,7 +28,7 @@ def main():
     )
 
     # plot the mean of all the data for control and treatment
-    cat_plt.mean().add_markers(color="black", size=20, symbol="+")
+    cat_plt.mean().add_markers(color="black", size=20, symbol="+").with_edge(width=3)
 
     # plot the mean of replicate means
     cat_plt.mean_for_each("replicate").mean().add_markers(

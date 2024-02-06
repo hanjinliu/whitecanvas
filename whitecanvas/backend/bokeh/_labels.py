@@ -109,14 +109,18 @@ class Label(_CanvasComponent):
 
     def _plt_set_visible(self, visible: bool):
         self._visible = visible
-        self._plt_get_axis().axis_label = None
+        if not visible:
+            self._plt_get_axis().axis_label = None
+        else:
+            self._plt_get_axis().axis_label = self._text
 
     def _plt_get_text(self) -> str:
         return self._text
 
     def _plt_set_text(self, text: str):
         self._text = text
-        self._plt_get_axis().axis_label = text
+        if self._plt_get_visible():
+            self._plt_get_axis().axis_label = text
 
     def _plt_get_color(self):
         return np.array(Color(self._plt_get_axis().axis_label_text_color).rgba)

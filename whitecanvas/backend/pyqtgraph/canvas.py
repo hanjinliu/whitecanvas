@@ -316,15 +316,15 @@ class SignalListener(pg.GraphicsObject):
         (x0, x1), (y0, y1) = rng
         self._rect = QtCore.QRectF(x0, y0, x1 - x0, y1 - y0)
 
-    def boundingRect(self):  # noqa: N802
+    def boundingRect(self):
         return self._rect
 
-    def mousePressEvent(self, ev: pgMouseClickEvent):  # noqa: N802
+    def mousePressEvent(self, ev: pgMouseClickEvent):
         self.pressed.emit(ev)
         self._had_button = bool(ev.buttons() ^ QtCore.Qt.MouseButton.NoButton)
         super().mousePressEvent(ev)
 
-    def hoverEvent(self, ev: pgHoverEvent):  # noqa: N802
+    def hoverEvent(self, ev: pgHoverEvent):
         if ev.isExit():
             return
         btns: QtCore.Qt.MouseButtons = ev.buttons()
@@ -336,7 +336,7 @@ class SignalListener(pg.GraphicsObject):
             self.moved.emit(ev.pos())
         self._had_button = has_button
 
-    def mouseDoubleClickEvent(self, ev):  # noqa: N802
+    def mouseDoubleClickEvent(self, ev):
         self.double_clicked.emit(ev)
         super().mouseDoubleClickEvent(ev)
 

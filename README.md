@@ -5,63 +5,67 @@
 
 A type safe and backend independent plotting library for Python, aiming at not the simplest, but the tidiest API.
 
-&rarr; [Documentation](https://hanjinliu.github.io/whitecanvas/)
-
-|**matplotlib**||**pyqtgraph**|
-|:--------:|:-:|:-------:|
-|![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud_matplotlib.png)|**Rain-cloud plot** in different backends ([Source code](https://github.com/hanjinliu/whitecanvas/blob/main/examples/raincloud_plot.py))|![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud_pyqtgraph.png)|
-|**vispy**|**plotly**|**bokeh**|
-![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud_vispy.png)|![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud_plotly.png)|![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud_bokeh.png)|
-
------
-
 ## Installation
 
 ```console
 pip install whitecanvas -U
 ```
 
-## Type safety
+## Project Philosophy
 
-In `whitecanvas`, each component is configured separately by `with_*` methods.
-This architecture makes function arguments highly consistent and allows you to
-write type-safe codes.
+#### Type safety
 
-```python
-import numpy as np
-from whitecanvas import new_canvas
+All the methods should be designed to have nice signature, and should return the same
+type of object, so that your program can be statically checked by the IDE.
 
-canvas = new_canvas()  # make a new canvas
+#### Backend independency
 
-# sample data
-N = 10
-xdata = np.linspace(0, np.pi * 2, N)
-ydata = np.sin(xdata)
-yerr = np.ones(N) / 3
+Every plotting library has their own strength and weakness. Same code should work on
+different backends, so that you can choose the best one for different purposes.
 
-# add layer
-layer = (
-    canvas
-    .add_line(xdata, ydata, color="blue")
-    .with_markers(color="violet", symbol="s")
-    .with_edge(color="blue")
-    .with_yerr(yerr, capsize=0.2, color="black")
-)
+Currently supported backends are `matplotlib`, `pyqtgraph`, `vispy`, `plotly` and
+`bokeh`. If you want other backends, please feel free to
+[open an issue](https://github.com/hanjinliu/whitecanvas/issues).
 
-canvas.show()  # show canvas
-```
+#### API tidiness
 
-![](https://github.com/hanjinliu/whitecanvas/blob/main/images/sin_with_err_matplotlib.png)
+Most of (probably all of) the plotting libraries rely on the large
+number of arguments to configure the plot elements. They are usually hard to remember,
+forcing you to look up the documentation every time you want to make a plot.
 
-## Backend independency
+`whitecanvas` tries to organize the methods, namespaces and arguments carefully so that you can make any kind of plot only with the help of the IDE's auto-completion and
+suggestions.
 
-One of the ultimate goal of `whitecanvas` is "visualize data everywhere".
-Currently supported backends are:
+## Documentation
 
-- `matplotlib`
-- `pyqtgraph`
-- `vispy`
-- `plotly`
-- `bokeh`
+Documentation is available [here](https://hanjinliu.github.io/whitecanvas/).
 
-If you want other backends, please feel free to [open an issue](https://github.com/hanjinliu/whitecanvas/issues).
+## Examples
+
+[&rarr; Find more examples](https://github.com/hanjinliu/whitecanvas/blob/main/examples)
+
+#### Rain-cloud plot in matplotlib
+
+[&rarr; source](https://github.com/hanjinliu/whitecanvas/blob/main/examples/raincloud_plot.py)
+
+![](https://github.com/hanjinliu/whitecanvas/blob/main/images/raincloud.png)
+
+#### Super plot in matplotlib
+
+[&rarr; source](https://github.com/hanjinliu/whitecanvas/blob/main/examples/superplot.py)
+
+![](https://github.com/hanjinliu/whitecanvas/blob/main/images/superplot.png)
+
+#### Heatmap with text in pyqtgraph
+
+[&rarr; source](https://github.com/hanjinliu/whitecanvas/blob/main/examples/heatmap_with_text.py)
+
+![](https://github.com/hanjinliu/whitecanvas/blob/main/images/heatmap.png)
+
+#### Curve fitting in bokeh
+
+[&rarr; source](https://github.com/hanjinliu/whitecanvas/blob/main/examples/curve_fit.py)
+
+![](https://github.com/hanjinliu/whitecanvas/blob/main/images/curve_fit.png)
+
+-----

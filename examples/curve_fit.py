@@ -13,7 +13,7 @@ def sample_data(tau: float, a: float, b: float, size: int = 40):
 
 def main():
     np.random.seed(1462)
-    canvas = new_canvas(backend="pyqtgraph:qt")
+    canvas = new_canvas(backend="bokeh")
 
     # tau, a, b, size
     params_true = [
@@ -36,7 +36,7 @@ def main():
         canvas.add_infcurve(model, color=line.color, alpha=1).with_params(*params)
 
     canvas.update_labels(
-        x="time [sec]", y="intensity", title="Fitting results"
+        x="time [sec]", y="intensity [a.u.]", title="Fitting results"
     ).show(block=True)
 
 if __name__ == "__main__":

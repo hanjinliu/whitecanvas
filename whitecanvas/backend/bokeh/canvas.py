@@ -70,11 +70,11 @@ class Canvas:
         self._mouse_button = event
 
     def _get_xaxis(self):
-        return self._plot.xaxis
+        return self._plot.xaxis[0]
 
     def _get_yaxis(self):
         if not self._second_y:
-            return self._plot.yaxis
+            return self._plot.yaxis[0]
         return self._plot.yaxis[1]
 
     def _get_xrange(self):
@@ -232,9 +232,7 @@ class Canvas:
 
     def _plt_twinx(self):
         self._plot.add_layout(
-            bk_models.LinearAxis(
-                y_range_name=SECOND_Y,
-            ),
+            bk_models.LinearAxis(y_range_name=SECOND_Y),
             "right",
         )
         self._plot.extra_y_ranges = {SECOND_Y: bk_models.DataRange1d()}

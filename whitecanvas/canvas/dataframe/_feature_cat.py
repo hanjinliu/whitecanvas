@@ -10,7 +10,7 @@ from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
-from whitecanvas.types import ArrayLike1D, ColormapType, Orientation
+from whitecanvas.types import ColormapType, HistBinType, Orientation
 
 if TYPE_CHECKING:
     from whitecanvas.canvas._base import CanvasBase
@@ -183,7 +183,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         cmap: ColormapType = "inferno",
         name: str | None = None,
-        bins: int | tuple[int, int] = 10,
+        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         rangex: tuple[float, float] | None = None,
         rangey: tuple[float, float] | None = None,
         density: bool = False,
@@ -200,7 +200,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             Colormap to use for the heatmap.
         name : str, optional
             Name of the layer.
-        bins : int or tuple[int, int], default 10
+        bins : int, array, str or tuple of them, default "auto"
             If int, the number of bins for both x and y. If tuple, the number of bins
             for x and y respectively.
         rangex : (float, float), optional
@@ -272,7 +272,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
     def add_hist(
         self,
         *,
-        bins: int | ArrayLike1D = 10,
+        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         limits: tuple[float, float] | None = None,
         kind: str = "count",
         shape: str = "bars",

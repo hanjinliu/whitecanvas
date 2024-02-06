@@ -102,7 +102,7 @@ markers_layer = canvas.add_markers(
 canvas.show()
 ```
 
-## Wanna use DataFrame?
+## Wanna use DataFrames?
 
 `whitecanvas` has a built-in support for DataFrame-like objects for categorical
 plotting. See [Categorical Plotting](categorical/index.md) for more details.

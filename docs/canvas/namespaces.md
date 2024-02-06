@@ -1,7 +1,7 @@
-# Customize X/Y axis
+# Namespaces
 
-Properties related to the X/Y axis can be customized using the `x` and `y` namespaces.
-Axis limits, color etc. can be set via the namespace.
+Each canvas has several namespaces to control the appearance of the canvas. First of
+all, the x/y-axis properties are controlled by the `x` and `y` namespaces.
 
 ``` python
 #!name: xy_axis_properties
@@ -72,5 +72,21 @@ canvas = new_canvas("matplotlib")
 
 canvas.x.ticks.set_labels([0, 1, 2], ["zero", "one", "two"])
 canvas.x.ticks.reset_labels()
+canvas.show()
+```
+
+## Title
+
+Canvas title can be set via the `title` namespace.
+
+``` python
+#!name: xy_axis_2
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+
+canvas.title.color = "teal"
+canvas.title.size = 16
+canvas.title.family = "Times New Roman"
 canvas.show()
 ```

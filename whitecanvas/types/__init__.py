@@ -1,4 +1,10 @@
-from whitecanvas.types._alias import ArrayLike1D, ColormapType, ColorType, _Void
+from whitecanvas.types._alias import (
+    ArrayLike1D,
+    ColormapType,
+    ColorType,
+    HistBinType,
+    _Void,
+)
 from whitecanvas.types._enums import (
     Alignment,
     Hatch,
@@ -20,6 +26,7 @@ __all__ = [
     "LineStyle",
     "Symbol",
     "Hatch",
+    "HistBinType",
     "Orientation",
     "Origin",
     "Modifier",

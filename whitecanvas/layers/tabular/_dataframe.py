@@ -16,10 +16,10 @@ from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 from whitecanvas.types import (
-    ArrayLike1D,
     ColormapType,
     ColorType,
     Hatch,
+    HistBinType,
     LineStyle,
     Orientation,
     Symbol,
@@ -505,7 +505,7 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
         y: str,
         name: str | None = None,
         cmap: ColormapType = "gray",
-        bins: int | tuple[int, int] = 10,
+        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         range=None,
         density: bool = False,
         backend: Backend | str | None = None,
@@ -596,7 +596,7 @@ class DFHistograms(
         cls,
         df: DataFrameWrapper[_DF],
         value: str,
-        bins: int | ArrayLike1D,
+        bins: HistBinType = "auto",
         limits: tuple[float, float] | None = None,
         kind="count",
         shape="bars",

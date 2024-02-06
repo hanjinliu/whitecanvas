@@ -3,18 +3,10 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
-from bokeh import (
-    events as bk_events,
-)
-from bokeh import (
-    layouts as bk_layouts,
-)
-from bokeh import (
-    models as bk_models,
-)
-from bokeh import (
-    plotting as bk_plotting,
-)
+from bokeh import events as bk_events
+from bokeh import layouts as bk_layouts
+from bokeh import models as bk_models
+from bokeh import plotting as bk_plotting
 from bokeh.io import output_notebook
 
 from whitecanvas import protocols

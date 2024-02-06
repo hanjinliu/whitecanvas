@@ -91,38 +91,6 @@ class Bars(
         self._bar_type = "bars"
         self._init_events()
 
-    @classmethod
-    def from_histogram(
-        cls,
-        data: ArrayLike1D,
-        *,
-        bins: int | ArrayLike1D = 10,
-        density: bool = False,
-        range: tuple[float, float] | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-        extent: float | None = None,
-        name: str | None = None,
-        color: ColorType = "blue",
-        alpha: float = 1.0,
-        hatch: str | Hatch = Hatch.SOLID,
-        backend: Backend | str | None = None,
-    ):
-        """Construct a bar plot from a histogram."""
-        data = as_array_1d(data)
-        counts, edges = np.histogram(data, bins, density=density, range=range)
-        centers = (edges[:-1] + edges[1:]) / 2
-        if extent is None:
-            extent = edges[1] - edges[0]
-        self = Bars(
-            centers, counts, extent=extent, name=name, color=color, alpha=alpha,
-            orient=orient, hatch=hatch, backend=backend,
-        )  # fmt: skip
-        if density:
-            self._bar_type = "histogram-density"
-        else:
-            self._bar_type = "histogram-count"
-        return self
-
     def _get_layer_data(self) -> XYData:
         """Current data of the layer."""
         x0, x1, y0, y1 = self._backend._plt_get_data()

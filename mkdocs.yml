@@ -22,20 +22,27 @@ theme:
 nav:
   - Overview: index.md
   - Quick Start: quick_start.md
+  - Canvas:
+    - Overview: canvas/index.md
+    - Namespaces: canvas/namespaces.md
+    - Working with the Backend Objects: canvas/native_objects.md
   - Layers:
     - Overview: layers/index.md
     - Line Layers: layers/line_layers.md
     - Face&Edge Layers: layers/face_layers.md
     - Layer Groups: layers/layer_groups.md
-  - Canvas:
-    - Overview: canvas/index.md
-    - X/Y Axis: canvas/xy_axis.md
-    - Working with the Backend Objects: canvas/native_objects.md
   - Categorical Plot:
     - Overview: categorical/index.md
     - Numerical &times; Numerical Data: categorical/num_num.md
     - Categorical &times; Numerical Data: categorical/cat_num.md
-
+  - Event Handling:
+    - Overview: events/index.md
+    - Canvas Events: events/canvas_events.md
+    - Layer Events: events/layer_events.md
+    - Mouse Events: events/mouse_events.md
+  - API Reference:
+    - api/core.md
+    - api/canvas.md
 
 plugins:
   - search

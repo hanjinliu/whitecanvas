@@ -21,14 +21,18 @@ plt.show()  # backend methods still work
 
 ## Retrieve the backend object from a `whitecanvas` canvas
 
-The backend object is available at the `native`{.interpreted-text
-role="attr"} property.
+The backend object is available at the `native` property.
 
 ``` python
 #!skip
 from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")
+canvas.native
+```
+
+``` title="Output"
+<Axes: >
 ```
 
 ## Combine `whitecanvas` with Applications

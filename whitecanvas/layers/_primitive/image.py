@@ -10,7 +10,7 @@ from psygnal import Signal
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer, LayerEvents
 from whitecanvas.protocols import ImageProtocol
-from whitecanvas.types import ArrayLike1D, ColormapType, Origin, _Void
+from whitecanvas.types import ArrayLike1D, ColormapType, HistBinType, Origin, _Void
 from whitecanvas.utils.normalize import as_array_1d
 
 _void = _Void()
@@ -248,7 +248,7 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         cls,
         x: ArrayLike1D,
         y: ArrayLike1D,
-        bins: int | tuple[int, int] = 10,
+        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         range=None,
         name: str | None = None,
         density: bool = False,
@@ -259,10 +259,20 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         _y = as_array_1d(y)
         if _x.size != _y.size:
             raise ValueError("x and y must have the same size.")
-        if hasattr(bins, "__index__"):
-            bins = (bins, bins)
+        if isinstance(bins, (int, np.number, str)):
+            xbins = ybins = bins
+        else:
+            xbins, ybins = bins
+        if range is None:
+            xrange = yrange = None
+        else:
+            xrange, yrange = range
+        _bins = (
+            np.histogram_bin_edges(_x, xbins, xrange),
+            np.histogram_bin_edges(_y, ybins, yrange),
+        )
         hist, xedges, yedges = np.histogram2d(
-            _x, _y, bins=bins, range=range, density=density
+            _x, _y, bins=_bins, range=(xrange, yrange), density=density
         )
         hist_t = hist.T
         shift = (xedges[0], yedges[0])

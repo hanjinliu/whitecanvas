@@ -9,7 +9,13 @@ from numpy.typing import NDArray
 from whitecanvas.backend import Backend
 from whitecanvas.layers._primitive import Band, Line
 from whitecanvas.layers.group._collections import LayerContainer
-from whitecanvas.types import ArrayLike1D, ColorType, LineStyle, Orientation
+from whitecanvas.types import (
+    ArrayLike1D,
+    ColorType,
+    HistBinType,
+    LineStyle,
+    Orientation,
+)
 from whitecanvas.utils.hist import get_hist_edges, histograms
 from whitecanvas.utils.normalize import as_array_1d
 
@@ -23,6 +29,7 @@ class HistogramShape(Enum):
 class HistogramKind(Enum):
     count = "count"
     density = "density"
+    probability = "probability"
     frequency = "frequency"
     percent = "percent"
 
@@ -156,7 +163,9 @@ class Histogram(LineFillBase):
         self._edges = edges
 
     @overload
-    def update_edges(self, bins: int, limits: tuple[float, float] | None = None):
+    def update_edges(
+        self, bins: HistBinType, limits: tuple[float, float] | None = None
+    ):
         ...
 
     @overload
@@ -182,7 +191,7 @@ class Histogram(LineFillBase):
         shape: HistogramShape = HistogramShape.bars,
         kind: HistogramKind = HistogramKind.count,
         name: str | None = None,
-        bins: int = 10,
+        bins: HistBinType = "auto",
         limits: tuple[float, float] | None = None,
         color: ColorType = "black",
         style: str | LineStyle = LineStyle.SOLID,
@@ -212,7 +221,7 @@ class Histogram(LineFillBase):
     @staticmethod
     def _calculate_xy(
         data,
-        bins: int | ArrayLike1D,
+        bins: HistBinType,
         shape: HistogramShape,
         kind: HistogramKind,
         limits: tuple[float, float] | None = None,
@@ -227,6 +236,8 @@ class Histogram(LineFillBase):
             heights = hist.counts[0]
         elif kind is HistogramKind.density:
             heights = hist.density()[0]
+        elif kind is HistogramKind.probability:
+            heights = hist.probability()[0]
         elif kind is HistogramKind.frequency:
             heights = hist.frequency()[0]
         elif kind is HistogramKind.percent:

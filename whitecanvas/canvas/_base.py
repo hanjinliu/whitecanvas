@@ -45,6 +45,7 @@ from whitecanvas.types import (
     ColormapType,
     ColorType,
     Hatch,
+    HistBinType,
     LineStyle,
     Orientation,
     Rect,
@@ -657,7 +658,7 @@ class CanvasBase(ABC):
         self,
         data: ArrayLike1D,
         *,
-        bins: int | ArrayLike1D = 10,
+        bins: HistBinType = "auto",
         limits: tuple[float, float] | None = None,
         name: str | None = None,
         shape: Literal["step", "polygon", "bars"] = "bars",
@@ -676,18 +677,19 @@ class CanvasBase(ABC):
         ----------
         data : array-like
             1D Array of data.
-        bins : int or 1D array-like, default 10
+        bins : int or 1D array-like, default "auto"
             Bins of the histogram. This parameter will directly be passed
             to `np.histogram`.
         limits : (float, float), optional
             Limits in which histogram will be built. This parameter will equivalent to
             the `range` paraneter of `np.histogram`.
-        density : bool, default False
-            If True, heights of bars will be normalized so that the total
-            area of the histogram will be 1. This parameter will directly
-            be passed to `np.histogram`.
         name : str, optional
             Name of the layer.
+        shape : {"step", "polygon", "bars"}, default "bars"
+            Shape of the histogram. This parameter defines how to convert the data into
+            the line nodes.
+        kind : {"count", "density", "probability", "frequency", "percent"}, optional
+            Kind of the histogram.
         orient : str or Orientation, default Orientation.VERTICAL
             Orientation of the bars.
         color : color-like, optional
@@ -716,7 +718,7 @@ class CanvasBase(ABC):
         *,
         cmap: ColormapType = "inferno",
         name: str | None = None,
-        bins: int | tuple[int, int] = 10,
+        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         rangex: tuple[float, float] | None = None,
         rangey: tuple[float, float] | None = None,
         density: bool = False,
@@ -1062,6 +1064,7 @@ class CanvasBase(ABC):
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
+        alpha: float = 1.0,
         antialias: bool = False,
         capsize: float = 0.0,
     ) -> _l.Errorbars:
@@ -1105,7 +1108,7 @@ class CanvasBase(ABC):
         style = theme._default("line.style", style)
         layer = _l.Errorbars(
             xdata, ylow, yhigh, name=name, color=color, width=width,
-            style=style, antialias=antialias, capsize=capsize,
+            style=style, antialias=antialias, capsize=capsize, alpha=alpha,
             orient=orient, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -1200,11 +1203,11 @@ class CanvasBase(ABC):
             Band width parameter of KDE. Must be a number or a string as the
             method to automatic determination.
         color : color-like, default None
-            Color of the band face.,
-        alpha : float, default 1.0
-            Alpha channel of the band face.
-        hatch : str, FacePattern, default FacePattern.SOLID
-            Hatch of the band face.
+            Color of the band face.
+        width : float, optional
+            Line width of the outline.
+        style : str or LineStyle, optional
+            Line style of the outline.
 
         Returns
         -------
@@ -1534,8 +1537,7 @@ class CanvasBase(ABC):
         else:
             pad_rel = 0.025
         self._autoscale_for_layer(layer, pad_rel=pad_rel)
-        if isinstance(layer, (_l.LayerGroup, _l.LayerWrapper)):
-            self._cb_reordered()
+        self._cb_reordered()
 
     def _cb_inserted_overlay(self, idx: int, layer: _l.Layer):
         _canvas = self._canvas()

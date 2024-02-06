@@ -14,6 +14,7 @@ from whitecanvas.types import (
     ColormapType,
     ColorType,
     Hatch,
+    HistBinType,
     LineStyle,
     Orientation,
     Symbol,
@@ -203,7 +204,7 @@ def errorbars(
 def hist(
     data: ArrayLike1D,
     *,
-    bins: int | ArrayLike1D = 10,
+    bins: HistBinType = "auto",
     range: tuple[float, float] | None = None,
     density: bool = False,
     name: str | None = None,

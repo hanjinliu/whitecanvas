@@ -143,8 +143,8 @@ class _TextLabelNamespace(_TextBoundNamespace):
         text = self.text
         color = self.color
         size = self.size
-        fontfamily = self.family
-        return f"{cname}({text=!r}, {color=!r}, {size=!r}, {fontfamily=!r})"
+        family = self.family
+        return f"{cname}({text=!r}, {color=!r}, {size=!r}, {family=!r})"
 
     @property
     def text(self) -> str:

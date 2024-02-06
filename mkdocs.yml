@@ -24,11 +24,14 @@ nav:
   - Quick Start: quick_start.md
   - Canvas:
     - Overview: canvas/index.md
+    - Basics: canvas/basics.md
     - Namespaces: canvas/namespaces.md
+    - Canvas Grid: canvas/grid.md
     - Working with the Backend Objects: canvas/native_objects.md
   - Layers:
     - Overview: layers/index.md
-    - Line Layers: layers/line_layers.md
+    - Lines: layers/lines.md
+    - Markers: layers/markers.md
     - Face&Edge Layers: layers/face_layers.md
     - Layer Groups: layers/layer_groups.md
   - Categorical Plot:

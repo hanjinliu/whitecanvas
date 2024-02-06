@@ -352,13 +352,16 @@ class CanvasBase(ABC):
         data : tabular data
             Any categorizable data. Currently, dict, pandas.DataFrame, and
             polars.DataFrame are supported.
-
+        x : str, optional
+            Name of the column that will be used for the x-axis. Must be numerical.
+        y : str, optional
+            Name of the column that will be used for the y-axis. Must be numerical.
         update_labels : bool, default True
             If True, update the x/y labels to the corresponding names.
 
         Returns
         -------
-        CategorizedPlot
+        CatPlotter
             Plotter object.
         """
         plotter = _df.CatPlotter(self, data, x, y, update_label=update_labels)
@@ -372,6 +375,26 @@ class CanvasBase(ABC):
         *,
         update_labels: bool = True,
     ) -> _df.XCatPlotter[Self, _DF]:
+        """
+        Categorize input data for plotting with x-axis as a categorical axis.
+
+        Parameters
+        ----------
+        data : tabular data
+            Any categorizable data. Currently, dict, pandas.DataFrame, and
+            polars.DataFrame are supported.
+        x : str or sequence of str, optional
+            Name of the column(s) that will be used for the x-axis. Must be categorical.
+        y : str, optional
+            Name of the column that will be used for the y-axis. Must be numerical.
+        update_labels : bool, default True
+            If True, update the x/y labels to the corresponding names.
+
+        Returns
+        -------
+        XCatPlotter
+            Plotter object.
+        """
         return _df.XCatPlotter(self, data, x, y, update_labels)
 
     def cat_y(
@@ -382,6 +405,26 @@ class CanvasBase(ABC):
         *,
         update_labels: bool = True,
     ) -> _df.YCatPlotter[Self, _DF]:
+        """
+        Categorize input data for plotting with y-axis as a categorical axis.
+
+        Parameters
+        ----------
+        data : tabular data
+            Any categorizable data. Currently, dict, pandas.DataFrame, and
+            polars.DataFrame are supported.
+        x : str, optional
+            Name of the column that will be used for the x-axis. Must be numerical.
+        y : str or sequence of str, optional
+            Name of the column(s) that will be used for the y-axis. Must be categorical.
+        update_labels : bool, default True
+            If True, update the x/y labels to the corresponding names.
+
+        Returns
+        -------
+        YCatPlotter
+            Plotter object
+        """
         return _df.YCatPlotter(self, data, y, x, update_labels)
 
     def cat_xy(
@@ -392,6 +435,26 @@ class CanvasBase(ABC):
         *,
         update_labels: bool = True,
     ) -> _df.XYCatPlotter[Self, _DF]:
+        """
+        Categorize input data for plotting with both axes as categorical.
+
+        Parameters
+        ----------
+        data : tabular data
+            Any categorizable data. Currently, dict, pandas.DataFrame, and
+            polars.DataFrame are supported.
+        x : str or sequence of str, optional
+            Name of the column(s) that will be used for the x-axis. Must be categorical.
+        y : str or sequence of str, optional
+            Name of the column(s) that will be used for the y-axis. Must be categorical.
+        update_labels : bool, default True
+            If True, update the x/y labels to the corresponding names.
+
+        Returns
+        -------
+        XYCatPlotter
+            Plotter object
+        """
         return _df.XYCatPlotter(self, data, x, y, update_labels)
 
     def stack_over(self, layer: _L0) -> StackOverPlotter[Self, _L0]:
@@ -406,11 +469,13 @@ class CanvasBase(ABC):
 
         will result in a bar plot like this
 
+        ```
          ┌───┐
          ├───│┌───┐
          │   │├───│
          ├───│├───│
         ─┴───┴┴───┴─
+        ```
         """
         if not isinstance(layer, (_l.Bars, _l.Band, _lg.StemPlot, _lg.LabeledBars)):
             raise TypeError(
@@ -968,7 +1033,7 @@ class CanvasBase(ABC):
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
         layer = _l.InfCurve(
-            model, bounds=bounds, name=name, color=color, width=width,
+            model, bounds=bounds, name=name, color=color, width=width, alpha=alpha,
             style=style, antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
@@ -979,11 +1044,36 @@ class CanvasBase(ABC):
         *,
         name: str | None = None,
         color: ColorType | None = None,
-        width: float = 1.0,
+        width: float | None = None,
         style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.InfLine:
+        """
+        Add a infinite horizontal line to the canvas.
+
+        Parameters
+        ----------
+        y : float
+            Y coordinate of the line.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
+            Alpha channel of the line.
+        antialias : bool, default True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        InfLine
+            The infline layer.
+        """
         return self.add_infline(
             (0, y), 0, name=name, color=color, width=width, style=style, alpha=alpha,
             antialias=antialias
@@ -995,11 +1085,36 @@ class CanvasBase(ABC):
         *,
         name: str | None = None,
         color: ColorType | None = None,
-        width: float = 1.0,
+        width: float | None = None,
         style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.InfLine:
+        """
+        Add a infinite vertical line to the canvas.
+
+        Parameters
+        ----------
+        x : float
+            X coordinate of the line.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
+            Alpha channel of the line.
+        antialias : bool, default True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        InfLine
+            The infline layer.
+        """
         return self.add_infline(
             (x, 0), 90, name=name, color=color, width=width, style=style, alpha=alpha,
             antialias=antialias,

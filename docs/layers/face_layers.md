@@ -2,7 +2,6 @@
 
 There are several layers that is composed of faces and edges.
 
-- `Markers` ... a layers composed of markers for scatter plots.
 - `Bars` ... a layer composed of bars.
 - `Band` ... a layer composed of a band region (fill-between region).
 - `Spans` ... a layer composed of infinitely long spans.

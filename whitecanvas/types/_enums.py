@@ -166,6 +166,10 @@ class Orientation(_StrEnum):
     def is_vertical(self):
         return self is Orientation.VERTICAL
 
+    @property
+    def is_horizontal(self):
+        return self is Orientation.HORIZONTAL
+
 
 class Origin(_StrEnum):
     """

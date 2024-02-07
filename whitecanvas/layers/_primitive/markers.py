@@ -343,9 +343,9 @@ class Markers(
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            backend=self._backend_name
+            orient=Orientation.HORIZONTAL, backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
+        yerr = Errorbars.empty_v(f"xerr-of-{self.name}", backend=self._backend_name)
         return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_yerr(
@@ -398,9 +398,9 @@ class Markers(
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            backend=self._backend_name
+            orient=Orientation.VERTICAL, backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
+        xerr = Errorbars.empty_h(f"yerr-of-{self.name}", backend=self._backend_name)
         return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_text(
@@ -429,10 +429,11 @@ class Markers(
             *self.data, strings, color=color, size=size, rotation=rotation,
             anchor=anchor, family=fontfamily, backend=self._backend_name,
         )  # fmt: skip
+        old_name = self.name
         return LabeledMarkers(
             self,
-            Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
-            Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),
+            Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name),
+            Errorbars.empty_v(f"yerr-of-{old_name}", backend=self._backend_name),
             texts=texts,
             name=self.name,
         )
@@ -488,12 +489,9 @@ class Markers(
             antialias=antialias, backend=self._backend_name
         )  # fmt: skip
         texts = Texts(
-            nodes[:, 0],
-            nodes[:, 1],
-            [""] * nodes.shape[0],
-            name="texts",
+            nodes[:, 0], nodes[:, 1], [""] * nodes.shape[0], name="texts",
             backend=self._backend_name,
-        )
+        )  # fmt: skip
         return Graph(self, edges_layer, texts, edges, name=self.name)
 
     def with_stem(

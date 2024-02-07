@@ -236,19 +236,19 @@ rng = np.random.default_rng(999)
 x = rng.normal(size=1000)
 y = rng.normal(size=1000)
 
-canvas = hgrid(2, backend="matplotlib")
+grid = hgrid(2, backend="matplotlib")
 (
-    canvas
+    grid
     .add_canvas(0)
     .update_labels(title="no coloring")
     .add_markers(x, y)
 )
 (
-    canvas
+    grid
     .add_canvas(1)
     .update_labels(title="with coloring")
     .add_markers(x, y)
     .color_by_density(cmap="viridis")
 )
-canvas.show()
+grid.show()
 ```

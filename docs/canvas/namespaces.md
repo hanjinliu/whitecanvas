@@ -4,7 +4,7 @@ Each canvas has several namespaces to control the appearance of the canvas. Firs
 all, the x/y-axis properties are controlled by the `x` and `y` namespaces.
 
 ``` python
-#!name: xy_axis_properties
+#!name: namespace_axis
 from whitecanvas import new_canvas
 
 canvas = new_canvas(backend="matplotlib")
@@ -21,7 +21,7 @@ canvas.show()
 You can set x/y labels using the `label` property.
 
 ``` python
-#!name: xy_axis_0
+#!name: namespace_axis_label_0
 from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")
@@ -35,7 +35,7 @@ The `label` property is actually another namespace. You can specify the text, fo
 etc. separately.
 
 ``` python
-#!name: xy_axis_1
+#!name: namespace_axis_label_1
 canvas = new_canvas("matplotlib")
 
 canvas.x.label.text = "X axis"
@@ -50,7 +50,7 @@ canvas.show()
 The tick properties can be set via `ticks` property.
 
 ``` python
-#!name: xy_axis_2
+#!name: namespace_ticks
 from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")
@@ -65,7 +65,7 @@ canvas.show()
 You can also override or reset the tick labels.
 
 ``` python
-#!name: xy_axis_3
+#!name: namespace_xticks_labels
 from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")
@@ -80,7 +80,7 @@ canvas.show()
 Canvas title can be set via the `title` namespace.
 
 ``` python
-#!name: xy_axis_2
+#!name: namespace_title
 from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")

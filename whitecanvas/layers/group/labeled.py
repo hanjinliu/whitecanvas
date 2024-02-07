@@ -153,6 +153,8 @@ class _LabeledLayerBase(LayerContainer):
             color=color, width=width, style=style, antialias=antialias,
             capsize=capsize,
         )  # fmt: skip
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self.xerr, maybe_empty=False)
         return self
 
     def with_yerr(
@@ -184,6 +186,8 @@ class _LabeledLayerBase(LayerContainer):
             color=color, width=width, style=style, antialias=antialias,
             capsize=capsize
         )  # fmt: skip
+        if canvas := self._canvas_ref():
+            canvas._autoscale_for_layer(self.yerr, maybe_empty=False)
         return self
 
     def with_text(
@@ -285,19 +289,14 @@ def _init_error_bars(
 ) -> tuple[Errorbars, Errorbars]:
     ori = Orientation.parse(orient)
     errorbar = Errorbars(
-        x,
-        est - err,
-        est + err,
-        orient=ori,
-        backend=backend,
-        capsize=capsize,
-    )
+        x, est - err, est + err, orient=ori, backend=backend, capsize=capsize,
+    )  # fmt: skip
     if ori.is_vertical:
-        xerr = Errorbars.empty(Orientation.HORIZONTAL, backend=backend)
+        xerr = Errorbars.empty_h(backend=backend)
         yerr = errorbar
     else:
         xerr = errorbar
-        yerr = Errorbars.empty(Orientation.VERTICAL, backend=backend)
+        yerr = Errorbars.empty_v(backend=backend)
     return xerr, yerr
 
 

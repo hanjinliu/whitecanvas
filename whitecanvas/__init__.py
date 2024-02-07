@@ -1,4 +1,4 @@
-__version__ = "0.2.0"
+__version__ = "0.2.1.dev0"
 
 from whitecanvas import theme
 from whitecanvas.canvas import Canvas, CanvasGrid

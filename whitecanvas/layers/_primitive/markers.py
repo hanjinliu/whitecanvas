@@ -30,9 +30,11 @@ from whitecanvas.types import (
     XYData,
     _Void,
 )
-from whitecanvas.utils.normalize import as_array_1d, normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, normalize_xy, parse_texts
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.layers import group as _lg
     from whitecanvas.layers._mixin import (
         ConstEdge,
@@ -196,7 +198,7 @@ class Markers(
         color: ColorType | _Void = _void,
         alpha: float | _Void = _void,
         hatch: str | Hatch | _Void = _void,
-    ) -> Markers[_Face, _Edge, _Size]:
+    ) -> Self:
         """Update the properties of the markers."""
         if symbol is not _void:
             self.symbol = symbol
@@ -215,7 +217,7 @@ class Markers(
         cmap: ColormapType = "jet",
         *,
         width: float = 0.0,
-    ) -> Markers[_Face, _Edge, _Size]:
+    ) -> Self:
         """
         Set the color of the markers by density.
 
@@ -240,7 +242,7 @@ class Markers(
         *,
         width: float = 3.0,
         style: str | LineStyle = LineStyle.SOLID,
-    ) -> Markers[_Face, _Edge, _Size]:
+    ) -> Self:
         """
         Convert the markers to edge-only mode.
 
@@ -266,7 +268,7 @@ class Markers(
         self.face.update(alpha=0.0)
         return self
 
-    def with_hover_text(self, text: Iterable[Any]) -> Markers[_Face, _Edge, _Size]:
+    def with_hover_text(self, text: Iterable[Any]) -> Self:
         """Add hover text to the markers."""
         texts = [str(t) for t in text]
         if len(texts) != self.ndata:
@@ -278,18 +280,22 @@ class Markers(
         return self
 
     def with_hover_template(
-        self, template: str, **kwargs
-    ) -> Markers[_Face, _Edge, _Size]:
+        self,
+        template: str,
+        extra: Any | None = None,
+    ) -> Self:
         """Add hover template to the markers."""
         xs, ys = self.data
-        custom_keys = list(kwargs.keys())
-        custom_values = [kwargs[k] for k in custom_keys]
-        if "x" in custom_keys or "y" in custom_keys or "i" in custom_keys:
-            raise ValueError("x, y and i are reserved formats.")
-        texts = []
-        for i in range(xs.size):
-            others = {k: v[i] for k, v in zip(custom_keys, custom_values)}
-            texts.append(template.format(x=xs[i], y=ys[i], i=i, **others))
+        params = parse_texts(template, xs.size, extra)
+        # set default format keys
+        params.setdefault("x", xs)
+        params.setdefault("y", ys)
+        if "i" not in params:
+            params["i"] = np.arange(xs.size)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(xs.size)
+        ]
         self._backend._plt_set_hover_text(texts)
         return self
 
@@ -405,7 +411,7 @@ class Markers(
 
     def with_text(
         self,
-        strings: list[str],
+        strings: str | list[str],
         *,
         color: ColorType = "black",
         size: float = 12,
@@ -413,6 +419,31 @@ class Markers(
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         fontfamily: str | None = None,
     ) -> _lg.LabeledMarkers:
+        """
+        Add texts at the positions of the data points.
+
+        Parameters
+        ----------
+        strings : str, sequence of str
+            String values to be added. If single str is given, same string will be added
+            to all of the positions.
+        color : ColorType, optional
+            Color of the text string.
+        size : float, default 12
+            Point size of the text.
+        rotation : float, default 0.0
+            Rotation angle of the text in degrees.
+        anchor : str or Alignment, default Alignment.BOTTOM_LEFT
+            Anchor position of the text. The anchor position will be the coordinate
+            given by (x, y).
+        family : str, optional
+            Font family of the text.
+
+        Returns
+        -------
+        LabeledMarkers
+            Layer group containing the markers.
+        """
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import LabeledMarkers
 
@@ -441,6 +472,7 @@ class Markers(
     def with_network(
         self,
         connections: NDArray[np.intp],
+        *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
         style: str | _Void = _void,
@@ -666,6 +698,30 @@ class Markers(
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
         alpha: float = 1.0,
     ) -> Markers[_Face, MultiEdge, _Size]:
+        """
+        Return a markers layer with multi-edge properties.
+
+        This function is used to create a markers layer with multiple edge
+        properties, such as colorful markers.
+
+        >>> markers = canvas.add_markers(x, y).with_edge_multi(color=colors)
+
+        Parameters
+        ----------
+        color : color-like or sequence of color-like, optional
+            Color(s) of the marker faces.
+        width : float or array of float, optional
+            Width(s) of the edges.
+        style : str, LineStyle or sequence of them, optional
+            Line style(s) of the edges.
+        alpha : float or sequence of float, optional
+            Alpha channel(s) of the faces.
+
+        Returns
+        -------
+        Markers
+            The updated markers layer.
+        """
         return super().with_edge_multi(color, width, style, alpha)
 
     def with_size_multi(
@@ -673,16 +729,16 @@ class Markers(
         size: float | Sequence[float],
     ) -> Markers[_Face, _Edge, NDArray[np.float32]]:
         if isinstance(size, (float, int, np.number)):
-            size = np.full(self.ndata, size, dtype=np.float32)
+            _size = np.full(self.ndata, size, dtype=np.float32)
         else:
-            size = as_array_1d(size, dtype=np.float32)
-            if size.size != self.ndata:
+            _size = as_array_1d(size, dtype=np.float32)
+            if _size.size != self.ndata:
                 raise ValueError(
                     "Expected size to have the same size as the data, "
-                    f"got {size.size} and {self.ndata}"
+                    f"got {_size.size} and {self.ndata}"
                 )
         self._size_is_array = True
-        self.size = size
+        self.size = _size
         return self
 
     def _as_all_multi(self) -> Markers[MultiFace, MultiEdge, NDArray[np.float32]]:

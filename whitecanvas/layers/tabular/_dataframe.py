@@ -185,6 +185,19 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         else:
             self.with_size(theme.get_theme().markers.size)
 
+        # set default hover text
+        fmt_list = list[str]()
+        for ikey, (key, value) in enumerate(self._source.iter_items()):
+            if not key:
+                continue
+            if ikey > 6:
+                break
+            if value.dtype.kind == "f":
+                fmt_list.append(f"{key}: {{{key}:.4g}}")
+            else:
+                fmt_list.append(f"{key}: {{{key}!r}}")
+        self.with_hover_template("\n".join(fmt_list))
+
     @overload
     def with_color(self, value: ColorType) -> Self:
         ...
@@ -361,6 +374,11 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         """
         for layer in self.base.iter_children():
             layer.as_edge_only(width=width, style=style)
+        return self
+
+    def with_hover_template(self, template: str) -> Self:
+        extra = dict(self._source.iter_items())
+        self.base.with_hover_template(template, extra=extra)
         return self
 
 

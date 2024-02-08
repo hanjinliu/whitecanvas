@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import sys
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Generic, Iterator, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
+
+from whitecanvas.utils.type_check import is_pandas_dataframe, is_polars_dataframe
 
 if TYPE_CHECKING:
     import pandas as pd  # noqa: F401
@@ -281,35 +282,9 @@ def parse(data: Any) -> DataFrameWrapper:
             if len({v.size for v in df.values()}) > 1:
                 raise ValueError("All columns must have the same length")
         return DictWrapper(df)
-    elif _is_pandas_dataframe(data):
+    elif is_pandas_dataframe(data):
         return PandasWrapper(data)
-    elif _is_polars_dataframe(data):
+    elif is_polars_dataframe(data):
         return PolarsWrapper(data)
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")
-
-
-def _is_pandas_dataframe(df) -> bool:
-    typ = type(df)
-    if (
-        typ.__name__ != "DataFrame"
-        or "pandas" not in sys.modules
-        or typ.__module__.split(".")[0] != "pandas"
-    ):
-        return False
-    import pandas as pd
-
-    return isinstance(df, pd.DataFrame)
-
-
-def _is_polars_dataframe(df) -> bool:
-    typ = type(df)
-    if (
-        typ.__name__ != "DataFrame"
-        or "polars" not in sys.modules
-        or typ.__module__.split(".")[0] != "polars"
-    ):
-        return False
-    import polars as pl
-
-    return isinstance(df, pl.DataFrame)

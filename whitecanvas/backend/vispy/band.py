@@ -91,7 +91,7 @@ class VispyBand(visuals.Compound):
 
     @border_width.setter
     def border_width(self, width: float):
-        self._border.set_data(self._pos, color=self._border_color, width=width)
+        self._border_width = width
         self._update()
 
 

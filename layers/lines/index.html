@@ -559,6 +559,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errorbars" class="md-nav__link">
+    <span class="md-ellipsis">
+      Errorbars
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rug" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rug
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1027,6 +1045,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errorbars" class="md-nav__link">
+    <span class="md-ellipsis">
+      Errorbars
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rug" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rug
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1140,6 +1176,33 @@ layer.</p>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/infcurve_layer.png" width="360px" /></p>
+<h2 id="errorbars">Errorbars</h2>
+<p><code>Errorbars</code> is a layer that represents error bars with caps. It can be created by the
+<a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas.CanvasBase.add_errorbars"><code>add_errorbars</code></a> method, but if you intend
+to add error bars to an existing layer with x/y data, try using the <code>with_xerr</code> and
+<code>with_yerr</code> methods of the layer to <a href="../layer_groups/">group layers</a>.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="n">ylow</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+<span class="n">yhigh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_errorbars</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ylow</span><span class="p">,</span> <span class="n">yhigh</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;crimson&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/errorbars_layer.png" width="360px" /></p>
+<h2 id="rug">Rug</h2>
+<p><code>Rug</code> is a layer that represents rug plot (or event plot). It can be created by the
+<a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas.CanvasBase.add_rug"><code>add_rug</code></a> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_rug</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/rug_layer.png" width="360px" /></p>
 
 
 

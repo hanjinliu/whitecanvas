@@ -575,9 +575,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#multi-faces-and-multi-edges" class="md-nav__link">
+  <a href="#multi-face-and-multi-edge" class="md-nav__link">
     <span class="md-ellipsis">
-      Multi-faces and Multi-edges
+      Multi-face and Multi-edge
     </span>
   </a>
   
@@ -983,9 +983,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#multi-faces-and-multi-edges" class="md-nav__link">
+  <a href="#multi-face-and-multi-edge" class="md-nav__link">
     <span class="md-ellipsis">
-      Multi-faces and Multi-edges
+      Multi-face and Multi-edge
     </span>
   </a>
   
@@ -1040,42 +1040,54 @@
 arguments. You can use the <code>with_edge</code> method of the output layer to set edge
 properties. This separation is very helpful to prevent the confusion of the arguments,
 especially the colors.</p>
+<p>Following example uses <a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas.CanvasBase.add_bars"><code>add_bars</code></a> and
+<a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas.CanvasBase.add_spans"><code>add_spans</code></a> methods to create <code>Bars</code> and
+<code>Spans</code> layers.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
-<span class="n">layer</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;yellow&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">with_edge</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="n">bars_layer</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_bars</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;yellow&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_edge</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">spans_layer</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_spans</span><span class="p">([[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.4</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.8</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_edge</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">lim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/face_layers_with_edge.png" width="360px" /></p>
 <p>All the properties can be set via properties of <code>face</code> and <code>edge</code>, or the <code>update</code>
 method.</p>
-<div class="highlight"><pre><span></span><code><span class="n">layer</span><span class="o">.</span><span class="n">face</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;yellow&quot;</span>
-<span class="n">layer</span><span class="o">.</span><span class="n">face</span><span class="o">.</span><span class="n">hatch</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="ch">#!skip</span>
+<span class="n">bars_layer</span><span class="o">.</span><span class="n">face</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;yellow&quot;</span>
+<span class="n">bars_layer</span><span class="o">.</span><span class="n">face</span><span class="o">.</span><span class="n">hatch</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
 
-<span class="n">layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
-<span class="n">layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="n">layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s2">&quot;--&quot;</span>
+<span class="n">spans_layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+<span class="n">spans_layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">spans_layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s2">&quot;--&quot;</span>
 
 <span class="c1"># use `update`</span>
-<span class="n">layer</span><span class="o">.</span><span class="n">face</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
-<span class="n">layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+<span class="n">bars_layer</span><span class="o">.</span><span class="n">face</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">spans_layer</span><span class="o">.</span><span class="n">edge</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="multi-faces-and-multi-edges">Multi-faces and Multi-edges</h2>
-<p><code>Markers</code> and <code>Bars</code> supports multi-faces and multi-edges. This means that you can
-create a layer with multiple colors, widths, etc.</p>
-<p>To do this, you have to call <code>with_face_multi</code> or <code>with_edge_multi</code> method.
-Here's an example of <code>Markers</code> with multi-faces.</p>
+<h2 id="multi-face-and-multi-edge">Multi-face and Multi-edge</h2>
+<p>As for <a href="../markers/"><code>Markers</code></a>, <code>Bars</code> and <code>Spans</code> supports multi-face and multi-edge.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
-<span class="n">layer</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
-<span class="p">)</span><span class="o">.</span><span class="n">with_face_multi</span><span class="p">(</span>
-    <span class="n">color</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>  <span class="c1"># random colors</span>
+<span class="n">layer</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_bars</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">with_face_multi</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;#00FF00&quot;</span><span class="p">,</span> <span class="s2">&quot;rgb(0, 0, 255)&quot;</span><span class="p">,</span> <span class="s2">&quot;black&quot;</span><span class="p">])</span>
 <span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>

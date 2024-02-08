@@ -559,6 +559,17 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Layer Groups
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -568,6 +579,100 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#layer-groups-with-lines" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layer Groups with Lines
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Groups with Lines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-markers-andor-error-bars" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add markers and/or error bars
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add bands
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-groups-with-markers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layer Groups with Markers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Groups with Markers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#markers-with-error-bars" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers with error bars
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markers-as-stems" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers as stems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markers-as-a-graph-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers as a graph network
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -937,6 +1042,89 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#layer-groups-with-lines" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layer Groups with Lines
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Groups with Lines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-markers-andor-error-bars" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add markers and/or error bars
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add bands
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-groups-with-markers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layer Groups with Markers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Groups with Markers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#markers-with-error-bars" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers with error bars
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markers-as-stems" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers as stems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markers-as-a-graph-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers as a graph network
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -966,36 +1154,160 @@ several built-in layer groups.</p>
 <li><code>Stem</code> = <code>Markers</code> + <code>MultiLine</code></li>
 <li><code>Graph</code> = <code>Markers</code> + <code>MultiLine</code> + <code>Texts</code></li>
 </ul>
-<p>These layer groups can be derived from primitive layers. For example, in the following
-code, markers are added to the line at the node positions, resulting in a <code>Plot</code> layer.</p>
+<p>These layer groups can be derived from primitive layers. It's very important to note
+that this layer-grouping architecture makes complex plots to have consistent argument
+with the individual plot elements.</p>
+<h2 id="layer-groups-with-lines">Layer Groups with Lines</h2>
+<p>In this section, we will introduce layer groups that are derived from the <code>Line</code> layer.</p>
+<h3 id="add-markers-andor-error-bars">Add markers and/or error bars</h3>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
-<span class="n">canvas</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+<span class="n">layer</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;myplot&quot;</span><span class="p">,</span>
 <span class="p">)</span><span class="o">.</span><span class="n">with_markers</span><span class="p">(</span>
     <span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span>
 <span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/layer_groups_line_markers.png" width="360px" /></p>
+<p>The <code>with_markers</code> method returns a <code>Plot</code> layer, which has <code>Line</code> and <code>Markers</code> as its
+children. Therefore, at the very least, any customization can be done on the children.</p>
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>  <span class="c1"># Plot&lt;&#39;myplot&#39;&gt;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">line</span><span class="p">)</span>  <span class="c1"># Line&lt;&#39;line-of-myplot&#39;&gt;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">markers</span><span class="p">)</span>  <span class="c1"># Markers&lt;&#39;markers-of-myplot&#39;&gt;</span>
+</code></pre></div>
+<p>Once the layer is grouped, layer group instead of the child layers are in the layer
+list.</p>
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">canvas</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>  <span class="c1"># LayerList([Plot&lt;&#39;myplot&#39;&gt;])</span>
+</code></pre></div>
 <p>The <code>Plot</code> layer can be further converted into a <code>LabeledPlot</code> layer by adding error
-bars using <code>with_yerr</code> method.</p>
+bars using <code>with_xerr</code> and/or <code>with_yerr</code> method.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
-<span class="n">canvas</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-<span class="p">)</span><span class="o">.</span><span class="n">with_markers</span><span class="p">(</span>
-    <span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span>
-<span class="p">)</span><span class="o">.</span><span class="n">with_yerr</span><span class="p">(</span>
-    <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_markers</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_yerr</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">with_xerr</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/layer_groups_line_markers_yerr.png" width="360px" /></p>
+<h3 id="add-bands">Add bands</h3>
+<p><a href="../face_layers/"><code>Band</code></a> may be used for different purposes.</p>
+<ol>
+<li>To fill the area of confidence interval.</li>
+<li>To fill the area between the line and the x- or y-axis.</li>
+</ol>
+<p>Both cases can be achieved using the <code>Line</code> methods.</p>
+<p>To fill the area that represents the errors, such as confidence interval and standard
+deviation, use the <code>with_xband</code> or <code>with_yband</code> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="c1"># one array for the same size of lower and upper bounds</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_yband</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+<span class="p">)</span>
+<span class="c1"># two arrays for different sizes of lower and upper bounds</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_yband</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
+<span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_line_yband.png" width="360px" /></p>
+<p>To fill the area between the line and the axis, use the <code>with_xfill</code> or <code>with_yfill</code>
+respectively.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_xfill</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_yfill</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_line_xfill.png" width="360px" /></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code>with_xfill</code> fill the area between the line and the <strong>y</strong>-axis. This is because the
+orientation of the filling is in the direction of the y-axis, consistent with the
+methods such as <code>with_xband</code> and <code>with_xerr</code>.</p>
+</div>
+<h2 id="layer-groups-with-markers">Layer Groups with Markers</h2>
+<h3 id="markers-with-error-bars">Markers with error bars</h3>
+<p><a href="#add-markers-andor-error-bars">Similar to the <code>Line</code> layer</a>, the <code>Markers</code> layer can
+also be grouped with the <code>Errorbar</code> layer.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_markers</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_xerr</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_yerr</span><span class="p">([</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_markers_errorbars.png" width="360px" /></p>
+<h3 id="markers-as-stems">Markers as stems</h3>
+<p>The <code>Stem</code> layer is a layer group of <code>Markers</code> and <code>MultiLine</code>. It can be created using
+the <code>with_stem</code> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">with_stem</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_markers_stem.png" width="360px" /></p>
+<h3 id="markers-as-a-graph-network">Markers as a graph network</h3>
+<p>A network graph is a collection of nodes and edges. The <code>Graph</code> layer is a layer group
+that can created using the <code>with_network</code> method of <code>Markers</code>. It uses the list of
+index pairs to connect markers.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="n">nodes</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">]]</span>
+<span class="n">connections</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span>
+
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;skyblue&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_edge</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_network</span><span class="p">(</span><span class="n">connections</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_text</span><span class="p">([</span><span class="s2">&quot;i=0&quot;</span><span class="p">,</span> <span class="s2">&quot;i=1&quot;</span><span class="p">,</span> <span class="s2">&quot;i=2&quot;</span><span class="p">,</span> <span class="s2">&quot;i=3&quot;</span><span class="p">,</span> <span class="s2">&quot;i=4&quot;</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_markers_graph.png" width="360px" /></p>
 
 
 

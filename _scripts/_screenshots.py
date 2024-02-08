@@ -27,7 +27,10 @@ def _write_image(src: str, ns: dict, dest: str) -> None:
             f"Error evaluating code\n\n{src}\n\nfor {dest!r}"
         ) from e
 
-    canvas = ns["canvas"]
+    if isinstance(ns.get("grid", None), CanvasGrid):
+        canvas = ns["grid"]
+    else:
+        canvas = ns["canvas"]
     assert isinstance(canvas, (CanvasGrid, SingleCanvas)), type(canvas)
     with mkdocs_gen_files.open(dest, "wb") as f:
         plt.tight_layout()
@@ -43,6 +46,7 @@ def main() -> None:
         theme.canvas_size = (800, 560)
         theme.font.size = 18
     plt.switch_backend("Agg")
+    names_found = set[str]()
     for mdfile in sorted(DOCS.rglob("*.md"), reverse=True):
         if mdfile.name in EXCLUDE:
             continue
@@ -55,15 +59,18 @@ def main() -> None:
             if code.startswith("#!skip"):
                 continue
             elif code.startswith("#!name:"):
-                if code.endswith("canvas.show()"):
+                if code.endswith(("canvas.show()", "grid.show()")):
                     code = code[:-7]
                 line = code.split("\n", 1)[0]
                 assert line.startswith("#!name:")
                 name = line.split(":", 1)[1].strip()
+                if name in names_found:
+                    raise ValueError(f"Duplicate name {name!r} in {mdfile}")
                 dest = f"_images/{name}.png"
                 _write_image(code, namespace, dest)
+                names_found.add(name)
             else:
-                if code.endswith("canvas.show()"):
+                if code.endswith(("canvas.show()", "grid.show()")):
                     code = code[:-7]
                 try:
                     exec(code, namespace, namespace)

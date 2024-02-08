@@ -12,6 +12,7 @@ from whitecanvas.layers._base import DataBoundLayer, LayerEvents
 from whitecanvas.protocols import ImageProtocol
 from whitecanvas.types import ArrayLike1D, ColormapType, HistBinType, Origin, _Void
 from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.utils.type_check import is_real_number
 
 _void = _Void()
 
@@ -170,7 +171,7 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
 
     @scale.setter
     def scale(self, scale: float | tuple[float, float]):
-        if isinstance(scale, (int, float, np.number)):
+        if is_real_number(scale):
             scale = float(scale), float(scale)
         dx, dy = scale
         if dx <= 0 or dy <= 0:

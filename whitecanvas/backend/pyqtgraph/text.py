@@ -19,6 +19,7 @@ from whitecanvas.backend.pyqtgraph._qt_utils import (
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(TextProtocol)
@@ -32,7 +33,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
 
     if TYPE_CHECKING:
 
-        def childItems(self) -> list[SingleText]:  # noqa: N802
+        def childItems(self) -> list[SingleText]:
             ...
 
     ##### TextProtocol #####
@@ -59,7 +60,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
         return [t._plt_get_text_size() for t in self.childItems()]
 
     def _plt_set_text_size(self, size: float | NDArray[np.floating]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(self._plt_get_ndata(), size)
         for t, size0 in zip(self.childItems(), size):
             t._plt_set_text_size(size0)
@@ -90,7 +91,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
         return [t.angle for t in self.childItems()]
 
     def _plt_set_text_rotation(self, rotation: float):
-        if isinstance(rotation, (int, float, np.number)):
+        if is_real_number(rotation):
             rotation = np.full(self._plt_get_ndata(), rotation)
         for t, rotation0 in zip(self.childItems(), rotation):
             t.setAngle(rotation0)
@@ -150,7 +151,7 @@ class Texts(pg.ItemGroup, PyQtLayer):
         )
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             width = np.full(self._plt_get_ndata(), width)
         for t, width0 in zip(self.childItems(), width):
             pen = t._get_pen()

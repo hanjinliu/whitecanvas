@@ -29,6 +29,7 @@ from whitecanvas.utils.normalize import (
     as_color_array,
     normalize_xy,
 )
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -66,7 +67,7 @@ class LineMixin(PrimitiveLayer[_Line]):
 
     @width.setter
     def width(self, width: float):
-        if not isinstance(width, (int, float, np.number)):
+        if not is_real_number(width):
             raise TypeError(f"Width must be a number, got {type(width)}")
         if width < 0:
             raise ValueError(f"Width must be non-negative, got {width!r}")

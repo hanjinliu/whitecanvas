@@ -9,6 +9,7 @@ from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(TextProtocol)
@@ -66,9 +67,11 @@ class Texts(Artist, MplLayer):
         )
 
     def _plt_set_text_size(self, size: float | NDArray[np.float32]):
-        if isinstance(size, (int, float, np.number)):
-            size = np.full(len(self.get_children()), size, dtype=np.float32)
-        for child, size0 in zip(self.get_children(), size):
+        if is_real_number(size):
+            _size = np.full(len(self.get_children()), size, dtype=np.float32)
+        else:
+            _size = size
+        for child, size0 in zip(self.get_children(), _size):
             child.set_fontsize(size0)
 
     def _plt_get_text_position(self) -> tuple[NDArray[np.float32], NDArray[np.float32]]:
@@ -202,7 +205,7 @@ class Texts(Artist, MplLayer):
         return np.array(out, dtype=np.float32)
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             width = np.full(len(self.get_children()), width, dtype=np.float32)
         for child, width0 in zip(self.get_children(), width):
             self._set_bbox_props(child, linewidth=width0)

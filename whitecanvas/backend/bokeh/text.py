@@ -14,6 +14,7 @@ from whitecanvas.backend.bokeh._base import (
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.types import Alignment, Hatch, LineStyle
 from whitecanvas.utils.normalize import arr_color, as_color_array, hex_color
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(TextProtocol)
@@ -91,7 +92,7 @@ class Texts(BokehLayer[bk_models.Text]):
         )
 
     def _plt_set_text_size(self, size: float):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(len(self._data.data["text"]), size)
         self._data.data["text_font_size"] = [f"{round(s, 1)}pt" for s in size]
 
@@ -117,7 +118,7 @@ class Texts(BokehLayer[bk_models.Text]):
         return np.array(self._data.data["angle"], dtype=np.float32)
 
     def _plt_set_text_rotation(self, rotation: float | NDArray[np.floating]):
-        if isinstance(rotation, (int, float, np.number)):
+        if is_real_number(rotation):
             rotation = np.full(len(self._data.data["text"]), rotation)
         self._data.data["angle"] = rotation
 
@@ -162,7 +163,7 @@ class Texts(BokehLayer[bk_models.Text]):
         return np.array(self._data.data["border_line_width"], dtype=np.float32)
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             width = np.full(len(self._data.data["text"]), width)
         self._data.data["border_line_width"] = width
 

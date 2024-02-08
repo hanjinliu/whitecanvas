@@ -17,7 +17,7 @@ def is_not_array(x) -> bool:
     return np.isscalar(x) or isinstance(x, Enum)
 
 
-def is_real_number(x) -> bool:
+def is_real_number(x) -> TypeGuard[float]:
     return isinstance(x, (int, float, Real, np.number))
 
 

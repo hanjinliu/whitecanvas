@@ -9,6 +9,7 @@ from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_not_array
 
 
 @check_protocol(BarProtocol)
@@ -99,7 +100,7 @@ class Bars(BarContainer, MplLayer):
         return np.array([patch.get_linewidth() for patch in self.patches])
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if isinstance(width, (int, float, np.number)):
+        if is_not_array(width):
             _width = [width] * len(self.patches)
         else:
             _width = width

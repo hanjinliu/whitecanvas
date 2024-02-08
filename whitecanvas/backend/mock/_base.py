@@ -5,8 +5,9 @@ from typing import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.types import Hatch, LineStyle, Orientation
+from whitecanvas.types import Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 class BaseMockLayer:
@@ -133,7 +134,7 @@ class MockHasMultiEdges:
         return self._edge_width
 
     def _plt_set_edge_width(self, width: float | Sequence[float]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             width = np.full(self._plt_get_ndata(), width, dtype=np.float32)
         else:
             width = np.asarray(width)

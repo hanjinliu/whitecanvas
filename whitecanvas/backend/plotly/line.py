@@ -13,6 +13,7 @@ from whitecanvas.backend.plotly._base import (
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 from whitecanvas.utils.normalize import arr_color, rgba_str_color
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(LineProtocol)
@@ -112,7 +113,7 @@ class MultiLine(PlotlyLayer):
         return np.full(len(self._data), width, dtype=np.float32)
 
     def _plt_set_edge_width(self, width):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             w = width
         else:
             candidates = np.unique(width)

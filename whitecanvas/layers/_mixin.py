@@ -30,6 +30,7 @@ from whitecanvas.types import (
     _Void,
 )
 from whitecanvas.utils.normalize import arr_color, as_any_1d_array, as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -470,7 +471,7 @@ class MultiEdge(EdgeNamespace):
 
     @width.setter
     def width(self, width: float | Iterable[float]):
-        if not isinstance(width, (int, float, np.number)):
+        if not is_real_number(width):
             width = np.asarray(width, dtype=np.float32)
             if width.shape != (self._layer.ndata,):
                 raise ValueError(

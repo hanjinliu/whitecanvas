@@ -18,6 +18,7 @@ from whitecanvas.backend.pyqtgraph._qt_utils import (
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(MarkersProtocol)
@@ -76,7 +77,7 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
         return self.data["size"]
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(len(self.data["x"]), size)
         self.setSize(size)
 
@@ -132,7 +133,7 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
         return np.array([pen.widthF() for pen in self._get_pen()], dtype=np.float32)
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             width = np.full(len(self.data["x"]), width)
         pens = self._get_pen()
         for pen, w in zip(pens, width):

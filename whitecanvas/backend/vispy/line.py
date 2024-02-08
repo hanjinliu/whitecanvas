@@ -7,6 +7,7 @@ from vispy.scene import visuals
 from whitecanvas.backend import _not_implemented
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.utils.normalize import as_array_1d, as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(LineProtocol)
@@ -101,7 +102,7 @@ class MultiLine(visuals.Compound):
         return np.array([line.width for line in self._lines], dtype=np.float32)
 
     def _plt_set_edge_width(self, width):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             for item in self._lines:
                 item.set_data(width=width)
         else:

@@ -8,6 +8,7 @@ from whitecanvas.backend import _not_implemented
 from whitecanvas.protocols import TextProtocol, check_protocol
 from whitecanvas.types import Alignment, LineStyle
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(TextProtocol)
@@ -54,7 +55,7 @@ class Texts(visuals.Compound):
         return [t.font_size for t in self.subvisuals]
 
     def _plt_set_text_size(self, size: float | NDArray[np.floating]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(self._plt_get_ndata(), size)
         for t, size0 in zip(self.subvisuals, size):
             t.font_size = size0
@@ -86,7 +87,7 @@ class Texts(visuals.Compound):
         return np.array([t.rotation[0] for t in self.subvisuals])
 
     def _plt_set_text_rotation(self, rotation: float | NDArray[np.floating]):
-        if isinstance(rotation, (int, float, np.number)):
+        if is_real_number(rotation):
             rotation = np.full(self._plt_get_ndata(), rotation)
         for t, rotation0 in zip(self.subvisuals, rotation):
             t.rotation = rotation0

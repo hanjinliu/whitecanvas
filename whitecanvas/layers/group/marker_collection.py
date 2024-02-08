@@ -35,6 +35,7 @@ from whitecanvas.utils.normalize import (
     as_color_array,
     parse_texts,
 )
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -170,7 +171,7 @@ class MarkerCollectionEdge(EdgeNamespace):
 
     @width.setter
     def width(self, width: float | Iterable[float]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             for _, layer in self._iter_markers():
                 layer.edge.width = width
             self.events.width.emit(width)
@@ -347,7 +348,7 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
 
     @size.setter
     def size(self, size: float | Iterable[float]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             for i, layer in enumerate(self):
                 sl = self._slices[i]
                 layer.size = size

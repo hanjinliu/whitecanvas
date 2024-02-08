@@ -14,6 +14,7 @@ from whitecanvas.backend.mock._base import (
 )
 from whitecanvas.types import Alignment, Orientation, Symbol
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @protocols.check_protocol(protocols.BandProtocol)
@@ -147,7 +148,7 @@ class Markers(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
         return self._size
 
     def _plt_set_symbol_size(self, size):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(self._size.shape, size, dtype=np.float32)
         self._size = size
 
@@ -189,7 +190,7 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
         return self._fontsize
 
     def _plt_set_text_size(self, size):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(self._fontsize.shape, size, dtype=np.float32)
         self._fontsize = size
 
@@ -211,7 +212,7 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
         return self._rotation
 
     def _plt_set_text_rotation(self, rotation):
-        if isinstance(rotation, (int, float, np.number)):
+        if is_real_number(rotation):
             rotation = np.full(self._rotation.shape, rotation, dtype=np.float32)
         self._rotation = rotation
 

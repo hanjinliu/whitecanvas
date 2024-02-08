@@ -15,6 +15,7 @@ from whitecanvas.backend.pyqtgraph._qt_utils import (
 )
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(LineProtocol)
@@ -131,7 +132,7 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
         return np.array([pen.widthF() for pen in self._qpens], dtype=np.float32)
 
     def _plt_set_edge_width(self, width: float | NDArray[np.float32]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             widths: list[float] = [width] * len(self._qpens)
         else:
             widths = width

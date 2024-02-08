@@ -53,6 +53,7 @@ from whitecanvas.types import (
     _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec, Self
@@ -216,7 +217,7 @@ class CanvasBase(ABC):
             ymax = y1
         if xpad is not None:
             xrange = xmax - xmin
-            if isinstance(xpad, (int, float, np.number)):
+            if is_real_number(xpad):
                 dx0 = dx1 = xpad * xrange
             else:
                 dx0, dx1 = xpad[0] * xrange, xpad[1] * xrange
@@ -224,7 +225,7 @@ class CanvasBase(ABC):
             xmax += dx1
         if ypad is not None:
             yrange = ymax - ymin
-            if isinstance(ypad, (int, float, np.number)):
+            if is_real_number(ypad):
                 dy0 = dy1 = ypad * yrange
             else:
                 dy0, dy1 = ypad[0] * yrange, ypad[1] * yrange
@@ -1410,11 +1411,7 @@ class CanvasBase(ABC):
         Texts
             The text layer.
         """
-        if (
-            isinstance(x, (int, float, np.number))
-            and isinstance(y, (int, float, np.number))
-            and isinstance(string, str)
-        ):
+        if is_real_number(x) and is_real_number(y) and isinstance(string, str):
             x, y, string = [x], [y], [string]
         x_, y_ = normalize_xy(x, y)
         if isinstance(string, str):

@@ -12,6 +12,7 @@ from whitecanvas.backend.bokeh._base import (
 )
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(MarkersProtocol)
@@ -63,7 +64,7 @@ class Markers(HeteroLayer[bk_models.Scatter]):
         return self._data.data["sizes"] * 2
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(self._plt_get_ndata(), size)
         self._data.data["sizes"] = size / 2
 

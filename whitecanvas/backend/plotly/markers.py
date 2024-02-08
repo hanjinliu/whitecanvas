@@ -12,6 +12,7 @@ from whitecanvas.backend.plotly._base import (
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol
 from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_color
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(MarkersProtocol)
@@ -69,7 +70,7 @@ class Markers(PlotlyLayer):
         return np.asarray(self._props["marker"]["size"])
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(self._plt_get_ndata(), size)
         self._props["marker"]["size"] = size
 
@@ -77,7 +78,7 @@ class Markers(PlotlyLayer):
         return np.asarray(self._props["marker"]["line"]["width"])
 
     def _plt_set_edge_width(self, width: float):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             width = np.full(self._plt_get_ndata(), width)
         self._props["marker"]["line"]["width"] = width
 

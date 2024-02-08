@@ -10,6 +10,7 @@ from whitecanvas.backend import _not_implemented
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Symbol
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(MarkersProtocol)
@@ -73,7 +74,7 @@ class Markers(visuals.Markers):
         return self._data["a_size"]
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(self._plt_get_ndata(), size)
         self.set_data(
             pos=self._data["a_position"],

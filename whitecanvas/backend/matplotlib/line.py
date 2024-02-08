@@ -9,6 +9,7 @@ from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(LineProtocol)
@@ -76,8 +77,8 @@ class MultiLine(LineCollection, MplLayer):
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
         return self.get_linewidth()
 
-    def _plt_set_edge_width(self, width: float):
-        if isinstance(width, (int, float, np.number)):
+    def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
+        if is_real_number(width):
             width = np.full(self._ndata, width)
         else:
             width = np.asarray(width)

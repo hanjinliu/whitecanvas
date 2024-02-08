@@ -10,6 +10,7 @@ from whitecanvas.layers._primitive import Line
 from whitecanvas.layers.group._collections import LayerCollectionBase
 from whitecanvas.types import LineStyle, XYData
 from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 
 class LineCollection(LayerCollectionBase[Line]):
@@ -49,7 +50,7 @@ class LineCollection(LayerCollectionBase[Line]):
 
     @width.setter
     def width(self, width: float | Sequence[float]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             _width = [width] * len(self)
         else:
             _width = np.asarray(width, dtype=np.float32)

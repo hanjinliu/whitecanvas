@@ -16,6 +16,7 @@ from whitecanvas.backend.matplotlib._base import MplLayer
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.utils.normalize import as_color_array
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from matplotlib.backend_bases import MouseEvent as mplMouseEvent
@@ -68,7 +69,7 @@ class Markers(PathCollection, MplLayer):
         return np.sqrt(self.get_sizes())
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
-        if isinstance(size, (int, float, np.number)):
+        if is_real_number(size):
             size = np.full(len(self.get_offsets()), size)
         self.set_sizes(size**2)
 
@@ -122,7 +123,7 @@ class Markers(PathCollection, MplLayer):
         return self.get_linewidth()
 
     def _plt_set_edge_width(self, width: float | NDArray[np.floating]):
-        if isinstance(width, (int, float, np.number)):
+        if is_real_number(width):
             width = np.full(len(self.get_offsets()), width)
         self.set_linewidth(width)
 

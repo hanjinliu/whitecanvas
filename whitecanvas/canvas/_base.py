@@ -64,6 +64,13 @@ _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
 _void = _Void()
 
+_ATTACH_TO_AXIS = (
+    _l.Bars,
+    _lg.Histogram,
+    _lg.Kde,
+    _lg.StemPlot,
+)
+
 
 class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
@@ -112,7 +119,7 @@ class CanvasBase(ABC):
         self.layers.events.reordered.connect(self._cb_reordered, unique=True)
         self.layers.events.connect(self._draw_canvas, unique=True)
 
-        self.overlays.events.inserted.connect(self._cb_inserted_overlay, unique=True)
+        self.overlays.events.inserted.connect(self._cb_overlay_inserted, unique=True)
         self.overlays.events.removed.connect(self._cb_removed, unique=True)
         self.overlays.events.connect(self._draw_canvas, unique=True)
 
@@ -1247,9 +1254,11 @@ class CanvasBase(ABC):
 
         >>> canvas.add_rug([2, 4, 5, 8, 11])
 
+        ```
           │ ││  │   │
         ──┴─┴┴──┴───┴──> x
           2 45  8   11
+        ```
 
         Parameters
         ----------
@@ -1593,12 +1602,19 @@ class CanvasBase(ABC):
             i += 1
         return name
 
-    def _autoscale_for_layer(self, layer: _l.Layer, pad_rel: float = 0.025):
+    def _autoscale_for_layer(
+        self,
+        layer: _l.Layer,
+        pad_rel: float | None = None,
+        maybe_empty: bool = True,
+    ):
         """This function will be called when a layer is inserted to the canvas."""
+        if pad_rel is None:
+            pad_rel = 0 if isinstance(layer, _l.Image) else 0.025
         if not self._autoscale_enabled:
             return
         xmin, xmax, ymin, ymax = layer.bbox_hint()
-        if len(self.layers) > 1:
+        if len(self.layers) > 1 or not maybe_empty:
             # NOTE: if there was no layer, so backend may not have xlim/ylim,
             # or they may be set to a default value.
             _xmin, _xmax = self.x.lim
@@ -1619,7 +1635,12 @@ class CanvasBase(ABC):
             xmax += 0.05
         else:
             dx = (xmax - xmin) * pad_rel
-            xmin -= dx
+            if (
+                xmin != 0
+                or not isinstance(layer, _ATTACH_TO_AXIS)
+                or layer.orient.is_vertical
+            ):
+                xmin -= dx
             xmax += dx
         if np.isnan(ymax) or np.isnan(ymin):
             ymin, ymax = self.y.lim
@@ -1628,8 +1649,13 @@ class CanvasBase(ABC):
             ymax += 0.05
         else:
             dy = (ymax - ymin) * pad_rel
-            ymin -= dy  # TODO: this causes bars/histogram to float
-            ymax += dy  #       over the x-axis.
+            if (
+                ymin != 0
+                or not isinstance(layer, _ATTACH_TO_AXIS)
+                or layer.orient.is_horizontal
+            ):
+                ymin -= dy
+            ymax += dy
         self.lims = xmin, xmax, ymin, ymax
 
     def _cb_inserted(self, idx: int, layer: _l.Layer):
@@ -1647,14 +1673,10 @@ class CanvasBase(ABC):
             # TODO: check if connecting LayerGroup is necessary
             layer._connect_canvas(self)
         # autoscale
-        if isinstance(layer, _l.Image):
-            pad_rel = 0
-        else:
-            pad_rel = 0.025
-        self._autoscale_for_layer(layer, pad_rel=pad_rel)
+        self._autoscale_for_layer(layer)
         self._cb_reordered()
 
-    def _cb_inserted_overlay(self, idx: int, layer: _l.Layer):
+    def _cb_overlay_inserted(self, idx: int, layer: _l.Layer):
         _canvas = self._canvas()
         fn = self._get_backend().get("as_overlay")
         for l in _iter_layers(layer):

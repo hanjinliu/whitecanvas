@@ -29,6 +29,10 @@ arguments. You can use the `with_edge` method of the output layer to set edge
 properties. This separation is very helpful to prevent the confusion of the arguments,
 especially the colors.
 
+Following example uses [`add_bars`][whitecanvas.canvas.CanvasBase.add_bars] and
+[`add_spans`][whitecanvas.canvas.CanvasBase.add_spans] methods to create `Bars` and
+`Spans` layers.
+
 ``` python
 #!name: face_layers_with_edge
 import numpy as np
@@ -36,7 +40,18 @@ from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")
 
-layer = canvas.add_markers(np.arange(10), color="yellow").with_edge(color="black")
+bars_layer = (
+    canvas
+    .add_bars([0, 1, 2, 3], [3, 4, 1, 2], color="yellow")
+    .with_edge(color="black")
+)
+
+spans_layer = (
+    canvas
+    .add_spans([[0.2, 0.8], [1.4, 2.1], [1.8, 3.0]], color="blue")
+    .with_edge(color="black")
+)
+canvas.y.lim = (0, 5)
 canvas.show()
 ```
 
@@ -44,25 +59,22 @@ All the properties can be set via properties of `face` and `edge`, or the `updat
 method.
 
 ``` python
-layer.face.color = "yellow"
-layer.face.hatch = "x"
+#!skip
+bars_layer.face.color = "yellow"
+bars_layer.face.hatch = "x"
 
-layer.edge.color = "black"
-layer.edge.width = 2
-layer.edge.style = "--"
+spans_layer.edge.color = "black"
+spans_layer.edge.width = 2
+spans_layer.edge.style = "--"
 
 # use `update`
-layer.face.update(color="yellow", hatch="x")
-layer.edge.update(color="black", width=2, style="--")
+bars_layer.face.update(color="yellow", hatch="x")
+spans_layer.edge.update(color="black", width=2, style="--")
 ```
 
-## Multi-faces and Multi-edges
+## Multi-face and Multi-edge
 
-`Markers` and `Bars` supports multi-faces and multi-edges. This means that you can
-create a layer with multiple colors, widths, etc.
-
-To do this, you have to call `with_face_multi` or `with_edge_multi` method.
-Here's an example of `Markers` with multi-faces.
+As for [`Markers`](markers.md), `Bars` and `Spans` supports multi-face and multi-edge.
 
 ``` python
 #!name: face_layers_multifaces
@@ -71,10 +83,10 @@ from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")
 
-layer = canvas.add_markers(
-    np.arange(10),
-).with_face_multi(
-    color=np.random.random((10, 3)),  # random colors
+layer = (
+    canvas
+    .add_bars([0, 1, 2, 3], [3, 4, 1, 2])
+    .with_face_multi(color=["red", "#00FF00", "rgb(0, 0, 255)", "black"])
 )
 canvas.show()
 ```

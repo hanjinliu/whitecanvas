@@ -109,3 +109,38 @@ canvas.x.lim = (-3, 3)
 canvas.y.lim = (-3, 3)
 canvas.show()
 ```
+
+## Errorbars
+
+`Errorbars` is a layer that represents error bars with caps. It can be created by the
+[`add_errorbars`][whitecanvas.canvas.CanvasBase.add_errorbars] method, but if you intend
+to add error bars to an existing layer with x/y data, try using the `with_xerr` and
+`with_yerr` methods of the layer to [group layers](layer_groups.md).
+
+``` python
+#!name: errorbars_layer
+import numpy as np
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+x = [0, 1, 2]
+ylow = [2, 3, 4]
+yhigh = [4, 5, 5]
+canvas.add_errorbars(x, ylow, yhigh, capsize=0.5, width=3, color="crimson")
+canvas.show()
+```
+
+## Rug
+
+`Rug` is a layer that represents rug plot (or event plot). It can be created by the
+[`add_rug`][whitecanvas.canvas.CanvasBase.add_rug] method.
+
+``` python
+#!name: rug_layer
+import numpy as np
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+canvas.add_rug([0.0, 0.1, 0.3, 0.8, 1.4, 3.5], color="black", width=2)
+canvas.show()
+```

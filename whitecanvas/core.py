@@ -31,7 +31,7 @@ def grid(
     ncols : int, default 1
         Number of columns.
     size : (int, int), optional
-        Size of the grid.
+        Displaying size of the grid (in pixels).
     backend : Backend or str, optional
         Backend name.
 
@@ -53,6 +53,25 @@ def grid_nonuniform(
     size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
+    """
+    Create a canvas grid with non-uniform cell sizes.
+
+    Parameters
+    ----------
+    heights : list of int
+        Height ratio of the rows.
+    widths : list of int
+        Width ratio the columns.
+    size : (int, int), optional
+        Displaying size of the grid (in pixels).
+    backend : Backend or str, optional
+        Backend name.
+
+    Returns
+    -------
+    CanvasGrid
+        Grid of empty canvases.
+    """
     g = CanvasGrid(heights, widths, backend=backend)
     if size is not None:
         g.size = size
@@ -65,6 +84,23 @@ def vgrid(
     size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasVGrid:
+    """
+    Create a vertical canvas grid with uniform cell sizes.
+
+    Parameters
+    ----------
+    nrows : int, default 1
+        Number of rows.
+    size : (int, int), optional
+        Displaying size of the grid (in pixels).
+    backend : Backend or str, optional
+        Backend name.
+
+    Returns
+    -------
+    CanvasVGrid
+        1D Grid of empty canvases.
+    """
     g = CanvasVGrid.uniform(nrows, backend=backend)
     if size is not None:
         g.size = size
@@ -77,6 +113,23 @@ def vgrid_nonuniform(
     size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasVGrid:
+    """
+    Create a vertical canvas grid with non-uniform cell sizes.
+
+    Parameters
+    ----------
+    heights : list of int
+        Height ratios of rows.
+    size : (int, int), optional
+        Displaying size of the grid (in pixels).
+    backend : Backend or str, optional
+        Backend name.
+
+    Returns
+    -------
+    CanvasVGrid
+        1D Grid of empty canvases.
+    """
     g = CanvasVGrid(heights, backend=backend)
     if size is not None:
         g.size = size
@@ -89,6 +142,23 @@ def hgrid(
     size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasHGrid:
+    """
+    Create a horizontal canvas grid with uniform cell sizes.
+
+    Parameters
+    ----------
+    ncols : int, default 1
+        Number of columns.
+    size : (int, int), optional
+        Displaying size of the grid (in pixels).
+    backend : Backend or str, optional
+        Backend name.
+
+    Returns
+    -------
+    CanvasHGrid
+        1D Grid of empty canvases.
+    """
     g = CanvasHGrid.uniform(ncols, backend=backend)
     if size is not None:
         g.size = size
@@ -101,6 +171,23 @@ def hgrid_nonuniform(
     size: tuple[int, int] | None = None,
     backend: Backend | str | None = None,
 ) -> CanvasHGrid:
+    """
+    Create a horizontal canvas grid with non-uniform cell sizes.
+
+    Parameters
+    ----------
+    widths : list of int
+        Width ratios of columns.
+    size : (int, int), optional
+        Displaying size of the grid (in pixels).
+    backend : Backend or str, optional
+        Backend name.
+
+    Returns
+    -------
+    CanvasHGrid
+        1D Grid of empty canvases.
+    """
     g = CanvasHGrid(widths, backend=backend)
     if size is not None:
         g.size = size
@@ -113,7 +200,19 @@ def new_canvas(
     size: tuple[int, int] | None = None,
     palette: str | ColormapType | None = None,
 ) -> SingleCanvas:
-    """Create a new canvas with a single cell."""
+    """
+    Create a new canvas with a single cell.
+
+    Parameters
+    ----------
+    backend : Backend or str, optional
+        Backend name.
+    size : (int, int), optional
+        Displaying size of the canvas (in pixels).
+    palette : str or ColormapType, optional
+        Color palette of the canvas. This color palette will be used to generate colors
+        for the plots.
+    """
     _grid = grid(backend=backend)
     _grid.add_canvas(0, 0, palette=palette)
     cvs = SingleCanvas(_grid)

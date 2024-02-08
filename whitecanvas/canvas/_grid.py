@@ -16,6 +16,8 @@ from whitecanvas.utils.normalize import arr_color
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+    from whitecanvas.types import ColormapType
+
 
 class GridEvents(SignalGroup):
     drawn = Signal()
@@ -181,6 +183,12 @@ class CanvasGrid:
         for _, canvas in self.iter_canvas():
             with canvas.y.events.lim.blocked():
                 canvas.y.lim = lim
+
+    def fill(self, palette: ColormapType | None = None) -> Self:
+        """Fill the grid with canvases."""
+        for _ in self.iter_add_canvas(palette=palette):
+            pass
+        return self
 
     def add_canvas(
         self,

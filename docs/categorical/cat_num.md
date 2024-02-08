@@ -192,6 +192,20 @@ canvas = new_canvas("matplotlib")
 )
 ```
 
+`with_hover_template` is also defined. All the column names can be used in the template
+format string.
+
+``` python
+#!skip
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_stripplot(color="replicate", dodge=True)
+    .with_hover_template("{category} (rep={replicate})")
+)
+```
+
 Each marker size can represent a numerical value. `with_size` will map the numerical
 values of a column to the size of the markers.
 

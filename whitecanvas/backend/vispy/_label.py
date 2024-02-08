@@ -10,10 +10,9 @@ from vispy.visuals.axis import AxisVisual, Ticker
 from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
-    from vispy.scene.cameras import PanZoomCamera
     from vispy.visuals import TextVisual
 
-    from whitecanvas.backend.vispy.canvas import Canvas
+    from whitecanvas.backend.vispy.canvas import Camera, Canvas
 
 
 class TextLabel(scene.Label):
@@ -63,7 +62,7 @@ class Axis(scene.AxisWidget):
     def _plt_viewbox(self) -> scene.ViewBox:
         return self._canvas_ref()._viewbox
 
-    def _plt_camera(self) -> PanZoomCamera:
+    def _plt_camera(self) -> Camera:
         return self._plt_viewbox().camera
 
     def _plt_get_limits(self) -> tuple[float, float]:
@@ -78,12 +77,13 @@ class Axis(scene.AxisWidget):
         # NOTE: margin = 0 is ignored in the current implementation of vispy.
         # use a very small margin instead.
         margin = (limits[1] - limits[0]) * 1e-8
-        if self._dim == 0:  # y
-            xlim = self._canvas_ref()._xaxis._plt_get_limits()
-            camera.set_range(x=xlim, y=limits, margin=margin)
-        else:
-            ylim = self._canvas_ref()._yaxis._plt_get_limits()
-            camera.set_range(x=limits, y=ylim, margin=margin)
+        with camera.changed.blocked():
+            if self._dim == 0:  # y
+                xlim = self._canvas_ref()._xaxis._plt_get_limits()
+                camera.set_range(x=xlim, y=limits, margin=margin)
+            else:
+                ylim = self._canvas_ref()._yaxis._plt_get_limits()
+                camera.set_range(x=limits, y=ylim, margin=margin)
         camera.set_default_state()
         camera.reset()
 

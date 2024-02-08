@@ -1352,32 +1352,18 @@ class CanvasBase(ABC):
 
     @overload
     def add_text(
-        self,
-        x: ArrayLike1D,
-        y: ArrayLike1D,
-        string: list[str],
-        *,
-        color: ColorType = "black",
-        size: float = 12,
-        rotation: float = 0.0,
-        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        family: str | None = None,
-    ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
+        self, x: ArrayLike1D, y: ArrayLike1D, string: list[str], *,
+        color: ColorType = "black", size: float = 12, rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT, family: str | None = None,
+    ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:  # fmt: skip
         ...
 
     @overload
     def add_text(
-        self,
-        x: float,
-        y: float,
-        string: str,
-        *,
-        color: ColorType = "black",
-        size: float = 12,
-        rotation: float = 0.0,
-        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        family: str | None = None,
-    ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:
+        self, x: float, y: float, string: str, *, color: ColorType = "black",
+        size: float = 12, rotation: float = 0.0,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT, family: str | None = None,
+    ) -> _l.Texts[_mixin.ConstFace, _mixin.ConstEdge, _mixin.ConstFont]:  # fmt: skip
         ...
 
     def add_text(
@@ -1402,9 +1388,9 @@ class CanvasBase(ABC):
         Parameters
         ----------
         x : float or array-like
-            X position of the text.
+            X position(s) of the text.
         y : float or array-like
-            Y position of the text.
+            Y position(s) of the text.
         string : str or list[str]
             Text string to display.
         color : ColorType, optional
@@ -1421,7 +1407,7 @@ class CanvasBase(ABC):
 
         Returns
         -------
-        Text
+        Texts
             The text layer.
         """
         if (

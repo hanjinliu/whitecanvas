@@ -49,12 +49,28 @@ class Canvas:
         self._annot = ax.annotate(
             text="", xy=(0, 0), xytext=(20, -20), textcoords="offset points",
             bbox={"fc": "w"}, fontproperties={"size": 14, "family": "Arial"},
+            clip_on=False,
         )  # fmt: skip
         self._annot.set_visible(False)
 
     def _set_tooltip(self, pos, text: str):
+        # determine in which direction to show the tooltip
+        x, y = pos
+        x0, x1 = self._axes.get_xlim()
+        y0, y1 = self._axes.get_ylim()
+        xc = (x0 + x1) / 2
+        yc = (y0 + y1) / 2
+        xtext = x - 20 if x > xc else x + 20
+        ytext = y - 20 if y > yc else y + 20
+        ha = "right" if x > xc else "left"
+        va = "top" if y > yc else "bottom"
+
+        # update the tooltip
         self._annot.xy = pos
         self._annot.set_text(text)
+        self._annot.set_position((xtext, ytext))
+        self._annot.set_verticalalignment(va)
+        self._annot.set_horizontalalignment(ha)
         self._annot.set_visible(True)
         if fig := self._axes.get_figure():
             fig.canvas.draw_idle()

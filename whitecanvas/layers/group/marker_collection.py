@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Iterator
+from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -29,7 +29,15 @@ from whitecanvas.types import (
     XYData,
     _Void,
 )
-from whitecanvas.utils.normalize import as_any_1d_array, as_array_1d, as_color_array
+from whitecanvas.utils.normalize import (
+    as_any_1d_array,
+    as_array_1d,
+    as_color_array,
+    parse_texts,
+)
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _void = _Void()
 _Markers = Markers[MultiFace, MultiEdge, NDArray[np.floating]]
@@ -357,7 +365,7 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
-    ) -> MarkerCollection:
+    ) -> Self:
         """Update the face properties."""
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
@@ -369,11 +377,43 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
         alpha: float = 1,
-    ) -> MarkerCollection:
+    ) -> Self:
         """Update the edge properties."""
         if color is None:
             color = get_theme().foreground_color
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
+        return self
+
+    def with_hover_text(self, text: Iterable[Any]) -> Self:
+        """Add hover text to the markers."""
+        texts = np.array([str(t) for t in text], dtype=object)
+        if len(texts) != self.ndata:
+            raise ValueError(
+                "Expected text to have the same size as the data, "
+                f"got {len(texts)} and {self.ndata}"
+            )
+        return self._set_hover_text_unsafe(texts)
+
+    def with_hover_template(self, template: str, extra: Any | None = None) -> Self:
+        """Add hover template to the markers."""
+        xs, ys = self.data
+        params = parse_texts(template, xs.size, extra)
+        # set default format keys
+        params.setdefault("x", xs)
+        params.setdefault("y", ys)
+        if "i" not in params:
+            params["i"] = np.arange(xs.size)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(xs.size)
+        ]
+        texts = np.array(texts, dtype=object)
+        return self._set_hover_text_unsafe(texts)
+
+    def _set_hover_text_unsafe(self, texts: NDArray[np.object_]):
+        for i, layer in enumerate(self):
+            sl = self._slices[i]
+            layer._backend._plt_set_hover_text(texts[sl])
         return self
 
     def _split_markers(

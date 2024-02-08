@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 from cmap import Color
 from numpy.typing import ArrayLike, NDArray
+
+from whitecanvas.utils import type_check as _tc
 
 
 def as_array_1d(x: ArrayLike, dtype=None) -> NDArray[np.number]:
@@ -70,7 +71,7 @@ def rgba_str_color(color) -> str:
 
 
 def as_any_1d_array(x: Any, size: int, dtype=None) -> np.ndarray:
-    if np.isscalar(x) or isinstance(x, Enum):
+    if _tc.is_not_array(x):
         out = np.full((size,), x, dtype=dtype)
     else:
         out = np.asarray(x, dtype=dtype)
@@ -100,5 +101,43 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
                 f"Color array must have shape (3,), (4,), (N={size}, 3), or (N={size},"
                 f" 4) but got\n{color!r}"
             )
-    arr = np.array(color)
+    try:
+        arr = np.array(color)
+    except ValueError as e:
+        if str(e).startswith("setting an array element with a sequence"):
+            # this happens when ["red", [0.0, 1.0, 0.0, 1.0]] is given
+            color_normed = np.stack(
+                [Color(c).rgba for c in color],
+                axis=0,
+                dtype=np.float32,
+            )
+            return color_normed
+        else:
+            raise
     return as_color_array(arr, size)
+
+
+def parse_texts(template: str, ndata: int, extra: Any | None = None) -> dict[str, Any]:
+    """Parse a template string and return parameters of hover texts."""
+    params = {}
+    if extra is None:
+        extra = {}
+    elif isinstance(extra, Mapping):
+        pass
+    elif _tc.is_pandas_dataframe(extra):
+        return parse_texts(template, ndata, extra=extra.to_dict(orient="list"))
+    elif _tc.is_polars_dataframe(extra):
+        return parse_texts(template, ndata, extra=extra.to_dict())
+    else:
+        raise TypeError("extra must be a mapping.")
+    for k, v in extra.items():
+        if "{" + k not in template:
+            continue
+        if _tc.is_not_array(v):
+            _v = np.full(ndata, v)
+        else:
+            _v = as_any_1d_array(v, ndata)
+        if _v.size != ndata:
+            raise ValueError(f"Expected {_v.size} elements, got {ndata} for {k!r}.")
+        params[k] = v
+    return params

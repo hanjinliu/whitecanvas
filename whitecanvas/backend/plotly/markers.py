@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from numpy.typing import NDArray
 from plotly import graph_objects as go
@@ -111,6 +113,17 @@ class Markers(PlotlyLayer):
             self._update_hover_texts(fig)
 
     def _update_hover_texts(self, fig: go.Figure):
+        if self._hover_texts is None:
+            return
+        if len(self._hover_texts) != self._plt_get_ndata():
+            warnings.warn(
+                f"Length of hover text ({len(self._hover_texts)}) does not match the "
+                f"number of data points ({self._plt_get_ndata()}). Ignore updating.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
         # check by ID
         def selector(trace):
             s = trace["customdata"]

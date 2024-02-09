@@ -118,6 +118,7 @@ class Canvas:
             for cb in layer._click_callbacks:
                 gobj.on_click(_convert_cb(cb), append=True)
             layer._fig_ref = weakref.ref(self._fig)
+            layer._update_hover_texts(self._fig)
 
     def _plt_remove_layer(self, layer: PlotlyLayer):
         """Remove layer from the canvas"""

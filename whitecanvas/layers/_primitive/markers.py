@@ -286,6 +286,8 @@ class Markers(
     ) -> Self:
         """Add hover template to the markers."""
         xs, ys = self.data
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
         params = parse_texts(template, xs.size, extra)
         # set default format keys
         params.setdefault("x", xs)

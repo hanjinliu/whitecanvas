@@ -265,9 +265,10 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            name=f"xerr-of-{self.name}", backend=self._backend_name
+            name=f"xerr-of-{self.name}", orient=Orientation.HORIZONTAL,
+            backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars.empty_h(f"yerr-of-{self.name}", backend=self._backend_name)
+        yerr = Errorbars.empty_v(f"yerr-of-{self.name}", backend=self._backend_name)
         old_name = self.name
         self.name = f"line-of-{self.name}"
         return LabeledLine(self, xerr, yerr, name=old_name)
@@ -300,7 +301,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
             width=width, style=style, antialias=antialias, capsize=capsize,
             name=f"yerr-of-{self.name}", backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars.empty_v(f"xerr-of-{self.name}", backend=self._backend_name)
+        xerr = Errorbars.empty_h(f"xerr-of-{self.name}", backend=self._backend_name)
         old_name = self.name
         self.name = f"line-of-{self.name}"
         return LabeledLine(self, xerr, yerr, name=old_name)

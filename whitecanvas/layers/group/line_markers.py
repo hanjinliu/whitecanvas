@@ -37,23 +37,66 @@ class Plot(LayerContainer):
 
     def with_edge(
         self,
-        color: ColorType | _Void = _void,
+        color: ColorType | None = None,
         alpha: float = 1.0,
         width: float = 1.0,
         style: str | LineStyle = LineStyle.SOLID,
     ) -> Plot:
+        """
+        Set the edge properties of the markers.
+
+        Parameters
+        ----------
+        color : ColorType, optional
+            The color of the edge. If not given, use the color defined by the theme.
+        alpha : float, default 1.0
+            The transparency of the edge.
+        width : float, default 1.0
+            The width of the edge.
+        style : str or LineStyle, default LineStyle.SOLID
+            The style of the edge.
+
+        Returns
+        -------
+        Plot
+            The current plot with the edge properties set.
+        """
         self.markers.with_edge(color=color, alpha=alpha, width=width, style=style)
         return self
 
     def with_text(
         self,
         strings: list[str],
+        *,
         color: ColorType = "black",
         size: float = 12,
         rotation: float = 0.0,
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
-        fontfamily: str | None = None,
+        family: str | None = None,
     ) -> LabeledPlot:
+        """
+        Add texts at the positions of markers.
+
+        Parameters
+        ----------
+        strings : list of str
+            The text to add to the markers.
+        color : ColorType, default "black"
+            The color of the text.
+        size : float, default 12
+            The size of the text.
+        rotation : float, default 0.0
+            The rotation of the text.
+        anchor : str or Alignment, default Alignment.BOTTOM_LEFT
+            The anchor position of the text.
+        family : str or None, optional
+            The font family of the text.
+
+        Returns
+        -------
+        LabeledPlot
+            The current plot with the text added to the markers.
+        """
         from whitecanvas.layers.group.labeled import LabeledPlot
 
         texts = Texts(
@@ -63,23 +106,51 @@ class Plot(LayerContainer):
             size=size,
             rotation=rotation,
             anchor=anchor,
-            family=fontfamily,
+            family=family,
             backend=self._backend_name,
         )
-        xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
-        yerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
-        return LabeledPlot(self, xerr, yerr, texts, name=self.name)
+        old_name = self.name
+        self.name = f"plot-of-{old_name}"
+        xerr = Errorbars.empty_v(f"xerr-of-{old_name}", backend=self._backend_name)
+        yerr = Errorbars.empty_h(f"yerr-of-{old_name}", backend=self._backend_name)
+        return LabeledPlot(self, xerr, yerr, texts, name=old_name)
 
     def with_xerr(
         self,
         err: ArrayLike,
         err_high: ArrayLike | None = None,
+        *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> LabeledPlot:
+        """
+        Add horizontal error bars from the markers.
+
+        Parameters
+        ----------
+        err : array-like
+            The error values.
+        err_high : array-like or None, optional
+            The high error values. If not given, use the same values as `err`.
+        color : ColorType or None, optional
+            The color of the error bars. If not given, use the color of the line.
+        width : float or None, optional
+            The width of the error bars. If not given, use the width of the markers.
+        style : str or None, optional
+            The style of the error bars. If not given, use the style of the markers.
+        antialias : bool or None, optional
+            Whether to use antialiasing. If not given, use the antialiasing of the line.
+        capsize : float, default 0
+            The size of the caps at the end of the error bars.
+
+        Returns
+        -------
+        LabeledPlot
+            The current plot with the horizontal error bars added.
+        """
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group.labeled import LabeledPlot
 
@@ -93,24 +164,53 @@ class Plot(LayerContainer):
             style = self.markers.edge.style
         if antialias is _void:
             antialias = self.line.antialias
+        old_name = self.name
+        self.name = f"plot-of-{old_name}"
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            backend=self._backend_name
+            orient=Orientation.HORIZONTAL, name=f"xerr-of-{old_name}",
+            backend=self._backend_name,
         )  # fmt: skip
-        yerr = Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name)
-        return LabeledPlot(self, xerr, yerr, name=self.name)
+        yerr = Errorbars.empty_v(f"yerr-of-{old_name}", backend=self._backend_name)
+        return LabeledPlot(self, xerr, yerr, name=old_name)
 
     def with_yerr(
         self,
         err: ArrayLike,
         err_high: ArrayLike | None = None,
+        *,
         color: ColorType | _Void = _void,
         width: float | _Void = _void,
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> LabeledPlot:
+        """
+        Add vertical error bars from the markers.
+
+        Parameters
+        ----------
+        err : array-like
+            The error values.
+        err_high : array-like or None, optional
+            The high error values. If not given, use the same values as `err`.
+        color : ColorType or None, optional
+            The color of the error bars. If not given, use the color of the line.
+        width : float or None, optional
+            The width of the error bars. If not given, use the width of the markers.
+        style : str or None, optional
+            The style of the error bars. If not given, use the style of the markers.
+        antialias : bool or None, optional
+            Whether to use antialiasing. If not given, use the antialiasing of the line.
+        capsize : float, default 0
+            The size of the caps at the end of the error bars.
+
+        Returns
+        -------
+        LabeledPlot
+            The current plot with the vertical error bars added.
+        """
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group.labeled import LabeledPlot
 
@@ -124,13 +224,15 @@ class Plot(LayerContainer):
             style = self.markers.edge.style
         if antialias is _void:
             antialias = self.line.antialias
+        old_name = self.name
+        self.name = f"plot-of-{old_name}"
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            backend=self._backend_name
+            name=f"yerr-of-{old_name}", backend=self._backend_name,
         )  # fmt: skip
-        xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
-        return LabeledPlot(self, xerr, yerr, name=self.name)
+        xerr = Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
+        return LabeledPlot(self, xerr, yerr, name=old_name)
 
     @property
     def data(self):

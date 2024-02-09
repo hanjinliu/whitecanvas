@@ -4,6 +4,7 @@ import weakref
 from typing import TYPE_CHECKING
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import AutoLocator, AutoMinorLocator
 
 from whitecanvas.types import LineStyle
 
@@ -157,7 +158,8 @@ class XTicks(SupportsText):
         self._canvas()._axes.set_xticks(pos, labels)
 
     def _plt_reset_override(self):
-        self._canvas()._axes.set_xticks([])
+        # FIXME: This is not a perfect solution. It will update the x-axis scale.
+        self._canvas()._axes.get_xaxis().clear()
 
     def _plt_set_color(self, color):
         d = self._fontdict.copy()
@@ -207,7 +209,7 @@ class YTicks(SupportsText):
         self._canvas()._axes.set_yticks(pos, labels)
 
     def _plt_reset_override(self):
-        self._canvas()._axes.set_yticks([])
+        self._canvas()._axes.get_yaxis().clear()
 
     def _plt_set_color(self, color):
         d = self._fontdict.copy()

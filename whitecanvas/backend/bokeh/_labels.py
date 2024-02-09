@@ -145,6 +145,8 @@ class Ticks(_CanvasComponent):
     def __init__(self, canvas: Canvas):
         super().__init__(canvas)
         self._visible = True
+        self._font_size = None
+        self._tick_color = None
 
     def _plt_get_axis(self) -> BokehAxis:
         raise NotImplementedError
@@ -157,7 +159,7 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().major_label_overrides = dict(zip(pos, labels))
 
     def _plt_reset_override(self):
-        self._plt_get_axis().ticker = None
+        self._plt_get_axis().ticker = []
         self._plt_get_axis().major_label_overrides = None
 
     def _plt_get_visible(self) -> bool:
@@ -165,13 +167,22 @@ class Ticks(_CanvasComponent):
 
     def _plt_set_visible(self, visible: bool):
         self._visible = visible
-        self._plt_get_axis().ticker = None
+        if not visible:
+            self._plt_get_axis().major_label_text_font_size = "0pt"
+            self._plt_get_axis().major_tick_line_color = None
+            self._plt_get_axis().minor_tick_line_color = None
+        else:
+            self._plt_get_axis().major_label_text_font_size = self._font_size
+            self._plt_get_axis().major_tick_line_color = self._tick_color
+            self._plt_get_axis().minor_tick_line_color = self._tick_color
 
     def _plt_get_size(self) -> float:
-        return self._plt_get_axis().major_label_text_font_size
+        return self._font_size
 
     def _plt_set_size(self, size: int):
-        self._plt_get_axis().major_label_text_font_size = f"{size}pt"
+        self._font_size = f"{size}pt"
+        if self._visible:
+            self._plt_get_axis().major_label_text_font_size = self._font_size
 
     def _plt_get_fontfamily(self) -> str:
         return self._plt_get_axis().major_label_text_font
@@ -180,10 +191,14 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().major_label_text_font = font
 
     def _plt_get_color(self):
-        return np.array(Color(self._plt_get_axis().major_label_text_color).rgba)
+        return np.array(Color(self._tick_color).rgba)
 
     def _plt_set_color(self, color):
-        self._plt_get_axis().major_label_text_color = Color(color).hex
+        self._tick_color = Color(color).hex
+        if self._visible:
+            self._plt_get_axis().major_label_text_color = self._tick_color
+            self._plt_get_axis().major_tick_line_color = self._tick_color
+            self._plt_get_axis().minor_tick_line_color = self._tick_color
 
     def _plt_get_text_rotation(self) -> float:
         return self._plt_get_axis().major_label_orientation

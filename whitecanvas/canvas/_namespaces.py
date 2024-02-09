@@ -220,10 +220,12 @@ class _TicksNamespace(_TextBoundNamespace):
         if len(_pos) != len(_labels):
             raise ValueError("pos and labels must have the same length.")
         self._get_object()._plt_override_labels(_pos, _labels)
+        self._get_canvas()._plt_draw()
 
     def reset_labels(self) -> None:
         """Reset the tick labels to the default."""
         self._get_object()._plt_reset_override()
+        self._get_canvas()._plt_draw()
 
     @property
     def rotation(self) -> float:

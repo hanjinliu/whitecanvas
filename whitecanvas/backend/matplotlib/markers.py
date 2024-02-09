@@ -38,7 +38,6 @@ class Markers(PathCollection, MplLayer):
             (_get_path(self._symbol),),
             sizes=[6] * len(offsets),
             offsets=offsets,
-            offset_transform=plt.gca().transData,
             picker=True,
         )
         self.set_transform(mtransforms.IdentityTransform())
@@ -147,6 +146,7 @@ class Markers(PathCollection, MplLayer):
         fig.canvas.mpl_connect(
             "motion_notify_event", throttled(self._on_hover, timeout=500)
         )
+        self.set_offset_transform(canvas._axes.transData)
 
     def _on_hover(self, event: mplMouseEvent = None):
         if self._hover_texts is None or not self._plt_get_visible():

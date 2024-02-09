@@ -344,6 +344,11 @@ class CanvasVGrid(CanvasGrid):
     def add_canvas(self, row: int, **kwargs) -> Canvas:
         return super().add_canvas(row, 0, **kwargs)
 
+    @override
+    def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
+        for row in range(len(self._heights)):
+            yield self.add_canvas(row, **kwargs)
+
 
 class CanvasHGrid(CanvasGrid):
     @override
@@ -375,6 +380,11 @@ class CanvasHGrid(CanvasGrid):
     @override
     def add_canvas(self, col: int, **kwargs) -> Canvas:
         return super().add_canvas(0, col, **kwargs)
+
+    @override
+    def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
+        for col in range(len(self._widths)):
+            yield self.add_canvas(col, **kwargs)
 
 
 class SingleCanvas(CanvasBase):

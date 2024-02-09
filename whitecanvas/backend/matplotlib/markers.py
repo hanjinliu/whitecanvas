@@ -39,6 +39,7 @@ class Markers(PathCollection, MplLayer):
             sizes=[6] * len(offsets),
             offsets=offsets,
             offset_transform=plt.gca().transData,
+            picker=True,
         )
         self.set_transform(mtransforms.IdentityTransform())
         self._edge_styles = [LineStyle.SOLID] * len(offsets)

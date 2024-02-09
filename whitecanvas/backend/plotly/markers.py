@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from numpy.typing import NDArray
+from plotly import graph_objects as go
 
 from whitecanvas.backend import _not_implemented
 from whitecanvas.backend.plotly._base import (
@@ -36,6 +39,7 @@ class Markers(PlotlyLayer):
             "hovertemplate": "%{customdata[0]}<extra></extra>",
         }
         self._fig_ref = lambda: None
+        self._hover_texts: list[str] | None = None
         self._click_callbacks = []
 
     def _plt_get_ndata(self) -> int:
@@ -103,8 +107,21 @@ class Markers(PlotlyLayer):
             raise NotImplementedError("post connection not implemented yet")
 
     def _plt_set_hover_text(self, text: list[str]):
+        self._hover_texts = text
         fig = self._fig_ref()
-        if fig is None:
+        if fig is not None:
+            self._update_hover_texts(fig)
+
+    def _update_hover_texts(self, fig: go.Figure):
+        if self._hover_texts is None:
+            return
+        if len(self._hover_texts) != self._plt_get_ndata():
+            warnings.warn(
+                f"Length of hover text ({len(self._hover_texts)}) does not match the "
+                f"number of data points ({self._plt_get_ndata()}). Ignore updating.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
             return
 
         # check by ID
@@ -115,6 +132,6 @@ class Markers(PlotlyLayer):
             return s[0][1] == id(self)
 
         fig.update_traces(
-            customdata=list(zip(text, [id(self)] * self._plt_get_ndata())),
+            customdata=list(zip(self._hover_texts, [id(self)] * self._plt_get_ndata())),
             selector=selector,
         )

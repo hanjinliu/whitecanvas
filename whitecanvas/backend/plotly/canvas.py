@@ -227,14 +227,14 @@ class CanvasGrid:
     def _plt_show(self):
         if self._app in ("qt", "wx", "tk"):
             return NotImplemented
-        if self._app == "notebook" or "IPython" in sys.modules:
+        if self._app == "notebook" and "IPython" in sys.modules:
             from IPython import get_ipython
             from IPython.display import display
 
             if get_ipython().__class__.__name__ == "ZMQInteractiveShell":
                 display(self._figs)
                 return
-        self._figs.show()
+        self._figs.show(renderer="browser")
 
     def _plt_get_background_color(self):
         return self._figs.layout.paper_bgcolor

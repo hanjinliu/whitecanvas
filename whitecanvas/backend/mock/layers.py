@@ -19,7 +19,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @protocols.check_protocol(protocols.BandProtocol)
-class Band(MockHasData, MockHasFaces, MockHasEdges):
+class Band(MockHasData, MockHasFaces, MockHasEdges, MockHasMouseEvents):
     def __init__(
         self,
         t: np.ndarray,

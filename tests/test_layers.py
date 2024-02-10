@@ -162,6 +162,16 @@ def test_errorbars(backend: str):
     assert all(w == 2 for w in layer.width)
     _test_visibility(layer)
 
+    layer = canvas.add_errorbars(np.arange(10), np.zeros(10), np.ones(10), capsize=0.2)
+
+    layer.color = [1.0, 0.0, 0.0, 1.0]
+    assert_color_array_equal(layer.color, "red")
+    layer.style = "-."
+    assert all(s == "-." for s in layer.style)
+    layer.width = 3
+    assert all(w == 3 for w in layer.width)
+    _test_visibility(layer)
+
 def test_texts(backend: str):
     canvas = new_canvas(backend=backend)
 

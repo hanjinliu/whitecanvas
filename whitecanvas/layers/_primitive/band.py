@@ -1,17 +1,29 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from psygnal import Signal
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer
-from whitecanvas.layers._mixin import FaceEdgeMixin
+from whitecanvas.layers._mixin import FaceEdgeMixin, FaceEdgeMixinEvents
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.protocols import BandProtocol
 from whitecanvas.types import ArrayLike1D, ColorType, Hatch, Orientation, XYYData
 from whitecanvas.utils.normalize import as_array_1d
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+
+class BandEvents(FaceEdgeMixinEvents):
+    picked = Signal()
+
 
 class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
+    events: BandEvents
+    _events_class = BandEvents
+
     def __init__(
         self,
         t: ArrayLike1D,
@@ -43,6 +55,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         self._band_type = "band"
         self.edge.width = 0.0
         self._init_events()
+        self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     @property
     def orient(self) -> Orientation:
@@ -88,3 +101,8 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         edge_high: ArrayLike1D | None = None,
     ):
         self.data = t, edge_low, edge_high
+
+    def with_hover_text(self, text: str) -> Self:
+        """Add hover text to the data points."""
+        self._backend._plt_set_hover_text(str(text))
+        return self

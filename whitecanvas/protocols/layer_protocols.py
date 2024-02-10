@@ -246,7 +246,11 @@ class MarkersProtocol(
 
 @runtime_checkable
 class BandProtocol(OrientedXYYDataProtocol, HasFaces, HasEdges, Protocol):
-    pass
+    def _plt_connect_pick_event(self, callback: Callable[[], Any]):
+        """Connect the item picked event."""
+
+    def _plt_set_hover_text(self, texts: str):
+        """Set hover text to the band"""
 
 
 @runtime_checkable

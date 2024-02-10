@@ -147,6 +147,7 @@ class DFViolinPlot(
         )  # fmt: skip
         super().__init__(base, cat.df)
         _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
+        self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
 
     @property
     def orient(self) -> Orientation:
@@ -159,6 +160,19 @@ class DFViolinPlot(
             layer.set_data(edge_low=_old.y0 + shift, edge_high=_old.y1 + shift)
         if canvas := self._canvas_ref():
             canvas._autoscale_for_layer(self, pad_rel=0.025)
+        return self
+
+    def with_hover_text(self, text: str | list[str]) -> Self:
+        """Set the hover tooltip text for the layer."""
+        self.base.with_hover_text(text)
+        return self
+
+    def with_hover_template(self, template: str) -> Self:
+        """Set the hover tooltip template for the layer."""
+        extra = {}
+        for i, key in enumerate(self._splitby):
+            extra[key] = [row[i] for row in self._categories]
+        self.base.with_hover_template(template, extra=extra)
         return self
 
 

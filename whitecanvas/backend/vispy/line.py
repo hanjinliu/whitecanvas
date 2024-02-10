@@ -57,6 +57,9 @@ class MonoLine(visuals.Line):
         # TODO: not used yet
         self._hover_texts = text
 
+    def _plt_connect_pick_event(self, callback):
+        pass
+
 
 @check_protocol(MultiLineProtocol)
 class MultiLine(visuals.Compound):
@@ -141,3 +144,6 @@ class MultiLine(visuals.Compound):
     def _plt_set_hover_text(self, text: list[str]):
         # TODO: not used yet
         self._hover_texts = text
+
+    def _plt_connect_pick_event(self, callback):
+        pass

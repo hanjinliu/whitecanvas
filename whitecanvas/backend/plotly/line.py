@@ -99,6 +99,8 @@ class MultiLine(PlotlyHoverableLayer):
             "customdata": [""] * len(xdata),
             "hovertemplate": "%{customdata}<extra></extra>",
         }
+        x = np.array(xdata, dtype=np.float32)
+        self._nan_indices = np.where(np.isnan(x))[0]
         PlotlyHoverableLayer.__init__(self)
 
     def _plt_get_data(self):
@@ -194,35 +196,11 @@ class MultiLine(PlotlyHoverableLayer):
     def _plt_set_antialias(self, antialias: bool):
         self._props["line"]["simplify"] = not antialias
 
-    def _plt_set_hover_text(self, text: list[str]):
-        x = np.array(self._props["x"], dtype=np.float32)
-        nan_indices = np.where(x)[0]
-        dif = np.diff(nan_indices, prepend=0, append=x.size)
-        # if x = [1, 2, None, 3, 4, 2, None, 3, 2]
-        # then dif = [2, 4, 3]
-        dif[1:] -= 1
-        if len(text) != len(dif):
-            warnings.warn(
-                "The length of the hover text does not match the number of lines. "
-                "Ignoring.",
-                UserWarning,
-                stacklevel=2,
-            )
-            return
-        customdata = []
-        for t, d in zip(text, dif):
-            customdata.extend([t] * d)
-            customdata.append("")
-        customdata.pop()
-        self._props["customdata"] = customdata
-        super()._plt_set_hover_text(text)
-
     def _update_hover_texts(self, fig):
         if self._hover_texts is None:
             return
-        x = np.array(self._props["x"], dtype=np.float32)
-        nan_indices = np.where(x)[0]
-        dif = np.diff(nan_indices, prepend=0, append=x.size)
+
+        dif = np.diff(self._nan_indices, prepend=0, append=len(self._props["x"]))
         # if x = [1, 2, None, 3, 4, 2, None, 3, 2]
         # then dif = [2, 4, 3]
         dif[1:] -= 1
@@ -244,3 +222,9 @@ class MultiLine(PlotlyHoverableLayer):
             customdata=customdata,
             selector={"uid": self._props["uid"]},
         )
+
+    def _plt_connect_pick_event(self, callback):
+        def _new_cb(indices: list[int]):
+            return callback([np.where(self._nan_indices < i)[0].size for i in indices])
+
+        return super()._plt_connect_pick_event(_new_cb)

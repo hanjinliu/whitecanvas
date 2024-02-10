@@ -67,9 +67,12 @@ class XXYYDataProtocol(BaseProtocol, Protocol):
 
 
 @runtime_checkable
-class SupportsPick(Protocol):
+class SupportsMouseEvents(Protocol):
     def _plt_connect_pick_event(self, callback: Callable[[list[int]], Any]):
         """Connect the item picked event."""
+
+    def _plt_set_hover_text(self, texts: list[str]):
+        """Set hover texts to the lines"""
 
 
 @runtime_checkable
@@ -194,7 +197,7 @@ class HasText(BaseProtocol, Protocol):
 
 
 @runtime_checkable
-class LineProtocol(XYDataProtocol, HasEdges, Protocol):
+class LineProtocol(XYDataProtocol, HasEdges, SupportsMouseEvents, Protocol):
     def _plt_get_antialias(self) -> bool:
         """Return the anti alias."""
 
@@ -203,7 +206,7 @@ class LineProtocol(XYDataProtocol, HasEdges, Protocol):
 
 
 @runtime_checkable
-class MultiLineProtocol(XYDataProtocol, HasMultiEdges, Protocol):
+class MultiLineProtocol(XYDataProtocol, HasMultiEdges, SupportsMouseEvents, Protocol):
     def _plt_get_data(self) -> list[NDArray[np.number]]:
         """Return the x and y array."""
 
@@ -218,13 +221,15 @@ class MultiLineProtocol(XYDataProtocol, HasMultiEdges, Protocol):
 
 
 @runtime_checkable
-class BarProtocol(XXYYDataProtocol, HasMultiFaces, HasMultiEdges, Protocol):
+class BarProtocol(
+    XXYYDataProtocol, HasMultiFaces, HasMultiEdges, SupportsMouseEvents, Protocol
+):
     """Protocols for plt.bar, plt.errorbar"""
 
 
 @runtime_checkable
 class MarkersProtocol(
-    XYDataProtocol, HasMultiFaces, SupportsPick, HasMultiEdges, Protocol
+    XYDataProtocol, HasMultiFaces, SupportsMouseEvents, HasMultiEdges, Protocol
 ):
     def _plt_get_symbol(self) -> Symbol:
         """Return the symbol."""
@@ -237,9 +242,6 @@ class MarkersProtocol(
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
         """Set the symbol size."""
-
-    def _plt_set_hover_text(self, text: list[str]) -> None:
-        """Set hover texts to the markers"""
 
 
 @runtime_checkable

@@ -47,6 +47,7 @@ class LineLayerEvents(LayerEvents):
     width = Signal(float)
     style = Signal(str)
     antialias = Signal(bool)
+    picked = Signal(int)
 
 
 class LineMixin(PrimitiveLayer[_Line]):
@@ -159,6 +160,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
+        self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     def _get_layer_data(self) -> XYData:
         return XYData(*self._backend._plt_get_data())
@@ -481,6 +483,7 @@ class MultiLineEvents(LayerEvents):
     width = Signal(float)
     style = Signal(str)
     antialias = Signal(bool)
+    picked = Signal(int)
 
 
 class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
@@ -506,6 +509,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         self.update(
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
+        self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     def _get_layer_data(self) -> list[NDArray[np.number]]:
         """Current data of the layer."""

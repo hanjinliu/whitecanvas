@@ -124,30 +124,28 @@ class Bars(pg.BarGraphItem, PyQtLayer):
 
     def _plt_connect_pick_event(self, callback):
         def cb(ev: QtGui.QMouseEvent):
-            idx = self.barUnderCursor(ev.pos())
-            if idx >= 0:
+            idx = self.barsUnderCursor(ev.pos())
+            if idx:
                 callback(idx)
 
         self.clicked.connect(cb)
 
-    def barUnderCursor(self, pos: QtCore.QPointF) -> int:
+    def barsUnderCursor(self, pos: QtCore.QPointF) -> list[int]:
         rect: QtCore.QRectF = self.boundingRect()
         if not rect.contains(pos):
             return -1
         x0, x1, y0, y1 = self._plt_get_data()
         px, py = pos.x(), pos.y()
         indices = np.where((x0 <= px) & (px <= x1) & (y0 <= py) & (py <= y1))[0]
-        if indices.size > 0:
-            return indices[0]
-        return -1
+        return indices.tolist()
 
     def hoverEvent(self, ev: pgHoverEvent):
         vb = self.getViewBox()
         if vb is not None and self._hover_texts is not None:
-            idx = self.barUnderCursor(ev.pos())
-            if idx >= 0:
+            idx = self.barsUnderCursor(ev.pos())
+            if idx:
                 self._toolTipCleared = False
-                vb.setToolTip(self._hover_texts[idx])
+                vb.setToolTip(self._hover_texts[idx[-1]])
             else:
                 if not self._toolTipCleared:
                     vb.setToolTip("")

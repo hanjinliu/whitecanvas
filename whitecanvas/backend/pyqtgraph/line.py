@@ -24,7 +24,7 @@ class MonoLine(pg.PlotCurveItem, PyQtLayer):
     def __init__(self, xdata, ydata):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
-        super().__init__(xdata, ydata, pen=pen, antialias=False)
+        super().__init__(xdata, ydata, pen=pen, antialias=False, clickable=True)
         self._hover_texts: list[str] | None = None
         self._toolTipCleared = True
 
@@ -82,8 +82,7 @@ class MonoLine(pg.PlotCurveItem, PyQtLayer):
 
     def _plt_connect_pick_event(self, callback):
         def cb(ins, ev: QtGui.QMouseEvent):
-            if self.mouseShape().contains(ev.pos()):
-                callback(self.closestPoint(ev.pos()))
+            callback([self.closestPoint(ev.pos())])
 
         self.sigClicked.connect(cb)
 
@@ -105,7 +104,7 @@ class MonoLine(pg.PlotCurveItem, PyQtLayer):
 
 @check_protocol(MultiLineProtocol)
 class MultiLine(pg.ItemGroup, PyQtLayer):
-    clicked = QtCore.Signal(int)
+    clicked = QtCore.Signal(list)
 
     def __init__(self, data: list[NDArray[np.floating]]):
         super().__init__()
@@ -114,8 +113,10 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
         self._lines: list[pg.PlotCurveItem] = []
         self._qpens: list[QtGui.QPen] = []
         for i, seg in enumerate(data):
-            item = pg.PlotCurveItem(seg[:, 0], seg[:, 1], pen=pen, antialias=True)
-            item.sigClicked.connect(lambda i=i: self.clicked.emit(i))
+            item = pg.PlotCurveItem(
+                seg[:, 0], seg[:, 1], pen=pen, antialias=True, clickable=True
+            )
+            item.sigClicked.connect(self._clicked_cb(i))
             self.addItem(item)
             self._lines.append(item)
             self._qpens.append(pen)
@@ -124,6 +125,9 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
         self._antialias = True
         self._hover_texts: list[str] = None
         self._toolTipCleared = True
+
+    def _clicked_cb(self, idx: int):
+        return lambda _ins, _: self.clicked.emit([idx])
 
     def boundingRect(self):
         if self._bounding_rect_cache is not None:
@@ -155,8 +159,8 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
             else:
                 pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
             for i in range(nitem, ndata):
-                item = pg.PlotCurveItem(pen=pen, antialias=True)
-                item.sigClicked.connect(lambda i=i: self.clicked.emit(i))
+                item = pg.PlotCurveItem(pen=pen, antialias=True, clickable=True)
+                item.sigClicked.connect(self._clicked_cb(i))
                 self.addItem(item)
                 self._lines.append(item)
                 self._qpens.append(pen)

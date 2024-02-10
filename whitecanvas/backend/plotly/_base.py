@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 import warnings
+import weakref
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
-from plotly.graph_objs import FigureWidget
+from plotly import graph_objs as go
 
 from whitecanvas.types import LineStyle, Symbol
+
+if TYPE_CHECKING:
+    from plotly.basedatatypes import BaseTraceType
 
 
 class PlotlyLayer:
     _props: dict[str, Any]
-    _fig_ref: Callable[[], FigureWidget]
+    _gobj: BaseTraceType
+    _fig_ref: Callable[[], go.FigureWidget]
 
     def _plt_get_visible(self) -> bool:
         return self._props["visible"]
@@ -32,7 +37,14 @@ class PlotlyHoverableLayer(PlotlyLayer):
             self._click_callbacks.append(callback)
             return
         else:
-            raise NotImplementedError("post connection not implemented yet")
+            self._connect_mouse_events(fig)
+
+    def _connect_mouse_events(self, fig: go.FigureWidget):
+        gobj = self._gobj
+        for cb in self._click_callbacks:
+            gobj.on_click(_convert_cb(cb), append=True)
+        self._fig_ref = weakref.ref(fig)
+        self._update_hover_texts(fig)
 
     def _plt_set_hover_text(self, text: list[str]):
         self._hover_texts = text
@@ -40,7 +52,7 @@ class PlotlyHoverableLayer(PlotlyLayer):
         if fig is not None:
             self._update_hover_texts(fig)
 
-    def _update_hover_texts(self, fig: FigureWidget):
+    def _update_hover_texts(self, fig: go.FigureWidget):
         if self._hover_texts is None:
             return
         if len(self._hover_texts) != self._plt_get_ndata():
@@ -114,3 +126,12 @@ _SYMBOLS = {
 }
 
 _SYMBOLS_INV = {v: k for k, v in _SYMBOLS.items()}
+
+
+def _convert_cb(cb):
+    def _out(_trace, points, _state):
+        indices = points.point_inds
+        if indices:
+            cb(indices)
+
+    return _out

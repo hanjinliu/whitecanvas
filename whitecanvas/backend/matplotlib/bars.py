@@ -19,7 +19,7 @@ class Bars(BarContainer, MplMouseEventsMixin):
         width = xhigh - xlow
         height = yhigh - ylow
         for x, y, dx, dy in zip(xlow, ylow, width, height):
-            r = Rectangle(xy=(x, y), width=dx, height=dy, linestyle="-")
+            r = Rectangle(xy=(x, y), width=dx, height=dy, linestyle="-", picker=True)
             r.get_path()._interpolation_steps = 100
             patches.append(r)
         super().__init__(patches)
@@ -63,6 +63,7 @@ class Bars(BarContainer, MplMouseEventsMixin):
             patch.set_width(x1i - x0i)
             patch.set_y(y0i)
             patch.set_height(y1i - y0i)
+        # TODO: longer or shorter
 
     ##### HasFace protocol #####
 

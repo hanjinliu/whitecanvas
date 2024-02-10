@@ -239,13 +239,13 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
             raise TypeError(f"Expected matplotlib Axes, got {typ}")
         backend = "matplotlib"
 
-    elif _is_in_module(typ, "plotly", "FigureWidget"):
-        from plotly.graph_objs import FigureWidget
+    elif _is_in_module(typ, "plotly", "Figure"):
+        from plotly.graph_objs import Figure
 
         from whitecanvas.backend.plotly import Canvas as BackendCanvas
 
-        if not isinstance(obj, FigureWidget):
-            raise TypeError(f"Expected plotly FigureWidget, got {typ}")
+        if not isinstance(obj, Figure):
+            raise TypeError(f"Expected plotly Figure, got {typ}")
         backend = "plotly"
     elif _is_in_module(typ, "bokeh", "Plot"):
         from bokeh.models import Plot

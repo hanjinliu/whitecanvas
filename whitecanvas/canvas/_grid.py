@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterator
 
 import numpy as np
@@ -312,6 +313,13 @@ class CanvasGrid:
             return self._backend_object._repr_html_(*args, **kwargs)
         raise NotImplementedError()
 
+    def to_html(self, file: str | None = None) -> str:
+        """Return HTML representation of the grid."""
+        html = self._backend.get("to_html")(self._backend_object)
+        if file is not None:
+            Path(file).write_text(html, encoding="utf-8")
+        return html
+
 
 class CanvasVGrid(CanvasGrid):
     @override
@@ -455,3 +463,7 @@ class SingleCanvas(CanvasBase):
 
     def _repr_html_(self, *args: Any, **kwargs: Any) -> str:
         return self._grid._repr_html_(*args, **kwargs)
+
+    def to_html(self, file: str | None = None) -> str:
+        """Return HTML representation of the canvas."""
+        return self._grid.to_html(file=file)

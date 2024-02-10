@@ -113,7 +113,7 @@ class Band(PlotlyHoverableLayer):
         if fig is not None:
             self._update_hover_texts(fig)
 
-    def _update_hover_texts(self, fig: go.FigureWidget):
+    def _update_hover_texts(self, fig: go.Figure):
         if self._hover_texts is None:
             return
 

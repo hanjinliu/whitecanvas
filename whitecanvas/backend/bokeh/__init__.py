@@ -1,3 +1,4 @@
+from whitecanvas.backend.bokeh._base import to_html
 from whitecanvas.backend.bokeh.band import Band
 from whitecanvas.backend.bokeh.bars import Bars
 from whitecanvas.backend.bokeh.canvas import Canvas, CanvasGrid

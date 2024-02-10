@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class PlotlyLayer:
     _props: dict[str, Any]
     _gobj: BaseTraceType
-    _fig_ref: Callable[[], go.FigureWidget]
+    _fig_ref: Callable[[], go.Figure]
 
     def _plt_get_visible(self) -> bool:
         return self._props["visible"]
@@ -39,7 +39,7 @@ class PlotlyHoverableLayer(PlotlyLayer):
         else:
             self._connect_mouse_events(fig)
 
-    def _connect_mouse_events(self, fig: go.FigureWidget):
+    def _connect_mouse_events(self, fig: go.Figure):
         gobj = self._gobj
         for cb in self._click_callbacks:
             gobj.on_click(_convert_cb(cb), append=True)
@@ -52,7 +52,7 @@ class PlotlyHoverableLayer(PlotlyLayer):
         if fig is not None:
             self._update_hover_texts(fig)
 
-    def _update_hover_texts(self, fig: go.FigureWidget):
+    def _update_hover_texts(self, fig: go.Figure):
         if self._hover_texts is None:
             return
         if len(self._hover_texts) != self._plt_get_ndata():
@@ -135,3 +135,9 @@ def _convert_cb(cb):
             cb(indices)
 
     return _out
+
+
+def to_html(canvas) -> str:
+    from plotly.io import to_html
+
+    return to_html(canvas._figs)

@@ -1,3 +1,4 @@
+from whitecanvas.backend.plotly._base import to_html
 from whitecanvas.backend.plotly.band import Band
 from whitecanvas.backend.plotly.bars import Bars
 from whitecanvas.backend.plotly.canvas import Canvas, CanvasGrid

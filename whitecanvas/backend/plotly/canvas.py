@@ -10,7 +10,6 @@ from plotly import graph_objects as go
 from whitecanvas import protocols
 from whitecanvas.backend.plotly._base import Location, PlotlyHoverableLayer, PlotlyLayer
 from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
-from whitecanvas.backend.plotly.markers import Markers
 from whitecanvas.types import MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
 
@@ -21,7 +20,7 @@ if TYPE_CHECKING:
 class Canvas:
     def __init__(
         self,
-        fig: go.FigureWidget | None = None,
+        fig: go.Figure | None = None,
         *,
         row: int = 0,
         col: int = 0,
@@ -29,7 +28,7 @@ class Canvas:
     ):
         # prepare widget
         if fig is None:
-            fig = go.FigureWidget()
+            fig = go.Figure()
         self._fig = fig
         self._loc = Location(row + 1, col + 1, secondary_y)
         self._xaxis = Axis(self, axis="xaxis")
@@ -114,6 +113,7 @@ class Canvas:
         self._fig.add_trace(layer._props, **self._loc.asdict())
         layer._props = self._fig._data[-1]
         layer._gobj = self._fig.data[-1]
+        layer._props["uid"] = layer._gobj.uid
         if isinstance(layer, PlotlyHoverableLayer):
             layer._connect_mouse_events(self._fig)
 
@@ -199,7 +199,7 @@ class CanvasGrid:
     def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
         from plotly.subplots import make_subplots
 
-        self._figs = go.FigureWidget(
+        self._figs = go.Figure(
             make_subplots(
                 rows=len(heights),
                 cols=len(widths),
@@ -225,7 +225,7 @@ class CanvasGrid:
             from IPython.display import display
 
             if get_ipython().__class__.__name__ == "ZMQInteractiveShell":
-                display(self._figs)
+                display(go.FigureWidget(self._figs))
                 return
         self._figs.show(renderer="browser")
 

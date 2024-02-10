@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Generic, TypeVar
 
+import bokeh.events as bk_events
 import bokeh.models as bk_models
 import numpy as np
 from numpy.typing import NDArray
@@ -82,6 +83,16 @@ class HeteroLayer(BokehLayer[_M]):
         else:
             color = [hex_color(c) for c in color]
         self._data.data["edge_color"] = color
+
+
+class SupportsMouseEvents:
+    def _plt_connect_pick_event(self, callback):
+        # TODO: not working
+        for event in [bk_events.Tap, bk_events.Press, bk_events.PanEnd]:
+            self._model.on_event(event, lambda e: callback(e.indices))
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self._data.data["hovertexts"] = text
 
 
 def to_bokeh_line_style(style: LineStyle) -> str:

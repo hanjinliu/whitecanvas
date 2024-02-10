@@ -183,10 +183,6 @@ class DataBoundLayer(PrimitiveLayer[_P], Generic[_P, _T]):
         self._set_layer_data(self._norm_layer_data(data))
         self.events.data.emit(data)
 
-    @abstractproperty
-    def ndata(self) -> int:
-        """Number of data points."""
-
 
 class HoverableDataBoundLayer(DataBoundLayer[_P, _T]):
     def with_hover_text(self, text: str | Iterable[Any]) -> Self:
@@ -202,6 +198,10 @@ class HoverableDataBoundLayer(DataBoundLayer[_P, _T]):
             )
         self._backend._plt_set_hover_text(texts)
         return self
+
+    @abstractproperty
+    def ndata(self) -> int:
+        """Number of data points."""
 
 
 class LayerGroup(Layer):

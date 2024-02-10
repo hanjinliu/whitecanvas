@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 
 from whitecanvas.backend.bokeh._base import (
     HeteroLayer,
+    SupportsMouseEvents,
     from_bokeh_symbol,
     to_bokeh_symbol,
 )
@@ -16,7 +17,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(MarkersProtocol)
-class Markers(HeteroLayer[bk_models.Scatter]):
+class Markers(HeteroLayer[bk_models.Scatter], SupportsMouseEvents):
     def __init__(self, xdata, ydata):
         ndata = len(xdata)
         self._data = bk_models.ColumnDataSource(
@@ -70,11 +71,3 @@ class Markers(HeteroLayer[bk_models.Scatter]):
 
     def _plt_get_ndata(self) -> int:
         return len(self._data.data["x"])
-
-    def _plt_connect_pick_event(self, callback):
-        # TODO: not working
-        for event in [bk_events.Tap, bk_events.Press, bk_events.PanEnd]:
-            self._model.on_event(event, lambda e: callback(e.indices))
-
-    def _plt_set_hover_text(self, text: list[str]):
-        self._data.data["hovertexts"] = text

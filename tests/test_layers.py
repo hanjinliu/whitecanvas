@@ -183,7 +183,7 @@ def test_texts(backend: str):
     layer.size = 28
     assert layer.size == 28
 
-    assert layer.ntexts == 10
+    assert layer.ndata == 10
     assert layer.string == list("abcdefghij")
     layer.string = list("ABCDEFGHIJ")
     assert layer.string == list("ABCDEFGHIJ")

@@ -3,12 +3,12 @@ from __future__ import annotations
 import bokeh.models as bk_models
 import numpy as np
 
-from whitecanvas.backend.bokeh._base import HeteroLayer
+from whitecanvas.backend.bokeh._base import HeteroLayer, SupportsMouseEvents
 from whitecanvas.protocols import BarProtocol, check_protocol
 
 
 @check_protocol(BarProtocol)
-class Bars(HeteroLayer[bk_models.Quad]):
+class Bars(HeteroLayer[bk_models.Quad], SupportsMouseEvents):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         ndata = len(xlow)
         self._visible = True
@@ -53,6 +53,3 @@ class Bars(HeteroLayer[bk_models.Quad]):
 
     def _plt_get_ndata(self) -> int:
         return len(self._data.data["x0"])
-
-    def _plt_set_hover_text(self, text: list[str]):
-        self._data.data["hovertexts"] = text

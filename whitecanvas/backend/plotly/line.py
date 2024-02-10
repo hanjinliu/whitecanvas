@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend.plotly._base import (
-    PlotlyLayer,
+    PlotlyHoverableLayer,
     from_plotly_linestyle,
     to_plotly_linestyle,
 )
@@ -17,8 +17,9 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(LineProtocol)
-class MonoLine(PlotlyLayer):
+class MonoLine(PlotlyHoverableLayer):
     def __init__(self, xdata, ydata):
+        ndata = len(xdata)
         self._props = {
             "x": xdata,
             "y": ydata,
@@ -27,7 +28,10 @@ class MonoLine(PlotlyLayer):
             "type": "scatter",
             "showlegend": False,
             "visible": True,
+            "customdata": [""] * ndata,
+            "hovertemplate": "%{customdata}<extra></extra>",
         }
+        PlotlyHoverableLayer.__init__(self)
 
     def _plt_get_data(self):
         return self._props["x"], self._props["y"]
@@ -35,6 +39,9 @@ class MonoLine(PlotlyLayer):
     def _plt_set_data(self, xdata, ydata):
         self._props["x"] = xdata
         self._props["y"] = ydata
+
+    def _plt_get_ndata(self) -> int:
+        return len(self._props["x"])
 
     def _plt_get_edge_width(self) -> float:
         return self._props["line"]["width"]
@@ -62,7 +69,7 @@ class MonoLine(PlotlyLayer):
 
 
 @check_protocol(MultiLineProtocol)
-class MultiLine(PlotlyLayer):
+class MultiLine(PlotlyHoverableLayer):
     def __init__(self, data: list[NDArray[np.floating]]):
         # In plotly, we can break a line into multiple segments by inserting None
         xdata = []
@@ -89,7 +96,10 @@ class MultiLine(PlotlyLayer):
             "type": "scatter",
             "showlegend": False,
             "visible": True,
+            "customdata": [""] * len(xdata),
+            "hovertemplate": "%{customdata}<extra></extra>",
         }
+        PlotlyHoverableLayer.__init__(self)
 
     def _plt_get_data(self):
         return self._data
@@ -108,9 +118,12 @@ class MultiLine(PlotlyLayer):
         self._props["x"] = xdata
         self._props["y"] = ydata
 
+    def _plt_get_ndata(self) -> int:
+        return len(self._data)
+
     def _plt_get_edge_width(self) -> NDArray[np.float32]:
         width = self._props["line"]["width"]
-        return np.full(len(self._data), width, dtype=np.float32)
+        return np.full(self._plt_get_ndata(), width, dtype=np.float32)
 
     def _plt_set_edge_width(self, width):
         if is_real_number(width):
@@ -133,7 +146,7 @@ class MultiLine(PlotlyLayer):
 
     def _plt_get_edge_style(self) -> list[LineStyle]:
         style = from_plotly_linestyle(self._props["line"]["dash"])
-        return [style] * len(self._data)
+        return [style] * self._plt_get_ndata()
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         if isinstance(style, LineStyle):
@@ -155,7 +168,7 @@ class MultiLine(PlotlyLayer):
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         col = arr_color(self._props["line"]["color"])
-        return np.stack([col] * len(self._data), axis=0)
+        return np.stack([col] * self._plt_get_ndata(), axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
@@ -180,3 +193,54 @@ class MultiLine(PlotlyLayer):
 
     def _plt_set_antialias(self, antialias: bool):
         self._props["line"]["simplify"] = not antialias
+
+    def _plt_set_hover_text(self, text: list[str]):
+        x = np.array(self._props["x"], dtype=np.float32)
+        nan_indices = np.where(x)[0]
+        dif = np.diff(nan_indices, prepend=0, append=x.size)
+        # if x = [1, 2, None, 3, 4, 2, None, 3, 2]
+        # then dif = [2, 4, 3]
+        dif[1:] -= 1
+        if len(text) != len(dif):
+            warnings.warn(
+                "The length of the hover text does not match the number of lines. "
+                "Ignoring.",
+                UserWarning,
+                stacklevel=2,
+            )
+            return
+        customdata = []
+        for t, d in zip(text, dif):
+            customdata.extend([t] * d)
+            customdata.append("")
+        customdata.pop()
+        self._props["customdata"] = customdata
+        super()._plt_set_hover_text(text)
+
+    def _update_hover_texts(self, fig):
+        if self._hover_texts is None:
+            return
+        x = np.array(self._props["x"], dtype=np.float32)
+        nan_indices = np.where(x)[0]
+        dif = np.diff(nan_indices, prepend=0, append=x.size)
+        # if x = [1, 2, None, 3, 4, 2, None, 3, 2]
+        # then dif = [2, 4, 3]
+        dif[1:] -= 1
+        if len(self._hover_texts) != len(dif):
+            warnings.warn(
+                "The length of the hover text does not match the number of lines. "
+                "Ignoring.",
+                UserWarning,
+                stacklevel=2,
+            )
+            return
+        customdata = []
+        for t, d in zip(self._hover_texts, dif):
+            customdata.extend([t] * d)
+            customdata.append("")
+        customdata.pop()
+
+        fig.update_traces(
+            customdata=customdata,
+            selector={"uid": self._props["uid"]},
+        )

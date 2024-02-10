@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from timeit import default_timer
 from typing import Callable
 
 import matplotlib as mpl
@@ -53,6 +54,29 @@ class Canvas:
         )  # fmt: skip
         self._annot.set_visible(False)
 
+        fig = self._axes.figure
+        if fig is None:
+            return
+        fig.canvas.mpl_connect("motion_notify_event", self._on_hover)
+        fig.canvas.mpl_connect("figure_leave_event", self._hide_tooltip)
+        self._hoverable_artists: list[Artist] = []
+        self._last_hover = -1.0
+
+    def _on_hover(self, event):
+        if default_timer() - self._last_hover < 0.1:
+            # avoid calling the tooltip too often
+            return
+        self._last_hover = default_timer()
+        if event.inaxes is not self._axes:
+            return
+        for layer in reversed(self._hoverable_artists):
+            text = layer._on_hover(event)
+            if text:
+                xy = event.xdata, event.ydata
+                self._set_tooltip(xy, text)
+                return
+        self._hide_tooltip()
+
     def _set_tooltip(self, pos, text: str):
         # determine in which direction to show the tooltip
         x, y = pos
@@ -75,7 +99,7 @@ class Canvas:
         if fig := self._axes.get_figure():
             fig.canvas.draw_idle()
 
-    def _hide_tooltip(self):
+    def _hide_tooltip(self, *_):
         if self._annot.get_visible():
             self._annot.set_visible(False)
             if fig := self._axes.get_figure():
@@ -108,6 +132,7 @@ class Canvas:
     def _plt_reorder_layers(self, layers: list[MplLayer]):
         for i, layer in enumerate(layers):
             layer._plt_set_zorder(i)
+        self._hoverable_artists.sort(key=lambda a: a.get_zorder())
 
     def _plt_get_aspect_ratio(self) -> float | None:
         out = self._axes.get_aspect()
@@ -141,10 +166,14 @@ class Canvas:
             raise NotImplementedError(f"{layer}")
         if hasattr(layer, "post_add"):
             layer.post_add(self)
+        if hasattr(layer, "_on_hover"):
+            self._hoverable_artists.append(layer)
 
     def _plt_remove_layer(self, layer: Artist):
         """Remove layer from the canvas"""
         layer.remove()
+        if layer in self._hoverable_artists:
+            self._hoverable_artists.remove(layer)
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""

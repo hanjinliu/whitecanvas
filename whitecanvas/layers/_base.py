@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import weakref
 from abc import ABC, abstractmethod, abstractproperty
-from typing import TYPE_CHECKING, Any, Generic, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -182,6 +182,26 @@ class DataBoundLayer(PrimitiveLayer[_P], Generic[_P, _T]):
         """Set the data for this layer."""
         self._set_layer_data(self._norm_layer_data(data))
         self.events.data.emit(data)
+
+    @abstractproperty
+    def ndata(self) -> int:
+        """Number of data points."""
+
+
+class HoverableDataBoundLayer(DataBoundLayer[_P, _T]):
+    def with_hover_text(self, text: str | Iterable[Any]) -> Self:
+        """Add hover text to the data points."""
+        if isinstance(text, str):
+            texts = [text] * self.ndata
+        else:
+            texts = [str(t) for t in text]
+        if len(texts) != self.ndata:
+            raise ValueError(
+                "Expected text to have the same size as the data, "
+                f"got {len(texts)} and {self.ndata}"
+            )
+        self._backend._plt_set_hover_text(texts)
+        return self
 
 
 class LayerGroup(Layer):

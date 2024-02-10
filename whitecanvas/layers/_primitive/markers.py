@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Sequence, TypeVar
 
 import numpy as np
 from cmap import Colormap
@@ -8,7 +8,7 @@ from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import DataBoundLayer
+from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import (
     EdgeNamespace,
     FaceEdgeMixinEvents,
@@ -56,7 +56,7 @@ class MarkersLayerEvents(FaceEdgeMixinEvents):
 
 
 class Markers(
-    DataBoundLayer[MarkersProtocol, XYData],
+    HoverableDataBoundLayer[MarkersProtocol, XYData],
     MultiFaceEdgeMixin[_Face, _Edge],
     Generic[_Face, _Edge, _Size],
 ):
@@ -266,17 +266,6 @@ class Markers(
         else:
             raise RuntimeError("Unreachable error.")
         self.face.update(alpha=0.0)
-        return self
-
-    def with_hover_text(self, text: Iterable[Any]) -> Self:
-        """Add hover text to the markers."""
-        texts = [str(t) for t in text]
-        if len(texts) != self.ndata:
-            raise ValueError(
-                "Expected text to have the same size as the data, "
-                f"got {len(texts)} and {self.ndata}"
-            )
-        self._backend._plt_set_hover_text(texts)
         return self
 
     def with_hover_template(

@@ -95,3 +95,7 @@ class Bars(visuals.Compound):
             rect._border_width = w
 
     _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_styles()
+
+    def _plt_set_hover_text(self, text: list[str]):
+        # TODO: not used yet
+        self._hover_texts = text

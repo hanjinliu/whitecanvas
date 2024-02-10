@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import DataBoundLayer
+from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import (
     ConstEdge,
     ConstFace,
@@ -48,7 +48,7 @@ class BarEvents(FaceEdgeMixinEvents):
 
 
 class Bars(
-    DataBoundLayer[BarProtocol, XYData],
+    HoverableDataBoundLayer[BarProtocol, XYData],
     MultiFaceEdgeMixin[_Face, _Edge],
 ):
     """
@@ -179,6 +179,11 @@ class Bars(
     def top(self, top: ArrayLike1D):
         top = as_array_1d(top)
         self.set_data(ydata=top - self.bottom)
+
+    @property
+    def ndata(self) -> int:
+        """The number of data points"""
+        return self.data.x.size
 
     @property
     def bar_width(self) -> float:
@@ -337,11 +342,6 @@ class Bars(
             style=style, antialias=antialias, capsize=capsize,
             orient=orient, backend=self._backend_name
         )  # fmt: skip
-
-    @property
-    def ndata(self) -> int:
-        """The number of data points"""
-        return self._backend._plt_get_data()[0].size
 
     def with_face(
         self,

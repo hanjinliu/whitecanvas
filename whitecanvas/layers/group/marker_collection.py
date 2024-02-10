@@ -385,9 +385,12 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
-    def with_hover_text(self, text: Iterable[Any]) -> Self:
+    def with_hover_text(self, text: str | Iterable[Any]) -> Self:
         """Add hover text to the markers."""
-        texts = np.array([str(t) for t in text], dtype=object)
+        if isinstance(text, str):
+            texts = np.full(self.ndata, text, dtype=object)
+        else:
+            texts = np.array([str(t) for t in text], dtype=object)
         if len(texts) != self.ndata:
             raise ValueError(
                 "Expected text to have the same size as the data, "

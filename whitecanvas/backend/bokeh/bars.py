@@ -53,3 +53,6 @@ class Bars(HeteroLayer[bk_models.Quad]):
 
     def _plt_get_ndata(self) -> int:
         return len(self._data.data["x0"])
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self._data.data["hovertexts"] = text

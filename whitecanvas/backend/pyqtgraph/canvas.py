@@ -5,12 +5,8 @@ from typing import Callable, cast
 import numpy as np
 import pyqtgraph as pg
 import qtpy
-from pyqtgraph.GraphicsScene.mouseEvents import (
-    HoverEvent as pgHoverEvent,
-)
-from pyqtgraph.GraphicsScene.mouseEvents import (
-    MouseClickEvent as pgMouseClickEvent,
-)
+from pyqtgraph.GraphicsScene.mouseEvents import HoverEvent as pgHoverEvent
+from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent as pgMouseClickEvent
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import Signal
 

@@ -7,7 +7,11 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
+from whitecanvas.layers._base import (
+    HoverableDataBoundLayer,
+    LayerEvents,
+    PrimitiveLayer,
+)
 from whitecanvas.layers._mixin import EnumArray
 from whitecanvas.layers._primitive.text import Texts
 from whitecanvas.layers._sizehint import xy_size_hint
@@ -130,7 +134,7 @@ class LineMixin(PrimitiveLayer[_Line]):
         return self
 
 
-class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
+class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData]):
     _backend_class_name = "MonoLine"
     events: LineLayerEvents
     _events_class = LineLayerEvents
@@ -192,6 +196,11 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         ydata: ArrayLike1D | None = None,
     ):
         self.data = xdata, ydata
+
+    @property
+    def ndata(self) -> int:
+        """Number of data points."""
+        return self.data.x.size
 
     def with_markers(
         self,
@@ -474,7 +483,7 @@ class MultiLineEvents(LayerEvents):
     antialias = Signal(bool)
 
 
-class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
+class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
     events: MultiLineEvents
     _events_class = MultiLineEvents
 
@@ -509,27 +518,27 @@ class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
         self._x_hint, self._y_hint = x_hint, y_hint
 
     @property
-    def nlines(self) -> int:
+    def ndata(self) -> int:
         """Number of lines."""
         return len(self._backend._plt_get_data())
 
     @property
     def color(self) -> NDArray[np.floating]:
         """Color of the line."""
-        if self.nlines == 0:
+        if self.ndata == 0:
             return np.zeros((0, 4), dtype=np.float32)
         return self._backend._plt_get_edge_color()
 
     @color.setter
     def color(self, color: ColorType):
-        col = as_color_array(color, self.nlines)
+        col = as_color_array(color, self.ndata)
         self._backend._plt_set_edge_color(col)
         self.events.color.emit(col)
 
     @property
     def width(self) -> float:
         """Width of the line."""
-        if self.nlines == 0:
+        if self.ndata == 0:
             return np.zeros(0, dtype=np.float32)
         return self._backend._plt_get_edge_width()
 
@@ -541,7 +550,7 @@ class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
     @property
     def style(self) -> EnumArray[LineStyle]:
         """Style of the line."""
-        if self.nlines == 0:
+        if self.ndata == 0:
             return np.zeros(0, dtype=object)
         return np.array(self._backend._plt_get_edge_style(), dtype=object)
 
@@ -562,7 +571,7 @@ class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
 
     @alpha.setter
     def alpha(self, value):
-        if self.nlines == 0:
+        if self.ndata == 0:
             return
         col = self.color.copy()
         col[:, 3] = value

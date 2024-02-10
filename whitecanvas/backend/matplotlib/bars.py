@@ -5,7 +5,7 @@ from matplotlib.container import BarContainer
 from matplotlib.patches import Rectangle
 from numpy.typing import NDArray
 
-from whitecanvas.backend.matplotlib._base import MplLayer
+from whitecanvas.backend.matplotlib._base import MplMouseEventsMixin
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle
 from whitecanvas.utils.normalize import as_color_array
@@ -13,7 +13,7 @@ from whitecanvas.utils.type_check import is_not_array
 
 
 @check_protocol(BarProtocol)
-class Bars(BarContainer, MplLayer):
+class Bars(BarContainer, MplMouseEventsMixin):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         patches = []
         width = xhigh - xlow
@@ -24,6 +24,7 @@ class Bars(BarContainer, MplLayer):
             patches.append(r)
         super().__init__(patches)
         self._visible = True
+        MplMouseEventsMixin.__init__(self)
 
     def _plt_get_visible(self):
         return self._visible
@@ -36,6 +37,11 @@ class Bars(BarContainer, MplLayer):
     def _plt_set_zorder(self, zorder: int):
         for patch in self.patches:
             patch.set_zorder(zorder)
+
+    def get_zorder(self):
+        if len(self.patches) == 0:
+            return 0
+        return self.patches[0].get_zorder()
 
     ##### XXYYDataProtocol #####
     def _plt_get_data(self):
@@ -106,3 +112,11 @@ class Bars(BarContainer, MplLayer):
             _width = width
         for patch, w in zip(self.patches, _width):
             patch.set_linewidth(w)
+
+    def contains(self, event):
+        ind: list[int] = []
+        for i, patch in enumerate(self.patches):
+            contains, _ = patch.contains(event)
+            if contains:
+                ind.append(i)
+        return len(ind) > 0, {"ind": ind}

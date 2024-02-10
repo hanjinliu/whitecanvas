@@ -8,7 +8,7 @@ from plotly import graph_objects as go
 
 from whitecanvas.backend import _not_implemented
 from whitecanvas.backend.plotly._base import (
-    PlotlyLayer,
+    PlotlyHoverableLayer,
     from_plotly_marker_symbol,
     to_plotly_marker_symbol,
 )
@@ -19,7 +19,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(MarkersProtocol)
-class Markers(PlotlyLayer):
+class Markers(PlotlyHoverableLayer):
     def __init__(self, xdata, ydata):
         ndata = len(xdata)
         self._props = {
@@ -35,12 +35,10 @@ class Markers(PlotlyLayer):
             "type": "scatter",
             "showlegend": False,
             "visible": True,
-            "customdata": list(zip([""] * ndata, [id(self)] * ndata)),
-            "hovertemplate": "%{customdata[0]}<extra></extra>",
+            "customdata": [""] * ndata,
+            "hovertemplate": "%{customdata}<extra></extra>",
         }
-        self._fig_ref = lambda: None
-        self._hover_texts: list[str] | None = None
-        self._click_callbacks = []
+        PlotlyHoverableLayer.__init__(self)
 
     def _plt_get_ndata(self) -> int:
         return len(self._props["x"])
@@ -97,41 +95,3 @@ class Markers(PlotlyLayer):
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         color = as_color_array(color, self._plt_get_ndata())
         self._props["marker"]["line"]["color"] = [rgba_str_color(c) for c in color]
-
-    def _plt_connect_pick_event(self, callback):
-        fig = self._fig_ref()
-        if fig is None:
-            self._click_callbacks.append(callback)
-            return
-        else:
-            raise NotImplementedError("post connection not implemented yet")
-
-    def _plt_set_hover_text(self, text: list[str]):
-        self._hover_texts = text
-        fig = self._fig_ref()
-        if fig is not None:
-            self._update_hover_texts(fig)
-
-    def _update_hover_texts(self, fig: go.Figure):
-        if self._hover_texts is None:
-            return
-        if len(self._hover_texts) != self._plt_get_ndata():
-            warnings.warn(
-                f"Length of hover text ({len(self._hover_texts)}) does not match the "
-                f"number of data points ({self._plt_get_ndata()}). Ignore updating.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            return
-
-        # check by ID
-        def selector(trace):
-            s = trace["customdata"]
-            if s is None:
-                return False
-            return s[0][1] == id(self)
-
-        fig.update_traces(
-            customdata=list(zip(self._hover_texts, [id(self)] * self._plt_get_ndata())),
-            selector=selector,
-        )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import bokeh.models as bk_models
 import numpy as np
-from bokeh.events import Tap
+from bokeh import events as bk_events
 from numpy.typing import NDArray
 
 from whitecanvas.backend.bokeh._base import (
@@ -61,19 +61,20 @@ class Markers(HeteroLayer[bk_models.Scatter]):
         self._model.angle = rot * np.pi / 2
 
     def _plt_get_symbol_size(self) -> NDArray[np.floating]:
-        return self._data.data["sizes"] * 2
+        return self._data.data["sizes"]
 
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
         if is_real_number(size):
             size = np.full(self._plt_get_ndata(), size)
-        self._data.data["sizes"] = size / 2
+        self._data.data["sizes"] = size
 
     def _plt_get_ndata(self) -> int:
         return len(self._data.data["x"])
 
     def _plt_connect_pick_event(self, callback):
         # TODO: not working
-        self._model.on_event(Tap, lambda e: callback(e.indices))
+        for event in [bk_events.Tap, bk_events.Press, bk_events.PanEnd]:
+            self._model.on_event(event, lambda e: callback(e.indices))
 
     def _plt_set_hover_text(self, text: list[str]):
         self._data.data["hovertexts"] = text

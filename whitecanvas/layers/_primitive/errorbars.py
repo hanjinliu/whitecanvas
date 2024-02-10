@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import Any, Iterable, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import DataBoundLayer
+from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import EnumArray
 from whitecanvas.layers._primitive.line import LineLayerEvents, MultiLine
 from whitecanvas.protocols.layer_protocols import MultiLineProtocol
@@ -28,7 +28,7 @@ class ErrorbarsEvents(LineLayerEvents):
     capsize = Signal(float)
 
 
-class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
+class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
     """Errorbars layer (parallel lines with caps)."""
 
     events: ErrorbarsEvents
@@ -152,7 +152,7 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
 
     @property
     def ndata(self) -> int:
-        """Number of data points."""
+        """Number of errorbars."""
         return self.data[0].size
 
     @property
@@ -240,7 +240,17 @@ class Errorbars(MultiLine, DataBoundLayer[MultiLineProtocol, XYYData]):
         return self
 
     def _has_caps(self) -> bool:
-        return self.nlines > self.ndata
+        return self.ndata > self.ndata
+
+    def with_hover_text(self, text: str | Iterable[Any]) -> Errorbars:
+        """Add hover text to the errorbars."""
+        if isinstance(text, str):
+            texts = [text] * self.ndata
+        else:
+            texts = [str(t) for t in text]
+        if self._has_caps():
+            texts = texts + texts + texts
+        return super().with_hover_text(text)
 
 
 def _xyy_to_segments(

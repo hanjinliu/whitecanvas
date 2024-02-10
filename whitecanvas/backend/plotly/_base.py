@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -17,6 +18,44 @@ class PlotlyLayer:
 
     def _plt_set_visible(self, visible: bool) -> bool:
         self._props["visible"] = visible
+
+
+class PlotlyHoverableLayer(PlotlyLayer):
+    def __init__(self):
+        self._hover_texts: list[str] | None = None
+        self._click_callbacks = []
+        self._fig_ref = lambda: None
+
+    def _plt_connect_pick_event(self, callback):
+        fig = self._fig_ref()
+        if fig is None:
+            self._click_callbacks.append(callback)
+            return
+        else:
+            raise NotImplementedError("post connection not implemented yet")
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self._hover_texts = text
+        fig = self._fig_ref()
+        if fig is not None:
+            self._update_hover_texts(fig)
+
+    def _update_hover_texts(self, fig: FigureWidget):
+        if self._hover_texts is None:
+            return
+        if len(self._hover_texts) != self._plt_get_ndata():
+            warnings.warn(
+                f"Length of hover text ({len(self._hover_texts)}) does not match the "
+                f"number of data points ({self._plt_get_ndata()}). Ignore updating.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
+        fig.update_traces(
+            customdata=self._hover_texts,
+            selector={"uid": self._props["uid"]},
+        )
 
 
 @dataclass

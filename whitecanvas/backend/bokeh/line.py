@@ -69,12 +69,15 @@ class MonoLine(BokehLayer[bk_models.Line]):
         self._model.line_join = "round" if antialias else "miter"
         self._model.line_cap = "round" if antialias else "butt"
 
+    def _plt_set_hover_text(self, text: list[str]):
+        self._data.data["hovertexts"] = text
+
 
 @check_protocol(MultiLineProtocol)
 class MultiLine(BokehLayer[bk_models.MultiLine]):
     def __init__(self, data: list[NDArray[np.number]]):
-        xdata = []
-        ydata = []
+        xdata: list[NDArray[np.number]] = []
+        ydata: list[NDArray[np.number]] = []
         for seg in data:
             xdata.append(seg[:, 0])
             ydata.append(seg[:, 1])
@@ -85,6 +88,7 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
                 "edge_color": ["blue"] * len(xdata),
                 "width": [1.0] * len(xdata),
                 "dash": ["solid"] * len(xdata),
+                "hovertexts": [""] * len(xdata),
             }
         )
         self._model = bk_models.MultiLine(
@@ -186,3 +190,6 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
     def _plt_set_antialias(self, antialias: bool):
         self._model.line_join = "round" if antialias else "miter"
         self._model.line_cap = "round" if antialias else "butt"
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self._data.data["hovertexts"] = text

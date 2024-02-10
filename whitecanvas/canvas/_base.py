@@ -1310,7 +1310,7 @@ class CanvasBase(ABC):
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
-    ) -> _l.Band:
+    ) -> _lg.Kde:
         """
         Add data as a band layer representing kernel density estimation (KDE).
 
@@ -1339,7 +1339,7 @@ class CanvasBase(ABC):
         Kde
             The KDE layer.
         """
-        name = self._coerce_name(_l.Band, name)
+        name = self._coerce_name(_lg.Kde, name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)

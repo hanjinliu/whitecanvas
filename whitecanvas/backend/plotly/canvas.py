@@ -8,7 +8,7 @@ import numpy as np
 from plotly import graph_objects as go
 
 from whitecanvas import protocols
-from whitecanvas.backend.plotly._base import Location, PlotlyLayer
+from whitecanvas.backend.plotly._base import Location, PlotlyHoverableLayer, PlotlyLayer
 from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.plotly.markers import Markers
 from whitecanvas.types import MouseEvent
@@ -113,12 +113,9 @@ class Canvas:
     def _plt_add_layer(self, layer: PlotlyLayer):
         self._fig.add_trace(layer._props, **self._loc.asdict())
         layer._props = self._fig._data[-1]
-        if isinstance(layer, Markers):
-            gobj: go.Scatter = self._fig.data[-1]
-            for cb in layer._click_callbacks:
-                gobj.on_click(_convert_cb(cb), append=True)
-            layer._fig_ref = weakref.ref(self._fig)
-            layer._update_hover_texts(self._fig)
+        layer._gobj = self._fig.data[-1]
+        if isinstance(layer, PlotlyHoverableLayer):
+            layer._connect_mouse_events(self._fig)
 
     def _plt_remove_layer(self, layer: PlotlyLayer):
         """Remove layer from the canvas"""
@@ -195,10 +192,6 @@ class Canvas:
 
     def _repr_mimebundle_(self, *args, **kwargs):
         return self._fig._repr_mimebundle_(*args, **kwargs)
-
-
-def _convert_cb(cb):
-    return lambda _, points, state: cb(points.point_inds)  # noqa: ARG005
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)

@@ -9,6 +9,7 @@ from whitecanvas.backend.mock._base import (
     MockHasData,
     MockHasEdges,
     MockHasFaces,
+    MockHasMouseEvents,
     MockHasMultiEdges,
     MockHasMultiFaces,
 )
@@ -18,7 +19,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @protocols.check_protocol(protocols.BandProtocol)
-class Band(MockHasData, MockHasFaces, MockHasEdges):
+class Band(MockHasData, MockHasFaces, MockHasEdges, MockHasMouseEvents):
     def __init__(
         self,
         t: np.ndarray,
@@ -43,7 +44,7 @@ class Band(MockHasData, MockHasFaces, MockHasEdges):
 
 
 @protocols.check_protocol(protocols.BarProtocol)
-class Bars(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
+class Bars(MockHasData, MockHasMultiFaces, MockHasMultiEdges, MockHasMouseEvents):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         super().__init__((xlow, xhigh, ylow, yhigh))
 
@@ -93,7 +94,7 @@ class Image(BaseMockLayer):
 
 
 @protocols.check_protocol(protocols.LineProtocol)
-class MonoLine(MockHasData, MockHasEdges):
+class MonoLine(MockHasData, MockHasEdges, MockHasMouseEvents):
     def __init__(self, xdata, ydata):
         super().__init__((xdata, ydata))
         self._antialias = True
@@ -106,7 +107,7 @@ class MonoLine(MockHasData, MockHasEdges):
 
 
 @protocols.check_protocol(protocols.MultiLineProtocol)
-class MultiLine(BaseMockLayer, MockHasMultiEdges):
+class MultiLine(BaseMockLayer, MockHasMultiEdges, MockHasMouseEvents):
     def __init__(self, data: list[np.ndarray]):
         super().__init__()
         self._data = data
@@ -129,7 +130,7 @@ class MultiLine(BaseMockLayer, MockHasMultiEdges):
 
 
 @protocols.check_protocol(protocols.MarkersProtocol)
-class Markers(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
+class Markers(MockHasData, MockHasMultiFaces, MockHasMultiEdges, MockHasMouseEvents):
     def __init__(self, xdata, ydata):
         super().__init__((xdata, ydata))
         self._symbol = Symbol.CIRCLE
@@ -151,12 +152,6 @@ class Markers(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
         if is_real_number(size):
             size = np.full(self._size.shape, size, dtype=np.float32)
         self._size = size
-
-    def _plt_set_hover_text(self, text: list[str]) -> None:
-        pass
-
-    def _plt_connect_pick_event(self, callback) -> None:
-        pass
 
 
 @protocols.check_protocol(protocols.TextProtocol)

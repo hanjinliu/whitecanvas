@@ -3,13 +3,13 @@ from __future__ import annotations
 import numpy as np
 from matplotlib.collections import PolyCollection
 
-from whitecanvas.backend.matplotlib._base import MplLayer
+from whitecanvas.backend.matplotlib._base import MplMouseEventsMixin
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle, Orientation
 
 
 @check_protocol(BandProtocol)
-class Band(PolyCollection, MplLayer):
+class Band(PolyCollection, MplMouseEventsMixin):
     def __init__(
         self,
         t: np.ndarray,
@@ -25,11 +25,12 @@ class Band(PolyCollection, MplLayer):
             bw = np.stack([ydata1[::-1], t[::-1]], axis=1)
         verts = np.concatenate([fw, bw], axis=0)
         self._edge_style = LineStyle.SOLID
-        super().__init__([verts], closed=True)
+        super().__init__([verts], closed=True, picker=True)
         self.set_edgecolor("#00000000")
         self._t = t
         self._y0 = ydata0
         self._y1 = ydata1
+        MplMouseEventsMixin.__init__(self)
 
     ##### XYYDataProtocol #####
     def _plt_get_vertical_data(self):
@@ -104,3 +105,14 @@ class Band(PolyCollection, MplLayer):
 
     def _plt_set_antialias(self, antialias: bool):
         self.set_antialiased(antialias)
+
+    def _on_hover(self, event=None):
+        if self._hover_texts is None or not self._plt_get_visible():
+            return
+        contains, ind = self.contains(event)
+        if not contains:
+            return
+        return self._hover_texts[0]
+
+    def _plt_set_hover_text(self, text: str):
+        self._hover_texts = [text]

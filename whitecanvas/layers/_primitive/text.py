@@ -71,7 +71,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
         if t is None:
             t = self._backend._plt_get_text()
         elif isinstance(t, str):
-            t = [t] * self.ntexts
+            t = [t] * self.ndata
         else:
             t = [str(t0) for t0 in t]
         xdata, ydata = normalize_xy(xpos, ypos)
@@ -89,6 +89,11 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     @property
     def ntexts(self):
         """Number of texts."""
+        return self.ndata
+
+    @property
+    def ndata(self):
+        """Number of texts."""
         return len(self.string)
 
     @property
@@ -99,7 +104,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     @string.setter
     def string(self, text: str | list[str]):
         if isinstance(text, str):
-            text = [text] * self.ntexts
+            text = [text] * self.ndata
         self._backend._plt_set_text(text)
 
     @property
@@ -116,10 +121,10 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
             if ypos is None:
                 ypos = y0
         xdata, ydata = normalize_xy(xpos, ypos)
-        if xdata.size != self.ntexts:
+        if xdata.size != self.ndata:
             raise ValueError(
                 f"Length of x ({xdata.size}) and y ({ydata.size}) must be equal "
-                f"to the number of texts ({self.ntexts})."
+                f"to the number of texts ({self.ndata})."
             )
         self._backend._plt_set_text_position((xdata, ydata))
 
@@ -157,7 +162,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
 
     @rotation.setter
     def rotation(self, rotation: float):
-        self._backend._plt_set_text_rotation(np.full(self.ntexts, float(rotation)))
+        self._backend._plt_set_text_rotation(np.full(self.ndata, float(rotation)))
 
     @property
     def family(self) -> str:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Iterable, Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -14,7 +14,7 @@ from whitecanvas.layers.group._collections import (
     RichContainerEvents,
 )
 from whitecanvas.types import Orientation, XYYData
-from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.utils.normalize import as_array_1d, parse_texts
 
 
 class BandCollection(
@@ -84,6 +84,29 @@ class BandCollection(
             y0 = np.full_like(y1, bottom)
             input_.append(XYYData(x, y0, y1))
         return cls(input_, name=name, orient=orient.transpose(), backend=backend)
+
+    def with_hover_text(self, text: str | Iterable[Any]):
+        """Set hover text for each band."""
+        if isinstance(text, str):
+            texts = [text] * len(self)
+        else:
+            texts = [str(t) for t in text]
+        for band, t in zip(self, texts):
+            band.with_hover_text(t)
+        return self
+
+    def with_hover_template(self, template: str, extra: dict[str, Any] | None = None):
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, len(self), extra)
+        # set default format keys
+        if "i" not in params:
+            params["i"] = np.arange(len(self))
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(len(self))
+        ]
+        return self.with_hover_text(texts)
 
 
 class ViolinPlot(BandCollection):

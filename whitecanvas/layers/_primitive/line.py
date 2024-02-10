@@ -7,7 +7,11 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
+from whitecanvas.layers._base import (
+    HoverableDataBoundLayer,
+    LayerEvents,
+    PrimitiveLayer,
+)
 from whitecanvas.layers._mixin import EnumArray
 from whitecanvas.layers._primitive.text import Texts
 from whitecanvas.layers._sizehint import xy_size_hint
@@ -28,10 +32,13 @@ from whitecanvas.utils.normalize import (
     as_array_1d,
     as_color_array,
     normalize_xy,
+    parse_texts,
 )
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.layers import group as _lg
 
 _void = _Void()
@@ -43,6 +50,7 @@ class LineLayerEvents(LayerEvents):
     width = Signal(float)
     style = Signal(str)
     antialias = Signal(bool)
+    picked = Signal(int)
 
 
 class LineMixin(PrimitiveLayer[_Line]):
@@ -130,7 +138,7 @@ class LineMixin(PrimitiveLayer[_Line]):
         return self
 
 
-class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
+class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData]):
     _backend_class_name = "MonoLine"
     events: LineLayerEvents
     _events_class = LineLayerEvents
@@ -155,6 +163,7 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
+        self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     def _get_layer_data(self) -> XYData:
         return XYData(*self._backend._plt_get_data())
@@ -192,6 +201,11 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
         ydata: ArrayLike1D | None = None,
     ):
         self.data = xdata, ydata
+
+    @property
+    def ndata(self) -> int:
+        """Number of data points."""
+        return self.data.x.size
 
     def with_markers(
         self,
@@ -440,6 +454,28 @@ class Line(LineMixin[LineProtocol], DataBoundLayer[LineProtocol, XYData]):
             name=old_name,
         )
 
+    def with_hover_template(
+        self,
+        template: str,
+        extra: Any | None = None,
+    ) -> Self:
+        """Add hover template to the markers."""
+        xs, ys = self.data
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, xs.size, extra)
+        # set default format keys
+        params.setdefault("x", xs)
+        params.setdefault("y", ys)
+        if "i" not in params:
+            params["i"] = np.arange(xs.size)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(xs.size)
+        ]
+        self._backend._plt_set_hover_text(texts)
+        return self
+
     @classmethod
     def build_cdf(
         cls,
@@ -472,9 +508,10 @@ class MultiLineEvents(LayerEvents):
     width = Signal(float)
     style = Signal(str)
     antialias = Signal(bool)
+    picked = Signal(int)
 
 
-class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
+class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
     events: MultiLineEvents
     _events_class = MultiLineEvents
 
@@ -497,6 +534,7 @@ class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
         self.update(
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
+        self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     def _get_layer_data(self) -> list[NDArray[np.number]]:
         """Current data of the layer."""
@@ -512,6 +550,8 @@ class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
     def nlines(self) -> int:
         """Number of lines."""
         return len(self._backend._plt_get_data())
+
+    ndata = nlines
 
     @property
     def color(self) -> NDArray[np.floating]:
@@ -599,6 +639,25 @@ class MultiLine(DataBoundLayer[MultiLineProtocol, "list[NDArray[np.number]]"]):
             self.alpha = alpha
         if antialias is not _void:
             self.antialias = antialias
+        return self
+
+    def with_hover_template(
+        self,
+        template: str,
+        extra: Any | None = None,
+    ) -> Self:
+        """Add hover template to the markers."""
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, self.nlines, extra)
+        # set default format keys
+        if "i" not in params:
+            params["i"] = np.arange(self.nlines)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(self.nlines)
+        ]
+        self._backend._plt_set_hover_text(texts)
         return self
 
 

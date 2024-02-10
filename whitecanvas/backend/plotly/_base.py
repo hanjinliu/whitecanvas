@@ -1,22 +1,73 @@
 from __future__ import annotations
 
+import warnings
+import weakref
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
-from plotly.graph_objs import FigureWidget
+from plotly import graph_objs as go
 
 from whitecanvas.types import LineStyle, Symbol
+
+if TYPE_CHECKING:
+    from plotly.basedatatypes import BaseTraceType
 
 
 class PlotlyLayer:
     _props: dict[str, Any]
-    _fig_ref: Callable[[], FigureWidget]
+    _gobj: BaseTraceType
+    _fig_ref: Callable[[], go.FigureWidget]
 
     def _plt_get_visible(self) -> bool:
         return self._props["visible"]
 
     def _plt_set_visible(self, visible: bool) -> bool:
         self._props["visible"] = visible
+
+
+class PlotlyHoverableLayer(PlotlyLayer):
+    def __init__(self):
+        self._hover_texts: list[str] | None = None
+        self._click_callbacks = []
+        self._fig_ref = lambda: None
+
+    def _plt_connect_pick_event(self, callback):
+        fig = self._fig_ref()
+        if fig is None:
+            self._click_callbacks.append(callback)
+            return
+        else:
+            self._connect_mouse_events(fig)
+
+    def _connect_mouse_events(self, fig: go.FigureWidget):
+        gobj = self._gobj
+        for cb in self._click_callbacks:
+            gobj.on_click(_convert_cb(cb), append=True)
+        self._fig_ref = weakref.ref(fig)
+        self._update_hover_texts(fig)
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self._hover_texts = text
+        fig = self._fig_ref()
+        if fig is not None:
+            self._update_hover_texts(fig)
+
+    def _update_hover_texts(self, fig: go.FigureWidget):
+        if self._hover_texts is None:
+            return
+        if len(self._hover_texts) != self._plt_get_ndata():
+            warnings.warn(
+                f"Length of hover text ({len(self._hover_texts)}) does not match the "
+                f"number of data points ({self._plt_get_ndata()}). Ignore updating.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
+        fig.update_traces(
+            customdata=self._hover_texts,
+            selector={"uid": self._props["uid"]},
+        )
 
 
 @dataclass
@@ -75,3 +126,12 @@ _SYMBOLS = {
 }
 
 _SYMBOLS_INV = {v: k for k, v in _SYMBOLS.items()}
+
+
+def _convert_cb(cb):
+    def _out(_trace, points, _state):
+        indices = points.point_inds
+        if indices:
+            cb(indices)
+
+    return _out

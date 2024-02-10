@@ -3,14 +3,19 @@ from __future__ import annotations
 import bokeh.models as bk_models
 import numpy as np
 
-from whitecanvas.backend.bokeh._base import BokehLayer, from_bokeh_hatch, to_bokeh_hatch
+from whitecanvas.backend.bokeh._base import (
+    BokehLayer,
+    SupportsMouseEvents,
+    from_bokeh_hatch,
+    to_bokeh_hatch,
+)
 from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle, Orientation
 from whitecanvas.utils.normalize import arr_color, hex_color
 
 
 @check_protocol(BandProtocol)
-class Band(BokehLayer["bk_models.VArea | bk_models.HArea"]):
+class Band(BokehLayer["bk_models.VArea | bk_models.HArea"], SupportsMouseEvents):
     def __init__(
         self,
         t: np.ndarray,
@@ -89,3 +94,6 @@ class Band(BokehLayer["bk_models.VArea | bk_models.HArea"]):
 
     def _plt_set_edge_style(self, style: LineStyle):
         self._edge_style = style
+
+    def _plt_set_hover_text(self, text: str):
+        self._data.data["hovertexts"] = [text] * len(self._data.data["t"])

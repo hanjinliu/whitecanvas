@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import numpy as np
+from plotly import graph_objects as go
 
 from whitecanvas.backend._not_implemented import face_pattern
 from whitecanvas.backend.plotly._base import (
-    PlotlyLayer,
+    PlotlyHoverableLayer,
     from_plotly_linestyle,
     to_plotly_linestyle,
 )
@@ -12,9 +13,12 @@ from whitecanvas.protocols import BandProtocol, check_protocol
 from whitecanvas.types import LineStyle, Orientation
 from whitecanvas.utils.normalize import arr_color, rgba_str_color
 
+# NOTE: plotly does not support hover text on the fill area.
+# see https://github.com/plotly/plotly.py/issues/2399
+
 
 @check_protocol(BandProtocol)
-class Band(PlotlyLayer):
+class Band(PlotlyHoverableLayer):
     def __init__(
         self,
         t: np.ndarray,
@@ -34,11 +38,15 @@ class Band(PlotlyLayer):
             "mode": "lines",
             "fill": "toself",
             "fillcolor": "blue",
+            # "hoverinfo": "skip", ... this also disables clicked event.
             "type": "scatter",
             "line": {"color": "blue", "width": 1, "dash": "solid", "simplify": False},
+            "customdata": [""] * t.size,
+            "hovertemplate": "%{customdata}<extra></extra>",
             "showlegend": False,
             "visible": True,
         }
+        PlotlyHoverableLayer.__init__(self)
 
     ##### XYYDataProtocol #####
     def _plt_get_vertical_data(self):
@@ -98,3 +106,18 @@ class Band(PlotlyLayer):
 
     def _plt_set_antialias(self, antialias: bool):
         self._props["line"]["simplify"] = not antialias
+
+    def _plt_set_hover_text(self, text: str):
+        self._hover_texts = [text]
+        fig = self._fig_ref()
+        if fig is not None:
+            self._update_hover_texts(fig)
+
+    def _update_hover_texts(self, fig: go.FigureWidget):
+        if self._hover_texts is None:
+            return
+
+        fig.update_traces(
+            customdata=self._hover_texts * self._props["x"].size,
+            selector={"uid": self._props["uid"]},
+        )

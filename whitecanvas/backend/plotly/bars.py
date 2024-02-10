@@ -4,14 +4,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import _not_implemented
-from whitecanvas.backend.plotly._base import PlotlyLayer
+from whitecanvas.backend.plotly._base import PlotlyHoverableLayer
 from whitecanvas.protocols import BarProtocol, check_protocol
 from whitecanvas.types import Hatch
 from whitecanvas.utils.normalize import arr_color, rgba_str_color
 
 
 @check_protocol(BarProtocol)
-class Bars(PlotlyLayer):
+class Bars(PlotlyHoverableLayer):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         x = (xlow + xhigh) / 2
         ndata = len(x)
@@ -32,8 +32,11 @@ class Bars(PlotlyLayer):
             },
             "visible": True,
             "showlegend": False,
+            "customdata": [""] * ndata,
+            "hovertemplate": "%{customdata}<extra></extra>",
             "type": "bar",
         }
+        PlotlyHoverableLayer.__init__(self)
 
     ##### XXYYDataProtocol #####
     def _plt_get_data(self):

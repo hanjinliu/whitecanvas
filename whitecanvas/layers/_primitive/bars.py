@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import DataBoundLayer
+from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import (
     ConstEdge,
     ConstFace,
@@ -31,7 +31,7 @@ from whitecanvas.types import (
     XYData,
     _Void,
 )
-from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.utils.normalize import as_array_1d, parse_texts
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -45,10 +45,11 @@ _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 class BarEvents(FaceEdgeMixinEvents):
     bar_width = Signal(float)
     bottom = Signal(np.ndarray)
+    picked = Signal(int)
 
 
 class Bars(
-    DataBoundLayer[BarProtocol, XYData],
+    HoverableDataBoundLayer[BarProtocol, XYData],
     MultiFaceEdgeMixin[_Face, _Edge],
 ):
     """
@@ -90,6 +91,7 @@ class Bars(
         self._x_hint, self._y_hint = xhint, yhint
         self._bar_type = "bars"
         self._init_events()
+        self._backend._plt_connect_pick_event(self.events.picked.emit)
 
     def _get_layer_data(self) -> XYData:
         """Current data of the layer."""
@@ -179,6 +181,11 @@ class Bars(
     def top(self, top: ArrayLike1D):
         top = as_array_1d(top)
         self.set_data(ydata=top - self.bottom)
+
+    @property
+    def ndata(self) -> int:
+        """The number of data points"""
+        return self.data.x.size
 
     @property
     def bar_width(self) -> float:
@@ -338,13 +345,9 @@ class Bars(
             orient=orient, backend=self._backend_name
         )  # fmt: skip
 
-    @property
-    def ndata(self) -> int:
-        """The number of data points"""
-        return self._backend._plt_get_data()[0].size
-
     def with_face(
         self,
+        *,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
@@ -353,6 +356,7 @@ class Bars(
 
     def with_face_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
         alpha: float = 1,
@@ -361,6 +365,7 @@ class Bars(
 
     def with_edge(
         self,
+        *,
         color: ColorType | None = None,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
@@ -370,12 +375,30 @@ class Bars(
 
     def with_edge_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
         alpha: float = 1,
     ) -> Bars[_Face, MultiEdge]:
         return super().with_edge_multi(color, width, style, alpha)
+
+    def with_hover_template(self, template: str, extra: Any | None = None) -> Bars:
+        xs, ys = self.data
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, xs.size, extra)
+        # set default format keys
+        params.setdefault("x", xs)
+        params.setdefault("y", ys)
+        if "i" not in params:
+            params["i"] = np.arange(xs.size)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(xs.size)
+        ]
+        self._backend._plt_set_hover_text(texts)
+        return self
 
 
 def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):

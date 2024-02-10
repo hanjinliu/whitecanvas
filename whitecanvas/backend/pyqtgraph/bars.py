@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from typing import Sequence
+
 import numpy as np
 import pyqtgraph as pg
 from numpy.typing import NDArray
-from qtpy import QtGui
+from pyqtgraph.GraphicsScene.mouseEvents import HoverEvent as pgHoverEvent
+from qtpy import QtCore, QtGui
 
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from whitecanvas.backend.pyqtgraph._qt_utils import (
@@ -20,6 +23,8 @@ from whitecanvas.utils.normalize import as_color_array
 
 @check_protocol(BarProtocol)
 class Bars(pg.BarGraphItem, PyQtLayer):
+    clicked = QtCore.Signal(object)
+
     def __init__(self, xlow, xhigh, ylow, yhigh):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
@@ -29,9 +34,11 @@ class Bars(pg.BarGraphItem, PyQtLayer):
             pens=[QtGui.QPen(pen) for _ in range(ndata)],
             brushes=[QtGui.QBrush(QtGui.QColor(0, 0, 0)) for _ in range(ndata)],
         )  # fmt: skip
+        self._hover_texts: list[str] = None
+        self._toolTipCleared = True
 
     ##### XYDataProtocol #####
-    def _plt_get_data(self):
+    def _plt_get_data(self) -> Sequence[NDArray[np.floating]]:
         return self.opts["x0"], self.opts["x1"], self.opts["y0"], self.opts["y1"]
 
     def _plt_set_data(self, xlow, xhigh, ylow, yhigh):
@@ -111,3 +118,39 @@ class Bars(pg.BarGraphItem, PyQtLayer):
             for pen, s in zip(pens, style):
                 pen.setStyle(to_qt_line_style(s))
         self.setOpts(pens=pens)
+
+    def _plt_set_hover_text(self, texts: list[str]):
+        self._hover_texts = texts
+
+    def _plt_connect_pick_event(self, callback):
+        def cb(ev: QtGui.QMouseEvent):
+            idx = self.barsUnderCursor(ev.pos())
+            if idx:
+                callback(idx)
+
+        self.clicked.connect(cb)
+
+    def barsUnderCursor(self, pos: QtCore.QPointF) -> list[int]:
+        rect: QtCore.QRectF = self.boundingRect()
+        if not rect.contains(pos):
+            return -1
+        x0, x1, y0, y1 = self._plt_get_data()
+        px, py = pos.x(), pos.y()
+        indices = np.where((x0 <= px) & (px <= x1) & (y0 <= py) & (py <= y1))[0]
+        return indices.tolist()
+
+    def hoverEvent(self, ev: pgHoverEvent):
+        vb = self.getViewBox()
+        if vb is not None and self._hover_texts is not None:
+            idx = self.barsUnderCursor(ev.pos())
+            if idx:
+                self._toolTipCleared = False
+                vb.setToolTip(self._hover_texts[idx[-1]])
+            else:
+                if not self._toolTipCleared:
+                    vb.setToolTip("")
+                    self._toolTipCleared = True
+
+    def mousePressEvent(self, ev: QtGui.QMouseEvent):
+        super().mousePressEvent(ev)
+        self.clicked.emit(ev)

@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 
 from whitecanvas.backend.bokeh._base import (
     BokehLayer,
+    SupportsMouseEvents,
     from_bokeh_line_style,
     to_bokeh_line_style,
 )
@@ -15,7 +16,7 @@ from whitecanvas.utils.normalize import arr_color, hex_color
 
 
 @check_protocol(LineProtocol)
-class MonoLine(BokehLayer[bk_models.Line]):
+class MonoLine(BokehLayer[bk_models.Line], SupportsMouseEvents):
     def __init__(self, xdata, ydata):
         self._data = bk_models.ColumnDataSource(
             data={"x": xdata, "y": ydata, "hovertexts": np.array([""] * len(xdata))}
@@ -71,10 +72,10 @@ class MonoLine(BokehLayer[bk_models.Line]):
 
 
 @check_protocol(MultiLineProtocol)
-class MultiLine(BokehLayer[bk_models.MultiLine]):
+class MultiLine(BokehLayer[bk_models.MultiLine], SupportsMouseEvents):
     def __init__(self, data: list[NDArray[np.number]]):
-        xdata = []
-        ydata = []
+        xdata: list[NDArray[np.number]] = []
+        ydata: list[NDArray[np.number]] = []
         for seg in data:
             xdata.append(seg[:, 0])
             ydata.append(seg[:, 1])
@@ -85,6 +86,7 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
                 "edge_color": ["blue"] * len(xdata),
                 "width": [1.0] * len(xdata),
                 "dash": ["solid"] * len(xdata),
+                "hovertexts": [""] * len(xdata),
             }
         )
         self._model = bk_models.MultiLine(
@@ -129,27 +131,32 @@ class MultiLine(BokehLayer[bk_models.MultiLine]):
         edge_color = self._data.data["edge_color"]
         width = self._data.data["width"]
         dash = self._data.data["dash"]
+        hovertexts = self._data.data["hovertexts"]
         if len(data) < ndata:
             loss = ndata - len(data)
             edge_color = edge_color[:-loss]
             width = width[:-loss]
             dash = dash[:-loss]
+            hovertexts = hovertexts[:-loss]
         elif len(data) > ndata:
             if ndata == 0:
                 edge_color = ["blue"] * len(data)
                 width = [1.0] * len(data)
                 dash = ["solid"] * len(data)
+                hovertexts = [""] * len(data)
             else:
                 gain = len(data) - ndata
                 edge_color = edge_color + edge_color[-1] * gain
                 width = width + width[-1] * gain
                 dash = dash + dash[-1] * gain
+                hovertexts = hovertexts + [""] * gain
         data = {
             "x": xdata,
             "y": ydata,
             "edge_color": edge_color,
             "width": width,
             "dash": dash,
+            "hovertexts": hovertexts,
         }
         self._data.data.update(data)
 

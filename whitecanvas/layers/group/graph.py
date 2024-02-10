@@ -59,7 +59,7 @@ class Graph(LayerContainer):
     def add_text_offset(self, dx: Any, dy: Any):
         """Add offset to text positions."""
         _offset = self._text_offset._add(dx, dy)
-        if self.texts.ntexts > 0:
+        if self.texts.ndata > 0:
             data = self.nodes.data
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(data.x + xoff, data.y + yoff)

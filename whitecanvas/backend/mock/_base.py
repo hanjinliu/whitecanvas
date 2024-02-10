@@ -139,3 +139,11 @@ class MockHasMultiEdges:
         else:
             width = np.asarray(width)
         self._edge_width = width
+
+
+class MockHasMouseEvents:
+    def _plt_set_hover_text(self, text: list[str]) -> None:
+        pass
+
+    def _plt_connect_pick_event(self, callback) -> None:
+        pass

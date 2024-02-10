@@ -106,7 +106,7 @@ class _LabeledLayerBase(LayerContainer):
         if self.yerr.ndata > 0:
             x, y0, y1 = self.yerr.data
             self.yerr.set_data(x + dx, y0 + dy, y1 + dy)
-        if self.texts.ntexts > 0:
+        if self.texts.ndata > 0:
             dx, dy = self._text_offset._asarray()
             self.texts.set_pos(px + dx, py + dy)
 
@@ -118,7 +118,7 @@ class _LabeledLayerBase(LayerContainer):
     def add_text_offset(self, dx: Any, dy: Any):
         """Add offset to text positions."""
         _offset = self._text_offset._add(dx, dy)
-        if self.texts.ntexts > 0:
+        if self.texts.ndata > 0:
             px, py = self._get_data_xy()
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(px + xoff, py + yoff)

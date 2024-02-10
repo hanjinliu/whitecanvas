@@ -5,7 +5,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from numpy.typing import NDArray
 
-from whitecanvas.backend.matplotlib._base import MplLayer
+from whitecanvas.backend.matplotlib._base import MplMouseEventsMixin
 from whitecanvas.protocols import LineProtocol, MultiLineProtocol, check_protocol
 from whitecanvas.types import LineStyle
 from whitecanvas.utils.normalize import as_color_array
@@ -13,7 +13,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(LineProtocol)
-class MonoLine(Line2D, MplLayer):
+class MonoLine(Line2D, MplMouseEventsMixin):
     def __init__(self, xdata, ydata):
         super().__init__(
             xdata,
@@ -22,7 +22,10 @@ class MonoLine(Line2D, MplLayer):
             linestyle="-",
             color="blue",
             markersize=0,
+            picker=True,
+            pickradius=5,
         )
+        MplMouseEventsMixin.__init__(self)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -58,12 +61,13 @@ class MonoLine(Line2D, MplLayer):
 
 
 @check_protocol(MultiLineProtocol)
-class MultiLine(LineCollection, MplLayer):
+class MultiLine(LineCollection, MplMouseEventsMixin):
     def __init__(self, data: list[NDArray[np.floating]]):
         # data: list of (N, 2)
-        super().__init__(data, linewidths=1)
+        super().__init__(data, linewidths=1, picker=True, pickradius=5)
         self._ndata = len(data)
         self._linestyle = [LineStyle.SOLID] * self._ndata
+        MplMouseEventsMixin.__init__(self)
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):

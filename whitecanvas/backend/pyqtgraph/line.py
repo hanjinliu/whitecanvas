@@ -5,6 +5,7 @@ from functools import reduce
 import numpy as np
 import pyqtgraph as pg
 from numpy.typing import NDArray
+from pyqtgraph.GraphicsScene.mouseEvents import HoverEvent as pgHoverEvent
 from qtpy import QtCore, QtGui
 
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
@@ -23,7 +24,9 @@ class MonoLine(pg.PlotCurveItem, PyQtLayer):
     def __init__(self, xdata, ydata):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
-        super().__init__(xdata, ydata, pen=pen, antialias=False)
+        super().__init__(xdata, ydata, pen=pen, antialias=False, clickable=True)
+        self._hover_texts: list[str] | None = None
+        self._toolTipCleared = True
 
     ##### XYDataProtocol #####
     def _plt_get_data(self):
@@ -67,23 +70,64 @@ class MonoLine(pg.PlotCurveItem, PyQtLayer):
         self.opts["antialias"] = antialias
         self.update()
 
+    def closestPoint(self, pos: QtCore.QPointF) -> int:
+        # TODO: pick the closest point for now, but ideally, we should pick the
+        # closest edge first, and then the closest point on the edge
+        x, y = self.getData()
+        dist2 = (x - pos.x()) ** 2 + (y - pos.y()) ** 2
+        idx = np.argmin(dist2)
+        if dist2[idx] < 10:
+            return idx
+        return idx
+
+    def _plt_connect_pick_event(self, callback):
+        def cb(ins, ev: QtGui.QMouseEvent):
+            callback([self.closestPoint(ev.pos())])
+
+        self.sigClicked.connect(cb)
+
+    def _plt_set_hover_text(self, text: list[str]):
+        self._hover_texts = text
+
+    def hoverEvent(self, ev: pgHoverEvent):
+        vb = self.getViewBox()
+        if vb is not None and self._hover_texts is not None:
+            if self.mouseShape().contains(ev.pos()):
+                i = self.closestPoint(ev.pos())
+                vb.setToolTip(self._hover_texts[i])
+                self._toolTipCleared = False
+            else:
+                if not self._toolTipCleared:
+                    vb.setToolTip("")
+                    self._toolTipCleared = True
+
 
 @check_protocol(MultiLineProtocol)
 class MultiLine(pg.ItemGroup, PyQtLayer):
+    clicked = QtCore.Signal(list)
+
     def __init__(self, data: list[NDArray[np.floating]]):
         super().__init__()
         pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
         pen.setCosmetic(True)
         self._lines: list[pg.PlotCurveItem] = []
         self._qpens: list[QtGui.QPen] = []
-        for seg in data:
-            item = pg.PlotCurveItem(seg[:, 0], seg[:, 1], pen=pen, antialias=True)
+        for i, seg in enumerate(data):
+            item = pg.PlotCurveItem(
+                seg[:, 0], seg[:, 1], pen=pen, antialias=True, clickable=True
+            )
+            item.sigClicked.connect(self._clicked_cb(i))
             self.addItem(item)
             self._lines.append(item)
             self._qpens.append(pen)
         self._data = data
         self._bounding_rect_cache = None
         self._antialias = True
+        self._hover_texts: list[str] = None
+        self._toolTipCleared = True
+
+    def _clicked_cb(self, idx: int):
+        return lambda _ins, _: self.clicked.emit([idx])
 
     def boundingRect(self):
         if self._bounding_rect_cache is not None:
@@ -105,6 +149,7 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
         if ndata < nitem:
             for item in self._lines[ndata:]:
                 scene.removeItem(item)
+                item.sigClicked.disconnect()
             self._lines = self._lines[:ndata]
             self._qpens = self._qpens[:ndata]
         else:
@@ -113,8 +158,9 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
                 pen = self._qpens[-1]
             else:
                 pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
-            for _ in range(ndata - nitem):
-                item = pg.PlotCurveItem(pen=pen, antialias=True)
+            for i in range(nitem, ndata):
+                item = pg.PlotCurveItem(pen=pen, antialias=True, clickable=True)
+                item.sigClicked.connect(self._clicked_cb(i))
                 self.addItem(item)
                 self._lines.append(item)
                 self._qpens.append(pen)
@@ -174,3 +220,22 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
             item.opts["antialias"] = antialias
             item.update()
         self._antialias = antialias
+
+    def hoverEvent(self, ev: pgHoverEvent):
+        vb = self.getViewBox()
+        if vb is not None and self._hover_texts is not None:
+            for i, line in enumerate(self._lines):
+                if line.mouseShape().contains(ev.pos()):
+                    vb.setToolTip(self._hover_texts[i])
+                    self._toolTipCleared = False
+                    break
+            else:
+                if not self._toolTipCleared:
+                    vb.setToolTip("")
+                    self._toolTipCleared = True
+
+    def _plt_set_hover_text(self, texts: list[str]):
+        self._hover_texts = texts
+
+    def _plt_connect_pick_event(self, callback):
+        self.clicked.connect(callback)

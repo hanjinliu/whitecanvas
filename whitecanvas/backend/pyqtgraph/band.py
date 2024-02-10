@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import weakref
+
 import numpy as np
 import pyqtgraph as pg
 from numpy.typing import NDArray
+from pyqtgraph.GraphicsScene.mouseEvents import HoverEvent as pgHoverEvent
 from qtpy import QtGui
 
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
@@ -29,6 +32,29 @@ class Band(pg.FillBetweenItem, PyQtLayer):
         pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         pen.setCosmetic(True)
         super().__init__(c0, c1, pen=pen, brush=QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+        self._viewBox = None
+        self._hover_texts: list[str] = None
+        self._callbacks = []
+
+    def getViewBox(self):
+        if self._viewBox is None:
+            p = self
+            while True:
+                try:
+                    p = p.parentItem()
+                except RuntimeError:
+                    return None
+                if p is None:
+                    vb = self.getViewWidget()
+                    if vb is None:
+                        return None
+                    else:
+                        self._viewBox = weakref.ref(vb)
+                        break
+                if hasattr(p, "implements") and p.implements("ViewBox"):
+                    self._viewBox = weakref.ref(p)
+                    break
+        return self._viewBox()
 
     ##### XYDataProtocol #####
     def _plt_get_vertical_data(self):
@@ -102,3 +128,29 @@ class Band(pg.FillBetweenItem, PyQtLayer):
         pen = self._get_pen()
         pen.setStyle(to_qt_line_style(style))
         self.setPen(pen)
+
+    def hoverEvent(self, ev: pgHoverEvent):
+        vb = self.getViewBox()
+        if vb is not None and self._hover_texts is not None:
+            if self.contains(ev.pos()):
+                self._toolTipCleared = False
+                vb.setToolTip(self._hover_texts[0])
+            else:
+                if not self._toolTipCleared:
+                    vb.setToolTip("")
+                    self._toolTipCleared = True
+
+    def _plt_set_hover_text(self, text: str):
+        self._hover_texts = [text]
+
+    def _plt_connect_pick_event(self, callback):
+        def cb(ev: QtGui.QMouseEvent):
+            if self.contains(ev.pos()):
+                callback()
+
+        self._callbacks.append(cb)
+
+    def mousePressEvent(self, ev: QtGui.QMouseEvent):
+        for cb in self._callbacks:
+            cb(ev)
+        return super().mousePressEvent(ev)

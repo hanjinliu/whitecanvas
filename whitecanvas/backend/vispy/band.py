@@ -175,3 +175,10 @@ class Band(VispyBand):
         self.border_width = width
 
     _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()
+
+    def _plt_set_hover_text(self, text: list[str]):
+        # TODO: not used yet
+        self._hover_texts = text
+
+    def _plt_connect_pick_event(self, callback):
+        pass

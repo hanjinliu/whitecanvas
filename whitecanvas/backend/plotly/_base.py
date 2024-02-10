@@ -135,3 +135,9 @@ def _convert_cb(cb):
             cb(indices)
 
     return _out
+
+
+def to_html(canvas) -> str:
+    from plotly.io import to_html
+
+    return to_html(canvas._figs)

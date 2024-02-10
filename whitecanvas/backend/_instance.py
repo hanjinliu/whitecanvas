@@ -64,7 +64,7 @@ class Backend:
         """Get an object from the current backend."""
         out = getattr(self._mod, attr, None)
         if out is None:
-            raise RuntimeError(f"Backend {self._name!r} does not have {attr!r}")
+            raise RuntimeError(f"Backend {self._name!r} does not implement {attr!r}")
         return out
 
     def is_dummy(self) -> bool:

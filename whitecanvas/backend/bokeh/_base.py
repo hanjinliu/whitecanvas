@@ -164,3 +164,13 @@ _HATCH_MAP = {
     Hatch.DOTS: "dot",
 }
 _HATCH_MAP_INV = {v: k for k, v in _HATCH_MAP.items()}
+
+
+def to_html(canvas) -> str:
+    from io import StringIO
+
+    from bokeh.plotting import save
+
+    with StringIO() as f:
+        save(canvas._grid_plot, f)
+        return f.getvalue()

@@ -178,11 +178,13 @@ texts in different backends.
 import numpy as np
 from whitecanvas import new_canvas
 
-canvas = new_canvas("plotly")
+canvas = new_canvas("plotly", size=(400, 300))
+x = np.arange(10)
+y = np.sin(x)
 
 layer = (
     canvas
-    .add_markers(np.arange(10), np.sin(np.arange(10)))
+    .add_markers(x, y)
     .with_hover_text([f"point {i}" for i in range(10)])
 )
 canvas.show()
@@ -195,12 +197,14 @@ canvas.show()
 import numpy as np
 from whitecanvas import new_canvas
 
-canvas = new_canvas("plotly")
+canvas = new_canvas("plotly", size=(400, 300))
+x = np.arange(10)
+y = np.sin(x)
 
 layer = (
     canvas
-    .add_markers(np.arange(10), np.sin(np.arange(10)))
-    .with_hover_template("x={x}, y={y}, i={i}")
+    .add_markers(x, y)
+    .with_hover_template("x={x:.2f}, y={y:.2f}, i={i}")
 )
 canvas.show()
 ```

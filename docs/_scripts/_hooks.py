@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import re
 import warnings
 from typing import TYPE_CHECKING, Any
@@ -30,9 +29,12 @@ def on_page_markdown(md: str, page: Page, **kwargs: Any) -> str:
             return new_md
         elif code.startswith("#!html:"):
             code, name = _get_html_name(code)
-            reldepth = "../" * page.file.src_path.count(os.sep)
+            reldepth = "../" * (page.file.src_path.count(os.sep) + 1)
             dest = f"{reldepth}_images/{name}.html"
-            html_text = Path(dest).read_text()
+            html_text = (
+                f'<iframe src={dest} frameborder="0" width="400px" height="300px" '
+                'scrolling="no"></iframe>'
+            )
             new_md = "```python\n" + code + "\n```\n\n" + html_text + "\n"
             return new_md
         elif code.startswith("#!"):

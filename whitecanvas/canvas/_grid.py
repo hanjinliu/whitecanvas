@@ -317,7 +317,7 @@ class CanvasGrid:
         """Return HTML representation of the grid."""
         html = self._backend.get("to_html")(self._backend_object)
         if file is not None:
-            Path(file).write_text(html)
+            Path(file).write_text(html, encoding="utf-8")
         return html
 
 

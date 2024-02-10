@@ -46,9 +46,9 @@ def _write_html(src: str, ns: dict, dest: str) -> None:
         canvas = ns["grid"]
     else:
         canvas = ns["canvas"]
-    assert isinstance(canvas, CanvasGrid), type(canvas)
+    assert isinstance(canvas, (CanvasGrid, SingleCanvas)), type(canvas)
     with mkdocs_gen_files.open(dest, "w") as f:
-        canvas.to_html(dest, f.name)
+        canvas.to_html(f.name)
 
 EXCLUDE: set[str] = set()
 
@@ -80,7 +80,7 @@ def main() -> None:
                     raise ValueError(f"Duplicate name {name!r} in {mdfile}")
                 dest = f"_images/{name}.png"
                 _write_image(code, namespace, dest)
-                names_found.add(name)
+                names_found.add(f"{name}.png")
             elif code.startswith("#!html:"):
                 if code.endswith(("canvas.show()", "grid.show()")):
                     code = code[:-7]
@@ -91,6 +91,7 @@ def main() -> None:
                     raise ValueError(f"Duplicate name {name!r} in {mdfile}")
                 dest = f"_images/{name}.html"
                 _write_html(code, namespace, dest)
+                names_found.add(f"{name}.html")
             else:
                 if code.endswith(("canvas.show()", "grid.show()")):
                     code = code[:-7]

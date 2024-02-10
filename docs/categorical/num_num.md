@@ -13,6 +13,7 @@ df = {
     "label": ["A"] * 5 + ["B"] * 5,
     "x": [0, 1, 2, 3, 4, 0, 1, 2, 3, 4],
     "y": [3, 1, 2, 4, 3, 5, 3, 3, 1, 2],
+    "some-info": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
 }
 ```
 
@@ -42,6 +43,15 @@ In the case of markers, you can use symbols to distinguish groups.
 #!name: categorical_add_markers_symbol
 canvas = new_canvas("matplotlib")
 canvas.cat(df, "x", "y").add_markers(symbol="label")
+canvas.show()
+```
+
+The layers implement hover texts by default, based on the input data frame.
+
+``` python
+#!html: categorical_add_markers_hover_text
+canvas = new_canvas("plotly", size=(400, 300))
+canvas.cat(df, "x", "y").add_markers(color="label")
 canvas.show()
 ```
 

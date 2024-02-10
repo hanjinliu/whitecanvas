@@ -2397,13 +2397,13 @@ canvas = wrap_canvas(plt.gca())</p>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected matplotlib Axes, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span>
 
-    <span class="k">elif</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;plotly&quot;</span><span class="p">,</span> <span class="s2">&quot;FigureWidget&quot;</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">plotly.graph_objs</span> <span class="kn">import</span> <span class="n">FigureWidget</span>
+    <span class="k">elif</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;plotly&quot;</span><span class="p">,</span> <span class="s2">&quot;Figure&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">plotly.graph_objs</span> <span class="kn">import</span> <span class="n">Figure</span>
 
         <span class="kn">from</span> <span class="nn">whitecanvas.backend.plotly</span> <span class="kn">import</span> <span class="n">Canvas</span> <span class="k">as</span> <span class="n">BackendCanvas</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">FigureWidget</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected plotly FigureWidget, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Figure</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected plotly Figure, got </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;plotly&quot;</span>
     <span class="k">elif</span> <span class="n">_is_in_module</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;bokeh&quot;</span><span class="p">,</span> <span class="s2">&quot;Plot&quot;</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">bokeh.models</span> <span class="kn">import</span> <span class="n">Plot</span>

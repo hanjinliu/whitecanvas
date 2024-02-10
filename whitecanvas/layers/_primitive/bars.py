@@ -31,7 +31,7 @@ from whitecanvas.types import (
     XYData,
     _Void,
 )
-from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.utils.normalize import as_array_1d, parse_texts
 
 if TYPE_CHECKING:
     from whitecanvas.layers import group as _lg
@@ -347,6 +347,7 @@ class Bars(
 
     def with_face(
         self,
+        *,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
@@ -355,6 +356,7 @@ class Bars(
 
     def with_face_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
         alpha: float = 1,
@@ -363,6 +365,7 @@ class Bars(
 
     def with_edge(
         self,
+        *,
         color: ColorType | None = None,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
@@ -372,12 +375,30 @@ class Bars(
 
     def with_edge_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
         alpha: float = 1,
     ) -> Bars[_Face, MultiEdge]:
         return super().with_edge_multi(color, width, style, alpha)
+
+    def with_hover_template(self, template: str, extra: Any | None = None) -> Bars:
+        xs, ys = self.data
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, xs.size, extra)
+        # set default format keys
+        params.setdefault("x", xs)
+        params.setdefault("y", ys)
+        if "i" not in params:
+            params["i"] = np.arange(xs.size)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(xs.size)
+        ]
+        self._backend._plt_set_hover_text(texts)
+        return self
 
 
 def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):

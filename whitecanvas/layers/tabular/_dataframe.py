@@ -59,6 +59,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self.with_width(width)
         if style is not None:
             self.with_style(style)
+        self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
 
     @classmethod
     def from_table(
@@ -131,18 +132,21 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self._style_by = style_by
         return self
 
-    def with_shift(
-        self,
-        dx: float = 0.0,
-        dy: float = 0.0,
-    ) -> Self:
+    def with_shift(self, dx: float = 0.0, dy: float = 0.0) -> Self:
         """Add a constant shift to the layer."""
         for layer in self._base_layer:
             old_data = layer.data
-            new_data = (old_data[0] + dx, old_data[1] + dy)
+            new_data = old_data[0] + dx, old_data[1] + dy
             layer.data = new_data
         if canvas := self._canvas_ref():
             canvas._autoscale_for_layer(self, pad_rel=0.025)
+        return self
+
+    def with_hover_template(self, template: str) -> Self:
+        extra = {}
+        for i, key in enumerate(self._splitby):
+            extra[key] = [row[i] for row in self._labels]
+        self.base.with_hover_template(template, extra=extra)
         return self
 
 
@@ -186,17 +190,7 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
             self.with_size(theme.get_theme().markers.size)
 
         # set default hover text
-        fmt_list = list[str]()
-        for ikey, (key, value) in enumerate(self._source.iter_items()):
-            if not key:
-                continue
-            if ikey > 6:
-                break
-            if value.dtype.kind == "f":
-                fmt_list.append(f"{key}: {{{key}:.4g}}")
-            else:
-                fmt_list.append(f"{key}: {{{key}!r}}")
-        self.with_hover_template("\n".join(fmt_list))
+        self.with_hover_template(default_template(source.iter_items()))
 
     @overload
     def with_color(self, value: ColorType) -> Self:
@@ -433,6 +427,7 @@ class DFBars(
             self.with_color(color)
         if hatch is not None:
             self.with_hatch(hatch)
+        self.with_hover_template(default_template(source.iter_items()))
 
     @classmethod
     def from_table(
@@ -497,10 +492,16 @@ class DFBars(
         self._hatch_by = hatch_by
         return self
 
+    def with_hover_template(self, template: str) -> Self:
+        extra = dict(self._source.iter_items())
+        self.base.with_hover_template(template, extra=extra)
+        return self
+
 
 class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
     @property
     def cmap(self) -> Colormap:
+        """Colormap of the heatmap."""
         return self._base_layer.cmap
 
     @cmap.setter
@@ -509,6 +510,7 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
 
     @property
     def clim(self) -> tuple[float, float]:
+        """Color limits of the heatmap."""
         return self._base_layer.clim
 
     @clim.setter
@@ -848,3 +850,18 @@ class DFRug(
             layers.append(each_layer)
         base = _lg.LayerCollectionBase(layers, name=name)
         return cls(df, base, labels, color=color, width=width, style=style)
+
+
+def default_template(it: Iterable[tuple[str, np.ndarray]], max_rows: int = 10) -> str:
+    """Default template string for markers"""
+    fmt_list = list[str]()
+    for ikey, (key, value) in enumerate(it):
+        if not key:
+            continue
+        if ikey >= max_rows:
+            break
+        if value.dtype.kind == "f":
+            fmt_list.append(f"{key}: {{{key}:.4g}}")
+        else:
+            fmt_list.append(f"{key}: {{{key}!r}}")
+    return "\n".join(fmt_list)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any, Iterable, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,8 +9,11 @@ from whitecanvas.backend import Backend
 from whitecanvas.layers._primitive import Line
 from whitecanvas.layers.group._collections import LayerCollectionBase
 from whitecanvas.types import LineStyle, XYData
-from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
+from whitecanvas.utils.normalize import as_any_1d_array, as_color_array, parse_texts
 from whitecanvas.utils.type_check import is_real_number
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class LineCollection(LayerCollectionBase[Line]):
@@ -80,3 +83,32 @@ class LineCollection(LayerCollectionBase[Line]):
         styles = as_any_1d_array(style, len(self))
         for line, s in zip(self, styles):
             line.style = s
+
+    def with_hover_texts(self, text: str | Iterable[Any]) -> Self:
+        if isinstance(text, str):
+            texts = [text] * len(self)
+        else:
+            texts = [str(t) for t in text]
+            if len(texts) != len(self):
+                raise ValueError("Length of texts must match the number of lines.")
+        for line, txt in zip(self, texts):
+            line.with_hover_text(txt)
+        return self
+
+    def with_hover_template(
+        self,
+        template: str,
+        extra: Any | None = None,
+    ) -> Self:
+        """Add hover template to the markers."""
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, len(self), extra)
+        # set default format keys
+        if "i" not in params:
+            params["i"] = np.arange(len(self))
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(len(self))
+        ]
+        return self.with_hover_texts(texts)

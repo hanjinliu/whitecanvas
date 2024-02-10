@@ -32,10 +32,13 @@ from whitecanvas.utils.normalize import (
     as_array_1d,
     as_color_array,
     normalize_xy,
+    parse_texts,
 )
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.layers import group as _lg
 
 _void = _Void()
@@ -451,6 +454,28 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
             name=old_name,
         )
 
+    def with_hover_template(
+        self,
+        template: str,
+        extra: Any | None = None,
+    ) -> Self:
+        """Add hover template to the markers."""
+        xs, ys = self.data
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, xs.size, extra)
+        # set default format keys
+        params.setdefault("x", xs)
+        params.setdefault("y", ys)
+        if "i" not in params:
+            params["i"] = np.arange(xs.size)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(xs.size)
+        ]
+        self._backend._plt_set_hover_text(texts)
+        return self
+
     @classmethod
     def build_cdf(
         cls,
@@ -612,6 +637,25 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
             self.alpha = alpha
         if antialias is not _void:
             self.antialias = antialias
+        return self
+
+    def with_hover_template(
+        self,
+        template: str,
+        extra: Any | None = None,
+    ) -> Self:
+        """Add hover template to the markers."""
+        if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
+            template = template.replace("\n", "<br>")
+        params = parse_texts(template, self.ndata, extra)
+        # set default format keys
+        if "i" not in params:
+            params["i"] = np.arange(self.ndata)
+        texts = [
+            template.format(**{k: v[i] for k, v in params.items()})
+            for i in range(self.ndata)
+        ]
+        self._backend._plt_set_hover_text(texts)
         return self
 
 

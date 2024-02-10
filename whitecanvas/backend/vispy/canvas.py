@@ -53,6 +53,7 @@ class Canvas:
             axis_label="",
         )
         x_axis.stretch = (1, 0.1)
+        x_axis.height_min = x_axis.height_max = 40
         grid.add_widget(x_axis, row=2, col=1)
         x_axis.link_view(self._viewbox)
         y_axis = Axis(
@@ -202,7 +203,11 @@ class CanvasGrid:
         self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int):
-        viewbox: ViewBox = self._grid.add_view(row, col, rowspan, colspan)
+        rspan = sum(self._heights[row : row + rowspan])
+        cspan = sum(self._widths[col : col + colspan])
+        r = sum(self._heights[:row])
+        c = sum(self._widths[:col])
+        viewbox: ViewBox = self._grid.add_view(r, c, rspan, cspan)
         canvas = Canvas(viewbox)
         canvas._set_scene_ref(self._scene)
         return canvas

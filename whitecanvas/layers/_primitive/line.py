@@ -547,27 +547,29 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         self._x_hint, self._y_hint = x_hint, y_hint
 
     @property
-    def ndata(self) -> int:
+    def nlines(self) -> int:
         """Number of lines."""
         return len(self._backend._plt_get_data())
+
+    ndata = nlines
 
     @property
     def color(self) -> NDArray[np.floating]:
         """Color of the line."""
-        if self.ndata == 0:
+        if self.nlines == 0:
             return np.zeros((0, 4), dtype=np.float32)
         return self._backend._plt_get_edge_color()
 
     @color.setter
     def color(self, color: ColorType):
-        col = as_color_array(color, self.ndata)
+        col = as_color_array(color, self.nlines)
         self._backend._plt_set_edge_color(col)
         self.events.color.emit(col)
 
     @property
     def width(self) -> float:
         """Width of the line."""
-        if self.ndata == 0:
+        if self.nlines == 0:
             return np.zeros(0, dtype=np.float32)
         return self._backend._plt_get_edge_width()
 
@@ -579,7 +581,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
     @property
     def style(self) -> EnumArray[LineStyle]:
         """Style of the line."""
-        if self.ndata == 0:
+        if self.nlines == 0:
             return np.zeros(0, dtype=object)
         return np.array(self._backend._plt_get_edge_style(), dtype=object)
 
@@ -600,7 +602,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
 
     @alpha.setter
     def alpha(self, value):
-        if self.ndata == 0:
+        if self.nlines == 0:
             return
         col = self.color.copy()
         col[:, 3] = value
@@ -647,13 +649,13 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         """Add hover template to the markers."""
         if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
             template = template.replace("\n", "<br>")
-        params = parse_texts(template, self.ndata, extra)
+        params = parse_texts(template, self.nlines, extra)
         # set default format keys
         if "i" not in params:
-            params["i"] = np.arange(self.ndata)
+            params["i"] = np.arange(self.nlines)
         texts = [
             template.format(**{k: v[i] for k, v in params.items()})
-            for i in range(self.ndata)
+            for i in range(self.nlines)
         ]
         self._backend._plt_set_hover_text(texts)
         return self

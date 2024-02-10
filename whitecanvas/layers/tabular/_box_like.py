@@ -69,6 +69,9 @@ class _BoxLikeMixin:
         self._hatch_by = hatch_by
         self._get_base().face.color = color_by.generate(self._categories, self._splitby)
         self._get_base().face.hatch = hatch_by.generate(self._categories, self._splitby)
+        if not hasattr(self, "with_hover_template"):
+            return
+        self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
 
     def _get_base(self) -> _FE:
         """Just for typing."""
@@ -199,6 +202,19 @@ class DFBoxPlot(
         shift: float = 0.0,
     ) -> Self:
         self._base_layer.with_shift(shift)
+        return self
+
+    def with_hover_text(self, text: str | list[str]) -> Self:
+        """Set the hover tooltip text for the layer."""
+        self.base.boxes.with_hover_text(text)
+        return self
+
+    def with_hover_template(self, template: str) -> Self:
+        """Set the hover tooltip template for the layer."""
+        extra = {}
+        for i, key in enumerate(self._splitby):
+            extra[key] = [row[i] for row in self._categories]
+        self.base.boxes.with_hover_template(template, extra=extra)
         return self
 
 
@@ -340,6 +356,19 @@ class DFPointPlot(
         else:
             self._base_layer.xerr.set_data(err_low, err_high, mdata.y)
 
+    def with_hover_text(self, text: str | list[str]) -> Self:
+        """Set the hover tooltip text for the layer."""
+        self.base.markers.with_hover_text(text)
+        return self
+
+    def with_hover_template(self, template: str) -> Self:
+        """Set the hover tooltip template for the layer."""
+        extra = {}
+        for i, key in enumerate(self._splitby):
+            extra[key] = [row[i] for row in self._categories]
+        self.base.markers.with_hover_template(template, extra=extra)
+        return self
+
 
 class DFBarPlot(
     _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _EstimatorMixin, Generic[_DF]
@@ -393,3 +422,16 @@ class DFBarPlot(
             self._base_layer.yerr.set_data(mdata.x, err_low, err_high)
         else:
             self._base_layer.xerr.set_data(err_low, err_high, mdata.y)
+
+    def with_hover_text(self, text: str | list[str]) -> Self:
+        """Set the hover tooltip text for the layer."""
+        self.base.bars.with_hover_text(text)
+        return self
+
+    def with_hover_template(self, template: str) -> Self:
+        """Set the hover tooltip template for the layer."""
+        extra = {}
+        for i, key in enumerate(self._splitby):
+            extra[key] = [row[i] for row in self._categories]
+        self.base.bars.with_hover_template(template, extra=extra)
+        return self

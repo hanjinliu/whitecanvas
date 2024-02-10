@@ -187,7 +187,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         ndata = self.ndata
         col = as_color_array(color, ndata)
         if self._has_caps():
-            col = np.concatenate([col] * 3)
+            col = np.concatenate([col] * 3, axis=0)
         MultiLine.color.fset(self, col)
 
     @property
@@ -240,7 +240,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         return self
 
     def _has_caps(self) -> bool:
-        return self.ndata > self.ndata
+        return self.nlines > self.ndata
 
     def with_hover_text(self, text: str | Iterable[Any]) -> Errorbars:
         """Add hover text to the errorbars."""

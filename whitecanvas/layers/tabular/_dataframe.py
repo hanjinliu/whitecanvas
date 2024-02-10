@@ -371,6 +371,7 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         return self
 
     def with_hover_template(self, template: str) -> Self:
+        """Set the hover tooltip template for the layer."""
         extra = dict(self._source.iter_items())
         self.base.with_hover_template(template, extra=extra)
         return self
@@ -493,6 +494,7 @@ class DFBars(
         return self
 
     def with_hover_template(self, template: str) -> Self:
+        """Set the hover tooltip template for the layer."""
         extra = dict(self._source.iter_items())
         self.base.with_hover_template(template, extra=extra)
         return self
@@ -639,15 +641,9 @@ class DFHistograms(
         layers = []
         for arr in arrays:
             each_layer = _lg.Histogram.from_array(
-                arr,
-                kind=kind,
-                bins=hist.edges,
-                limits=limits,
-                width=width,
-                orient=ori,
-                shape=shape,
-                backend=backend,
-            )
+                arr, kind=kind, bins=hist.edges, limits=limits, width=width,
+                orient=ori, shape=shape, backend=backend,
+            )  # fmt: skip
             layers.append(each_layer)
         base = _lg.LayerCollectionBase(layers, name=name)
         return cls(df, base, labels, color=color, width=width, style=style)

@@ -50,7 +50,7 @@ class Canvas:
         self._annot = ax.annotate(
             text="", xy=(0, 0), xytext=(20, -20), textcoords="offset points",
             bbox={"fc": "w"}, fontproperties={"size": 14, "family": "Arial"},
-            clip_on=False,
+            clip_on=False, zorder=10000,
         )  # fmt: skip
         self._annot.set_visible(False)
 

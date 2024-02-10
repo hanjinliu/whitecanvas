@@ -162,16 +162,23 @@ canvas.show()
 
 ## Hover Text
 
+Hover text is very useful for interactive data exploration. `whitecanvas` supports hover
+texts in different backends.
+
+!!! note
+    To demonstrate the hover texts in this document, we use `plotly` backend. This does
+    not mean that hover text is not supported in `matplotlib`.
+
 ### Give a sequence of hover texts
 
 `with_hover_text` method sets the hover text of the markers.
 
 ``` python
-#!skip
+#!html: add_markers_with_hover_text
 import numpy as np
 from whitecanvas import new_canvas
 
-canvas = new_canvas("matplotlib")
+canvas = new_canvas("plotly")
 
 layer = (
     canvas
@@ -184,11 +191,11 @@ canvas.show()
 ### Give a hover template
 
 ``` python
-#!skip
+#!html: add_markers_with_hover_template
 import numpy as np
 from whitecanvas import new_canvas
 
-canvas = new_canvas("matplotlib")
+canvas = new_canvas("plotly")
 
 layer = (
     canvas

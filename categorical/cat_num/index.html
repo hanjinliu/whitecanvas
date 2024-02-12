@@ -1148,6 +1148,18 @@ violins.</p>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_violin_5.png" width="360px" /></p>
+<p>The color palette of the canvas is used to paint categories. If you want to change it
+after the layer is added, use <code>update_color_palette</code> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">update_color_palette</span><span class="p">([</span><span class="s2">&quot;pink&quot;</span><span class="p">,</span> <span class="s2">&quot;teal&quot;</span><span class="p">])</span>
+<span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_violin_6.png" width="360px" /></p>
 <p><code>add_boxplot</code>, <code>add_pointplot</code> and <code>add_barplot</code> is very similar to <code>add_violinplot</code>.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">hgrid</span>
 

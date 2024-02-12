@@ -4930,7 +4930,7 @@
 <span class="sd">        Add an infinite curve to the canvas.</span>
 
 <span class="sd">        &gt;&gt;&gt; canvas.add_infcurve(lambda x: x ** 2)  # parabola</span>
-<span class="sd">        &gt;&gt;&gt; canvas.add_infcurve(lambda x, a: np.sin(a*x)).with_params(2)  # parametric</span>
+<span class="sd">        &gt;&gt;&gt; canvas.add_infcurve(lambda x, a: np.sin(a*x)).update_params(2)  # parametric</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -8206,7 +8206,7 @@ the default behavior.</p>
 <blockquote>
 <blockquote>
 <p>canvas.add_infcurve(lambda x: x ** 2)  # parabola
-canvas.add_infcurve(lambda x, a: np.sin(a*x)).with_params(2)  # parametric</p>
+canvas.add_infcurve(lambda x, a: np.sin(a*x)).update_params(2)  # parametric</p>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -8433,7 +8433,7 @@ signature as <code>scipy.optimize.curve_fit</code>.</p>
 <span class="sd">    Add an infinite curve to the canvas.</span>
 
 <span class="sd">    &gt;&gt;&gt; canvas.add_infcurve(lambda x: x ** 2)  # parabola</span>
-<span class="sd">    &gt;&gt;&gt; canvas.add_infcurve(lambda x, a: np.sin(a*x)).with_params(2)  # parametric</span>
+<span class="sd">    &gt;&gt;&gt; canvas.add_infcurve(lambda x, a: np.sin(a*x)).update_params(2)  # parametric</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

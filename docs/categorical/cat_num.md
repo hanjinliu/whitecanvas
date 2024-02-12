@@ -133,6 +133,21 @@ canvas = new_canvas("matplotlib")
 canvas.show()
 ```
 
+The color palette of the canvas is used to paint categories. If you want to change it
+after the layer is added, use `update_color_palette` method.
+
+``` python
+#!name: categorical_axis_violin_6
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .update_color_palette(["pink", "teal"])
+)
+canvas.show()
+```
+
 `add_boxplot`, `add_pointplot` and `add_barplot` is very similar to `add_violinplot`.
 
 ``` python

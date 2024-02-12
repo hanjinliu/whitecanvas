@@ -22,6 +22,7 @@ from whitecanvas.types import (
     Orientation,
     _Void,
 )
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -105,6 +106,7 @@ class _BoxLikeMixin:
         self,
         palette: ColormapType | None = None,
         *,
+        alpha: float | None = None,
         cycle_by: str | Sequence[str] | None = None,
     ) -> Self:
         """
@@ -116,10 +118,23 @@ class _BoxLikeMixin:
             Color palette used to generate colors for each category. A color palette
             can be a list of colors or any types that can be converted into a
             `cmap.Colormap` object.
+        alpha : float, optional
+            Additional alpha value that will be applied to the palette colors.
+        cycle_by : str or sequence of str, optional
+            If given, colors will be cycled on this column name(s).
         """
         by = self._normalize_by_arg(cycle_by, self._color_by.by)
         color_by = _p.ColorPlan.from_palette(by, palette=palette)
-        self._get_base().face.color = color_by.generate(self._categories, self._splitby)
+        colors = color_by.generate(self._categories, self._splitby)
+        color_arr = np.stack([c.rgba for c in colors], dtype=np.float32)
+        if alpha is not None:
+            if is_real_number(alpha) and 0 <= alpha <= 1:
+                color_arr[:, 3] = alpha
+            else:
+                raise TypeError(
+                    f"`alpha` must be a scalar value between 0 and 1, got {alpha!r}."
+                )
+        self._get_base().face.color = color_arr
         self._color_by = color_by
         return self
 

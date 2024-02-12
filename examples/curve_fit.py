@@ -13,7 +13,7 @@ def sample_data(tau: float, a: float, b: float, size: int = 40):
 
 def main():
     np.random.seed(1462)
-    canvas = new_canvas(backend="bokeh")
+    canvas = new_canvas(backend="matplotlib:qt")
 
     # tau, a, b, size
     params_true = [
@@ -33,7 +33,12 @@ def main():
 
         # add the fitting curve
         params, _ = curve_fit(model, x, y, p0=[2, 1, 0])
-        canvas.add_infcurve(model, color=line.color, alpha=1).with_params(*params)
+        (
+            canvas
+            .add_infcurve(model, color=line.color, alpha=1)
+            .update_params(*params)
+            .with_hover_text("a={:.3g}, tau={:.3g}, b={:.3g}".format(*params))
+        )
 
     canvas.update_labels(
         x="time [sec]", y="intensity [a.u.]", title="Fitting results"

@@ -322,6 +322,7 @@ class LayerWrapper(Layer, Generic[_L]):
 _DEPRECATED = [
     ("with_shift", "move"),
     ("with_color", "update_color"),
+    ("with_color_palette", "update_color_palette"),
     ("with_colormap", "update_colormap"),
     ("with_style", "update_style"),
     ("with_width", "update_width"),
@@ -333,21 +334,23 @@ _DEPRECATED = [
 ]
 
 
-def _wrap_deprecation(method, new: str):
+def _wrap_deprecation(method, old: str):
     def wrapper(self, *args, **kwargs):
         warnings.warn(
-            f"{method.__name__} is deprecated and will be removed in the future. "
-            f"Use {new} instead.",
+            f"{old} is deprecated and will be removed in the future. "
+            f"Use {method.__name__} instead.",
             DeprecationWarning,
             stacklevel=2,
         )
         return method(self, *args, **kwargs)
 
-    wrapper.__doc__ = f"Deprecated. Use {new} instead."
+    wrapper.__doc__ = f"Deprecated. Use {method.__name__} instead."
     return wrapper
 
 
 def _set_deprecated_aliases(layer: Layer):
-    for deprecatd, new in _DEPRECATED:
+    for deprecated, new in _DEPRECATED:
         if hasattr(layer, new):
-            setattr(layer, deprecatd, _wrap_deprecation(getattr(layer, new), new))
+            setattr(
+                layer, deprecated, _wrap_deprecation(getattr(layer, new), deprecated)
+            )

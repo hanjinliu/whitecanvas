@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
+from plotly import graph_objects as go
 
 from whitecanvas.backend.plotly._base import PlotlyLayer
 from whitecanvas.protocols import TextProtocol, check_protocol
@@ -10,7 +11,7 @@ from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_colo
 
 
 @check_protocol(TextProtocol)
-class Texts(PlotlyLayer):
+class Texts(PlotlyLayer[go.Scatter]):
     def __init__(
         self, x: NDArray[np.floating], y: NDArray[np.floating], text: list[str]
     ):
@@ -35,10 +36,10 @@ class Texts(PlotlyLayer):
 
     ##### TextProtocol #####
 
-    def _plt_get_text(self) -> str:
-        return self._props["text"]
+    def _plt_get_text(self) -> list[str]:
+        return list(self._props["text"])
 
-    def _plt_set_text(self, text: str):
+    def _plt_set_text(self, text: list[str]):
         self._props["text"] = text
 
     def _plt_get_text_color(self):

@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 from cmap import Colormap
+from plotly import graph_objects as go
 
 from whitecanvas.backend.plotly._base import PlotlyLayer
 from whitecanvas.protocols import ImageProtocol, check_protocol
 
 
 @check_protocol(ImageProtocol)
-class Image(PlotlyLayer):
+class Image(PlotlyLayer[go.Heatmap]):
     def __init__(self, data: np.ndarray):
         self._props = {
             "z": data,

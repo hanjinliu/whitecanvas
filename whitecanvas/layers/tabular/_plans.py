@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Generic, Iterator, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 
 import numpy as np
 from cmap import Color, Colormap
@@ -46,180 +46,6 @@ class CategoricalPlan(Plan[_V]):
     @abstractmethod
     def default(cls, by: Sequence[str]) -> Self:
         """Create a default plan."""
-
-
-class OffsetPolicy(ABC):
-    """Class that defines how to define offsets for given data."""
-
-    @abstractmethod
-    def get(self, interval: int) -> float:
-        """Get increment of position for given interval from the previous position."""
-
-    def with_shift(self, val: float) -> CompositeOffsetPolicy:
-        return CompositeOffsetPolicy([self, ConstOffset(val)])
-
-
-class ConstMarginPolicy(OffsetPolicy):
-    def __init__(self, margin: float) -> None:
-        self._margin = margin
-
-    def get(self, interval: int) -> float:
-        return interval + self._margin
-
-
-class ConstPolicy(OffsetPolicy):
-    def __init__(self, incr: float) -> None:
-        self._incr = incr
-
-    def get(self, interval: int) -> float:
-        return self._incr
-
-
-class NoMarginPolicy(ConstMarginPolicy):
-    def __init__(self) -> None:
-        super().__init__(0.0)
-
-
-class OverlayPolicy(OffsetPolicy):
-    def get(self, interval: int) -> float:
-        return 0.0
-
-
-class CompositeOffsetPolicy(OffsetPolicy):
-    def __init__(self, policies: list[OffsetPolicy]) -> None:
-        self._policies = policies
-
-    def get(self, interval: int) -> float:
-        return sum(policy.get(interval) for policy in self._policies)
-
-    def with_shift(self, val: float) -> CompositeOffsetPolicy:
-        return CompositeOffsetPolicy([*self._policies, ConstOffset(val)])
-
-
-class ConstOffset(OffsetPolicy):
-    def __init__(self, val: float) -> None:
-        self._val = val
-
-    def get(self, idx: int, size: int):
-        return self._val
-
-
-class NoOffset(ConstOffset):
-    def __init__(self) -> None:
-        super().__init__(0.0)
-
-
-class ManualOffset(OffsetPolicy):
-    def __init__(self, offsets: list[float]) -> None:
-        self._offsets = offsets
-
-    def get(self, idx: int, size: int):
-        return self._offsets[idx]
-
-
-class OffsetPlan(CategoricalPlan[float]):
-    """Plan of how to define x-offsets for each category."""
-
-    def __init__(self, by: tuple[str, ...], offsets: list[OffsetPolicy]):
-        super().__init__(by)
-        self._offsets = offsets
-
-    @classmethod
-    def default(cls) -> OffsetPlan:
-        return cls((), [])
-
-    def more_by(self, *by: str, margin: float = 0.0) -> OffsetPlan:
-        """Add more offsets."""
-        found = [b for b in by if b in self._by]
-        if found:
-            raise ValueError(f"{found} is already in the plan.")
-        new = [ConstMarginPolicy(margin) for _ in by]
-        return OffsetPlan(self._by + tuple(by), self._offsets + new)
-
-    def shift(self, val: float) -> OffsetPlan:
-        new = [offset.with_shift(val) for offset in self._offsets]
-        return OffsetPlan(self._by, new)
-
-    def iter_ticks(
-        self,
-        labels: list[tuple[Any, ...]],
-        by_all: tuple[str, ...],
-    ) -> Iterator[tuple[float, list[str]]]:
-        indices = [by_all.index(b) for b in self.by]
-        ncols = len(indices)
-        out_lookup: dict[tuple, float] = {}
-        # make a full mesh where all combinations are included
-        each_uniques = [
-            unique(np.array([row[i] for row in labels]), axis=None) for i in indices
-        ]
-
-        last_row: tuple | None = None
-        last_x = np.zeros(ncols, dtype=np.float32)
-        # intervals will be like:
-        # each_uniques --> intervals
-        # [[1, 2], [4, 5, 6]] --> [3, 1]
-        # [[1, 2], [4, 5, 6], [7, 8]] --> [6, 2, 1]
-        intervals = _to_intervals(each_uniques)
-        for row in itertools.product(*each_uniques):
-            row_arr = np.array(row)
-            if last_row is None:
-                last_row = row_arr
-                x = 0.0
-            else:
-                i = int(np.where(row_arr != last_row)[0][0])
-                x0 = last_x[i]
-                x = x0 + self._offsets[i].get(intervals[i])
-                last_x[i:] = x
-            out_lookup[row] = x
-            last_row = row_arr
-        # yield like this:
-        # 0.0 ['Female', 'Dinner', 'No']
-        # 1.0 ['Female', 'Dinner', 'Yes']
-        # 2.0 ['Female', 'Lunch', 'No']
-        # 3.0 ['Female', 'Lunch', 'Yes']
-        # 4.0 ['Male', 'Dinner', 'No']
-        # 5.0 ['Male', 'Dinner', 'Yes']
-        # 6.0 ['Male', 'Lunch', 'No']
-        # 7.0 ['Male', 'Lunch', 'Yes']
-        for _r in labels:
-            _pos = out_lookup[tuple(_r[i] for i in indices)]
-            _labels = [str(_r[i]) for i in indices]
-            yield _pos, _labels
-
-    def generate(
-        self,
-        labels: list[tuple[Any, ...]],
-        by_all: tuple[str, ...],
-    ) -> list[float]:
-        return [pos for pos, _ in self.iter_ticks(labels, by_all)]
-
-
-# class TightOffsetPlan(OffsetPlan):
-
-#     def generate(
-#         self,
-#         labels: np.ndarray,
-#         by_all: tuple[str, ...],
-#     ) -> list[float]:
-#         indices = [by_all.index(b) for b in self.by]
-#         ncols = len(indices)
-#         out_lookup = {}
-#         filt = _filter_unique(labels, indices)
-#         x = 0.0
-#         last_row = None
-#         last_idx = np.zeros(ncols, dtype=np.int32)
-#         for idx, row in enumerate(filt):
-#             if last_row is None:
-#                 last_row = row
-#             else:
-#                 i: int = np.where(row != last_row)[0][0]
-#                 interval = idx - last_idx[i]
-#                 offset = self._offsets[i].get(interval)
-#                 last_idx[i:] = idx
-#                 x += offset
-#             out_lookup[tuple(row)] = x
-#         out = [out_lookup[tuple(row_all[indices])] for row_all in labels]
-#         return out
 
 
 class CyclicPlan(CategoricalPlan[_V]):
@@ -417,11 +243,14 @@ class ColorPlan(CyclicPlan[Color]):
         cls,
         by: Sequence[str],
         palette: ColorPalette | None = None,
+        maybe_const: bool = False,
     ) -> ColorPlan:
         if palette is None:
             palette = "tab10"
         palette = ColorPalette(palette)
         colors = palette.nextn(palette.ncolors, update=False)
+        if len(colors) == 1 and maybe_const:
+            return cls.from_const(colors[0])
         return cls(tuple(by), colors)
 
     # NOTE: Color instance is detected as a sequence of 4 floats

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 import weakref
 from abc import ABC, abstractmethod, abstractproperty
 from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar
@@ -41,6 +42,7 @@ class Layer(ABC):
         self._x_hint = self._y_hint = None
         self._is_grouped = False
         self._canvas_ref = lambda: None
+        _set_deprecated_aliases(self)
 
     @abstractproperty
     def visible(self) -> bool:
@@ -314,3 +316,38 @@ class LayerWrapper(Layer, Generic[_L]):
     def _disconnect_canvas(self, canvas: CanvasBase):
         self._base_layer._disconnect_canvas(canvas)
         return super()._disconnect_canvas(canvas)
+
+
+# deprecated, new
+_DEPRECATED = [
+    ("with_shift", "move"),
+    ("with_color", "update_color"),
+    ("with_colormap", "update_colormap"),
+    ("with_style", "update_style"),
+    ("with_width", "update_width"),
+    ("with_size", "update_size"),
+    ("with_hatch", "update_hatch"),
+    ("with_symbol", "update_symbol"),
+    ("with_edge_color", "update_edge_color"),
+    ("with_edge_colormap", "update_edge_colormap"),
+]
+
+
+def _wrap_deprecation(method, new: str):
+    def wrapper(self, *args, **kwargs):
+        warnings.warn(
+            f"{method.__name__} is deprecated and will be removed in the future. "
+            f"Use {new} instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return method(self, *args, **kwargs)
+
+    wrapper.__doc__ = f"Deprecated. Use {new} instead."
+    return wrapper
+
+
+def _set_deprecated_aliases(layer: Layer):
+    for deprecatd, new in _DEPRECATED:
+        if hasattr(layer, new):
+            setattr(layer, deprecatd, _wrap_deprecation(getattr(layer, new), new))

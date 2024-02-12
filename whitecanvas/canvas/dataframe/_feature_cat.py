@@ -115,9 +115,9 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             style=style, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
     def add_markers(
@@ -173,9 +173,9 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             size=size, symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
     def add_hist2d(
@@ -290,9 +290,9 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         if self._update_label:
             if orient.is_vertical:
                 canvas.y.label.text = kind
@@ -346,9 +346,9 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         if self._update_label:
             ax_label = "density"
             if orient.is_vertical:
@@ -362,12 +362,29 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
-        low: float = 0.0,
-        high: float = 1.0,
+        width: NStr | float | None = None,
         style: NStr | None = None,
+        low: float = 0.0,
+        high: float | None = None,
     ):
-        # TODO: implement this
-        raise NotImplementedError
+        canvas = self._canvas()
+        width = theme._default("line.width", width)
+        x0, orient = self._column_and_orient()
+        if high is None:
+            if orient.is_vertical:
+                hmin, hmax = sorted(canvas.y.lim)
+            else:
+                hmin, hmax = sorted(canvas.x.lim)
+            high = low + (hmax - hmin) * 0.05
+        layer = _lt.DFRug.from_table(
+            self._df, x0, name=name, orient=orient, color=color, width=width,
+            style=style, backend=canvas._get_backend(), low=low, high=high,
+        )  # fmt: skip
+        if color is not None and not layer._color_by.is_const():
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
+        elif color is None:
+            layer.update_color(canvas._color_palette.next())
+        return canvas.add_layer(layer)
 
     def _column_and_orient(self) -> tuple[str, Orientation]:
         if self._x is None and self._y is None:

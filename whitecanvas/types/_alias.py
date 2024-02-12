@@ -5,7 +5,7 @@ from cmap import Color, Colormap
 from numpy.typing import NDArray
 
 ColorType = Union[str, Iterable["int | float"], Color]
-ColormapType = Union[str, Colormap, Any]
+ColormapType = Union[str, Colormap, "list[ColorType]", Any]
 Number = Union[int, float, np.number]
 ArrayLike1D = Union[Sequence[Number], NDArray[np.number]]
 HistBinType = Union[int, ArrayLike1D, str]

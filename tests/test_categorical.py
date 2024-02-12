@@ -83,7 +83,7 @@ def test_markers(backend: str):
     out = _c.add_markers(color="black")
     assert_color_array_equal(out._base_layer.face.color, "black")
 
-    out = _c.add_markers(color="transparent").with_edge_colormap("size")
+    out = _c.add_markers(color="transparent").update_edge_colormap("size")
 
 def test_heatmap(backend: str):
     canvas = new_canvas(backend=backend)

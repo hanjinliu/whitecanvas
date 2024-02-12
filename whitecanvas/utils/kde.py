@@ -227,7 +227,7 @@ class gaussian_kde:  # noqa: N801
 
         self.set_bandwidth(bw_method=bw_method)
 
-    def evaluate(self, points):
+    def evaluate(self, points) -> np.ndarray:
         """Evaluate the estimated pdf on a set of points.
 
         Parameters

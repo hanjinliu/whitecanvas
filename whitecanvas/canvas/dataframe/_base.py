@@ -36,7 +36,7 @@ class BaseCatPlotter(Generic[_C, _DF]):
         df: _DF,
     ):
         self._canvas_ref = weakref.ref(canvas)
-        self._df = parse(df)
+        self._df: DataFrameWrapper[_DF] = parse(df)
 
     def _canvas(self) -> _C:
         canvas = self._canvas_ref()

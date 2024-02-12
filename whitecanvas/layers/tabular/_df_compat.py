@@ -81,7 +81,7 @@ class DataFrameWrapper(ABC, Generic[_T]):
         ...
 
     @abstractmethod
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
         ...
 
     @abstractmethod
@@ -140,15 +140,16 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
             yield row, self.filter(by, row)
             observed.add(row)
 
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
         if method not in ("min", "max", "mean", "median", "sum", "std"):
             raise ValueError(f"Unsupported aggregation method: {method}")
         agg = getattr(np, method)
-        out = {k: [] for k in (*by, on)}
+        out = {k: [] for k in (*by, *on)}
         for sl, sub in self.group_by(by):
             for b, s in zip(by, sl):
                 out[b].append(s)
-            out[on].append(agg(sub[on]))
+            for o in on:
+                out[o].append(agg(sub[o]))
         return DictWrapper({k: np.array(v) for k, v in out.items()})
 
     def value_count(self, by: tuple[str, ...]) -> Self:
@@ -202,7 +203,8 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         for sl, sub in self._data.groupby(list(by), observed=True):
             yield sl, PandasWrapper(sub)
 
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
+        on = list(on)
         return PandasWrapper(self._data.groupby(list(by))[on].agg(method).reset_index())
 
     def value_count(self, by: tuple[str, ...]) -> Self:
@@ -255,11 +257,11 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PolarsWrapper(sub)
 
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
         import polars as pl
 
-        expr = getattr(pl.col(on), method)()
-        return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(expr))
+        exprs = [getattr(pl.col(o), method)() for o in on]
+        return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(*exprs))
 
     def value_count(self, by: tuple[str, ...]) -> Self:
         return PolarsWrapper(

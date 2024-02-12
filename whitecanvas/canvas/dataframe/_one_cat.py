@@ -342,9 +342,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     def _post_add_boxlike(self, layer: _BoxLikeMixin, color):
         canvas = self._canvas()
         if color is not None and not layer._color_by.is_const():
-            layer.with_color_palette(canvas._color_palette)
+            layer.update_color_palette(canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_const(color=canvas._color_palette.next())
 
     def add_stripplot(
         self,
@@ -408,9 +408,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
     def add_markers(
@@ -495,9 +495,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(layer._color_by.by, palette=canvas._color_palette)
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
     def add_hist_heatmap(
@@ -592,9 +592,9 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(color, palette=canvas._color_palette)
+            layer.update_color(color, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
     def add_markers(
@@ -651,9 +651,9 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(color, palette=canvas._color_palette)
+            layer.update_color(color, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
     def add_bars(
@@ -709,9 +709,9 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
-            layer.with_color(color, palette=canvas._color_palette)
+            layer.update_color(color, palette=canvas._color_palette)
         elif color is None:
-            layer.with_color(canvas._color_palette.next())
+            layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
     def _aggregate(

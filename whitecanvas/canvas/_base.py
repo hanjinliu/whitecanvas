@@ -1009,7 +1009,7 @@ class CanvasBase(ABC):
         Add an infinite curve to the canvas.
 
         >>> canvas.add_infcurve(lambda x: x ** 2)  # parabola
-        >>> canvas.add_infcurve(lambda x, a: np.sin(a*x)).with_params(2)  # parametric
+        >>> canvas.add_infcurve(lambda x, a: np.sin(a*x)).update_params(2)  # parametric
 
         Parameters
         ----------

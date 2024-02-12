@@ -14,12 +14,12 @@ def main():
     cat_plt = canvas.cat_x(df, x="species", y="sepal_width")
     cat_plt.add_stripplot(
         color="species", extent=0.3
-    ).with_edge(color="#3F3F00").with_shift(-0.3)
+    ).with_edge(color="#3F3F00").move(-0.3)
     cat_plt.add_boxplot(color="species", extent=0.3)
     cat_plt.mean().add_markers(color="black", size=10, symbol="+")
     cat_plt.add_violinplot(
         color="species", extent=0.3, shape="right"
-    ).with_edge(color="#3F3F00").with_shift(0.2)
+    ).with_edge(color="#3F3F00").move(0.2)
 
     canvas.show(block=True)
 

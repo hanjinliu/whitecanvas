@@ -143,7 +143,8 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         """Orientation of the boxplot."""
         return self._orient
 
-    def with_shift(self, shift: float) -> BoxPlot:
+    def move(self, shift: float) -> BoxPlot:
+        """Move the layer by the given shift."""
         self.boxes.set_data(xdata=self.boxes.data.x + shift)
         if self.orient.is_vertical:
             _wdata = []

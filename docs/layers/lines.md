@@ -91,7 +91,7 @@ canvas view range is updated.
 `InfCurve` is usually created by the [`add_infcurve`][whitecanvas.canvas.CanvasBase.
 add_infcurve] method. The input model function must be defined as `model(x, ...)` where
 `x` is `ndarray` of the x-coordinates and the rest of the arguments are the parameters
-of the model. The parameters can be set by the `with_params` method of the returned
+of the model. The parameters can be set by the `update_params` method of the returned
 layer.
 
 ``` python
@@ -103,8 +103,8 @@ def model(x, freq, phase):
     return np.sin(x * freq - phase)
 
 canvas = new_canvas("matplotlib")
-canvas.add_infcurve(model, color="black").with_params(freq=2, phase=0)
-canvas.add_infcurve(model, color="black", style=":").with_params(freq=2, phase=1.6)
+canvas.add_infcurve(model, color="black").update_params(freq=2, phase=0)
+canvas.add_infcurve(model, color="black", style=":").update_params(freq=2, phase=1.6)
 canvas.x.lim = (-3, 3)
 canvas.y.lim = (-3, 3)
 canvas.show()

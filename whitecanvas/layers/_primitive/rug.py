@@ -1,20 +1,24 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+from cmap import Colormap
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import DataBoundLayer
+from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._primitive.line import (
     LineLayerEvents,
     MultiLine,
     MultiLineProtocol,
 )
-from whitecanvas.types import ColorType, LineStyle, Orientation
+from whitecanvas.types import ColormapType, ColorType, LineStyle, Orientation
 from whitecanvas.utils.normalize import as_array_1d
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class RugEvents(LineLayerEvents):
@@ -22,7 +26,7 @@ class RugEvents(LineLayerEvents):
     high = Signal(float)
 
 
-class Rug(MultiLine, DataBoundLayer[MultiLineProtocol, NDArray[np.number]]):
+class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.number]]):
     """
     Rug plot (event plot) layer.
 
@@ -70,6 +74,7 @@ class Rug(MultiLine, DataBoundLayer[MultiLineProtocol, NDArray[np.number]]):
 
     @property
     def low(self) -> float:
+        """Coordinate of the lower bound."""
         return self._low
 
     @low.setter
@@ -81,6 +86,7 @@ class Rug(MultiLine, DataBoundLayer[MultiLineProtocol, NDArray[np.number]]):
 
     @property
     def high(self) -> float:
+        """Coordinate of the higher bound."""
         return self._high
 
     @high.setter
@@ -97,6 +103,23 @@ class Rug(MultiLine, DataBoundLayer[MultiLineProtocol, NDArray[np.number]]):
     def orient(self) -> Orientation:
         """Orientation of the rug plot."""
         return self._orient
+
+    def color_by_density(self, cmap: ColormapType = "jet") -> Self:
+        """
+        Set the color of the markers by density.
+
+        Parameters
+        ----------
+        cmap : ColormapType, optional
+            Colormap used to map the density to colors.
+        """
+        from whitecanvas.utils.kde import gaussian_kde
+
+        events = self.data
+        density = gaussian_kde(events)(events)
+        normed = density / density.max()
+        self.color = Colormap(cmap)(normed)
+        return self
 
 
 def _norm_input(

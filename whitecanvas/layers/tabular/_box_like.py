@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generic, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, Sequence, TypeVar
 
 import numpy as np
 from cmap import Color
@@ -15,11 +15,14 @@ from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular import _shared
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
 from whitecanvas.types import (
+    ColormapType,
     ColorType,
     Hatch,
     LineStyle,
     Orientation,
+    _Void,
 )
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -29,6 +32,7 @@ if TYPE_CHECKING:
     _FE = _mixin.AbstractFaceEdgeMixin[_mixin.FaceNamespace, _mixin.EdgeNamespace]
 
 _DF = TypeVar("_DF")
+_void = _Void()
 
 
 def _norm_color_hatch(
@@ -77,32 +81,108 @@ class _BoxLikeMixin:
         """Just for typing."""
         return self._base_layer
 
-    def with_color_palette(self, palette) -> Self:
-        if self._color_by.is_const():
-            raise ValueError("Cannot redraw color for a constant color")
-        color_by = _p.ColorPlan.from_palette(self._color_by.by, palette=palette)
-        self._get_base().face.color = color_by.generate(self._categories, self._splitby)
+    def _normalize_by_arg(self, by, default: tuple[str, ...]) -> tuple[str, ...]:
+        if by is None:
+            by = default
+        elif isinstance(by, str):
+            if by not in self._splitby:
+                raise ValueError(
+                    f"Cannot color by {by!r} as the plot is not split by this column. "
+                    f"Valid columns are: {self._splitby!r}."
+                )
+            by = (by,)
+        else:
+            for b in by:
+                if not isinstance(b, str):
+                    raise TypeError("`by` must be a str or sequence of str.")
+                if b not in self._splitby:
+                    raise ValueError(
+                        f"Cannot color by {by!r} as the plot is not split by this "
+                        f"column. Valid columns are: {self._splitby!r}."
+                    )
+        return by
+
+    def update_color_palette(
+        self,
+        palette: ColormapType | None = None,
+        *,
+        alpha: float | None = None,
+        cycle_by: str | Sequence[str] | None = None,
+    ) -> Self:
+        """
+        Update the colors by a color palette.
+
+        Parameters
+        ----------
+        palette : colormap type
+            Color palette used to generate colors for each category. A color palette
+            can be a list of colors or any types that can be converted into a
+            `cmap.Colormap` object.
+        alpha : float, optional
+            Additional alpha value that will be applied to the palette colors.
+        cycle_by : str or sequence of str, optional
+            If given, colors will be cycled on this column name(s).
+        """
+        by = self._normalize_by_arg(cycle_by, self._color_by.by)
+        color_by = _p.ColorPlan.from_palette(by, palette=palette)
+        colors = color_by.generate(self._categories, self._splitby)
+        color_arr = np.stack([c.rgba for c in colors], dtype=np.float32)
+        if alpha is not None:
+            if is_real_number(alpha) and 0 <= alpha <= 1:
+                color_arr[:, 3] = alpha
+            else:
+                raise TypeError(
+                    f"`alpha` must be a scalar value between 0 and 1, got {alpha!r}."
+                )
+        self._get_base().face.color = color_arr
         self._color_by = color_by
         return self
 
-    def with_color(self, color: ColorType) -> Self:
-        color_by = _p.ColorPlan.from_const(Color(color))
-        self._get_base().face.color = color_by.generate(self._categories, self._splitby)
-        self._color_by = color_by
-        return self
+    def update_hatch_palette(
+        self,
+        palette: Sequence[str | Hatch],
+        *,
+        cycle_by: str | Sequence[str] | None = None,
+    ) -> Self:
+        """
+        Update the hatch patterns by a list of hatch values.
 
-    def with_hatch_palette(self, choices) -> Self:
-        if self._hatch_by.is_const():
-            raise ValueError("Cannot redraw hatch for a constant hatch")
-        hatch_by = _p.HatchPlan.new(self._hatch_by.by, values=choices)
+        Parameters
+        ----------
+        palette : sequence of str or Hatch
+            Hatch palette used to generate colors for each category.
+        """
+        by = self._normalize_by_arg(cycle_by, self._hatch_by.by)
+        hatch_by = _p.HatchPlan.new(by, values=palette)
         self._get_base().face.hatch = hatch_by.generate(self._categories, self._splitby)
         self._hatch_by = hatch_by
         return self
 
-    def with_hatch(self, hatch: str | Hatch) -> Self:
-        hatch_by = _p.HatchPlan.from_const(Hatch(hatch))
-        self._get_base().face.hatch = hatch_by.generate(self._categories, self._splitby)
-        self._hatch_by = hatch_by
+    def update_const(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        hatch: str | Hatch | _Void = _void,
+    ) -> Self:
+        """
+        Update the plot features to the constant values.
+
+        Parameters
+        ----------
+        color : color-type, optional
+            Constant colors used for the plot.
+        hatch : str or Hatch, optional
+            Constant hatch used for the plot.
+        """
+        cat = self._categories
+        if color is not _void:
+            color_by = _p.ColorPlan.from_const(Color(color))
+            self._get_base().face.color = color_by.generate(cat, self._splitby)
+            self._color_by = color_by
+        if hatch is not _void:
+            hatch_by = _p.HatchPlan.from_const(Hatch(hatch))
+            self._get_base().face.hatch = hatch_by.generate(cat, self._splitby)
+            self._hatch_by = hatch_by
         return self
 
     def with_edge(
@@ -113,6 +193,7 @@ class _BoxLikeMixin:
         style: str | LineStyle = LineStyle.SOLID,
         alpha: float = 1.0,
     ) -> Self:
+        """Add edge to the plot with given settings."""
         self._get_base().with_edge(color=color, width=width, style=style, alpha=alpha)
         return self
 
@@ -154,7 +235,8 @@ class DFViolinPlot(
         """Orientation of the violins."""
         return self._base_layer.orient
 
-    def with_shift(self, shift: float = 0.0) -> Self:
+    def move(self, shift: float = 0.0) -> Self:
+        """Move the layer by the given shift."""
         for layer in self._base_layer:
             _old = layer.data
             layer.set_data(edge_low=_old.y0 + shift, edge_high=_old.y1 + shift)
@@ -211,11 +293,9 @@ class DFBoxPlot(
         """Orientation of the violins."""
         return self._base_layer.orient
 
-    def with_shift(
-        self,
-        shift: float = 0.0,
-    ) -> Self:
-        self._base_layer.with_shift(shift)
+    def move(self, shift: float = 0.0) -> Self:
+        """Move the layer by the given shift."""
+        self._base_layer.move(shift)
         return self
 
     def with_hover_text(self, text: str | list[str]) -> Self:
@@ -342,10 +422,8 @@ class DFPointPlot(
         """Orientation of the violins."""
         return self._orient
 
-    def with_shift(
-        self,
-        shift: float = 0.0,
-    ) -> Self:
+    def move(self, shift: float = 0.0) -> Self:
+        """Move the layer by the given shift."""
         base = self._base_layer
         data = base.data
         if self._orient.is_vertical:

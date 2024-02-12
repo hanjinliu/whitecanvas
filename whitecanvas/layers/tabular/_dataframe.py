@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Iterable,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import numpy as np
 from cmap import Color, Colormap
@@ -55,10 +63,10 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         base = _lg.LineCollection(segs, name=name, backend=backend)
         super().__init__(base, source)
         if color is not None:
-            self.with_color(color)
-        self.with_width(width)
+            self.update_color(color)
+        self.update_width(width)
         if style is not None:
-            self.with_style(style)
+            self.update_style(style)
         self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
 
     @classmethod
@@ -93,18 +101,18 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         )  # fmt: skip
 
     @overload
-    def with_color(self, value: ColorType) -> Self:
+    def update_color(self, value: ColorType) -> Self:
         ...
 
     @overload
-    def with_color(
+    def update_color(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
     ) -> Self:
         ...
 
-    def with_color(self, by, /, palette=None):
+    def update_color(self, by, /, palette=None):
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -116,11 +124,11 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self._color_by = color_by
         return self
 
-    def with_width(self, value: float) -> Self:
+    def update_width(self, value: float) -> Self:
         self._base_layer.width = value
         return self
 
-    def with_style(self, by: str | Iterable[str], styles=None) -> Self:
+    def update_style(self, by: str | Iterable[str], styles=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -132,7 +140,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self._style_by = style_by
         return self
 
-    def with_shift(self, dx: float = 0.0, dy: float = 0.0) -> Self:
+    def move(self, dx: float = 0.0, dy: float = 0.0) -> Self:
         """Add a constant shift to the layer."""
         for layer in self._base_layer:
             old_data = layer.data
@@ -179,62 +187,56 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
 
         super().__init__(base, source)
         if color is not None:
-            self.with_color(color)
+            self.update_color(color)
         if hatch is not None:
-            self.with_hatch(hatch)
+            self.update_hatch(hatch)
         if symbol is not None:
-            self.with_symbol(symbol)
+            self.update_symbol(symbol)
         if size is not None:
-            self.with_size(size)
+            self.update_size(size)
         else:
-            self.with_size(theme.get_theme().markers.size)
+            self.update_size(theme.get_theme().markers.size)
 
         # set default hover text
         self.with_hover_template(default_template(source.iter_items()))
 
     @overload
-    def with_color(self, value: ColorType) -> Self:
+    def update_color(self, value: ColorType) -> Self:
         ...
 
     @overload
-    def with_color(
+    def update_color(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
     ) -> Self:
         ...
 
-    def with_color(self, by, /, palette=None) -> Self:
+    def update_color(self, by, /, palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
             color_by = _p.ColorPlan.from_const(Color(cov.value))
-        colors = color_by.map(self._source)
-        self._base_layer.face.color = colors
+        self._base_layer.face.color = color_by.map(self._source)
         self._color_by = color_by
         return self
 
-    def with_colormap(
+    def update_colormap(
         self,
         by: str,
-        cmap: ColormapType | None = None,
+        cmap: ColormapType = "viridis",
         clim: tuple[float, float] | None = None,
     ) -> Self:
         """Update the face colormap."""
         if not isinstance(by, str):
             raise ValueError("Can only colormap by a single column.")
-        if cmap is None:
-            cmap = Colormap("viridis")
-        else:
-            cmap = Colormap(cmap)
-        color_by = _p.ColormapPlan.from_colormap(by, cmap=cmap, clim=clim)
-        colors = color_by.map(self._source)
-        self._base_layer.face.color = colors
+        color_by = _p.ColormapPlan.from_colormap(by, cmap=Colormap(cmap), clim=clim)
+        self._base_layer.face.color = color_by.map(self._source)
         self._color_by = color_by
         return self
 
-    def with_edge_color(self, by: str | Iterable[str], palette=None) -> Self:
+    def update_edge_color(self, by: str | Iterable[str], palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
@@ -245,7 +247,7 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         self._edge_color_by = color_by
         return self
 
-    def with_edge_colormap(
+    def update_edge_colormap(
         self,
         by: str,
         cmap: ColormapType | None = None,
@@ -263,7 +265,7 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         self._edge_color_by = color_by
         return self
 
-    def with_hatch(self, by: str | Iterable[str], palette=None) -> Self:
+    def update_hatch(self, by: str | Iterable[str], palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             hatch_by = _p.HatchPlan.new(cov.columns, values=palette)
@@ -275,14 +277,14 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         return self
 
     @overload
-    def with_size(self, value: float) -> Self:
+    def update_size(self, value: float) -> Self:
         ...
 
     @overload
-    def with_size(self, by: str, limits=None) -> Self:
+    def update_size(self, by: str, limits=None) -> Self:
         ...
 
-    def with_size(self, by, /, limits=None):
+    def update_size(self, by, /, limits=None):
         """Set the size of the markers."""
         if isinstance(by, str):
             size_by = _p.SizePlan.from_range(by, limits=limits)
@@ -293,14 +295,16 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         return self
 
     @overload
-    def with_symbol(self, value: str | Symbol) -> Self:
+    def update_symbol(self, value: str | Symbol) -> Self:
         ...
 
     @overload
-    def with_symbol(self, by: str | Iterable[str] | None = None, symbols=None) -> Self:
+    def update_symbol(
+        self, by: str | Iterable[str] | None = None, symbols=None
+    ) -> Self:
         ...
 
-    def with_symbol(self, by, /, symbols=None) -> Self:
+    def update_symbol(self, by, /, symbols=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             symbol_by = _p.SymbolPlan.new(cov.columns, values=symbols)
@@ -311,14 +315,15 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         return self
 
     @overload
-    def with_width(self, value: float) -> Self:
+    def update_width(self, value: float) -> Self:
         ...
 
     @overload
-    def with_width(self, by: str, limits=None) -> Self:
+    def update_width(self, by: str, limits=None) -> Self:
         ...
 
-    def with_width(self, by, /, limits=None) -> Self:
+    def update_width(self, by, /, limits=None) -> Self:
+        """Update the width of the markers."""
         if isinstance(by, str):
             width_by = _p.WidthPlan.from_range(by, limits=limits)
         else:
@@ -335,12 +340,12 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         style: LineStyle | str = LineStyle.SOLID,
     ) -> Self:
         if color is not None:
-            self.with_edge_color(color)
-        self.with_width(width)
+            self.update_edge_color(color)
+        self.update_width(width)
         self._base_layer.edge.style = LineStyle(style)
         return self
 
-    def with_shift(self, dx: float = 0.0, dy: float = 0.0) -> Self:
+    def move(self, dx: float = 0.0, dy: float = 0.0) -> Self:
         """Add a constant shift to the layer."""
         _old_data = self._base_layer.data
         self._base_layer.set_data(xdata=_old_data.x + dx, ydata=_old_data.y + dy)
@@ -387,7 +392,7 @@ class DFMarkerGroups(DFMarkers):
         """Orientation of the plot."""
         return self._orient
 
-    def with_shift(self, shift: float = 0.0) -> Self:
+    def move(self, shift: float = 0.0) -> Self:
         """Add a constant shift to the layer."""
         _old_data = self._base_layer.data
         if self.orient.is_vertical:
@@ -425,9 +430,9 @@ class DFBars(
         ).with_face_multi()
         super().__init__(base, source)
         if color is not None:
-            self.with_color(color)
+            self.update_color(color)
         if hatch is not None:
-            self.with_hatch(hatch)
+            self.update_hatch(hatch)
         self.with_hover_template(default_template(source.iter_items()))
 
     @classmethod
@@ -469,7 +474,7 @@ class DFBars(
             orient=orient, backend=backend,
         )  # fmt: skip
 
-    def with_color(self, by: str | Iterable[str] | ColorType, palette=None) -> Self:
+    def update_color(self, by: str | Iterable[str] | ColorType, palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -481,7 +486,7 @@ class DFBars(
         self._color_by = color_by
         return self
 
-    def with_hatch(self, by: str | Iterable[str], choices=None) -> Self:
+    def update_hatch(self, by: str | Iterable[str], choices=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -607,11 +612,11 @@ class DFHistograms(
         self._splitby = splitby
         super().__init__(base, source)
         if color is not None:
-            self.with_color(color)
+            self.update_color(color)
         if isinstance(width, str):
-            self.with_width(width)
+            self.update_width(width)
         if style is not None:
-            self.with_style(style)
+            self.update_style(style)
 
     @classmethod
     def from_table(
@@ -649,18 +654,18 @@ class DFHistograms(
         return cls(df, base, labels, color=color, width=width, style=style)
 
     @overload
-    def with_color(self, value: ColorType) -> Self:
+    def update_color(self, value: ColorType) -> Self:
         ...
 
     @overload
-    def with_color(
+    def update_color(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
     ) -> Self:
         ...
 
-    def with_color(self, by, /, palette=None):
+    def update_color(self, by, /, palette=None):
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -673,12 +678,12 @@ class DFHistograms(
         self._color_by = color_by
         return self
 
-    def with_width(self, value: float) -> Self:
+    def update_width(self, value: float) -> Self:
         for hist in self._base_layer:
             hist.line.width = value
         return self
 
-    def with_style(self, by: str | Iterable[str], styles=None) -> Self:
+    def update_style(self, by: str | Iterable[str], styles=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -713,11 +718,11 @@ class DFKde(
         self._splitby = splitby
         super().__init__(base, source)
         if color is not None:
-            self.with_color(color)
+            self.update_color(color)
         if isinstance(width, str):
-            self.with_width(width)
+            self.update_width(width)
         if style is not None:
-            self.with_style(style)
+            self.update_style(style)
 
     @classmethod
     def from_table(
@@ -749,18 +754,18 @@ class DFKde(
         return cls(df, base, labels, color=color, width=width, style=style)
 
     @overload
-    def with_color(self, value: ColorType) -> Self:
+    def update_color(self, value: ColorType) -> Self:
         ...
 
     @overload
-    def with_color(
+    def update_color(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
     ) -> Self:
         ...
 
-    def with_color(self, by, /, palette=None):
+    def update_color(self, by, /, palette=None):
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -773,12 +778,12 @@ class DFKde(
         self._color_by = color_by
         return self
 
-    def with_width(self, value: float) -> Self:
+    def update_width(self, value: float) -> Self:
         for hist in self._base_layer:
             hist.line.width = value
         return self
 
-    def with_style(self, by: str | Iterable[str], styles=None) -> Self:
+    def update_style(self, by: str | Iterable[str], styles=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -792,32 +797,25 @@ class DFKde(
         return self
 
 
-class DFRug(
-    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_l.Rug], _DF],
-    Generic[_DF],
-):
+class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], Generic[_DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
-        base: _lg.LayerCollectionBase[_l.Rug],
-        labels: list[tuple[Any, ...]],
+        base: _l.Rug,
         color: _Cols | None = None,
         width: str | None = None,
         style: _Cols | None = None,
     ):
-        splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
         self._width_by = _p.WidthPlan.default()
         self._style_by = _p.StylePlan.default()
-        self._labels = labels
-        self._splitby = splitby
         super().__init__(base, source)
         if color is not None:
-            self.with_color(color)
+            self.update_color(color)
         if isinstance(width, str):
-            self.with_width(width)
+            self.update_width(width)
         if style is not None:
-            self.with_style(style)
+            self.update_style(style)
 
     @classmethod
     def from_table(
@@ -827,25 +825,93 @@ class DFRug(
         color: str | None = None,
         width: float = 1.0,
         style: str | None = None,
+        low: float = 0.0,
+        high: float = 1.0,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
     ) -> DFRug[_DF]:
-        splitby = _shared.join_columns(color, style, source=df)
         ori = Orientation.parse(orient)
-        arrays: list[np.ndarray] = []
-        labels: list[tuple] = []
-        for sl, sub in df.group_by(splitby):
-            labels.append(sl)
-            arrays.append(sub[value])
-        layers = []
-        for arr in arrays:
-            each_layer = _l.Rug(
-                arr, width=width, orient=ori, backend=backend,
-            )  # fmt: skip
-            layers.append(each_layer)
-        base = _lg.LayerCollectionBase(layers, name=name)
-        return cls(df, base, labels, color=color, width=width, style=style)
+        base = _l.Rug(
+            df[value], name=name, orient=ori, low=low, high=high, backend=backend,
+        )  # fmt: skip
+        return cls(df, base, color=color, width=width, style=style)
+
+    @overload
+    def update_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def update_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def update_color(self, by, /, palette=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
+        else:
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
+        self._base_layer.color = color_by.map(self._source)
+        self._color_by = color_by
+        return self
+
+    def update_colormap(
+        self,
+        by: str,
+        cmap: ColormapType = "viridis",
+        clim: tuple[float, float] | None = None,
+    ) -> Self:
+        """Update the face colormap."""
+        if not isinstance(by, str):
+            raise ValueError("Can only colormap by a single column.")
+        color_by = _p.ColormapPlan.from_colormap(by, cmap=Colormap(cmap), clim=clim)
+        self._base_layer.color = color_by.map(self._source)
+        self._color_by = color_by
+        return self
+
+    @overload
+    def update_width(self, value: float) -> Self:
+        ...
+
+    @overload
+    def update_width(self, by: str, limits=None) -> Self:
+        ...
+
+    def update_width(self, by, /, limits=None) -> Self:
+        """Update the width of the markers."""
+        if isinstance(by, str):
+            width_by = _p.WidthPlan.from_range(by, limits=limits)
+        else:
+            width_by = _p.WidthPlan.from_const(float(by))
+        self._base_layer.width = width_by.map(self._source)
+        self._width_by = width_by
+        return self
+
+    @overload
+    def update_style(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def update_style(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def update_style(self, by, /, palette=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            style_by = _p.StylePlan.new(cov.columns, palette)
+        else:
+            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
+        self._base_layer.style = style_by.map(self._source)
+        self._style_by = style_by
+        return self
 
 
 def default_template(it: Iterable[tuple[str, np.ndarray]], max_rows: int = 10) -> str:

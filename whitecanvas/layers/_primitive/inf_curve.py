@@ -8,11 +8,14 @@ import numpy as np
 from typing_extensions import Concatenate, ParamSpec
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers._base import _wrap_deprecation
 from whitecanvas.layers._primitive.line import LineMixin
 from whitecanvas.protocols import LineProtocol
 from whitecanvas.types import ColorType, LineStyle, Rect
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.canvas import Canvas
 
 _P = ParamSpec("_P")
@@ -65,7 +68,11 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         self._kwargs = {}
         self._linspace_num = 256
 
-    def with_params(self, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        setattr(  # noqa: B010
+            self, "with_params", _wrap_deprecation(self.update_params, "with_params")
+        )
+
+    def update_params(self, *args: _P.args, **kwargs: _P.kwargs) -> Self:
         """Set the parameters of the model function."""
         xdata, _ = self._backend._plt_get_data()
         ydata = self._model(xdata, *args, **kwargs)
@@ -74,6 +81,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         if not self._params_ready:
             self._params_ready = True
             self._canvas().x.events.lim.emit(self._canvas().x.lim)
+        return self
 
     @property
     def params(self) -> tuple[tuple, dict[str, Any]]:
@@ -84,6 +92,12 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
     def model(self) -> Callable[[Concatenate[np.ndarray, _P]], np.ndarray]:
         """The model function of the layer."""
         return self._model
+
+    def with_hover_text(self, text: str) -> Self:
+        if not isinstance(text, str):
+            raise TypeError(f"Hover text must be str, got {type(text)}.")
+        self._backend._plt_set_hover_text([text] * self._linspace_num)
+        return self
 
     def _connect_canvas(self, canvas: Canvas):
         canvas.x.events.lim.connect(self._recalculate_line)
@@ -172,6 +186,12 @@ class InfLine(LineMixin[LineProtocol]):
             self._tan = math.tan(_radian)
             self._intercept = self._pos[1] - self._tan * self._pos[0]
         self._recalculate_line(self._last_rect)
+
+    def with_hover_text(self, text: str) -> Self:
+        if not isinstance(text, str):
+            raise TypeError(f"Hover text must be str, got {type(text)}.")
+        self._backend._plt_set_hover_text([text] * 2)
+        return self
 
     def _connect_canvas(self, canvas: Canvas):
         canvas.events.lims.connect(self._recalculate_line)

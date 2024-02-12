@@ -19,7 +19,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(MarkersProtocol)
-class Markers(PlotlyHoverableLayer):
+class Markers(PlotlyHoverableLayer[go.Scatter]):
     def __init__(self, xdata, ydata):
         ndata = len(xdata)
         self._props = {

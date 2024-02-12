@@ -25,10 +25,14 @@ class Canvas:
         row: int = 0,
         col: int = 0,
         secondary_y: bool = False,
+        app: str = "default",
     ):
         # prepare widget
         if fig is None:
-            fig = go.Figure()
+            if app == "notebook":
+                fig = go.FigureWidget()
+            else:
+                fig = go.Figure()
         self._fig = fig
         self._loc = Location(row + 1, col + 1, secondary_y)
         self._xaxis = Axis(self, axis="xaxis")
@@ -111,9 +115,9 @@ class Canvas:
 
     def _plt_add_layer(self, layer: PlotlyLayer):
         self._fig.add_trace(layer._props, **self._loc.asdict())
-        layer._props = self._fig._data[-1]
-        layer._gobj = self._fig.data[-1]
-        layer._props["uid"] = layer._gobj.uid
+        # layer._props = self._fig._data[-1]
+        layer._props = self._fig.data[-1]
+        layer._props["uid"] = layer._props.uid
         if isinstance(layer, PlotlyHoverableLayer):
             layer._connect_mouse_events(self._fig)
 
@@ -199,7 +203,11 @@ class CanvasGrid:
     def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
         from plotly.subplots import make_subplots
 
-        self._figs = go.Figure(
+        if app == "notebook":
+            fig_class = go.FigureWidget
+        else:
+            fig_class = go.Figure
+        self._figs = fig_class(
             make_subplots(
                 rows=len(heights),
                 cols=len(widths),
@@ -215,7 +223,7 @@ class CanvasGrid:
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         if rowspan > 1 or colspan > 1:
             raise NotImplementedError("Plotly backend does not support rowspan/colspan")
-        return Canvas(self._figs, row=row, col=col)
+        return Canvas(self._figs, row=row, col=col, app=self._app)
 
     def _plt_show(self):
         if self._app in ("qt", "wx", "tk"):
@@ -225,7 +233,7 @@ class CanvasGrid:
             from IPython.display import display
 
             if get_ipython().__class__.__name__ == "ZMQInteractiveShell":
-                display(go.FigureWidget(self._figs))
+                display(self._figs)
                 return
         self._figs.show(renderer="browser")
 

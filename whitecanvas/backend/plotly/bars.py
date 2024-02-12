@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
+from plotly import graph_objects as go
 
 from whitecanvas.backend import _not_implemented
 from whitecanvas.backend.plotly._base import PlotlyHoverableLayer
@@ -11,7 +12,7 @@ from whitecanvas.utils.normalize import arr_color, rgba_str_color
 
 
 @check_protocol(BarProtocol)
-class Bars(PlotlyHoverableLayer):
+class Bars(PlotlyHoverableLayer[go.Bar]):
     def __init__(self, xlow, xhigh, ylow, yhigh):
         x = (xlow + xhigh) / 2
         ndata = len(x)

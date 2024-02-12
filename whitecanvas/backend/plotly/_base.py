@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 import weakref
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar
 
 from plotly import graph_objs as go
 
@@ -12,10 +12,11 @@ from whitecanvas.types import LineStyle, Symbol
 if TYPE_CHECKING:
     from plotly.basedatatypes import BaseTraceType
 
+_O = TypeVar("_O", bound="BaseTraceType")
 
-class PlotlyLayer:
-    _props: dict[str, Any]
-    _gobj: BaseTraceType
+
+class PlotlyLayer(Generic[_O]):
+    _props: dict[str, Any] | _O
     _fig_ref: Callable[[], go.Figure]
 
     def _plt_get_visible(self) -> bool:
@@ -25,7 +26,7 @@ class PlotlyLayer:
         self._props["visible"] = visible
 
 
-class PlotlyHoverableLayer(PlotlyLayer):
+class PlotlyHoverableLayer(PlotlyLayer[_O]):
     def __init__(self):
         self._hover_texts: list[str] | None = None
         self._click_callbacks = []
@@ -35,13 +36,20 @@ class PlotlyHoverableLayer(PlotlyLayer):
         fig = self._fig_ref()
         if fig is None:
             self._click_callbacks.append(callback)
-            return
         else:
-            self._connect_mouse_events(fig)
+            self._connect_mouse_events(fig, [callback])
 
-    def _connect_mouse_events(self, fig: go.Figure):
-        gobj = self._gobj
-        for cb in self._click_callbacks:
+    def _connect_mouse_events(
+        self,
+        fig: go.Figure,
+        callbacks: list[Callable] | None = None,
+    ):
+        if callbacks is None:
+            callbacks = self._click_callbacks
+        gobj = self._props
+        if not hasattr(gobj, "uid"):
+            raise ValueError("Graph object is not created yet.")
+        for cb in callbacks:
             gobj.on_click(_convert_cb(cb), append=True)
         self._fig_ref = weakref.ref(fig)
         self._update_hover_texts(fig)
@@ -129,7 +137,7 @@ _SYMBOLS_INV = {v: k for k, v in _SYMBOLS.items()}
 
 
 def _convert_cb(cb):
-    def _out(_trace, points, _state):
+    def _out(trace, points, state):
         indices = points.point_inds
         if indices:
             cb(indices)

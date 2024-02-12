@@ -4,6 +4,7 @@ import warnings
 
 import numpy as np
 from numpy.typing import NDArray
+from plotly import graph_objects as go
 
 from whitecanvas.backend.plotly._base import (
     PlotlyHoverableLayer,
@@ -17,7 +18,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 
 @check_protocol(LineProtocol)
-class MonoLine(PlotlyHoverableLayer):
+class MonoLine(PlotlyHoverableLayer[go.Scatter]):
     def __init__(self, xdata, ydata):
         ndata = len(xdata)
         self._props = {
@@ -69,7 +70,7 @@ class MonoLine(PlotlyHoverableLayer):
 
 
 @check_protocol(MultiLineProtocol)
-class MultiLine(PlotlyHoverableLayer):
+class MultiLine(PlotlyHoverableLayer[go.Scatter]):
     def __init__(self, data: list[NDArray[np.floating]]):
         # In plotly, we can break a line into multiple segments by inserting None
         xdata = []

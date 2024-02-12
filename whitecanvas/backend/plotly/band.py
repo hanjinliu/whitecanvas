@@ -18,7 +18,7 @@ from whitecanvas.utils.normalize import arr_color, rgba_str_color
 
 
 @check_protocol(BandProtocol)
-class Band(PlotlyHoverableLayer):
+class Band(PlotlyHoverableLayer[go.Scatter]):
     def __init__(
         self,
         t: np.ndarray,

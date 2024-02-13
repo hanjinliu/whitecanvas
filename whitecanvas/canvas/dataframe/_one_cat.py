@@ -500,6 +500,36 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
+    def add_rugplot(
+        self,
+        *,
+        name: str | None = None,
+        color: NStr | None = None,
+        width: float | None = None,
+        style: NStr | None = None,
+        dodge: NStr | bool = True,
+        extent: float = 0.8,
+    ) -> _lt.DFRugGroups[_DF]:
+        canvas = self._canvas()
+        width = theme._default("line.width", width)
+
+        df = self._df
+        splitby, dodge = _shared.norm_dodge(
+            df, self._offset, color, style, dodge=dodge
+        )  # fmt: skip
+        _map = self._cat_iter.prep_position_map(splitby, dodge)
+        _extent = self._cat_iter.zoom_factor(dodge) * extent
+        jitter = _jitter.CategoricalJitter(splitby, _map)
+        layer = _lt.DFRugGroups.from_table(
+            df, jitter, self._get_value(), name=name, color=color, orient=self._orient,
+            extent=_extent, width=width, style=style, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if color is not None and not layer._color_by.is_const():
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
+        elif color is None:
+            layer.update_color(canvas._color_palette.next())
+        return canvas.add_layer(layer)
+
     def add_hist_heatmap(
         self,
         cmap: ColormapType = "inferno",

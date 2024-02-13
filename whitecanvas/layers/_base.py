@@ -224,7 +224,10 @@ class LayerGroup(Layer):
             if isinstance(child, LayerGroup):
                 yield from child.iter_children_recursive()
             elif isinstance(child, LayerWrapper):
-                yield child._base_layer
+                if isinstance(child._base_layer, LayerGroup):
+                    yield from child._base_layer.iter_children_recursive()
+                else:
+                    yield child._base_layer
             else:
                 yield child
 

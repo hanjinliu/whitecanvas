@@ -156,7 +156,8 @@ class Orientation(_StrEnum):
                 return cls.HORIZONTAL
         return cls(value)
 
-    def transpose(self):
+    def transpose(self) -> Orientation:
+        """Transpose the orientation."""
         if self is self.VERTICAL:
             return self.HORIZONTAL
         else:

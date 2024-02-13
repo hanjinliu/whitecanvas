@@ -46,6 +46,7 @@ from whitecanvas.types import (
     ColorType,
     Hatch,
     HistBinType,
+    KdeBandWidthType,
     LineStyle,
     Orientation,
     Rect,
@@ -339,6 +340,44 @@ class CanvasBase(ABC):
         if y is not None:
             self.y.label.text = y
             self.y.label.visible = True
+        return self
+
+    def update_font(
+        self,
+        size: float | _Void = _void,
+        color: ColorType | _Void = _void,
+        family: str | _Void = _void,
+    ) -> Self:
+        """
+        Update all the fonts, including the title, x/y labels and x/y tick labels.
+
+        Parameters
+        ----------
+        size : float, optional
+            New font size.
+        color : color-like, optional
+            New font color.
+        family : str, optional
+            New font family.
+        """
+        if size is not _void:
+            self.title.size = size
+            self.x.label.size = size
+            self.y.label.size = size
+            self.x.ticks.size = size
+            self.y.ticks.size = size
+        if family is not _void:
+            self.title.family = family
+            self.x.label.family = family
+            self.y.label.family = family
+            self.x.ticks.family = family
+            self.y.ticks.family = family
+        if color is not _void:
+            self.title.color = color
+            self.x.label.color = color
+            self.y.label.color = color
+            self.x.ticks.color = color
+            self.y.ticks.color = color
         return self
 
     def cat(
@@ -1306,7 +1345,7 @@ class CanvasBase(ABC):
         bottom: float = 0.0,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
-        band_width: float | Literal["scott", "silverman"] = "scott",
+        band_width: KdeBandWidthType = "scott",
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
@@ -1325,8 +1364,7 @@ class CanvasBase(ABC):
         orient : str, Orientation, default Orientation.VERTICAL
             Orientation of the KDE.
         band_width : float or str, default "scott"
-            Band width parameter of KDE. Must be a number or a string as the
-            method to automatic determination.
+            Method to calculate the estimator bandwidth.
         color : color-like, default None
             Color of the band face.
         width : float, optional

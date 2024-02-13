@@ -13,6 +13,7 @@ from whitecanvas.types import (
     ArrayLike1D,
     ColorType,
     HistBinType,
+    KdeBandWidthType,
     LineStyle,
     Orientation,
 )
@@ -355,7 +356,7 @@ class Kde(LineFillBase):
         scale: float = 1.0,
         *,
         name: str | None = None,
-        band_width: float | None = None,
+        band_width: KdeBandWidthType = "scott",
         color: ColorType = "blue",
         style: str | LineStyle = LineStyle.SOLID,
         width: float = 1.0,
@@ -377,7 +378,7 @@ class Kde(LineFillBase):
     @staticmethod
     def _calculate_params(
         data: NDArray[np.number],
-        band_width: float,
+        band_width: KdeBandWidthType,
         bottom: float = 0.0,
         scale: float = 1.0,
     ) -> tuple[NDArray[np.number], NDArray[np.number], float]:

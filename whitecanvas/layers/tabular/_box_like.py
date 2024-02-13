@@ -11,8 +11,8 @@ from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _mixin
 from whitecanvas.layers import group as _lg
+from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
-from whitecanvas.layers.tabular import _shared
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
 from whitecanvas.types import (
     ColormapType,
@@ -228,6 +228,8 @@ class DFViolinPlot(
         )  # fmt: skip
         super().__init__(base, cat.df)
         _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
+        self._value = value
+        self._map = cat.prep_position_map(_splitby, dodge)
         self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
 
     @property
@@ -256,6 +258,36 @@ class DFViolinPlot(
             extra[key] = [row[i] for row in self._categories]
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def with_rug(
+        self,
+        *,
+        width: float = 1.0,
+        color="black",
+    ):
+        from whitecanvas.layers.tabular import DFRugGroups
+
+        _extent = self.base.extent
+        jitter = _jitter.CategoricalJitter(self._splitby, self._map)
+        if self.base._shape == "both":
+            align = "center"
+        elif self.base._shape == "left":
+            align = "high"
+        else:
+            align = "low"
+        rug = DFRugGroups.from_table(
+            self._source,
+            jitter,
+            self._value,
+            color=color,
+            width=width,
+            extent=_extent,
+            backend=self.base._backend_name,
+        ).scale_by_density(align=align)
+        old_name = self.name
+        return _lg.LayerTuple([self, rug], name=old_name)
+
+    # def with_box(self):
 
 
 class DFBoxPlot(

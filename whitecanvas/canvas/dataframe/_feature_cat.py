@@ -11,7 +11,7 @@ from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
-from whitecanvas.types import ColormapType, HistBinType, Orientation
+from whitecanvas.types import ColormapType, HistBinType, KdeBandWidthType, Orientation
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -341,7 +341,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
     def add_kde(
         self,
         *,
-        band_width: float | None = None,
+        band_width: KdeBandWidthType = "scott",
         name: str | None = None,
         color: NStr | None = None,
         width: str | None = None,

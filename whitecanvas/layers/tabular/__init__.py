@@ -14,6 +14,7 @@ from whitecanvas.layers.tabular._dataframe import (
     DFMarkers,
     DFPointPlot2D,
     DFRug,
+    DFRugGroups,
 )
 from whitecanvas.layers.tabular._df_compat import parse
 
@@ -30,6 +31,7 @@ __all__ = [
     "DFHistograms",
     "DFKde",
     "DFRug",
+    "DFRugGroups",
     "DFPointPlot2D",
     "parse",
 ]

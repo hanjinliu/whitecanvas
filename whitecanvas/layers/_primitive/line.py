@@ -598,6 +598,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
 
     @property
     def alpha(self) -> NDArray[np.float32]:
+        """Alpha channel of each line."""
         return self.color[:, 3]
 
     @alpha.setter

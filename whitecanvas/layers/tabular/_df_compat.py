@@ -62,11 +62,15 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
     @abstractmethod
     def select(self, columns: list[str]) -> Self:
-        ...
+        """Select columns from the data frame and return a new one."""
 
     @abstractmethod
     def sort(self, by: str) -> Self:
-        ...
+        """Sort the data frame by a column and return the sorted one."""
+
+    @abstractmethod
+    def get_rows(self, indices: list[int]) -> Self:
+        """Get rows by indices and return a new data frame."""
 
     @abstractmethod
     def filter(
@@ -118,6 +122,9 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
     def sort(self, by: str) -> Self:
         arr = self[by]
         indices = np.argsort(arr)
+        return DictWrapper({k: v[indices] for k, v in self._data.items()})
+
+    def get_rows(self, indices: list[int]) -> Self:
         return DictWrapper({k: v[indices] for k, v in self._data.items()})
 
     def filter(
@@ -188,6 +195,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def sort(self, by: str) -> Self:
         return PandasWrapper(self._data.sort_values(by))
 
+    def get_rows(self, indices: list[int]) -> Self:
+        return PandasWrapper(self._data.iloc[indices])
+
     def filter(
         self,
         by: tuple[str, ...],
@@ -240,6 +250,9 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
 
     def sort(self, by: str) -> Self:
         return PolarsWrapper(self._data.sort(by))
+
+    def get_rows(self, indices: list[int]) -> Self:
+        return PolarsWrapper(self._data[indices])
 
     def filter(
         self,

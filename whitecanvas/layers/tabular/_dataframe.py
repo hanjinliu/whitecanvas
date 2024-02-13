@@ -28,12 +28,14 @@ from whitecanvas.types import (
     ColorType,
     Hatch,
     HistBinType,
+    KdeBandWidthType,
     LineStyle,
     Orientation,
     Symbol,
     _Void,
 )
 from whitecanvas.utils.hist import histograms
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -140,13 +142,13 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self._style_by = style_by
         return self
 
-    def move(self, dx: float = 0.0, dy: float = 0.0) -> Self:
+    def move(self, dx: float = 0.0, dy: float = 0.0, autoscale: bool = True) -> Self:
         """Add a constant shift to the layer."""
         for layer in self._base_layer:
             old_data = layer.data
             new_data = old_data[0] + dx, old_data[1] + dy
             layer.data = new_data
-        if canvas := self._canvas_ref():
+        if autoscale and (canvas := self._canvas_ref()):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
@@ -339,17 +341,18 @@ class DFMarkers(_shared.DataFrameLayerWrapper[_lg.MarkerCollection, _DF]):
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
     ) -> Self:
+        """Add edge to the markers."""
         if color is not None:
             self.update_edge_color(color)
         self.update_width(width)
         self._base_layer.edge.style = LineStyle(style)
         return self
 
-    def move(self, dx: float = 0.0, dy: float = 0.0) -> Self:
+    def move(self, dx: float = 0.0, dy: float = 0.0, autoscale: bool = True) -> Self:
         """Add a constant shift to the layer."""
         _old_data = self._base_layer.data
         self._base_layer.set_data(xdata=_old_data.x + dx, ydata=_old_data.y + dy)
-        if canvas := self._canvas_ref():
+        if autoscale and (canvas := self._canvas_ref()):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
@@ -392,14 +395,14 @@ class DFMarkerGroups(DFMarkers):
         """Orientation of the plot."""
         return self._orient
 
-    def move(self, shift: float = 0.0) -> Self:
+    def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Add a constant shift to the layer."""
         _old_data = self._base_layer.data
         if self.orient.is_vertical:
             self._base_layer.set_data(xdata=_old_data.x + shift)
         else:
             self._base_layer.set_data(ydata=_old_data.y + shift)
-        if canvas := self._canvas_ref():
+        if autoscale and (canvas := self._canvas_ref()):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
@@ -729,7 +732,7 @@ class DFKde(
         cls,
         df: DataFrameWrapper[_DF],
         value: str,
-        band_width: float | None = None,
+        band_width: KdeBandWidthType = "scott",
         color: str | None = None,
         width: float = 1.0,
         style: str | None = None,
@@ -803,19 +806,23 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], Generic[_DF]):
         source: DataFrameWrapper[_DF],
         base: _l.Rug,
         color: _Cols | None = None,
-        width: str | None = None,
-        style: _Cols | None = None,
+        width: str | float | None = None,
+        style: str | Iterable[str] | None = None,
     ):
         self._color_by = _p.ColorPlan.default()
         self._width_by = _p.WidthPlan.default()
         self._style_by = _p.StylePlan.default()
+        self._scale_by = _p.WidthPlan.default()
         super().__init__(base, source)
         if color is not None:
             self.update_color(color)
         if isinstance(width, str):
             self.update_width(width)
+        elif is_real_number(width):
+            self.base.width = width
         if style is not None:
             self.update_style(style)
+        self.with_hover_template(default_template(source.iter_items()))
 
     @classmethod
     def from_table(
@@ -836,6 +843,11 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], Generic[_DF]):
             df[value], name=name, orient=ori, low=low, high=high, backend=backend,
         )  # fmt: skip
         return cls(df, base, color=color, width=width, style=style)
+
+    @property
+    def orient(self) -> Orientation:
+        """Orientation of the rugs"""
+        return self.base.orient
 
     @overload
     def update_color(self, value: ColorType) -> Self:
@@ -886,6 +898,8 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], Generic[_DF]):
         if isinstance(by, str):
             width_by = _p.WidthPlan.from_range(by, limits=limits)
         else:
+            if limits is not None:
+                raise TypeError("Cannot set limits for a constant width.")
             width_by = _p.WidthPlan.from_const(float(by))
         self._base_layer.width = width_by.map(self._source)
         self._width_by = width_by
@@ -913,9 +927,157 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], Generic[_DF]):
         self._style_by = style_by
         return self
 
+    def update_scale(self, by: str | float, align: str = "low") -> Self:
+        ...
+
+    def with_hover_template(self, template: str) -> Self:
+        """Set the hover tooltip template for the layer."""
+        extra = dict(self._source.iter_items())
+        self.base.with_hover_template(template, extra=extra)
+        return self
+
+
+class DFRugGroups(DFRug[_DF]):
+    def __init__(
+        self,
+        source: DataFrameWrapper[_DF],
+        base: _l.Rug,
+        value: str,
+        splitby: tuple[str, ...],
+        color: str | tuple[str, ...] | None = None,
+        width: str | None = None,
+        style: str | tuple[str, ...] | None = None,
+        extent: float = 0.8,
+    ):
+        super().__init__(source, base, color=color, width=width, style=style)
+        self._splitby = splitby
+        self._value = value
+        self._extent = extent
+
+    @property
+    def orient(self) -> Orientation:
+        """Orientation of the plot."""
+        return self.base.orient.transpose()
+
+    def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
+        """Add a constant shift to the layer."""
+        _old = self._base_layer.data_full
+        self._base_layer.data_full = _old.x, _old.y0 + shift, _old.y1 + shift
+        if autoscale and (canvas := self._canvas_ref()):
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
+        return self
+
+    @classmethod
+    def from_table(
+        cls,
+        df: DataFrameWrapper[_DF],
+        jitter: _jitter.CategoricalJitter,
+        value: str,
+        color: str | None = None,
+        width: float = 1.0,
+        style: str | None = None,
+        extent: float = 0.8,
+        name: str | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFRugGroups[_DF]:
+        # orientation of the rugs are always opposite to the orientation of the plot
+        ori = Orientation.parse(orient).transpose()
+        x = jitter.map(df)
+        dx = extent / 2
+        base = _l.Rug(
+            df[value],
+            orient=ori,
+            low=x - dx,
+            high=x + dx,
+            name=name,
+            backend=backend,
+        )
+        return cls(
+            df,
+            base,
+            value,
+            jitter.by,
+            color=color,
+            width=width,
+            style=style,
+            extent=extent,
+        )
+
+    def scale_by_density(
+        self,
+        *,
+        align: str = "center",
+        band_width: KdeBandWidthType = "scott",
+    ) -> Self:
+        """
+        Set the height of the lines by density.
+
+        Parameters
+        ----------
+        align : {'low', 'high', 'center'}, optional
+            How to align the rug lines around the offset. This parameter is defined as
+            follows.
+
+            ```
+               "low"     "high"    "center"
+
+                │ │                  │ │
+              ──┴─┴──   ──┬─┬──    ──┼─┼──
+                          │ │        │ │
+            ```
+        band_width : float, "scott" or "silverman", optional
+            Method to calculate the estimator bandwidth.
+        """
+        from whitecanvas.utils.kde import gaussian_kde
+
+        data_full = self.base.data_full
+        densities: list[np.ndarray] = []
+        slices: list[np.ndarray] = []
+        offsets: list[float] = []
+        for _sl, sub in self._source.group_by(self._splitby):
+            arr = sub[self._value]
+            density = gaussian_kde(arr, band_width)(arr)
+            densities.append(density)
+            _ar_bool = np.column_stack(
+                [self._source[col] == s for col, s in zip(self._splitby, _sl)]
+            ).all(axis=1)
+            slices.append(_ar_bool)
+            offsets.append(data_full.ycenter[_ar_bool].mean())
+        density_max = max(d.max() for d in densities)
+        normed = [d / density_max * self._extent / 2 for d in densities]
+
+        # sort densities
+        normed_sorted = np.empty(self._source.shape[0], dtype=np.float32)
+        off_sorted = np.empty_like(normed_sorted)
+        for _sl, _norm, _off in zip(slices, normed, offsets):
+            normed_sorted[_sl] = _norm
+            off_sorted[_sl] = _off
+
+        if align == "low":
+            y0 = off_sorted
+            y1 = off_sorted + normed_sorted
+        elif align == "high":
+            y0 = off_sorted - normed_sorted
+            y1 = off_sorted
+        elif align == "center":
+            y0 = off_sorted - normed_sorted
+            y1 = off_sorted + normed_sorted
+        else:
+            raise ValueError(
+                f"`align` must be 'low', 'high', or 'center', got {align!r}."
+            )
+        self.base.data_full = data_full.x, y0, y1
+        return self
+
 
 def default_template(it: Iterable[tuple[str, np.ndarray]], max_rows: int = 10) -> str:
-    """Default template string for markers"""
+    """
+    Default template string for markers
+
+    This template can only be used for those plot that has one tooltip for each data
+    point, which includes markers, bars and rugs.
+    """
     fmt_list = list[str]()
     for ikey, (key, value) in enumerate(it):
         if not key:

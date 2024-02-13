@@ -50,6 +50,10 @@ class CategoricalLikeJitter(JitterBase):
             out[sl] = pos
         return out
 
+    @property
+    def by(self) -> tuple[str, ...]:
+        return self._by
+
 
 class CategoricalJitter(CategoricalLikeJitter):
     """Jitter for categorical data."""

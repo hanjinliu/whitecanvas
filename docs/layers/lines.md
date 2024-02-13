@@ -129,18 +129,3 @@ yhigh = [4, 5, 5]
 canvas.add_errorbars(x, ylow, yhigh, capsize=0.5, width=3, color="crimson")
 canvas.show()
 ```
-
-## Rug
-
-`Rug` is a layer that represents rug plot (or event plot). It can be created by the
-[`add_rug`][whitecanvas.canvas.CanvasBase.add_rug] method.
-
-``` python
-#!name: rug_layer
-import numpy as np
-from whitecanvas import new_canvas
-
-canvas = new_canvas("matplotlib")
-canvas.add_rug([0.0, 0.1, 0.3, 0.8, 1.4, 3.5], color="black", width=2)
-canvas.show()
-```

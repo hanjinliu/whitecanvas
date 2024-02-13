@@ -8,15 +8,15 @@ def main():
         canvas.add_markers([2, 2, 2, 2], color="blue", size=20)
         .with_face_multi()
     )
-    @line0.events.picked.connect
+    @line0.events.clicked.connect
     def on_line_clicked(i: int):
         line0.color = "red"
 
-    @line1.events.picked.connect
+    @line1.events.clicked.connect
     def on_line_clicked(i: int):
         line1.color = "red"
 
-    @markers.events.picked.connect
+    @markers.events.clicked.connect
     def on_markers_clicked(i: int):
         colors = markers.face.color
         colors[i] = [1, 0, 0, 1]

@@ -41,7 +41,7 @@ def main():
     )
 
     # connect pick event
-    @markers.events.picked.connect
+    @markers.events.clicked.connect
     def _on_pick(indices):
         if len(indices) == 1:
             i = indices[0]

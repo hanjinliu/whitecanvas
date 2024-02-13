@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class BandEvents(FaceEdgeMixinEvents):
-    picked = Signal()
+    clicked = Signal()
 
 
 class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
@@ -55,7 +55,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         self._band_type = "band"
         self.edge.width = 0.0
         self._init_events()
-        self._backend._plt_connect_pick_event(self.events.picked.emit)
+        self._backend._plt_connect_pick_event(self.events.clicked.emit)
 
     @property
     def orient(self) -> Orientation:

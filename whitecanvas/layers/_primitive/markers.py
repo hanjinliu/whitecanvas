@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Any, Generic, Sequence, TypeVar
 
 import numpy as np
@@ -50,9 +51,20 @@ _Size = TypeVar("_Size", float, NDArray[np.floating])
 
 
 class MarkersLayerEvents(FaceEdgeMixinEvents):
-    picked = Signal(list)
+    clicked = Signal(list)
     symbol = Signal(Symbol)
     size = Signal(float)
+
+    @property
+    def picked(self):
+        """Deprecated. Use `clicked` instead."""
+        warnings.warn(
+            "The `picked` event is deprecated and will be removed in the future. "
+            "Use `clicked` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.clicked
 
 
 class Markers(
@@ -93,7 +105,7 @@ class Markers(
         pad_r = size / 400
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata, pad_r, pad_r)
 
-        self._backend._plt_connect_pick_event(self.events.picked.emit)
+        self._backend._plt_connect_pick_event(self.events.clicked.emit)
         self._init_events()
 
     @classmethod

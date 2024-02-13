@@ -45,7 +45,7 @@ _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 class BarEvents(FaceEdgeMixinEvents):
     bar_width = Signal(float)
     bottom = Signal(np.ndarray)
-    picked = Signal(int)
+    clicked = Signal(int)
 
 
 class Bars(
@@ -91,7 +91,7 @@ class Bars(
         self._x_hint, self._y_hint = xhint, yhint
         self._bar_type = "bars"
         self._init_events()
-        self._backend._plt_connect_pick_event(self.events.picked.emit)
+        self._backend._plt_connect_pick_event(self.events.clicked.emit)
 
     def _get_layer_data(self) -> XYData:
         """Current data of the layer."""

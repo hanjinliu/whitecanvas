@@ -14,7 +14,7 @@
         <link rel="prev" href="../lines/">
       
       
-        <link rel="next" href="../face_layers/">
+        <link rel="next" href="../distribution/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -437,6 +437,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -581,48 +587,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hover-text" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hover Text
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Hover Text">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#give-a-sequence-of-hover-texts" class="md-nav__link">
-    <span class="md-ellipsis">
-      Give a sequence of hover texts
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#give-a-hover-template" class="md-nav__link">
-    <span class="md-ellipsis">
-      Give a hover template
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#picking-markers" class="md-nav__link">
-    <span class="md-ellipsis">
-      Picking Markers
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#methods-for-better-interpretability" class="md-nav__link">
     <span class="md-ellipsis">
       Methods for Better Interpretability
@@ -662,11 +626,53 @@
   
   
     <li class="md-nav__item">
+      <a href="../distribution/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Distribution
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../texts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Texts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../face_layers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Face&Edge Layers
+    Bars, Band and Spans
   </span>
   
 
@@ -697,6 +703,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mouse/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Mouse Interactivity
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -715,6 +742,8 @@
       
         
           
+        
+      
         
       
         
@@ -797,6 +826,27 @@
   
   <span class="md-ellipsis">
     Categorical &times; Numerical Data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../categorical/aggregation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Aggregation
   </span>
   
 
@@ -1094,48 +1144,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hover-text" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hover Text
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Hover Text">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#give-a-sequence-of-hover-texts" class="md-nav__link">
-    <span class="md-ellipsis">
-      Give a sequence of hover texts
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#give-a-hover-template" class="md-nav__link">
-    <span class="md-ellipsis">
-      Give a hover template
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#picking-markers" class="md-nav__link">
-    <span class="md-ellipsis">
-      Picking Markers
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#methods-for-better-interpretability" class="md-nav__link">
     <span class="md-ellipsis">
       Methods for Better Interpretability
@@ -1312,62 +1320,6 @@ is correctly typed, IDE will recognize the returned layer as a multi-face layer.
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/markers_layer_multisizes.png" width="360px" /></p>
-<h2 id="hover-text">Hover Text</h2>
-<p>Hover text is very useful for interactive data exploration. <code>whitecanvas</code> supports hover
-texts in different backends.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>To demonstrate the hover texts in this document, we use <code>plotly</code> backend. This does
-not mean that hover text is not supported in <code>matplotlib</code>.</p>
-</div>
-<h3 id="give-a-sequence-of-hover-texts">Give a sequence of hover texts</h3>
-<p><code>with_hover_text</code> method sets the hover text of the markers.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;plotly&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-<span class="n">layer</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">canvas</span>
-    <span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_hover_text</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;point </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span>
-<span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<iframe src=../../_images/add_markers_with_hover_text.html frameborder="0" width="400px" height="300px" scrolling="no"></iframe>
-
-<h3 id="give-a-hover-template">Give a hover template</h3>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;plotly&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-<span class="n">layer</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">canvas</span>
-    <span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_hover_template</span><span class="p">(</span><span class="s2">&quot;x=</span><span class="si">{x:.2f}</span><span class="s2">, y=</span><span class="si">{y:.2f}</span><span class="s2">, i=</span><span class="si">{i}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<iframe src=../../_images/add_markers_with_hover_template.html frameborder="0" width="400px" height="300px" scrolling="no"></iframe>
-
-<h2 id="picking-markers">Picking Markers</h2>
-<p>Markers have a <code>picked</code> event. You can connect a callback to the event to handle the
-picking.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="n">layer</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">add_markers</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-
-<span class="nd">@layer</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">picked</span><span class="o">.</span><span class="n">connect</span>
-<span class="k">def</span> <span class="nf">_on_pick</span><span class="p">(</span><span class="n">picked</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;picked indices: </span><span class="si">{</span><span class="n">picked</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</code></pre></div>
 <h2 id="methods-for-better-interpretability">Methods for Better Interpretability</h2>
 <p><code>Markers</code> is implemented with the following methods to make the plot more interpretable.</p>
 <h3 id="color-by-density">Color by density</h3>
@@ -1444,13 +1396,13 @@ colors the markers by the density of the points using kernel density estimation.
         
         
           
-          <a href="../face_layers/" class="md-footer__link md-footer__link--next" aria-label="Next: Face&amp;Edge Layers">
+          <a href="../distribution/" class="md-footer__link md-footer__link--next" aria-label="Next: Distribution">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Face&Edge Layers
+                Distribution
               </div>
             </div>
             <div class="md-footer__button md-icon">

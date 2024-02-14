@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import (
     TYPE_CHECKING,
+    Generic,
     Sequence,
     TypeVar,
 )
@@ -10,15 +11,51 @@ from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
-from whitecanvas.types import ColormapType, HistBinType, Orientation
+from whitecanvas.types import ColormapType, HistBinType, KdeBandWidthType, Orientation
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.canvas._base import CanvasBase
 
     NStr = str | Sequence[str]
 
 _C = TypeVar("_C", bound="CanvasBase")
 _DF = TypeVar("_DF")
+
+
+_C = TypeVar("_C", bound="CanvasBase")
+_DF = TypeVar("_DF")
+
+
+class _Aggregator(Generic[_C, _DF]):
+    def __init__(self, method: str, plotter: CatPlotter[_C, _DF] = None):
+        self._method = method
+        self._plotter = plotter
+
+    def __get__(self, ins: _C, owner) -> Self:
+        return _Aggregator(self._method, ins)
+
+    def __repr__(self) -> str:
+        return f"Aggregator<{self._method}>"
+
+    def __call__(self, by: str | tuple[str, ...]) -> CatPlotter[_C, _DF]:
+        """Aggregate the values before plotting it."""
+        plotter = self._plotter
+        if isinstance(by, str):
+            by = (by,)
+        elif len(by) == 0:
+            raise ValueError("No column is specified for grouping.")
+        if plotter is None:
+            raise TypeError("Cannot call this method from a class.")
+        on = [plotter._x, plotter._y]
+        df_agg = plotter._df.agg_by(by, on, self._method)
+        return CatPlotter(
+            plotter._canvas(),
+            df_agg,
+            x=plotter._x,
+            y=plotter._y,
+        )
 
 
 class CatPlotter(BaseCatPlotter[_C, _DF]):
@@ -187,7 +224,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         rangex: tuple[float, float] | None = None,
         rangey: tuple[float, float] | None = None,
         density: bool = False,
-    ):
+    ) -> _lt.DFHeatmap[_DF]:
         """
         Add 2-D histogram of given x/y columns.
 
@@ -231,7 +268,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         hatch: NStr | None = None,
         size: float | None = None,
         capsize: float = 0.15,
-    ):
+    ) -> _lt.DFPointPlot2D[_DF]:
         """
         Add 2-D point plot.
 
@@ -280,7 +317,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         color: NStr | None = None,
         width: float | None = None,
         style: NStr | None = None,
-    ):
+    ) -> _lt.DFHistograms[_DF]:
         canvas = self._canvas()
         width = theme._default("line.width", width)
         x0, orient = self._column_and_orient()
@@ -304,12 +341,12 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
     def add_kde(
         self,
         *,
-        band_width: float | None = None,
+        band_width: KdeBandWidthType = "scott",
         name: str | None = None,
         color: NStr | None = None,
         width: str | None = None,
         style: NStr | None = None,
-    ):
+    ) -> _lt.DFKde[_DF]:
         """
         Add lines representing kernel density estimation.
 
@@ -334,8 +371,8 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        WrappedLines
-            Line collection layer.
+        DFKde
+            KDE layer.
         """
         canvas = self._canvas()
         width = theme._default("line.width", width)
@@ -366,7 +403,31 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         style: NStr | None = None,
         low: float = 0.0,
         high: float | None = None,
-    ):
+    ) -> _lt.DFRug[_DF]:
+        """
+        Add a rug plot representing 1D distribution.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        width : str, optional
+            Column name for line width. Must be numerical.
+        style : str or sequence of str, optional
+            Column name(s) for styling the lines. Must be categorical.
+        low : float, default 0.0
+            Lower bound of each rug lines.
+        high : float, default 0.0
+            Higher bound of each rug lines. Automatically determined by the canvas size
+            by default.
+
+        Returns
+        -------
+        DFRug
+            Rug plot layer.
+        """
         canvas = self._canvas()
         width = theme._default("line.width", width)
         x0, orient = self._column_and_orient()
@@ -378,7 +439,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             high = low + (hmax - hmin) * 0.05
         layer = _lt.DFRug.from_table(
             self._df, x0, name=name, orient=orient, color=color, width=width,
-            style=style, backend=canvas._get_backend(), low=low, high=high,
+            style=style, low=low, high=high, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is not None and not layer._color_by.is_const():
             layer.update_color(layer._color_by.by, palette=canvas._color_palette)
@@ -396,6 +457,6 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         else:
             return self._y, Orientation.HORIZONTAL
 
-
-class CatAggPlotter:
-    ...
+    # aggregators and group aggregators
+    mean_for_each = _Aggregator("mean")
+    median_for_each = _Aggregator("median")

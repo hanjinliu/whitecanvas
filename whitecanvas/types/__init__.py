@@ -3,6 +3,7 @@ from whitecanvas.types._alias import (
     ColormapType,
     ColorType,
     HistBinType,
+    KdeBandWidthType,
     _Void,
 )
 from whitecanvas.types._enums import (
@@ -27,6 +28,7 @@ __all__ = [
     "Symbol",
     "Hatch",
     "HistBinType",
+    "KdeBandWidthType",
     "Orientation",
     "Origin",
     "Modifier",

@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Sequence, Union
+from typing import Any, Iterable, Literal, Sequence, Union
 
 import numpy as np
 from cmap import Color, Colormap
@@ -9,6 +9,7 @@ ColormapType = Union[str, Colormap, "list[ColorType]", Any]
 Number = Union[int, float, np.number]
 ArrayLike1D = Union[Sequence[Number], NDArray[np.number]]
 HistBinType = Union[int, ArrayLike1D, str]
+KdeBandWidthType = Union[float, Literal["scott", "silverman"]]
 
 
 class _Singleton:

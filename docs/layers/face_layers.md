@@ -1,4 +1,4 @@
-# Face&Edge-type Layers
+# Bars, Band and Spans
 
 There are several layers that is composed of faces and edges.
 

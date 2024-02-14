@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 
 from whitecanvas import new_canvas
@@ -41,18 +42,16 @@ def test_cat_plots(backend: str, orient: str):
     cat_plt.add_stripplot(color="c")
     cat_plt.add_swarmplot(color="c")
     cat_plt.add_boxplot(color="c")
-    cat_plt.add_violinplot(color="c")
-
-def test_colored_plots(backend: str):
-    canvas = new_canvas(backend=backend)
-    df = {
-        "x": np.arange(30),
-        "y": np.arange(30),
-        "label": np.repeat(["A", "B", "C"], 10),
-    }
-
-    canvas.cat(df, "x", "y").add_markers(color="label")
-    canvas.cat(df, "x", "y").add_line(color="label")
+    cat_plt.add_violinplot(color="c").with_rug()
+    cat_plt.add_pointplot(color="c").err_by_se()
+    cat_plt.add_barplot(color="c")
+    if backend == "plotly":
+        # NOTE: plotly does not support multiple colors for rugplot
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cat_plt.add_rugplot(color="c").scale_by_density()
+    else:
+        cat_plt.add_rugplot(color="c").scale_by_density()
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)

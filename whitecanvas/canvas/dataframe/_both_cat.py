@@ -193,4 +193,4 @@ class XYCatAggPlotter(BaseCatPlotter[_C, _DF]):
         else:
             if on is None:
                 raise ValueError("Value column is not specified.")
-            return df.agg_by(by, on, self._agg_method)
+            return df.agg_by(by, [on], self._agg_method)

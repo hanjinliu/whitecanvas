@@ -75,7 +75,7 @@ class _GroupAggregator(Generic[_C, _DF]):
             raise ValueError("No column is specified for grouping.")
         return type(plotter)(
             plotter._canvas(),
-            plotter._df.agg_by((*plotter._offset, *by), plotter._value, self._method),
+            plotter._df.agg_by((*plotter._offset, *by), [plotter._value], self._method),
             offset=plotter._offset,
             value=plotter._value,
             update_label=plotter._update_label,
@@ -98,6 +98,12 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             offset = (offset,)
         elif offset is None:
             offset = ()
+        else:
+            if any(not isinstance(o, str) for o in offset):
+                raise TypeError(
+                    "Category column(s) must be specified by a string or a sequence "
+                    f"of strings, got {offset!r}."
+                )
         self._offset: tuple[str, ...] = offset
         self._cat_iter = CatIterator(self._df, offset)
         self._value = value
@@ -500,6 +506,36 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
+    def add_rugplot(
+        self,
+        *,
+        name: str | None = None,
+        color: NStr | None = None,
+        width: float | None = None,
+        style: NStr | None = None,
+        dodge: NStr | bool = True,
+        extent: float = 0.8,
+    ) -> _lt.DFRugGroups[_DF]:
+        canvas = self._canvas()
+        width = theme._default("line.width", width)
+
+        df = self._df
+        splitby, dodge = _shared.norm_dodge(
+            df, self._offset, color, style, dodge=dodge
+        )  # fmt: skip
+        _map = self._cat_iter.prep_position_map(splitby, dodge)
+        _extent = self._cat_iter.zoom_factor(dodge) * extent
+        jitter = _jitter.CategoricalJitter(splitby, _map)
+        layer = _lt.DFRugGroups.from_table(
+            df, jitter, self._get_value(), name=name, color=color, orient=self._orient,
+            extent=_extent, width=width, style=style, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if color is not None and not layer._color_by.is_const():
+            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
+        elif color is None:
+            layer.update_color(canvas._color_palette.next())
+        return canvas.add_layer(layer)
+
     def add_hist_heatmap(
         self,
         cmap: ColormapType = "inferno",
@@ -528,6 +564,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
 
 class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
+    """Class for plotting aggregated values of a single categorical axis."""
+
     def __init__(
         self,
         canvas: _C,
@@ -556,7 +594,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         Add line that connect the aggregated values.
 
-        >>> canvas.cat_x(df).mean().add_line("time", "value")
+        >>> canvas.cat_x(df, "time", "value").mean().add_line()
 
         Parameters
         ----------
@@ -610,7 +648,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         Add markers that represent the aggregated values.
 
-        >>> canvas.cat_x(df).mean().add_markers("time", "value")
+        >>> canvas.cat_x(df, "time", "value").mean().add_markers()
 
         Parameters
         ----------
@@ -668,7 +706,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         """
         Add bars that represent the aggregated values.
 
-        >>> canvas.cat_x(df).mean().add_bars("time", "value")
+        >>> canvas.cat_x(df, "time", "value").mean().add_bars()
 
         Parameters
         ----------
@@ -716,7 +754,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
 
     def _aggregate(
         self,
-        df: DataFrameWrapper,
+        df: DataFrameWrapper[_DF],
         by: tuple[str, ...],
         on: str,
     ) -> DataFrameWrapper[_DF]:
@@ -727,7 +765,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         else:
             if on is None:
                 raise ValueError("Value column is not specified.")
-            return df.agg_by(by, on, self._agg_method)
+            return df.agg_by(by, [on], self._agg_method)
 
 
 class XCatPlotter(OneAxisCatPlotter[_C, _DF]):

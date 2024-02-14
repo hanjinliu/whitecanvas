@@ -62,11 +62,15 @@ class DataFrameWrapper(ABC, Generic[_T]):
 
     @abstractmethod
     def select(self, columns: list[str]) -> Self:
-        ...
+        """Select columns from the data frame and return a new one."""
 
     @abstractmethod
     def sort(self, by: str) -> Self:
-        ...
+        """Sort the data frame by a column and return the sorted one."""
+
+    @abstractmethod
+    def get_rows(self, indices: list[int]) -> Self:
+        """Get rows by indices and return a new data frame."""
 
     @abstractmethod
     def filter(
@@ -81,7 +85,7 @@ class DataFrameWrapper(ABC, Generic[_T]):
         ...
 
     @abstractmethod
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
         ...
 
     @abstractmethod
@@ -120,6 +124,9 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
         indices = np.argsort(arr)
         return DictWrapper({k: v[indices] for k, v in self._data.items()})
 
+    def get_rows(self, indices: list[int]) -> Self:
+        return DictWrapper({k: v[indices] for k, v in self._data.items()})
+
     def filter(
         self,
         by: tuple[str, ...],
@@ -140,15 +147,16 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
             yield row, self.filter(by, row)
             observed.add(row)
 
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
         if method not in ("min", "max", "mean", "median", "sum", "std"):
             raise ValueError(f"Unsupported aggregation method: {method}")
         agg = getattr(np, method)
-        out = {k: [] for k in (*by, on)}
+        out = {k: [] for k in (*by, *on)}
         for sl, sub in self.group_by(by):
             for b, s in zip(by, sl):
                 out[b].append(s)
-            out[on].append(agg(sub[on]))
+            for o in on:
+                out[o].append(agg(sub[o]))
         return DictWrapper({k: np.array(v) for k, v in out.items()})
 
     def value_count(self, by: tuple[str, ...]) -> Self:
@@ -187,6 +195,9 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def sort(self, by: str) -> Self:
         return PandasWrapper(self._data.sort_values(by))
 
+    def get_rows(self, indices: list[int]) -> Self:
+        return PandasWrapper(self._data.iloc[indices])
+
     def filter(
         self,
         by: tuple[str, ...],
@@ -202,7 +213,8 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         for sl, sub in self._data.groupby(list(by), observed=True):
             yield sl, PandasWrapper(sub)
 
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
+        on = list(on)
         return PandasWrapper(self._data.groupby(list(by))[on].agg(method).reset_index())
 
     def value_count(self, by: tuple[str, ...]) -> Self:
@@ -239,6 +251,9 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
     def sort(self, by: str) -> Self:
         return PolarsWrapper(self._data.sort(by))
 
+    def get_rows(self, indices: list[int]) -> Self:
+        return PolarsWrapper(self._data[indices])
+
     def filter(
         self,
         by: tuple[str, ...],
@@ -255,11 +270,11 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         for sl, sub in self._data.group_by(by, maintain_order=True):
             yield sl, PolarsWrapper(sub)
 
-    def agg_by(self, by: tuple[str, ...], on: str, method: str) -> Self:
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
         import polars as pl
 
-        expr = getattr(pl.col(on), method)()
-        return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(expr))
+        exprs = [getattr(pl.col(o), method)() for o in on]
+        return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(*exprs))
 
     def value_count(self, by: tuple[str, ...]) -> Self:
         return PolarsWrapper(

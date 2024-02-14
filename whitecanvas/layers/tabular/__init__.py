@@ -5,17 +5,20 @@ from whitecanvas.layers.tabular._box_like import (
     DFViolinPlot,
 )
 from whitecanvas.layers.tabular._dataframe import (
-    DFBars,
     DFHeatmap,
     DFHistograms,
     DFKde,
     DFLines,
-    DFMarkerGroups,
-    DFMarkers,
     DFPointPlot2D,
-    DFRug,
 )
 from whitecanvas.layers.tabular._df_compat import parse
+from whitecanvas.layers.tabular._marker_like import (
+    DFBars,
+    DFMarkerGroups,
+    DFMarkers,
+    DFRug,
+    DFRugGroups,
+)
 
 __all__ = [
     "DFBarPlot",
@@ -30,6 +33,7 @@ __all__ = [
     "DFHistograms",
     "DFKde",
     "DFRug",
+    "DFRugGroups",
     "DFPointPlot2D",
     "parse",
 ]

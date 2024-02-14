@@ -416,19 +416,17 @@ class LabeledPlot(
         backend: str | Backend | None = None,
     ) -> LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]:
         x, y, err_data = _init_mean_sd(x, data, color)
+        xerr, yerr = _init_error_bars(x, y, err_data, orient, capsize, backend)
+        if not orient.is_vertical:
+            x, y = y, x
         markers = Markers(
-            x,
-            y,
-            backend=backend,
+            x, y, backend=backend,
         ).with_face_multi(
-            color=color,
-            hatch=hatch,
-            alpha=alpha,
-        )
+            color=color, hatch=hatch, alpha=alpha,
+        )  # fmt: skip
         lines = Line(x, y, backend=backend)
         plot = Plot(lines, markers)
         lines.visible = False
-        xerr, yerr = _init_error_bars(x, y, err_data, orient, capsize, backend)
         return cls(plot, xerr=xerr, yerr=yerr, name=name)
 
     @classmethod

@@ -32,12 +32,16 @@ nav:
     - Overview: layers/index.md
     - Lines: layers/lines.md
     - Markers: layers/markers.md
-    - Face&Edge Layers: layers/face_layers.md
+    - Distribution: layers/distribution.md
+    - Texts: layers/texts.md
+    - Bars, Band and Spans: layers/face_layers.md
     - Layer Groups: layers/layer_groups.md
+    - Mouse Interactivity: layers/mouse.md
   - Categorical Plot:
     - Overview: categorical/index.md
     - Numerical &times; Numerical Data: categorical/num_num.md
     - Categorical &times; Numerical Data: categorical/cat_num.md
+    - Aggregation: categorical/aggregation.md
   - Event Handling:
     - Overview: events/index.md
     - Canvas Events: events/canvas_events.md

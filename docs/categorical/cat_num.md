@@ -174,6 +174,10 @@ canvas.show()
 
 ## Marker-type Plots
 
+Marker-type plots use a marker to represent each data point.
+
+### Strip plot
+
 ``` python
 #!name: categorical_axis_stripplot
 canvas = new_canvas("matplotlib")
@@ -182,6 +186,7 @@ canvas = new_canvas("matplotlib")
     .cat_x(df, x="category", y="observation")
     .add_stripplot(color="replicate")
 )
+canvas.show()
 ```
 
 ``` python
@@ -192,6 +197,7 @@ canvas = new_canvas("matplotlib")
     .cat_x(df, x="category", y="observation")
     .add_stripplot(color="replicate", dodge=True)
 )
+canvas.show()
 ```
 
 As for the `Markers` layer, `as_edge_only` will convert the face features to the edge features.
@@ -205,6 +211,7 @@ canvas = new_canvas("matplotlib")
     .add_stripplot(color="replicate", dodge=True)
     .as_edge_only(width=2)
 )
+canvas.show()
 ```
 
 `with_hover_template` is also defined. All the column names can be used in the template
@@ -219,6 +226,7 @@ canvas = new_canvas("matplotlib")
     .add_stripplot(color="replicate", dodge=True)
     .with_hover_template("{category} (rep={replicate})")
 )
+canvas.show()
 ```
 
 Each marker size can represent a numerical value. `with_size` will map the numerical
@@ -233,9 +241,11 @@ canvas = new_canvas("matplotlib")
     .add_stripplot()
     .with_size("temperature")
 )
+canvas.show()
 ```
 
-Similarly, each marker color can represent a numerical value. `with_colormap` will map the value with an arbitrary colormap.
+Similarly, each marker color can represent a numerical value. `update_colormap` will map
+the value with an arbitrary colormap.
 
 ``` python
 #!name: categorical_axis_stripplot_by_color
@@ -244,11 +254,16 @@ canvas = new_canvas("matplotlib")
     canvas
     .cat_x(df, x="category", y="observation")
     .add_stripplot()
-    .with_colormap("temperature", cmap="coolwarm")
+    .update_colormap("temperature", cmap="coolwarm")
 )
+canvas.show()
 ```
 
-Swarm plot is another way to visualize all the data points with markers.
+### Swarm plot
+
+Swarm plot (or beeswarm plot) is another way to visualize all the data points with
+markers. In swarm plot, the outline of the markers represents the distribution of the
+data.
 
 ``` python
 #!name: categorical_axis_swarmplot
@@ -257,61 +272,66 @@ canvas = new_canvas("matplotlib")
     canvas
     .cat_x(df, x="category", y="observation")
     .add_swarmplot(sort=True)
-    .with_colormap("temperature", cmap="coolwarm")
+    .update_colormap("temperature", cmap="coolwarm")
 )
-```
-
-## Aggregation
-
-Showing the aggregated data is a common way to efficiently visualize a lot of data. This
-task is usually done by the module specific group-by methods, but `whitecanvas` provides
-a built-in method to simplify the process.
-
-In following example, `mean()` is used to prepare a mean-aggregated plotter, which has
-`add_markers` method to add the mean markers to the plotter.
-
-``` python
-#!name: categorical_axis_stripplot_and_agg_mean
-canvas = new_canvas("matplotlib")
-
-# create a categorical plotter
-cat_plt = canvas.cat_x(df, x="category", y="observation")
-
-# plot all the data
-cat_plt.add_stripplot(color="category")
-# plot the mean
-cat_plt.mean().add_markers(color="category", size=20)
-
 canvas.show()
 ```
 
-Similar `add_*` methods include `add_line()` and `add_bars()`.
+### Rug plot
+
+Although rug plot does not directly use markers, it also use a line to represent each
+data point.
 
 ``` python
-#!name: categorical_axis_stripplot_and_agg_line
-canvas = new_canvas("matplotlib")
-
-# create a categorical plotter
-cat_plt = canvas.cat_x(df, x="category", y="observation")
-
-# plot all the data
-cat_plt.add_stripplot(color="category")
-# plot the mean
-cat_plt.mean().add_line(width=3, color="black")
-
-canvas.show()
-```
-
-Count plot is a special case of the aggregation. Use `count()` to make the plotter.
-
-``` python
-#!name: categorical_axis_countplot
+#!name: categorical_axis_rugplot
 canvas = new_canvas("matplotlib")
 (
     canvas
-    .cat_x(df, x="category")
-    .count()
-    .add_bars(color="replicate", dodge=True)
+    .cat_x(df, x="category", y="observation")
+    .add_rugplot(color="replicate", dodge=True)
+)
+canvas.show()
+```
+
+Some methods defined for marker-type plots can also be used for rug plot.
+
+``` python
+#!name: categorical_axis_rugplot_colormap
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_rugplot()
+    .update_colormap("temperature", cmap="coolwarm")
+)
+canvas.show()
+```
+
+`scale_by_density` will change the length of the rugs to represent the density of the
+data points.
+
+``` python
+#!name: categorical_axis_rugplot_density
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_rugplot(color="replicate", dodge=True)
+    .scale_by_density()
+)
+canvas.show()
+```
+
+Rug plot can also be overlaid with violin plot with `with_rug` method.
+
+``` python
+#!name: categorical_axis_violin_with_rug
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_rug()
 )
 canvas.show()
 ```

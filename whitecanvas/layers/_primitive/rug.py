@@ -143,12 +143,9 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
             How to align the rug lines around the offset. This parameter is defined as
             follows.
 
-            ```python
+            ```
                "low"     "high"    "center"
-
-                │ │                  │ │
               ──┴─┴──   ──┬─┬──    ──┼─┼──
-                          │ │        │ │
             ```
         """
         data_full = self.data_full
@@ -226,10 +223,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
 
             ```
                "low"     "high"    "center"
-
-                │ │                  │ │
               ──┴─┴──   ──┬─┬──    ──┼─┼──
-                          │ │        │ │
             ```
         band_width : float, "scott" or "silverman", optional
             Method to calculate the estimator bandwidth.

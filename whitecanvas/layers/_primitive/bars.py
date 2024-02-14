@@ -34,6 +34,8 @@ from whitecanvas.types import (
 from whitecanvas.utils.normalize import as_array_1d, parse_texts
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.layers import group as _lg
 
 
@@ -382,6 +384,37 @@ class Bars(
         alpha: float = 1,
     ) -> Bars[_Face, MultiEdge]:
         return super().with_edge_multi(color, width, style, alpha)
+
+    def as_edge_only(
+        self,
+        *,
+        width: float = 3.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Self:
+        """
+        Convert the bars to edge-only mode.
+
+        This method will set the face color to transparent and the edge color to the
+        current face color.
+
+        Parameters
+        ----------
+        width : float, default 3.0
+            Width of the edge.
+        style : str or LineStyle, default LineStyle.SOLID
+            Line style of the edge.
+        """
+        color = self.face.color
+        if color.ndim == 0:
+            pass
+        elif color.ndim == 1:
+            self.with_edge(color=color, width=width, style=style)
+        elif color.ndim == 2:
+            self.with_edge_multi(color=color, width=width, style=style)
+        else:
+            raise RuntimeError("Unreachable error.")
+        self.face.update(alpha=0.0)
+        return self
 
     def with_hover_template(self, template: str, extra: Any | None = None) -> Bars:
         xs, ys = self.data

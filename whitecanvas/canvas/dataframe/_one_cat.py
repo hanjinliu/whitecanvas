@@ -98,6 +98,12 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             offset = (offset,)
         elif offset is None:
             offset = ()
+        else:
+            if any(not isinstance(o, str) for o in offset):
+                raise TypeError(
+                    "Category column(s) must be specified by a string or a sequence "
+                    f"of strings, got {offset!r}."
+                )
         self._offset: tuple[str, ...] = offset
         self._cat_iter = CatIterator(self._df, offset)
         self._value = value

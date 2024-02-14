@@ -138,12 +138,7 @@ class MultiLine(PlotlyHoverableLayer[go.Scatter]):
             elif len(candidates) == 0:
                 w = 0.0
             else:
-                warnings.warn(
-                    "plotly does not support multiple line widths. "
-                    "Set to the first one.",
-                    UserWarning,
-                    stacklevel=2,
-                )
+                _warn_multiple("line widths")
                 w = width[0]
         self._props["line"]["width"] = w
 
@@ -161,12 +156,7 @@ class MultiLine(PlotlyHoverableLayer[go.Scatter]):
             elif len(candidates) == 0:
                 self._props["line"]["dash"] = "solid"
             else:
-                warnings.warn(
-                    "plotly does not support multiple line styles. "
-                    "Set to the first one.",
-                    UserWarning,
-                    stacklevel=2,
-                )
+                _warn_multiple("line styles")
                 self._props["line"]["dash"] = to_plotly_linestyle(style[0])
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
@@ -183,12 +173,7 @@ class MultiLine(PlotlyHoverableLayer[go.Scatter]):
             elif len(candidates) == 0:
                 self._props["line"]["color"] = "blue"
             else:
-                warnings.warn(
-                    "plotly does not support multiple line colors. "
-                    "Set to the first one.",
-                    UserWarning,
-                    stacklevel=2,
-                )
+                _warn_multiple("line colors")
                 self._props["line"]["color"] = rgba_str_color(color[0])
 
     def _plt_get_antialias(self) -> bool:
@@ -229,3 +214,11 @@ class MultiLine(PlotlyHoverableLayer[go.Scatter]):
             return callback([np.where(self._nan_indices < i)[0].size for i in indices])
 
         return super()._plt_connect_pick_event(_new_cb)
+
+
+def _warn_multiple(prop: str):
+    return warnings.warn(
+        f"plotly does not support multiple {prop}. Set to the first one.",
+        UserWarning,
+        stacklevel=4,
+    )

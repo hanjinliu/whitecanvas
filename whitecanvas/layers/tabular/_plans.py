@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.layers.tabular._utils import unique
 from whitecanvas.types import Hatch, LineStyle, Symbol
+from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -205,23 +206,33 @@ class MapPlan(ABC, Generic[_V]):
 
 class ScalarMapPlan(MapPlan[float]):
     @classmethod
-    def from_range(cls, on: str, limits: tuple[float, float] | None = None) -> Self:
+    def from_range(
+        cls,
+        on: str,
+        range: tuple[float, float] | None = None,
+        domain: tuple[float, float] | None = None,
+    ) -> Self:
         """Add a mapper that maps a range to a value."""
+        _check_min_max(range)
+        _check_min_max(domain)
 
         def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
             arr = values[on]
-            valid = np.isfinite(arr)
-            amin, amax = arr[valid].min(), arr[valid].max()
-            if amin == amax:
-                if limits is not None:
-                    w0, w1 = limits
-                    return np.full(arr.shape, (w0 + w1) / 2)
-                else:
-                    return np.full(arr.shape, amin)
+            if domain is None:
+                valid = np.isfinite(arr)
+                amin, amax = arr[valid].min(), arr[valid].max()
+                if amin == amax:
+                    if range is not None:
+                        w0, w1 = range
+                        return np.full(arr.shape, (w0 + w1) / 2)
+                    else:
+                        return np.full(arr.shape, amin)
+            else:
+                amin, amax = domain
             _arr = arr.clip(amin, amax)
             _arr[np.isnan(_arr)] = amin
-            if limits is not None:
-                w0, w1 = limits
+            if range is not None:
+                w0, w1 = range
                 return (_arr - amin) / (amax - amin) * (w1 - w0) + w0
             else:
                 return _arr
@@ -346,6 +357,8 @@ class ColormapPlan(MapPlan[NDArray[np.float32]]):
         *,
         clim: tuple[float, float] | None = None,
     ) -> Self:
+        _check_min_max(clim)
+
         def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
             arr = values[on]
             valid = np.isfinite(arr)
@@ -375,11 +388,6 @@ class SizePlan(ScalarMapPlan):
         return lambda _: 12.0
 
 
-def _to_intervals(each_uniques: list[np.ndarray]):
-    each_size = [un.size for un in each_uniques] + [1]
-    return np.cumprod(each_size[1:][::-1])[::-1]
-
-
 class ConstMap:
     def __init__(self, value):
         self._value = value
@@ -390,3 +398,14 @@ class ConstMap:
     def __call__(self, values: dict[str, np.ndarray]) -> Sequence[_V]:
         series = next(iter(values.values()), np.zeros(0))
         return [self._value] * series.size
+
+
+def _check_min_max(val: tuple[float, float] | None = None):
+    if val is None:
+        return
+    mn, mx = val
+    if not (is_real_number(mn) and is_real_number(mx)):
+        raise TypeError(f"Must be a tuple of two real numbers, got {val!r}.")
+    if mn > mx:
+        raise ValueError(f"min must be less than or equal to max, got {mn} and {mx}.")
+    return

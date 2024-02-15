@@ -8,7 +8,6 @@ from typing import (
     Generic,
     Iterable,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -28,7 +27,6 @@ from whitecanvas.types import (
     KdeBandWidthType,
     LineStyle,
     Orientation,
-    _Void,
 )
 from whitecanvas.utils.hist import histograms
 
@@ -36,8 +34,6 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 _DF = TypeVar("_DF")
-_Cols = Union[str, "tuple[str, ...]"]
-_void = _Void()
 
 
 class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF]):
@@ -46,9 +42,9 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         source: DataFrameWrapper[_DF],
         segs: list[np.ndarray],
         labels: list[tuple[Any, ...]],
-        color: _Cols | None = None,
+        color: str | tuple[str, ...] | None = None,
         width: float = 1.0,
-        style: _Cols | None = None,
+        style: str | tuple[str, ...] | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
     ):
@@ -250,9 +246,9 @@ class DFHistograms(
         source: DataFrameWrapper[_DF],
         base: _lg.LayerCollectionBase[_lg.Histogram],
         labels: list[tuple[Any, ...]],
-        color: _Cols | None = None,
+        color: str | tuple[str, ...] | None = None,
         width: str | None = None,
-        style: _Cols | None = None,
+        style: str | tuple[str, ...] | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
@@ -356,9 +352,9 @@ class DFKde(
         source: DataFrameWrapper[_DF],
         base: _lg.LayerCollectionBase[_lg.Kde],
         labels: list[tuple[Any, ...]],
-        color: _Cols | None = None,
+        color: str | tuple[str, ...] | None = None,
         width: str | None = None,
-        style: _Cols | None = None,
+        style: str | tuple[str, ...] | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
@@ -445,23 +441,3 @@ class DFKde(
             self._base_layer[i].line.style = st
         self._style_by = style_by
         return self
-
-
-def default_template(it: Iterable[tuple[str, np.ndarray]], max_rows: int = 10) -> str:
-    """
-    Default template string for markers
-
-    This template can only be used for those plot that has one tooltip for each data
-    point, which includes markers, bars and rugs.
-    """
-    fmt_list = list[str]()
-    for ikey, (key, value) in enumerate(it):
-        if not key:
-            continue
-        if ikey >= max_rows:
-            break
-        if value.dtype.kind == "f":
-            fmt_list.append(f"{key}: {{{key}:.4g}}")
-        else:
-            fmt_list.append(f"{key}: {{{key}!r}}")
-    return "\n".join(fmt_list)

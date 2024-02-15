@@ -167,7 +167,9 @@ class CanvasGrid:
     def __getitem__(self, key: tuple[int, int]) -> Canvas:
         canvas = self._canvas_array[key]
         if canvas is None:
-            raise IndexError(f"Canvas at {key} is not set")
+            raise ValueError(f"Canvas at {key} is not set")
+        elif isinstance(canvas, np.ndarray):
+            raise ValueError(f"Cannot index by {key}.")
         return canvas
 
     def _create_backend(self) -> protocols.CanvasGridProtocol:

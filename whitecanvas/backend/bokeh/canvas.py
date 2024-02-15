@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Iterator
 
 import numpy as np
 from bokeh import events as bk_events
@@ -24,7 +24,7 @@ from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType
 from whitecanvas.utils.normalize import arr_color, hex_color
 
 
-def _prep_plot(width=400, height=300):
+def _prep_plot(width=400, height=300) -> bk_plotting.figure:
     plot = bk_plotting.figure(
         width=width,
         height=height,
@@ -247,22 +247,29 @@ def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
     def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
-        nr, nc = len(heights), len(widths)
+        hsum = sum(heights)
+        wsum = sum(widths)
         children = []
-        for _ in range(nr):
+        for h in heights:
             row = []
-            for _ in range(nc):
-                row.append(_prep_plot())
+            for w in widths:
+                p = _prep_plot(width=int(w / wsum * 600), height=int(h / hsum * 600))
+                p.visible = False
+                row.append(p)
             children.append(row)
         self._grid_plot: bk_layouts.GridPlot = bk_layouts.gridplot(
             children, sizing_mode="fixed"
         )
-        self._shape = (nr, nc)
+        self._widths = widths
+        self._heights = heights
+        self._width_total = wsum
+        self._height_total = hsum
         self._app = app
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
-        for plot, r0, c0 in self._grid_plot.children:
+        for r0, c0, plot in self._iter_bokeh_subplots():
             if r0 == row and c0 == col:
+                plot.visible = True
                 return Canvas(plot)
         raise ValueError(f"Canvas at ({row}, {col}) not found")
 
@@ -280,12 +287,8 @@ class CanvasGrid:
 
     def _plt_set_background_color(self, color):
         color = hex_color(color)
-        for r in range(self._shape[0]):
-            for c in range(self._shape[1]):
-                child = self._grid_plot.children[r][c]
-                if not hasattr(child, "background_fill_color"):
-                    continue
-                child.background_fill_color = color
+        for _, _, child in self._iter_bokeh_subplots():
+            child.background_fill_color = color
 
     def _plt_screenshot(self):
         import io
@@ -296,10 +299,17 @@ class CanvasGrid:
             export_png(self._grid_plot, filename=buff)
             buff.seek(0)
             data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
-        w, h = self._grid_plot.plot_width, self._grid_plot.plot_height
+        w, h = self._grid_plot.width, self._grid_plot.height
         img = data.reshape((int(h), int(w), -1))
         return img
 
     def _plt_set_figsize(self, width: int, height: int):
+        for r, c, child in self._iter_bokeh_subplots():
+            child.height = int(self._heights[r] / self._height_total * width)
+            child.width = int(self._widths[c] / self._width_total * height)
         self._grid_plot.width = width
         self._grid_plot.height = height
+
+    def _iter_bokeh_subplots(self) -> Iterator[tuple[int, int, bk_plotting.figure]]:
+        for child, r, c in self._grid_plot.children:
+            yield r, c, child

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
-from whitecanvas import hgrid
+from whitecanvas import new_row
 
 def make_images() -> np.ndarray:
     # prepare sample image data
@@ -23,7 +23,7 @@ def main():
     images = make_images()
     means = np.mean(images, axis=(1, 2))  # calculate mean intensity to plot
 
-    g = hgrid(2, backend="matplotlib:qt")
+    g = new_row(2, backend="matplotlib:qt")
 
     # markers to be picked
     markers = (

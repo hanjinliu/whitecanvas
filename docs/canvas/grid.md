@@ -11,9 +11,9 @@ The signature of the method differs between 1D and 2D grid.
 
 ``` python
 #!name: canvas_grid_vertical
-from whitecanvas import vgrid
+from whitecanvas import new_col
 
-grid = vgrid(3, backend="matplotlib")
+grid = new_col(3, backend="matplotlib")
 
 c0 = grid.add_canvas(0)
 c0.add_text(0, 0, "Canvas 0")
@@ -27,9 +27,9 @@ grid.show()
 
 ``` python
 #!name: canvas_grid_horizontal
-from whitecanvas import hgrid
+from whitecanvas import new_row
 
-grid = hgrid(3, backend="matplotlib")
+grid = new_row(3, backend="matplotlib")
 
 c0 = grid.add_canvas(0)
 c0.add_text(0, 0, "Canvas 0")
@@ -44,9 +44,9 @@ grid.show()
 
 ``` python
 #!name: canvas_grid_2d
-from whitecanvas import grid as grid2d
+from whitecanvas import new_grid
 
-grid = grid2d(2, 2, backend="matplotlib")
+grid = new_grid(2, 2, backend="matplotlib")
 
 for i, j in [(0, 0), (0, 1), (1, 0), (1, 1)]:
     c = grid.add_canvas(i, j)

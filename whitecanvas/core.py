@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import (
@@ -9,189 +9,15 @@ from whitecanvas.canvas import (
     CanvasGrid,
     CanvasHGrid,
     CanvasVGrid,
+    JointCanvas,
     SingleCanvas,
 )
 from whitecanvas.types import ColormapType
 
+if TYPE_CHECKING:
+    from typing import Literal
 
-def grid(
-    nrows: int = 1,
-    ncols: int = 1,
-    *,
-    size: tuple[int, int] | None = None,
-    backend: Backend | str | None = None,
-) -> CanvasGrid:
-    """
-    Create a canvas grid with uniform cell sizes.
-
-    Parameters
-    ----------
-    nrows : int, default 1
-        Number of rows.
-    ncols : int, default 1
-        Number of columns.
-    size : (int, int), optional
-        Displaying size of the grid (in pixels).
-    backend : Backend or str, optional
-        Backend name.
-
-    Returns
-    -------
-    CanvasGrid
-        Grid of empty canvases.
-    """
-    g = CanvasGrid.uniform(nrows, ncols, backend=backend)
-    if size is not None:
-        g.size = size
-    return g
-
-
-def grid_nonuniform(
-    heights: list[int],
-    widths: list[int],
-    *,
-    size: tuple[int, int] | None = None,
-    backend: Backend | str | None = None,
-) -> CanvasGrid:
-    """
-    Create a canvas grid with non-uniform cell sizes.
-
-    Parameters
-    ----------
-    heights : list of int
-        Height ratio of the rows.
-    widths : list of int
-        Width ratio the columns.
-    size : (int, int), optional
-        Displaying size of the grid (in pixels).
-    backend : Backend or str, optional
-        Backend name.
-
-    Returns
-    -------
-    CanvasGrid
-        Grid of empty canvases.
-    """
-    g = CanvasGrid(heights, widths, backend=backend)
-    if size is not None:
-        g.size = size
-    return g
-
-
-def vgrid(
-    nrows: int = 1,
-    *,
-    size: tuple[int, int] | None = None,
-    backend: Backend | str | None = None,
-) -> CanvasVGrid:
-    """
-    Create a vertical canvas grid with uniform cell sizes.
-
-    Parameters
-    ----------
-    nrows : int, default 1
-        Number of rows.
-    size : (int, int), optional
-        Displaying size of the grid (in pixels).
-    backend : Backend or str, optional
-        Backend name.
-
-    Returns
-    -------
-    CanvasVGrid
-        1D Grid of empty canvases.
-    """
-    g = CanvasVGrid.uniform(nrows, backend=backend)
-    if size is not None:
-        g.size = size
-    return g
-
-
-def vgrid_nonuniform(
-    heights: list[int],
-    *,
-    size: tuple[int, int] | None = None,
-    backend: Backend | str | None = None,
-) -> CanvasVGrid:
-    """
-    Create a vertical canvas grid with non-uniform cell sizes.
-
-    Parameters
-    ----------
-    heights : list of int
-        Height ratios of rows.
-    size : (int, int), optional
-        Displaying size of the grid (in pixels).
-    backend : Backend or str, optional
-        Backend name.
-
-    Returns
-    -------
-    CanvasVGrid
-        1D Grid of empty canvases.
-    """
-    g = CanvasVGrid(heights, backend=backend)
-    if size is not None:
-        g.size = size
-    return g
-
-
-def hgrid(
-    ncols: int = 1,
-    *,
-    size: tuple[int, int] | None = None,
-    backend: Backend | str | None = None,
-) -> CanvasHGrid:
-    """
-    Create a horizontal canvas grid with uniform cell sizes.
-
-    Parameters
-    ----------
-    ncols : int, default 1
-        Number of columns.
-    size : (int, int), optional
-        Displaying size of the grid (in pixels).
-    backend : Backend or str, optional
-        Backend name.
-
-    Returns
-    -------
-    CanvasHGrid
-        1D Grid of empty canvases.
-    """
-    g = CanvasHGrid.uniform(ncols, backend=backend)
-    if size is not None:
-        g.size = size
-    return g
-
-
-def hgrid_nonuniform(
-    widths: list[int],
-    *,
-    size: tuple[int, int] | None = None,
-    backend: Backend | str | None = None,
-) -> CanvasHGrid:
-    """
-    Create a horizontal canvas grid with non-uniform cell sizes.
-
-    Parameters
-    ----------
-    widths : list of int
-        Width ratios of columns.
-    size : (int, int), optional
-        Displaying size of the grid (in pixels).
-    backend : Backend or str, optional
-        Backend name.
-
-    Returns
-    -------
-    CanvasHGrid
-        1D Grid of empty canvases.
-    """
-    g = CanvasHGrid(widths, backend=backend)
-    if size is not None:
-        g.size = size
-    return g
+    _0_or_1 = Literal[0, 1]
 
 
 def new_canvas(
@@ -213,12 +39,95 @@ def new_canvas(
         Color palette of the canvas. This color palette will be used to generate colors
         for the plots.
     """
-    _grid = grid(backend=backend)
+    _grid = CanvasGrid([1], [1], backend=backend)
     _grid.add_canvas(0, 0, palette=palette)
     cvs = SingleCanvas(_grid)
     if size is not None:
         cvs.size = size
     return cvs
+
+
+def new_grid(
+    rows: int | Sequence[int] = 1,
+    cols: int | Sequence[int] = 1,
+    *,
+    size: tuple[int, int] | None = None,
+    backend: Backend | str | None = None,
+) -> CanvasGrid:
+    """
+    Create a new canvas grid with uniform or non-uniform cell sizes.
+
+    >>> grid = new_grid(2, 3)  # 2x3 grid
+    >>> grid = new_grid(2, 3, size=(800, 600))  # 2x3 grid with size 800x600
+    >>> grid = new_grid([1, 2], [2, 1])  # 2x2 grid with non-uniform sizes
+
+    If you want to create a 1D grid, use `new_row` or `new_col` instead.
+
+    Parameters
+    ----------
+    rows : int or sequence of int, default 1
+        Number of rows (if an integer is given) or height ratio of the rows (if a
+        sequence of intergers is given).
+    cols : int or sequence of int, default 1
+        Number of columns (if an integer is given) or width ratio of the columns (if a
+        sequence of intergers is given).
+    size : (int, int), optional
+        Displaying size of the grid (in pixels).
+    backend : Backend or str, optional
+        Backend name, such as "matplotlib:qt".
+
+    Returns
+    -------
+    CanvasGrid
+        Grid of empty canvases.
+    """
+    heights = _norm_ratio(rows)
+    widths = _norm_ratio(cols)
+    grid = CanvasGrid(heights, widths, backend=backend)
+    if size is not None:
+        grid.size = size
+    return grid
+
+
+def new_row(
+    cols: int | Sequence[int] = 1,
+    *,
+    size: tuple[int, int] | None = None,
+    backend: Backend | str | None = None,
+) -> CanvasHGrid:
+    """Create a new horizontal canvas grid with uniform or non-uniform cell sizes."""
+    widths = _norm_ratio(cols)
+    grid = CanvasHGrid(widths, backend=backend)
+    if size is not None:
+        grid.size = size
+    return grid
+
+
+def new_col(
+    rows: int | Sequence[int] = 1,
+    *,
+    size: tuple[int, int] | None = None,
+    backend: Backend | str | None = None,
+) -> CanvasVGrid:
+    """Create a new vertical canvas grid with uniform or non-uniform cell sizes."""
+    heights = _norm_ratio(rows)
+    grid = CanvasVGrid(heights, backend=backend)
+    if size is not None:
+        grid.size = size
+    return grid
+
+
+def new_jointcanvas(
+    backend: Backend | str | None = None,
+    *,
+    loc: tuple[_0_or_1, _0_or_1] = (1, 0),
+    size: tuple[int, int] | None = None,
+    palette: str | ColormapType | None = None,
+) -> JointCanvas:
+    joint = JointCanvas(loc, palette=palette, backend=backend)
+    if size is not None:
+        joint.size = size
+    return joint
 
 
 def wrap_canvas(obj: Any, palette=None) -> Canvas:
@@ -278,3 +187,17 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
 
 def _is_in_module(typ_str: str, mod_name: str, cls_name: str) -> bool:
     return mod_name in sys.modules and typ_str.split(".")[-1] == cls_name
+
+
+def _norm_ratio(r: int | Sequence[int]) -> list[int]:
+    if hasattr(r, "__int__"):
+        out = [1] * int(r)
+    else:
+        out: list[int] = []
+        for x in r:
+            if not hasattr(x, "__int__"):
+                raise ValueError(f"Invalid value for size ratio: {r!r}.")
+            out.append(int(x))
+        if len(out) == 0:
+            raise ValueError("Size ratio must not be empty.")
+    return out

@@ -50,7 +50,7 @@ def test_namespace_pointing_at_different_objects():
     assert_color_equal(c1.x.color, "blue")
 
 def test_grid(backend: str):
-    cgrid = wc.grid(2, 2, backend=backend).link_x().link_y()
+    cgrid = wc.new_grid(2, 2, backend=backend).link_x().link_y()
     c00 = cgrid.add_canvas(0, 0)
     c01 = cgrid.add_canvas(0, 1)
     c10 = cgrid.add_canvas(1, 0)
@@ -75,7 +75,7 @@ def test_grid(backend: str):
 
 
 def test_grid_nonuniform(backend: str):
-    cgrid = wc.grid_nonuniform(
+    cgrid = wc.new_grid(
         [2, 1], [2, 1], backend=backend
     ).link_x().link_y()
     c00 = cgrid.add_canvas(0, 0)
@@ -101,7 +101,7 @@ def test_grid_nonuniform(backend: str):
     assert len(c11.layers) == 1
 
 def test_vgrid_hgrid(backend: str):
-    cgrid = wc.vgrid(2, backend=backend).link_x().link_y()
+    cgrid = wc.new_col(2, backend=backend).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
 
@@ -114,7 +114,7 @@ def test_vgrid_hgrid(backend: str):
     assert len(c0.layers) == 1
     assert len(c1.layers) == 1
 
-    cgrid = wc.hgrid(2, backend=backend).link_x().link_y()
+    cgrid = wc.new_row(2, backend=backend).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
 

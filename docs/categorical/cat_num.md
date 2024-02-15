@@ -153,9 +153,9 @@ canvas.show()
 ``` python
 #!name: categorical_axis_many_plots
 #!width: 700
-from whitecanvas import hgrid
+from whitecanvas import new_row
 
-canvas = hgrid(ncols=3, size=(1600, 600), backend="matplotlib")
+canvas = new_row(3, size=(1600, 600), backend="matplotlib")
 
 c0 = canvas.add_canvas(0)
 c0.cat_x(df, x="category", y="observation").add_boxplot()

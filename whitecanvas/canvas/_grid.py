@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator, Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,6 +11,7 @@ from typing_extensions import override
 from whitecanvas import protocols
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
+from whitecanvas.canvas._linker import link_axes
 from whitecanvas.theme import get_theme
 from whitecanvas.utils.normalize import arr_color
 
@@ -33,8 +34,6 @@ class CanvasGrid:
         heights: list[int],
         widths: list[int],
         *,
-        link_x: bool = False,
-        link_y: bool = False,
         backend: Backend | str | None = None,
     ) -> None:
         self._heights = heights
@@ -45,8 +44,10 @@ class CanvasGrid:
         self._canvas_array.fill(None)
 
         # link axes
-        self._x_linked = link_x
-        self._y_linked = link_y
+        self._x_linked = False
+        self._y_linked = False
+        self._x_linker_ref = None
+        self._y_linker_ref = None
 
         # update settings
         theme = get_theme()
@@ -82,30 +83,12 @@ class CanvasGrid:
         """The (row, col) shape of the grid"""
         return self._canvas_array.shape
 
-    @property
-    def x_linked(self) -> bool:
-        """Whether the x-axis of all canvases are linked."""
-        return self._x_linked
-
-    @x_linked.setter
-    def x_linked(self, value: bool):
-        self.link_x() if value else self.unlink_x()
-
-    @property
-    def y_linked(self) -> bool:
-        """Whether the y-axis of all canvases are linked."""
-        return self._y_linked
-
-    @y_linked.setter
-    def y_linked(self, value: bool):
-        self.link_y() if value else self.unlink_y()
-
-    def link_x(self, future: bool = True) -> Self:
+    def link_x(self, *, future: bool = True, hide_ticks: bool = True) -> Self:
         """
         Link all the x-axes of the canvases in the grid.
 
-        >>> from whitecanvas import grid
-        >>> g = grid(2, 2).link_x()  # link x-axes of all canvases
+        >>> from whitecanvas import new_grid
+        >>> g = new_grid(2, 2).link_x()  # link x-axes of all canvases
 
         Parameters
         ----------
@@ -113,19 +96,24 @@ class CanvasGrid:
             If Ture, all the canvases added in the future will also be linked. Only link
             the existing canvases if False.
         """
-        if not self._x_linked:
-            for _, canvas in self.iter_canvas():
-                canvas.x.events.lim.connect(self._align_xlims, unique=True)
-            if future:
-                self._x_linked = True
+        if self._x_linker_ref is not None:
+            self._x_linker_ref.unlink_all()  # initialize linker
+        to_link = []
+        for (_r, _), _canvas in self.iter_canvas():
+            to_link.append(_canvas)
+            if hide_ticks and _r != self.shape[0] - 1:
+                _canvas.x.ticks.visible = False
+        self._x_linker_ref = link_axes(to_link)
+        if future:
+            self._x_linked = True
         return self
 
-    def link_y(self, future: bool = True) -> Self:
+    def link_y(self, *, future: bool = True, hide_ticks: bool = True) -> Self:
         """
         Link all the y-axes of the canvases in the grid.
 
-        >>> from whitecanvas import grid
-        >>> g = grid(2, 2).link_y()  # link y-axes of all canvases
+        >>> from whitecanvas import new_grid
+        >>> g = new_grid(2, 2).link_y()  # link y-axes of all canvases
 
         Parameters
         ----------
@@ -133,29 +121,16 @@ class CanvasGrid:
             If Ture, all the canvases added in the future will also be linked. Only link
             the existing canvases if False.
         """
-        if not self._y_linked:
-            for _, canvas in self.iter_canvas():
-                canvas.y.events.lim.connect(self._align_ylims, unique=True)
-            if future:
-                self._y_linked = True
-        return self
-
-    def unlink_x(self, future: bool = True) -> Self:
-        """Unlink all the x-axes of the canvases in the grid."""
-        if self._x_linked:
-            for _, canvas in self.iter_canvas():
-                canvas.x.events.lim.disconnect(self._align_xlims)
-            if future:
-                self._x_linked = False
-        return self
-
-    def unlink_y(self, future: bool = True) -> Self:
-        """Unlink all the y-axes of the canvases in the grid."""
-        if self._y_linked:
-            for _, canvas in self.iter_canvas():
-                canvas.y.events.lim.disconnect(self._align_ylims)
-            if future:
-                self._y_linked = False
+        if self._y_linker_ref is not None:
+            self._y_linker_ref.unlink_all()
+        to_link = []
+        for (_, _c), _canvas in self.iter_canvas():
+            to_link.append(_canvas)
+            if hide_ticks and _c != self.shape[1] - 1:
+                _canvas.y.ticks.visible = False
+        self._y_linker_ref = link_axes(to_link)
+        if future:
+            self._y_linked = True
         return self
 
     def __repr__(self) -> str:
@@ -177,16 +152,6 @@ class CanvasGrid:
             self._heights, self._widths, self._backend._app
         )
 
-    def _align_xlims(self, lim: tuple[float, float]):
-        for _, canvas in self.iter_canvas():
-            with canvas.x.events.lim.blocked():
-                canvas.x.lim = lim
-
-    def _align_ylims(self, lim: tuple[float, float]):
-        for _, canvas in self.iter_canvas():
-            with canvas.y.events.lim.blocked():
-                canvas.y.lim = lim
-
     def fill(self, palette: ColormapType | None = None) -> Self:
         """Fill the grid with canvases."""
         for _ in self.iter_add_canvas(palette=palette):
@@ -199,6 +164,7 @@ class CanvasGrid:
         col: int,
         rowspan: int = 1,
         colspan: int = 1,
+        *,
         palette: str | None = None,
     ) -> Canvas:
         """Add a canvas to the grid at the given position"""
@@ -217,10 +183,10 @@ class CanvasGrid:
         canvas._install_mouse_events()
 
         # link axes if needed
-        if self.x_linked:
-            canvas.x.events.lim.connect(self._align_xlims, unique=True)
-        if self.y_linked:
-            canvas.y.events.lim.connect(self._align_ylims, unique=True)
+        if self._x_linked:
+            self._x_linker_ref.link(canvas.x)
+        if self._y_linked:
+            self._y_linker_ref.link(canvas.y)
         canvas.events.drawn.connect(self.events.drawn.emit, unique=True)
         return canvas
 
@@ -337,7 +303,7 @@ class CanvasVGrid(CanvasGrid):
     def __getitem__(self, key: int) -> Canvas:
         canvas = self._canvas_array[key, 0]
         if canvas is None:
-            raise IndexError(f"Canvas at {key} is not set")
+            raise ValueError(f"Canvas at {key} is not set")
         return canvas
 
     @override
@@ -374,7 +340,7 @@ class CanvasHGrid(CanvasGrid):
     def __getitem__(self, key: int) -> Canvas:
         canvas = self._canvas_array[0, key]
         if canvas is None:
-            raise IndexError(f"Canvas at {key} is not set")
+            raise ValueError(f"Canvas at {key} is not set")
         return canvas
 
     @override
@@ -397,23 +363,11 @@ class CanvasHGrid(CanvasGrid):
             yield self.add_canvas(col, **kwargs)
 
 
-class SingleCanvas(CanvasBase):
-    def __init__(self, grid: CanvasGrid):
-        if grid.shape != (1, 1):
-            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
-        self._grid = grid
-        _it = grid.iter_canvas()
-        _, canvas = next(_it)
-        if next(_it, None) is not None:
-            raise ValueError("Grid must have only one canvas")
+class _CanvasWithGrid(CanvasBase):
+    def __init__(self, canvas: Canvas, grid: CanvasGrid):
         self._main_canvas = canvas
-        super().__init__(palette=self._main_canvas._color_palette)
-
-        # NOTE: events, dims etc are not shared between the main canvas and the
-        # SingleCanvas instance. To avoid confusion, the first and the only canvas
-        # should be replaces with the SingleCanvas instance.
-        grid._canvas_array[0, 0] = self
-        self.events.drawn.connect(self._main_canvas.events.drawn.emit, unique=True)
+        self._grid = grid
+        super().__init__(palette=canvas._color_palette)
 
     def _get_backend(self) -> Backend:
         """Return the backend."""
@@ -469,3 +423,79 @@ class SingleCanvas(CanvasBase):
     def to_html(self, file: str | None = None) -> str:
         """Return HTML representation of the canvas."""
         return self._grid.to_html(file=file)
+
+
+class SingleCanvas(_CanvasWithGrid):
+    """
+    A canvas without other subplots.
+
+    This class is the simplest form of canvas. In `matplotlib` terms, it is a figure
+    with a single axes.
+    """
+
+    def __init__(self, grid: CanvasGrid):
+        if grid.shape != (1, 1):
+            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
+        self._grid = grid
+        _it = grid.iter_canvas()
+        _, canvas = next(_it)
+        if next(_it, None) is not None:
+            raise ValueError("Grid must have only one canvas")
+        self._main_canvas = canvas
+        super().__init__(canvas, grid)
+
+        # NOTE: events, dims etc are not shared between the main canvas and the
+        # SingleCanvas instance. To avoid confusion, the first and the only canvas
+        # should be replaces with the SingleCanvas instance.
+        grid._canvas_array[0, 0] = self
+        self.events.drawn.connect(self._main_canvas.events.drawn.emit, unique=True)
+
+
+_0or1 = Literal[0, 1]
+
+
+class JointCanvas(_CanvasWithGrid):
+    """
+    Grid with a main (joint) canvas and two marginal canvases.
+
+    The marginal canvases shares the x-axis and y-axis with the main canvas.
+    """
+
+    def __init__(
+        self,
+        loc: tuple[_0or1, _0or1] = (1, 0),
+        palette: str | ColormapType | None = None,
+        backend: Backend | str | None = None,
+    ):
+        widths = [1, 1]
+        heights = [1, 1]
+        rloc, cloc = loc
+        if rloc not in (0, 1) or cloc not in (0, 1):
+            raise ValueError(f"Invalid location {loc!r}.")
+        widths[rloc] = heights[cloc] = 3
+        grid = CanvasGrid(widths, heights, backend=Backend(backend))
+        canvas = grid.add_canvas(rloc, cloc, palette=palette)
+        self._x_canvas = grid.add_canvas(1 - rloc, cloc)
+        self._y_canvas = grid.add_canvas(rloc, 1 - cloc)
+
+        super().__init__(canvas, grid)
+
+        # NOTE: events, dims etc are not shared between the main canvas and the
+        # JointCanvas instance. To avoid confusion, the main canvas should be replaces
+        # with the JointCanvas instance.
+        grid._canvas_array[rloc, cloc] = self
+        self.events.drawn.connect(canvas.events.drawn.emit, unique=True)
+
+        # link axes
+        self._x_linker = link_axes([self._main_canvas.x, self._x_canvas.x])
+        self._y_linker = link_axes([self._main_canvas.y, self._y_canvas.y])
+
+    @property
+    def x_canvas(self) -> Canvas:
+        """The canvas at the x-axis."""
+        return self._x_canvas
+
+    @property
+    def y_canvas(self) -> Canvas:
+        """The canvas at the y-axis."""
+        return self._y_canvas

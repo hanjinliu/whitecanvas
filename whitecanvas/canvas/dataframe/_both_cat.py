@@ -60,7 +60,7 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
         df: _DF,
         x: str | tuple[str, ...],
         y: str | tuple[str, ...],
-        update_label: bool = False,
+        update_labels: bool = False,
     ):
         super().__init__(canvas, df)
         if isinstance(x, str):
@@ -69,10 +69,10 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
             y = (y,)
         self._x: tuple[str, ...] = x
         self._y: tuple[str, ...] = y
-        self._update_label = update_label
+        self._update_label = update_labels
         self._cat_iter_x = CatIterator(self._df, x)
         self._cat_iter_y = CatIterator(self._df, y)
-        if update_label:
+        if update_labels:
             self._update_xy_label(x, y)
         self._update_axis_labels()
 

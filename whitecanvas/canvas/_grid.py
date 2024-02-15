@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Iterator
 
 import numpy as np
 from numpy.typing import NDArray
@@ -56,28 +56,6 @@ class CanvasGrid:
         self.events = GridEvents()
         self.__class__._CURRENT_INSTANCE = self
 
-    @classmethod
-    def uniform(
-        cls,
-        nrows: int = 1,
-        ncols: int = 1,
-        *,
-        backend: Backend | str | None = None,
-    ) -> CanvasGrid:
-        """
-        Create a canvas grid with uniform row and column sizes.
-
-        Parameters
-        ----------
-        nrows : int
-            The number of rows in the grid.
-        ncols : int
-            The number of columns in the grid.
-        backend : backend-like, optional
-            The backend to use for the grid.
-        """
-        return CanvasGrid([10] * nrows, [10] * ncols, backend=backend)
-
     @property
     def shape(self) -> tuple[int, int]:
         """The (row, col) shape of the grid"""
@@ -99,7 +77,7 @@ class CanvasGrid:
         if self._x_linker_ref is not None:
             self._x_linker_ref.unlink_all()  # initialize linker
         to_link = []
-        for (_r, _), _canvas in self.iter_canvas():
+        for (_r, _), _canvas in self._iter_canvas():
             to_link.append(_canvas)
             if hide_ticks and _r != self.shape[0] - 1:
                 _canvas.x.ticks.visible = False
@@ -124,7 +102,7 @@ class CanvasGrid:
         if self._y_linker_ref is not None:
             self._y_linker_ref.unlink_all()
         to_link = []
-        for (_, _c), _canvas in self.iter_canvas():
+        for (_, _c), _canvas in self._iter_canvas():
             to_link.append(_canvas)
             if hide_ticks and _c != self.shape[1] - 1:
                 _canvas.y.ticks.visible = False
@@ -154,7 +132,7 @@ class CanvasGrid:
 
     def fill(self, palette: ColormapType | None = None) -> Self:
         """Fill the grid with canvases."""
-        for _ in self.iter_add_canvas(palette=palette):
+        for _ in self._iter_add_canvas(palette=palette):
             pass
         return self
 
@@ -190,12 +168,12 @@ class CanvasGrid:
         canvas.events.drawn.connect(self.events.drawn.emit, unique=True)
         return canvas
 
-    def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
+    def _iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
         for row in range(len(self._heights)):
             for col in range(len(self._widths)):
                 yield self.add_canvas(row, col, **kwargs)
 
-    def iter_canvas(self) -> Iterator[tuple[tuple[int, int], Canvas]]:
+    def _iter_canvas(self) -> Iterator[tuple[tuple[int, int], Canvas]]:
         yielded: set[int] = set()
         for idx, canvas in np.ndenumerate(self._canvas_array):
             _id = id(canvas)
@@ -307,21 +285,11 @@ class CanvasVGrid(CanvasGrid):
         return canvas
 
     @override
-    @classmethod
-    def uniform(
-        cls,
-        nrows: int = 1,
-        *,
-        backend: Backend | str | None = None,
-    ) -> CanvasVGrid:
-        return CanvasVGrid([1] * nrows, backend=backend)
-
-    @override
     def add_canvas(self, row: int, **kwargs) -> Canvas:
         return super().add_canvas(row, 0, **kwargs)
 
     @override
-    def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
+    def _iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
         for row in range(len(self._heights)):
             yield self.add_canvas(row, **kwargs)
 
@@ -344,21 +312,11 @@ class CanvasHGrid(CanvasGrid):
         return canvas
 
     @override
-    @classmethod
-    def uniform(
-        cls,
-        ncols: int = 1,
-        *,
-        backend: Backend | str | None = None,
-    ) -> CanvasHGrid:
-        return CanvasHGrid([1] * ncols, backend=backend)
-
-    @override
     def add_canvas(self, col: int, **kwargs) -> Canvas:
         return super().add_canvas(0, col, **kwargs)
 
     @override
-    def iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
+    def _iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
         for col in range(len(self._widths)):
             yield self.add_canvas(col, **kwargs)
 
@@ -437,7 +395,7 @@ class SingleCanvas(_CanvasWithGrid):
         if grid.shape != (1, 1):
             raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
         self._grid = grid
-        _it = grid.iter_canvas()
+        _it = grid._iter_canvas()
         _, canvas = next(_it)
         if next(_it, None) is not None:
             raise ValueError("Grid must have only one canvas")
@@ -449,53 +407,3 @@ class SingleCanvas(_CanvasWithGrid):
         # should be replaces with the SingleCanvas instance.
         grid._canvas_array[0, 0] = self
         self.events.drawn.connect(self._main_canvas.events.drawn.emit, unique=True)
-
-
-_0or1 = Literal[0, 1]
-
-
-class JointCanvas(_CanvasWithGrid):
-    """
-    Grid with a main (joint) canvas and two marginal canvases.
-
-    The marginal canvases shares the x-axis and y-axis with the main canvas.
-    """
-
-    def __init__(
-        self,
-        loc: tuple[_0or1, _0or1] = (1, 0),
-        palette: str | ColormapType | None = None,
-        backend: Backend | str | None = None,
-    ):
-        widths = [1, 1]
-        heights = [1, 1]
-        rloc, cloc = loc
-        if rloc not in (0, 1) or cloc not in (0, 1):
-            raise ValueError(f"Invalid location {loc!r}.")
-        widths[rloc] = heights[cloc] = 3
-        grid = CanvasGrid(widths, heights, backend=Backend(backend))
-        canvas = grid.add_canvas(rloc, cloc, palette=palette)
-        self._x_canvas = grid.add_canvas(1 - rloc, cloc)
-        self._y_canvas = grid.add_canvas(rloc, 1 - cloc)
-
-        super().__init__(canvas, grid)
-
-        # NOTE: events, dims etc are not shared between the main canvas and the
-        # JointCanvas instance. To avoid confusion, the main canvas should be replaces
-        # with the JointCanvas instance.
-        grid._canvas_array[rloc, cloc] = self
-        self.events.drawn.connect(canvas.events.drawn.emit, unique=True)
-
-        # link axes
-        self._x_linker = link_axes([self._main_canvas.x, self._x_canvas.x])
-        self._y_linker = link_axes([self._main_canvas.y, self._y_canvas.y])
-
-    @property
-    def x_canvas(self) -> Canvas:
-        """The canvas at the x-axis."""
-        return self._x_canvas
-
-    @property
-    def y_canvas(self) -> Canvas:
-        """The canvas at the y-axis."""
-        return self._y_canvas

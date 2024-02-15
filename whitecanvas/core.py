@@ -9,7 +9,7 @@ from whitecanvas.canvas import (
     CanvasGrid,
     CanvasHGrid,
     CanvasVGrid,
-    JointCanvas,
+    JointGrid,
     SingleCanvas,
 )
 from whitecanvas.types import ColormapType
@@ -117,14 +117,33 @@ def new_col(
     return grid
 
 
-def new_jointcanvas(
+def new_jointgrid(
     backend: Backend | str | None = None,
     *,
     loc: tuple[_0_or_1, _0_or_1] = (1, 0),
     size: tuple[int, int] | None = None,
     palette: str | ColormapType | None = None,
-) -> JointCanvas:
-    joint = JointCanvas(loc, palette=palette, backend=backend)
+) -> JointGrid:
+    """
+    Create a new joint grid.
+
+    Parameters
+    ----------
+    backend : Backend or str, optional
+        Backend of the canvas.
+    loc : (int, int), default (1, 0)
+        Location of the main canvas. Each integer must be 0 or 1.
+    size : (int, int), optional
+        Size of the canvas in pixel.
+    palette : colormap type, optional
+        Color palette used for the canvases.
+
+    Returns
+    -------
+    JointGrid
+        Joint grid object.
+    """
+    joint = JointGrid(loc, palette=palette, backend=backend)
     if size is not None:
         joint.size = size
     return joint

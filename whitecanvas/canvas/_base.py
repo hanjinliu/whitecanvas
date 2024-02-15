@@ -411,7 +411,7 @@ class CanvasBase(ABC):
         CatPlotter
             Plotter object.
         """
-        plotter = _df.CatPlotter(self, data, x, y, update_label=update_labels)
+        plotter = _df.CatPlotter(self, data, x, y, update_labels=update_labels)
         return plotter
 
     def cat_x(

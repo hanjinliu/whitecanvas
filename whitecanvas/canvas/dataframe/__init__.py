@@ -1,5 +1,6 @@
 from whitecanvas.canvas.dataframe._both_cat import XYCatPlotter
 from whitecanvas.canvas.dataframe._feature_cat import CatPlotter
+from whitecanvas.canvas.dataframe._joint_cat import JointCatPlotter
 from whitecanvas.canvas.dataframe._one_cat import XCatPlotter, YCatPlotter
 
 __all__ = [
@@ -7,4 +8,5 @@ __all__ = [
     "XCatPlotter",
     "YCatPlotter",
     "XYCatPlotter",
+    "JointCatPlotter",
 ]

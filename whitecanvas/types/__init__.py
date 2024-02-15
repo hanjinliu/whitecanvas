@@ -9,6 +9,8 @@ from whitecanvas.types._alias import (
 from whitecanvas.types._enums import (
     Alignment,
     Hatch,
+    HistogramKind,
+    HistogramShape,
     LineStyle,
     Modifier,
     MouseButton,
@@ -28,6 +30,8 @@ __all__ = [
     "Symbol",
     "Hatch",
     "HistBinType",
+    "HistogramKind",
+    "HistogramShape",
     "KdeBandWidthType",
     "Orientation",
     "Origin",

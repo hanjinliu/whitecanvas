@@ -1,5 +1,6 @@
 from numpy.testing import assert_allclose
 
+import pytest
 import whitecanvas as wc
 from whitecanvas import new_canvas
 
@@ -126,3 +127,14 @@ def test_vgrid_hgrid(backend: str):
 
     assert len(c0.layers) == 1
     assert len(c1.layers) == 1
+
+def test_unlink(backend: str):
+    grid = wc.new_row(2, backend=backend).fill()
+    linker = wc.link_axes(grid[0].x, grid[1].x)
+    grid[0].x.lim = (10, 11)
+    assert grid[0].x.lim == pytest.approx((10, 11))
+    assert grid[1].x.lim == pytest.approx((10, 11))
+    linker.unlink_all()
+    grid[0].x.lim = (20, 21)
+    assert grid[0].x.lim == pytest.approx((20, 21))
+    assert grid[1].x.lim == pytest.approx((10, 11))

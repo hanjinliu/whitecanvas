@@ -186,3 +186,17 @@ class Origin(_StrEnum):
     CORNER = "corner"
     EDGE = "edge"
     CENTER = "center"
+
+
+class HistogramShape(_StrEnum):
+    step = "step"
+    polygon = "polygon"
+    bars = "bars"
+
+
+class HistogramKind(_StrEnum):
+    count = "count"
+    density = "density"
+    probability = "probability"
+    frequency = "frequency"
+    percent = "percent"

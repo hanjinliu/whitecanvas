@@ -246,7 +246,7 @@ def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
+    def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
         hsum = sum(heights)
         wsum = sum(widths)
         children = []

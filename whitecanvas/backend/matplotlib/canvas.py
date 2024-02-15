@@ -17,7 +17,7 @@ from matplotlib.collections import Collection
 from matplotlib.lines import Line2D
 
 from whitecanvas import protocols
-from whitecanvas.backend.matplotlib._base import MplLayer
+from whitecanvas.backend.matplotlib._base import MplLayer, MplMouseEventsMixin
 from whitecanvas.backend.matplotlib._labels import (
     Title,
     XAxis,
@@ -59,16 +59,18 @@ class Canvas:
             return
         fig.canvas.mpl_connect("motion_notify_event", self._on_hover)
         fig.canvas.mpl_connect("figure_leave_event", self._hide_tooltip)
-        self._hoverable_artists: list[Artist] = []
+        self._hoverable_artists: list[MplMouseEventsMixin] = []
         self._last_hover = -1.0
 
-    def _on_hover(self, event):
+    def _on_hover(self, event: mplMouseEvent):
         if default_timer() - self._last_hover < 0.1:
             # avoid calling the tooltip too often
             return
+        if event.button is not None:
+            return self._hide_tooltip()
         self._last_hover = default_timer()
         if event.inaxes is not self._axes:
-            return
+            return self._hide_tooltip()
         for layer in reversed(self._hoverable_artists):
             text = layer._on_hover(event)
             if text:
@@ -290,7 +292,7 @@ _MOUSE_MOD_MAP = {
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
+    def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
         nr, nc = len(heights), len(widths)
         self._gridspec = plt.GridSpec(
             nr, nc, height_ratios=heights, width_ratios=widths

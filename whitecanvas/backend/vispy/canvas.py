@@ -193,13 +193,13 @@ class Canvas:
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
+    def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
         if app != "default":
             vispy_use(_APP_NAMES.get(app, app))
         self._scene = SceneCanvasExt(keys="interactive")
         self._grid: Grid = self._scene.central_widget.add_grid()
         self._scene.create_native()
-        self._heights = heights  # TODO: not used
+        self._heights = heights
         self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int):

@@ -38,7 +38,8 @@ class AxisLinker:
 
     def unlink_all(self) -> None:
         """Unlink all axes."""
-        for axis in self._axis_set:
+        axes = list(self._axis_set)  # avoid the size changing during iteration
+        for axis in axes:
             self.unlink(axis)
         self.__class__._GLOBAL_LINKERS.discard(self)
 

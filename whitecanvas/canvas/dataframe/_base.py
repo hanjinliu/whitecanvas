@@ -20,10 +20,9 @@ from whitecanvas.layers.tabular import _utils, parse
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    from whitecanvas.canvas._base import CanvasBase
     from whitecanvas.layers.tabular._dataframe import DataFrameWrapper
 
-_C = TypeVar("_C", bound="CanvasBase")
+_C = TypeVar("_C")  # NOTE: don't have to be a canvas
 _DF = TypeVar("_DF")
 NStr = Union[str, Sequence[str]]
 AggMethods = Literal["min", "max", "mean", "median", "sum", "std"]

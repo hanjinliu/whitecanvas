@@ -242,7 +242,7 @@ class Canvas:
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
+    def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
         if app == "notebook":
             from pyqtgraph.jupyter import GraphicsLayoutWidget
         elif app in ("default", "qt"):

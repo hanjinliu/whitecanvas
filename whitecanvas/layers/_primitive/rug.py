@@ -37,6 +37,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
     ──┴─┴┴──┴───┴──>
     """
 
+    _ATTACH_TO_AXIS = True
     events: MultiLineEvents
     _events_class = MultiLineEvents
 

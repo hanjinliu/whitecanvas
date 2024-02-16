@@ -200,7 +200,7 @@ class Canvas:
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
-    def __init__(self, heights: list[int], widths: list[int], app: str = "default"):
+    def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
         from plotly.subplots import make_subplots
 
         if app == "notebook":
@@ -215,7 +215,7 @@ class CanvasGrid:
                 column_widths=widths,
             )
         )
-        self._figs.update_layout(margin={"l": 6, "r": 6, "t": 6, "b": 6})
+        self._figs.update_layout(margin={"l": 6, "r": 6, "t": 30, "b": 6})
         self._app = app
         self._heights = heights
         self._widths = widths
@@ -256,3 +256,7 @@ class CanvasGrid:
     def _plt_set_figsize(self, width: int, height: int):
         self._figs.layout.width = width
         self._figs.layout.height = height
+
+    def _plt_set_spacings(self, wspace: float, hspace: float):
+        # plotly does not have a flexible way to set spacings
+        pass

@@ -262,7 +262,7 @@ class YLabelNamespace(_TextLabelNamespace):
         return self._get_canvas()._plt_get_ylabel()
 
 
-class _AxisNamespace(Namespace):
+class AxisNamespace(Namespace):
     events: AxisSignals
 
     def __init__(self, canvas: CanvasBase | None = None):
@@ -330,7 +330,7 @@ class _AxisNamespace(Namespace):
         self._get_object()._plt_set_grid_state(visible, color, width, style)
 
 
-class XAxisNamespace(_AxisNamespace):
+class XAxisNamespace(AxisNamespace):
     label = XLabelNamespace()
     ticks = XTickNamespace()
 
@@ -338,7 +338,7 @@ class XAxisNamespace(_AxisNamespace):
         return self._get_canvas()._plt_get_xaxis()
 
 
-class YAxisNamespace(_AxisNamespace):
+class YAxisNamespace(AxisNamespace):
     label = YLabelNamespace()
     ticks = YTickNamespace()
 

@@ -1,5 +1,7 @@
+import numpy as np
 from numpy.testing import assert_allclose
 
+import pytest
 import whitecanvas as wc
 from whitecanvas import new_canvas
 
@@ -50,7 +52,7 @@ def test_namespace_pointing_at_different_objects():
     assert_color_equal(c1.x.color, "blue")
 
 def test_grid(backend: str):
-    cgrid = wc.grid(2, 2, backend=backend).link_x().link_y()
+    cgrid = wc.new_grid(2, 2, backend=backend).link_x().link_y()
     c00 = cgrid.add_canvas(0, 0)
     c01 = cgrid.add_canvas(0, 1)
     c10 = cgrid.add_canvas(1, 0)
@@ -75,7 +77,7 @@ def test_grid(backend: str):
 
 
 def test_grid_nonuniform(backend: str):
-    cgrid = wc.grid_nonuniform(
+    cgrid = wc.new_grid(
         [2, 1], [2, 1], backend=backend
     ).link_x().link_y()
     c00 = cgrid.add_canvas(0, 0)
@@ -101,7 +103,7 @@ def test_grid_nonuniform(backend: str):
     assert len(c11.layers) == 1
 
 def test_vgrid_hgrid(backend: str):
-    cgrid = wc.vgrid(2, backend=backend).link_x().link_y()
+    cgrid = wc.new_col(2, backend=backend).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
 
@@ -114,7 +116,7 @@ def test_vgrid_hgrid(backend: str):
     assert len(c0.layers) == 1
     assert len(c1.layers) == 1
 
-    cgrid = wc.hgrid(2, backend=backend).link_x().link_y()
+    cgrid = wc.new_row(2, backend=backend).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
 
@@ -126,3 +128,19 @@ def test_vgrid_hgrid(backend: str):
 
     assert len(c0.layers) == 1
     assert len(c1.layers) == 1
+
+def test_unlink(backend: str):
+    grid = wc.new_row(2, backend=backend).fill()
+    linker = wc.link_axes(grid[0].x, grid[1].x)
+    grid[0].x.lim = (10, 11)
+    assert grid[0].x.lim == pytest.approx((10, 11))
+    assert grid[1].x.lim == pytest.approx((10, 11))
+    linker.unlink_all()
+    grid[0].x.lim = (20, 21)
+    assert grid[0].x.lim == pytest.approx((20, 21))
+    assert grid[1].x.lim == pytest.approx((10, 11))
+
+def test_jointgrid(backend: str):
+    rng = np.random.default_rng(0)
+    joint = wc.new_jointgrid(backend=backend).with_hist().with_kde().with_rug()
+    joint.add_markers(rng.random(100), rng.random(100), color="red")

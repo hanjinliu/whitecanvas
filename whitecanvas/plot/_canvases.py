@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasGrid
-from whitecanvas.core import grid, new_canvas
+from whitecanvas.core import new_canvas, new_grid
 
 
 def current_grid() -> CanvasGrid:
@@ -33,4 +33,4 @@ def subplots(
     backend: Backend | str | None = None,
 ) -> CanvasGrid:
     """Create a new grid of subplots."""
-    return grid(nrows, ncols, backend=backend).fill()
+    return new_grid(nrows, ncols, backend=backend).fill()

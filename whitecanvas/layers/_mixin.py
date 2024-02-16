@@ -596,7 +596,7 @@ class FaceEdgeMixin(AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
         super().__init__(MonoFace(self), MonoEdge(self))
 
     def _make_sure_hatch_visible(self):
-        if self.edge.width == 0:
+        if self.face.hatch is not Hatch.SOLID and self.edge.width == 0:
             self.edge.width = 1
             self.edge.color = get_theme().foreground_color
 
@@ -669,6 +669,13 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         return self
 
     def _make_sure_hatch_visible(self):
+        # TODO: following lines are needed, but it might be slow.
+        # if isinstance(self.face, MonoFace):
+        #     if self.face.hatch is Hatch.SOLID:
+        #         return
+        # else:
+        #     if np.all(self.face.hatch == Hatch.SOLID):
+        #         return
         _is_no_width = self.edge.width == 0
         if isinstance(self._edge_namespace, MultiEdge):
             if np.any(_is_no_width):

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 from typing import overload
 
 import numpy as np
@@ -13,6 +12,8 @@ from whitecanvas.types import (
     ArrayLike1D,
     ColorType,
     HistBinType,
+    HistogramKind,
+    HistogramShape,
     KdeBandWidthType,
     LineStyle,
     Orientation,
@@ -21,23 +22,12 @@ from whitecanvas.utils.hist import get_hist_edges, histograms
 from whitecanvas.utils.normalize import as_array_1d
 
 
-class HistogramShape(Enum):
-    step = "step"
-    polygon = "polygon"
-    bars = "bars"
-
-
-class HistogramKind(Enum):
-    count = "count"
-    density = "density"
-    probability = "probability"
-    frequency = "frequency"
-    percent = "percent"
-
-
 class LineFillBase(LayerContainer):
+    _ATTACH_TO_AXIS = True
+
     def __init__(self, line: Line, fill: Band, name: str | None = None):
         super().__init__([line, fill], name=name)
+        self._fill_alpha = 0.2
 
     @property
     def line(self) -> Line:
@@ -62,8 +52,19 @@ class LineFillBase(LayerContainer):
     @color.setter
     def color(self, color: ColorType):
         self.line.color = color
-        self.fill.face.update(color=color, alpha=0.2)
-        self.fill.edge.width = 0.0
+        self.fill.face.update(color=color, alpha=self._fill_alpha)
+        self.fill.edge.update(color=color, alpha=self._fill_alpha)
+
+    @property
+    def fill_alpha(self) -> float:
+        """The alpha value applied to the fill region compared to the line."""
+        return self._fill_alpha
+
+    @fill_alpha.setter
+    def fill_alpha(self, alpha: float):
+        self._fill_alpha = alpha
+        self.fill.face.alpha = alpha
+        self.fill.edge.alpha = alpha
 
 
 class Histogram(LineFillBase):

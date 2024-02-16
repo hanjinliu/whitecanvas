@@ -260,10 +260,10 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         _y = as_array_1d(y)
         if _x.size != _y.size:
             raise ValueError("x and y must have the same size.")
-        if isinstance(bins, (int, np.number, str)):
-            xbins = ybins = bins
-        else:
+        if isinstance(bins, tuple):
             xbins, ybins = bins
+        else:
+            xbins = ybins = bins
         if range is None:
             xrange = yrange = None
         else:

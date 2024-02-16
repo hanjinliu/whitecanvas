@@ -32,6 +32,7 @@ class LayerEvents(SignalGroup):
 class Layer(ABC):
     events: LayerEvents
     _events_class: type[LayerEvents]
+    _ATTACH_TO_AXIS = False
 
     def __init__(self, name: str | None = None):
         if not hasattr(self.__class__, "_events_class"):
@@ -61,23 +62,6 @@ class Layer(ABC):
     def name(self, name: str):
         """Set the name of this layer."""
         self._name = str(name)
-
-    def expect(self, layer_type: _L, /) -> _L:
-        """
-        A type guard for layers.
-
-        >>> canvas.layers["scatter-layer-name"].expect(Line).color
-        """
-        if not isinstance(layer_type, type) or issubclass(layer_type, PrimitiveLayer):
-            raise TypeError(
-                "Argument of `expect` must be a layer class, "
-                f"got {layer_type!r} (type: {type(layer_type).__name__}))"
-            )
-        if not isinstance(self, layer_type):
-            raise TypeError(
-                f"Expected {layer_type.__name__}, got {type(self).__name__}"
-            )
-        return self
 
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
@@ -319,6 +303,10 @@ class LayerWrapper(Layer, Generic[_L]):
     def _disconnect_canvas(self, canvas: CanvasBase):
         self._base_layer._disconnect_canvas(canvas)
         return super()._disconnect_canvas(canvas)
+
+    @property
+    def _ATTACH_TO_AXIS(self) -> bool:
+        return self._base_layer._ATTACH_TO_AXIS
 
 
 # deprecated, new

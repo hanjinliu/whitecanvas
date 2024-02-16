@@ -24,10 +24,6 @@ _C = TypeVar("_C", bound="CanvasBase")
 _DF = TypeVar("_DF")
 
 
-_C = TypeVar("_C", bound="CanvasBase")
-_DF = TypeVar("_DF")
-
-
 class _Aggregator(Generic[_C, _DF]):
     def __init__(self, method: str, plotter: CatPlotter[_C, _DF] = None):
         self._method = method
@@ -69,13 +65,13 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         df: _DF,
         x: str | None,
         y: str | None,
-        update_label: bool = False,
+        update_labels: bool = False,
     ):
         super().__init__(canvas, df)
         self._x = x
         self._y = y
-        self._update_label = update_label
-        if update_label:
+        self._update_label = update_labels
+        if update_labels:
             self._update_xy_label(x, y)
 
     def _get_x(self) -> str:

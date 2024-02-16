@@ -214,3 +214,6 @@ class CanvasGridProtocol(Protocol):
 
     def _plt_set_figsize(self, width: int, height: int):
         """Set size of canvas in pixels."""
+
+    def _plt_set_spacings(self, wspace: float, hspace: float):
+        """Set spacing between subplots"""

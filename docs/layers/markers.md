@@ -174,13 +174,13 @@ colors the markers by the density of the points using kernel density estimation.
 #!name: markers_layer_color_by_density
 #!width: 500
 import numpy as np
-from whitecanvas import hgrid
+from whitecanvas import new_row
 
 rng = np.random.default_rng(999)
 x = rng.normal(size=1000)
 y = rng.normal(size=1000)
 
-grid = hgrid(2, backend="matplotlib")
+grid = new_row(2, backend="matplotlib")
 (
     grid
     .add_canvas(0)

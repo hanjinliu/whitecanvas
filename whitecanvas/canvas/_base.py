@@ -66,13 +66,6 @@ _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
 _void = _Void()
 
-_ATTACH_TO_AXIS = (
-    _l.Bars,
-    _lg.Histogram,
-    _lg.Kde,
-    _lg.StemPlot,
-)
-
 
 class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
@@ -411,7 +404,7 @@ class CanvasBase(ABC):
         CatPlotter
             Plotter object.
         """
-        plotter = _df.CatPlotter(self, data, x, y, update_label=update_labels)
+        plotter = _df.CatPlotter(self, data, x, y, update_labels=update_labels)
         return plotter
 
     def cat_x(
@@ -1658,8 +1651,8 @@ class CanvasBase(ABC):
             dx = (xmax - xmin) * pad_rel
             if (
                 xmin != 0
-                or not isinstance(layer, _ATTACH_TO_AXIS)
-                or layer.orient.is_vertical
+                or not layer._ATTACH_TO_AXIS
+                or getattr(layer, "orient", None) is not Orientation.HORIZONTAL
             ):
                 xmin -= dx
             xmax += dx
@@ -1672,8 +1665,8 @@ class CanvasBase(ABC):
             dy = (ymax - ymin) * pad_rel
             if (
                 ymin != 0
-                or not isinstance(layer, _ATTACH_TO_AXIS)
-                or layer.orient.is_horizontal
+                or not layer._ATTACH_TO_AXIS
+                or getattr(layer, "orient", None) is not Orientation.VERTICAL
             ):
                 ymin -= dy
             ymax += dy

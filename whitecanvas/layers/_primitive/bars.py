@@ -65,6 +65,7 @@ class Bars(
         Edge properties of the bars.
     """
 
+    _ATTACH_TO_AXIS = True
     events: BarEvents
     _events_class = BarEvents
 

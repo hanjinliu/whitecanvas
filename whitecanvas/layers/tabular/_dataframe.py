@@ -8,7 +8,6 @@ from typing import (
     Generic,
     Iterable,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -28,7 +27,6 @@ from whitecanvas.types import (
     KdeBandWidthType,
     LineStyle,
     Orientation,
-    _Void,
 )
 from whitecanvas.utils.hist import histograms
 
@@ -36,8 +34,6 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 _DF = TypeVar("_DF")
-_Cols = Union[str, "tuple[str, ...]"]
-_void = _Void()
 
 
 class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF]):
@@ -46,9 +42,9 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         source: DataFrameWrapper[_DF],
         segs: list[np.ndarray],
         labels: list[tuple[Any, ...]],
-        color: _Cols | None = None,
+        color: str | tuple[str, ...] | None = None,
         width: float = 1.0,
-        style: _Cols | None = None,
+        style: str | tuple[str, ...] | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
     ):
@@ -250,14 +246,16 @@ class DFHistograms(
         source: DataFrameWrapper[_DF],
         base: _lg.LayerCollectionBase[_lg.Histogram],
         labels: list[tuple[Any, ...]],
-        color: _Cols | None = None,
+        color: str | tuple[str, ...] | None = None,
         width: str | None = None,
-        style: _Cols | None = None,
+        style: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
         self._width_by = _p.WidthPlan.default()
         self._style_by = _p.StylePlan.default()
+        self._hatch_by = _p.HatchPlan.default()
         self._labels = labels
         self._splitby = splitby
         super().__init__(base, source)
@@ -267,6 +265,8 @@ class DFHistograms(
             self.update_width(width)
         if style is not None:
             self.update_style(style)
+        if hatch is not None:
+            self.update_hatch(hatch)
 
     @classmethod
     def from_table(
@@ -280,6 +280,7 @@ class DFHistograms(
         color: str | None = None,
         width: float = 1.0,
         style: str | None = None,
+        hatch: str | None = None,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
@@ -301,7 +302,7 @@ class DFHistograms(
             )  # fmt: skip
             layers.append(each_layer)
         base = _lg.LayerCollectionBase(layers, name=name)
-        return cls(df, base, labels, color=color, width=width, style=style)
+        return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
 
     @overload
     def update_color(self, value: ColorType) -> Self:
@@ -333,17 +334,30 @@ class DFHistograms(
             hist.line.width = value
         return self
 
-    def update_style(self, by: str | Iterable[str], styles=None) -> Self:
+    def update_style(self, by: str | Iterable[str], palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
                 raise ValueError(f"Cannot style by a column other than {self._splitby}")
-            style_by = _p.StylePlan.new(cov.columns, values=styles)
+            style_by = _p.StylePlan.new(cov.columns, values=palette)
         else:
             style_by = _p.StylePlan.from_const(LineStyle(cov.value))
         for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
             self._base_layer[i].line.style = st
         self._style_by = style_by
+        return self
+
+    def update_hatch(self, by: str | Iterable[str], styles=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot hatch by a column other than {self._splitby}")
+            hatch_by = _p.HatchPlan.new(cov.columns, values=styles)
+        else:
+            hatch_by = _p.HatchPlan.from_const(cov.value)
+        for i, st in enumerate(hatch_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].fill.face.hatch = st
+        self._hatch_by = hatch_by
         return self
 
 
@@ -356,9 +370,10 @@ class DFKde(
         source: DataFrameWrapper[_DF],
         base: _lg.LayerCollectionBase[_lg.Kde],
         labels: list[tuple[Any, ...]],
-        color: _Cols | None = None,
+        color: str | tuple[str, ...] | None = None,
         width: str | None = None,
-        style: _Cols | None = None,
+        style: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
@@ -373,6 +388,8 @@ class DFKde(
             self.update_width(width)
         if style is not None:
             self.update_style(style)
+        if hatch is not None:
+            self.update_hatch(hatch)
 
     @classmethod
     def from_table(
@@ -383,10 +400,11 @@ class DFKde(
         color: str | None = None,
         width: float = 1.0,
         style: str | None = None,
+        hatch: str | None = None,
         name: str | None = None,
         orient: str | Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
-    ) -> DFHistograms[_DF]:
+    ) -> DFKde[_DF]:
         splitby = _shared.join_columns(color, style, source=df)
         ori = Orientation.parse(orient)
         arrays: list[np.ndarray] = []
@@ -401,7 +419,7 @@ class DFKde(
             )  # fmt: skip
             layers.append(each_layer)
         base = _lg.LayerCollectionBase(layers, name=name)
-        return cls(df, base, labels, color=color, width=width, style=style)
+        return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
 
     @overload
     def update_color(self, value: ColorType) -> Self:
@@ -446,22 +464,15 @@ class DFKde(
         self._style_by = style_by
         return self
 
-
-def default_template(it: Iterable[tuple[str, np.ndarray]], max_rows: int = 10) -> str:
-    """
-    Default template string for markers
-
-    This template can only be used for those plot that has one tooltip for each data
-    point, which includes markers, bars and rugs.
-    """
-    fmt_list = list[str]()
-    for ikey, (key, value) in enumerate(it):
-        if not key:
-            continue
-        if ikey >= max_rows:
-            break
-        if value.dtype.kind == "f":
-            fmt_list.append(f"{key}: {{{key}:.4g}}")
+    def update_hatch(self, by: str | Iterable[str], styles=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot hatch by a column other than {self._splitby}")
+            hatch_by = _p.HatchPlan.new(cov.columns, values=styles)
         else:
-            fmt_list.append(f"{key}: {{{key}!r}}")
-    return "\n".join(fmt_list)
+            hatch_by = _p.HatchPlan.from_const(cov.value)
+        for i, st in enumerate(hatch_by.generate(self._labels, self._splitby)):
+            self._base_layer[i].fill.face.hatch = st
+        self._hatch_by = hatch_by
+        return self

@@ -78,7 +78,7 @@ class _GroupAggregator(Generic[_C, _DF]):
             plotter._df.agg_by((*plotter._offset, *by), [plotter._value], self._method),
             offset=plotter._offset,
             value=plotter._value,
-            update_label=plotter._update_label,
+            update_labels=plotter._update_labels,
         )
 
 
@@ -91,7 +91,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         df: _DF,
         offset: str | tuple[str, ...] | None,
         value: str | None,
-        update_label: bool = False,
+        update_labels: bool = False,
     ):
         super().__init__(canvas, df)
         if isinstance(offset, str):
@@ -107,8 +107,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         self._offset: tuple[str, ...] = offset
         self._cat_iter = CatIterator(self._df, offset)
         self._value = value
-        self._update_label = update_label
-        if update_label:
+        self._update_labels = update_labels
+        if update_labels:
             if value is not None:
                 self._update_axis_labels(value)
             pos, label = self._cat_iter.axis_ticks()

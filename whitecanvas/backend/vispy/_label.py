@@ -10,7 +10,7 @@ from vispy.visuals.axis import AxisVisual, Ticker
 from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
-    from vispy.visuals import TextVisual
+    from vispy.visuals import LineVisual, TextVisual
 
     from whitecanvas.backend.vispy.canvas import Camera, Canvas
 
@@ -114,19 +114,24 @@ class Ticks:
         self._axis = weakref.ref(axis)
         axis.axis.ticker = VispyTicker(axis.axis)
 
+    def _get_ticks(self) -> LineVisual:
+        return self._axis().axis._ticks
+
+    def _get_ticker(self) -> VispyTicker:
+        return self._axis().axis.ticker
+
     @property
     def _text(self) -> TextVisual:
         return self._axis().axis._text
 
     def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
-        axis = self._axis().axis
-        return list(axis._ticks.pos), self._text.text
+        return list(self._get_ticks().pos), self._text.text
 
     def _plt_override_labels(self, pos: list[float], labels: list[str]):
-        self._axis().axis.ticker._categorical_labels = (pos, labels)
+        self._get_ticker()._categorical_labels = (pos, labels)
 
     def _plt_reset_override(self):
-        self._axis().axis.ticker._categorical_labels = None
+        self._get_ticker()._categorical_labels = None
 
     def _plt_get_color(self):
         return np.array(self._text.color)
@@ -136,10 +141,10 @@ class Ticks:
         self._axis().axis.tick_color = color
 
     def _plt_get_visible(self) -> bool:
-        return self._axis().visible
+        return self._get_ticker().visible
 
     def _plt_set_visible(self, visible: bool):
-        self._axis().visible = visible
+        self._get_ticker().visible = visible
 
     def _plt_get_size(self) -> float:
         return self._text.font_size
@@ -169,8 +174,11 @@ class VispyTicker(Ticker):
         anchors = axis.ticker._anchors
         super().__init__(axis, anchors)
         self._categorical_labels: tuple[list[float], list[str]] | None = None
+        self._visible = True
 
     def _get_tick_frac_labels(self):
+        if not self._visible:
+            return np.zeros(0), np.zeros(0), np.zeros(0)
         if self._categorical_labels is None:
             return super()._get_tick_frac_labels()
         pos, labels = self._categorical_labels
@@ -181,3 +189,13 @@ class VispyTicker(Ticker):
         ok = (0 <= major_tick_fractions) & (major_tick_fractions <= 1)
         tick_labels = np.asarray(labels)[ok]
         return major_tick_fractions[ok], minor_tick_fractions, tick_labels
+
+    @property
+    def visible(self):
+        return self._visible
+
+    @visible.setter
+    def visible(self, visible: bool):
+        self._visible = visible
+        self.axis.update()
+        self.axis._update_subvisuals()

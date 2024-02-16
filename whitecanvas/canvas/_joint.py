@@ -170,6 +170,7 @@ class JointGrid(CanvasGrid):
         alpha: float = 1.0,
         hatch: str | Hatch | None = None,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:
+        color = self._main_canvas._generate_colors(color)
         out = self._main_canvas.add_markers(
             xdata, ydata, name=name, symbol=symbol, size=size, color=color,
             alpha=alpha, hatch=hatch,

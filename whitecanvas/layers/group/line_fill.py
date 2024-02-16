@@ -23,6 +23,8 @@ from whitecanvas.utils.normalize import as_array_1d
 
 
 class LineFillBase(LayerContainer):
+    _ATTACH_TO_AXIS = True
+
     def __init__(self, line: Line, fill: Band, name: str | None = None):
         super().__init__([line, fill], name=name)
         self._fill_alpha = 0.2

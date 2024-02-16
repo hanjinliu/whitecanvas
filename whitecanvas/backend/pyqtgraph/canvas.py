@@ -294,6 +294,10 @@ class CanvasGrid:
     def _plt_set_figsize(self, width: int, height: int):
         self._layoutwidget.resize(width, height)
 
+    def _plt_set_spacings(self, wspace: float, hspace: float):
+        self._layoutwidget.ci.layout.setHorizontalSpacing(wspace)
+        self._layoutwidget.ci.layout.setVerticalSpacing(hspace)
+
 
 class SignalListener(pg.GraphicsObject):
     # Mouse events in pyqtgraph is very complicated.

@@ -6,7 +6,7 @@ from typing import (
     TypeVar,
 )
 
-from whitecanvas.canvas.dataframe._feature_cat import CatPlotter
+from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
 from whitecanvas.types import ColormapType, HistBinType
@@ -20,7 +20,7 @@ _C = TypeVar("_C", bound="JointGrid")
 _DF = TypeVar("_DF")
 
 
-class JointCatPlotter(CatPlotter[_C, _DF]):
+class JointCatPlotter(BaseCatPlotter[_C, _DF]):
     def __init__(
         self,
         canvas: _C,
@@ -29,7 +29,30 @@ class JointCatPlotter(CatPlotter[_C, _DF]):
         y: str | None,
         update_labels: bool = False,
     ):
-        super().__init__(canvas, df, x, y, update_labels=update_labels)
+        super().__init__(canvas, df)
+        self._x = x
+        self._y = y
+        self._update_label = update_labels
+        if update_labels:
+            self._update_xy_label(x, y)
+
+    def _get_x(self) -> str:
+        if self._x is None:
+            raise ValueError("Column for x-axis is not set")
+        return self._x
+
+    def _get_y(self) -> str:
+        if self._y is None:
+            raise ValueError("Column for y-axis is not set")
+        return self._y
+
+    def _update_xy_label(self, x: str | None, y: str | None) -> None:
+        """Update the x and y labels using the column names"""
+        canvas = self._canvas()
+        if isinstance(x, str):
+            canvas.x.label.text = x
+        if isinstance(y, str):
+            canvas.y.label.text = y
 
     def add_markers(
         self,
@@ -86,6 +109,7 @@ class JointCatPlotter(CatPlotter[_C, _DF]):
             )
             grid.y_canvas.add_layer(ylayer)
             grid._link_marginal_to_main(ylayer, layer)
+        grid._autoscale_layers()
         return layer
 
     def add_hist2d(
@@ -142,4 +166,5 @@ class JointCatPlotter(CatPlotter[_C, _DF]):
             )  # fmt: skip
             grid.y_canvas.add_layer(ylayer)
             grid._link_marginal_to_main(ylayer, layer)
+        grid._autoscale_layers()
         return layer

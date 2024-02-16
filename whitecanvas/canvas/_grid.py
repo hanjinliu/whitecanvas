@@ -84,6 +84,8 @@ class CanvasGrid:
         self._x_linker_ref = link_axes(to_link)
         if future:
             self._x_linked = True
+            if hide_ticks:
+                self._backend_object._plt_set_spacings(6, 6)
         return self
 
     def link_y(self, *, future: bool = True, hide_ticks: bool = True) -> Self:
@@ -109,6 +111,8 @@ class CanvasGrid:
         self._y_linker_ref = link_axes(to_link)
         if future:
             self._y_linked = True
+            if hide_ticks:
+                self._backend_object._plt_set_spacings(6, 6)
         return self
 
     def __repr__(self) -> str:

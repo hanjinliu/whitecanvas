@@ -227,6 +227,9 @@ class CanvasGrid:
     def _plt_set_figsize(self, width: int, height: int):
         self._scene.size = (width, height)
 
+    def _plt_set_spacings(self, wspace: float, hspace: float):
+        self._grid.spacing = wspace
+
 
 _APP_NAMES = {
     "qt4": "pyqt4",

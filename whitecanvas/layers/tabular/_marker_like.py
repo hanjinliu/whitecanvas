@@ -11,6 +11,7 @@ from typing import (
 
 import numpy as np
 from cmap import Color, Colormap
+from numpy.typing import NDArray
 
 from whitecanvas import layers as _l
 from whitecanvas import theme
@@ -542,6 +543,36 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
 
     # def update_scale(self, by: str | float, align: str = "low") -> Self:
     #     ...
+
+    def update_length(
+        self,
+        lengths: float | NDArray[np.number],
+        *,
+        offset: float | None = None,
+        align: str = "low",
+    ) -> Self:
+        """
+        Update the length of the rug lines.
+
+        Parameters
+        ----------
+        lengths : float or array-like
+            Length of the rug lines. If a scalar, all the lines have the same length.
+            If an array, each line has a different length.
+        offset : float, optional
+            Offset of the lines. If not given, the mean of the lower and upper bounds is
+            used.
+        align : {'low', 'high', 'center'}, optional
+            How to align the rug lines around the offset. This parameter is defined as
+            follows.
+
+            ```
+               "low"     "high"    "center"
+              ──┴─┴──   ──┬─┬──    ──┼─┼──
+            ```
+        """
+        self.base.update_length(lengths=lengths, offset=offset, align=align)
+        return self
 
     def with_hover_template(self, template: str) -> Self:
         """Set the hover tooltip template for the layer."""

@@ -131,6 +131,9 @@ class CanvasGrid:
     def _plt_set_figsize(self, width: int, height: int):
         self._figsize = (width, height)
 
+    def _plt_set_spacings(self, wspace: float, hspace: float):
+        pass
+
 
 class _SupportsText:
     def __init__(self):

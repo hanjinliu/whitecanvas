@@ -310,6 +310,9 @@ class CanvasGrid:
         self._grid_plot.width = width
         self._grid_plot.height = height
 
+    def _plt_set_spacings(self, wspace: float, hspace: float):
+        self._grid_plot.spacing = (int(wspace), int(hspace))
+
     def _iter_bokeh_subplots(self) -> Iterator[tuple[int, int, bk_plotting.figure]]:
         for child, r, c in self._grid_plot.children:
             yield r, c, child

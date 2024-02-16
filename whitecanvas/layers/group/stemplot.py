@@ -11,6 +11,8 @@ from whitecanvas.utils.normalize import normalize_xy
 
 
 class StemPlot(LayerContainer):
+    _ATTACH_TO_AXIS = True
+
     def __init__(
         self,
         markers: Markers,

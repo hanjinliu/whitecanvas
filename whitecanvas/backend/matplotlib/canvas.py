@@ -349,3 +349,10 @@ class CanvasGrid:
         dpi = self._fig.get_dpi()
         self._fig.set_size_inches(width / dpi, height / dpi)
         self._fig.tight_layout()
+
+    def _plt_set_spacings(self, wspace: float, hspace: float):
+        dpi = self._fig.get_dpi()
+        nh, nw = self._gridspec.get_geometry()
+        w_avg = self._fig.get_figwidth() / nw * dpi
+        h_avg = self._fig.get_figheight() / nh * dpi
+        self._gridspec.update(hspace=hspace / h_avg, wspace=wspace / w_avg)

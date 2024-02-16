@@ -488,6 +488,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         alpha: float = 1.0,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
         backend: Backend | str | None = None,
     ):
         """Construct a line from a cumulative histogram."""
@@ -498,7 +499,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         if not Orientation.parse(orient).is_vertical:
             xdata, ydata = ydata, xdata
         return Line(
-            xdata, ydata, name=name, color=color, alpha=alpha,
+            xdata, ydata, name=name, color=color, alpha=alpha, antialias=antialias,
             width=width, style=style, backend=backend,
         )  # fmt: skip
 

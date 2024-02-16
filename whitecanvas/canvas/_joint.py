@@ -89,6 +89,8 @@ class JointGrid(CanvasGrid):
             self._ynamespace_canvas = self._y_canvas
             self._main_canvas.y.ticks.visible = False
 
+        self._backend_object._plt_set_spacings(10, 10)
+
         # link axes
         self._x_linker = link_axes([self._main_canvas.x, self._x_canvas.x])
         self._y_linker = link_axes([self._main_canvas.y, self._y_canvas.y])
@@ -184,6 +186,7 @@ class JointGrid(CanvasGrid):
             )
             self.y_canvas.add_layer(ylayer)
             self._link_marginal_to_main(ylayer, out)
+        self._autoscale_layers()
         return out
 
     def with_hist_x(
@@ -350,6 +353,16 @@ class JointGrid(CanvasGrid):
         self.with_rug_x(width=width)
         self.with_rug_y(width=width)
         return self
+
+    def _autoscale_layers(self):
+        for layer in self.x_canvas.layers:
+            if isinstance(layer, (_l.Rug, _lt.DFRug)):
+                ylow, yhigh = self.x_canvas.y.lim
+                layer.update_length((yhigh - ylow) * 0.1)
+        for layer in self.y_canvas.layers:
+            if isinstance(layer, (_l.Rug, _lt.DFRug)):
+                xlow, xhigh = self.y_canvas.x.lim
+                layer.update_length((xhigh - xlow) * 0.1)
 
 
 class MarginalPlotter(ABC):

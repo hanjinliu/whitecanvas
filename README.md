@@ -57,6 +57,12 @@ Documentation is available [here](https://hanjinliu.github.io/whitecanvas/).
 
 ![](https://github.com/hanjinliu/whitecanvas/blob/main/images/superplot.png)
 
+#### Joint plot in matplotlib
+
+[&rarr; source](https://github.com/hanjinliu/whitecanvas/blob/main/examples/joint_grid.py)
+
+![](https://github.com/hanjinliu/whitecanvas/blob/main/images/jointgrid.png)
+
 #### Heatmap with text in pyqtgraph
 
 [&rarr; source](https://github.com/hanjinliu/whitecanvas/blob/main/examples/heatmap_with_text.py)

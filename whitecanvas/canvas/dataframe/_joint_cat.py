@@ -79,11 +79,13 @@ class JointCatPlotter(CatPlotter[_C, _DF]):
                 self._df, self._get_x(), color=color, hatch=hatch, backend=grid._backend
             )  # fmt: skip
             grid.x_canvas.add_layer(xlayer)
+            grid._link_marginal_to_main(xlayer, layer)
         for _y_plt in grid._iter_y_plotters():
             ylayer = _y_plt.add_layer_for_cat_markers(
                 self._df, self._get_y(), color=color, hatch=hatch, backend=grid._backend
             )
             grid.y_canvas.add_layer(ylayer)
+            grid._link_marginal_to_main(ylayer, layer)
         return layer
 
     def add_hist2d(
@@ -133,9 +135,11 @@ class JointCatPlotter(CatPlotter[_C, _DF]):
                 self._df, self._get_x(), bins=bins, limits=rangex, backend=grid._backend
             )  # fmt: skip
             grid.x_canvas.add_layer(xlayer)
+            grid._link_marginal_to_main(xlayer, layer)
         for _y_plt in grid._iter_y_plotters():
             ylayer = _y_plt.add_layer_for_cat_hist2d(
                 self._df, self._get_y(), bins=bins, limits=rangey, backend=grid._backend
             )  # fmt: skip
             grid.y_canvas.add_layer(ylayer)
+            grid._link_marginal_to_main(ylayer, layer)
         return layer

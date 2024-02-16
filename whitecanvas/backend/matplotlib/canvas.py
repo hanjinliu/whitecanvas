@@ -79,7 +79,7 @@ class Canvas:
                 return
         self._hide_tooltip()
 
-    def _set_tooltip(self, pos, text: str):
+    def _set_tooltip(self, pos: tuple[float, float], text: str):
         # determine in which direction to show the tooltip
         x, y = pos
         x0, x1 = self._axes.get_xlim()

@@ -51,7 +51,7 @@ class LineFillBase(LayerContainer):
     def color(self, color: ColorType):
         self.line.color = color
         self.fill.face.update(color=color, alpha=self._fill_alpha)
-        self.fill.edge.width = 0.0
+        self.fill.edge.update(color=color, alpha=self._fill_alpha)
 
     @property
     def fill_alpha(self) -> float:
@@ -62,6 +62,7 @@ class LineFillBase(LayerContainer):
     def fill_alpha(self, alpha: float):
         self._fill_alpha = alpha
         self.fill.face.alpha = alpha
+        self.fill.edge.alpha = alpha
 
 
 class Histogram(LineFillBase):

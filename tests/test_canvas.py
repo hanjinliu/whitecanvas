@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.testing import assert_allclose
 
 import pytest
@@ -138,3 +139,8 @@ def test_unlink(backend: str):
     grid[0].x.lim = (20, 21)
     assert grid[0].x.lim == pytest.approx((20, 21))
     assert grid[1].x.lim == pytest.approx((10, 11))
+
+def test_jointgrid(backend: str):
+    rng = np.random.default_rng(0)
+    joint = wc.new_jointgrid(backend=backend).with_hist().with_kde().with_rug()
+    joint.add_markers(rng.random(100), rng.random(100), color="red")

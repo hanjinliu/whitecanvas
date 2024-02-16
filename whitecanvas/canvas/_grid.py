@@ -78,7 +78,7 @@ class CanvasGrid:
             self._x_linker_ref.unlink_all()  # initialize linker
         to_link = []
         for (_r, _), _canvas in self._iter_canvas():
-            to_link.append(_canvas)
+            to_link.append(_canvas.x)
             if hide_ticks and _r != self.shape[0] - 1:
                 _canvas.x.ticks.visible = False
         self._x_linker_ref = link_axes(to_link)
@@ -103,8 +103,8 @@ class CanvasGrid:
             self._y_linker_ref.unlink_all()
         to_link = []
         for (_, _c), _canvas in self._iter_canvas():
-            to_link.append(_canvas)
-            if hide_ticks and _c != self.shape[1] - 1:
+            to_link.append(_canvas.y)
+            if hide_ticks and _c != 0:
                 _canvas.y.ticks.visible = False
         self._y_linker_ref = link_axes(to_link)
         if future:

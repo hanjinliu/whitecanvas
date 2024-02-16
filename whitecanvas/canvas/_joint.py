@@ -40,7 +40,6 @@ if TYPE_CHECKING:
 
     NStr = str | Sequence[str]
 
-_C = TypeVar("_C", bound="JointGrid")
 _DF = TypeVar("_DF")
 
 
@@ -153,6 +152,10 @@ class JointGrid(CanvasGrid):
 
         return JointCatPlotter(self, data, x, y, update_labels=update_labels)
 
+    def _link_marginal_to_main(self, layer: _l.Layer, main: _l.Layer) -> None:
+        # TODO: this is not the only thing to be done
+        main.events.visible.connect_setattr(layer, "visible")
+
     def add_markers(
         self,
         xdata: ArrayLike1D,
@@ -166,25 +169,21 @@ class JointGrid(CanvasGrid):
         hatch: str | Hatch | None = None,
     ) -> _l.Markers[_mixin.ConstFace, _mixin.ConstEdge, float]:
         out = self._main_canvas.add_markers(
-            xdata,
-            ydata,
-            name=name,
-            symbol=symbol,
-            size=size,
-            color=color,
-            alpha=alpha,
-            hatch=hatch,
-        )
+            xdata, ydata, name=name, symbol=symbol, size=size, color=color,
+            alpha=alpha, hatch=hatch,
+        )  # fmt: skip
         for _x_plt in self._iter_x_plotters():
             xlayer = _x_plt.add_layer_for_markers(
                 xdata, color, hatch, backend=self._backend
             )
             self.x_canvas.add_layer(xlayer)
+            self._link_marginal_to_main(xlayer, out)
         for _y_plt in self._iter_y_plotters():
             ylayer = _y_plt.add_layer_for_markers(
                 ydata, color, hatch, backend=self._backend
             )
             self.y_canvas.add_layer(ylayer)
+            self._link_marginal_to_main(ylayer, out)
         return out
 
     def with_hist_x(
@@ -195,6 +194,25 @@ class JointGrid(CanvasGrid):
         kind: str | HistogramKind = HistogramKind.density,
         shape: str | HistogramShape = HistogramShape.bars,
     ) -> Self:
+        """
+        Configure the x-marginal canvas to have a histogram.
+
+        Parameters
+        ----------
+        bins : int or 1D array-like, default "auto"
+            Bins of the histogram. This parameter will directly be passed
+            to `np.histogram`.
+        limits : (float, float), optional
+            Limits in which histogram will be built. This parameter will equivalent to
+            the `range` paraneter of `np.histogram`.
+        name : str, optional
+            Name of the layer.
+        shape : {"step", "polygon", "bars"}, default "bars"
+            Shape of the histogram. This parameter defines how to convert the data into
+            the line nodes.
+        kind : {"count", "density", "probability", "frequency", "percent"}, optional
+            Kind of the histogram.
+        """
         self._x_plotters.append(
             MarginalHistPlotter(
                 Orientation.VERTICAL, bins=bins, limits=limits, kind=kind, shape=shape
@@ -210,6 +228,25 @@ class JointGrid(CanvasGrid):
         kind: str | HistogramKind = HistogramKind.density,
         shape: str | HistogramShape = HistogramShape.bars,
     ) -> Self:
+        """
+        Configure the y-marginal canvas to have a histogram.
+
+        Parameters
+        ----------
+        bins : int or 1D array-like, default "auto"
+            Bins of the histogram. This parameter will directly be passed
+            to `np.histogram`.
+        limits : (float, float), optional
+            Limits in which histogram will be built. This parameter will equivalent to
+            the `range` paraneter of `np.histogram`.
+        name : str, optional
+            Name of the layer.
+        shape : {"step", "polygon", "bars"}, default "bars"
+            Shape of the histogram. This parameter defines how to convert the data into
+            the line nodes.
+        kind : {"count", "density", "probability", "frequency", "percent"}, optional
+            Kind of the histogram.
+        """
         self._y_plotters.append(
             MarginalHistPlotter(
                 Orientation.HORIZONTAL, bins=bins, limits=limits, kind=kind, shape=shape
@@ -220,13 +257,36 @@ class JointGrid(CanvasGrid):
     def with_hist(
         self,
         *,
-        bins: HistBinType = "auto",
+        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         limits: tuple[float, float] | None = None,
         kind: str | HistogramKind = HistogramKind.density,
         shape: str | HistogramShape = HistogramShape.bars,
     ) -> Self:
-        self.with_hist_x(bins=bins, limits=limits, kind=kind, shape=shape)
-        self.with_hist_y(bins=bins, limits=limits, kind=kind, shape=shape)
+        """
+        Configure both of the marginal canvases to have histograms.
+
+        Parameters
+        ----------
+        bins : int or 1D array-like, default "auto"
+            Bins of the histogram. This parameter will directly be passed
+            to `np.histogram`.
+        limits : (float, float), optional
+            Limits in which histogram will be built. This parameter will equivalent to
+            the `range` paraneter of `np.histogram`.
+        name : str, optional
+            Name of the layer.
+        shape : {"step", "polygon", "bars"}, default "bars"
+            Shape of the histogram. This parameter defines how to convert the data into
+            the line nodes.
+        kind : {"count", "density", "probability", "frequency", "percent"}, optional
+            Kind of the histogram.
+        """
+        if isinstance(bins, tuple):
+            bins_x, bins_y = bins
+        else:
+            bins_x = bins_y = bins
+        self.with_hist_x(bins=bins_x, limits=limits, kind=kind, shape=shape)
+        self.with_hist_y(bins=bins_y, limits=limits, kind=kind, shape=shape)
         return self
 
     def with_kde_x(

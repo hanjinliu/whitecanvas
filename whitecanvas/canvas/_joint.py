@@ -208,8 +208,6 @@ class JointGrid(CanvasGrid):
         limits : (float, float), optional
             Limits in which histogram will be built. This parameter will equivalent to
             the `range` paraneter of `np.histogram`.
-        name : str, optional
-            Name of the layer.
         shape : {"step", "polygon", "bars"}, default "bars"
             Shape of the histogram. This parameter defines how to convert the data into
             the line nodes.
@@ -242,8 +240,6 @@ class JointGrid(CanvasGrid):
         limits : (float, float), optional
             Limits in which histogram will be built. This parameter will equivalent to
             the `range` paraneter of `np.histogram`.
-        name : str, optional
-            Name of the layer.
         shape : {"step", "polygon", "bars"}, default "bars"
             Shape of the histogram. This parameter defines how to convert the data into
             the line nodes.
@@ -276,8 +272,6 @@ class JointGrid(CanvasGrid):
         limits : (float, float), optional
             Limits in which histogram will be built. This parameter will equivalent to
             the `range` paraneter of `np.histogram`.
-        name : str, optional
-            Name of the layer.
         shape : {"step", "polygon", "bars"}, default "bars"
             Shape of the histogram. This parameter defines how to convert the data into
             the line nodes.
@@ -299,6 +293,18 @@ class JointGrid(CanvasGrid):
         band_width: KdeBandWidthType = "scott",
         fill_alpha: float = 0.2,
     ) -> Self:
+        """
+        Configure the x-marginal canvas to have a kernel density estimate (KDE) plot.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the line. Use theme default if not specified.
+        band_width : "scott", "silverman" or float, default "scott"
+            Bandwidth of the kernel.
+        fill_alpha : float, default 0.2
+            Alpha value of the fill color.
+        """
         width = theme._default("line.width", width)
         self._x_plotters.append(
             MarginalKdePlotter(
@@ -317,6 +323,18 @@ class JointGrid(CanvasGrid):
         band_width: KdeBandWidthType = "scott",
         fill_alpha: float = 0.2,
     ) -> Self:
+        """
+        Configure the y-marginal canvas to have a kernel density estimate (KDE) plot.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the line. Use theme default if not specified.
+        band_width : "scott", "silverman" or float, default "scott"
+            Bandwidth of the kernel.
+        fill_alpha : float, default 0.2
+            Alpha value of the fill color.
+        """
         width = theme._default("line.width", width)
         self._y_plotters.append(
             MarginalKdePlotter(
@@ -335,21 +353,57 @@ class JointGrid(CanvasGrid):
         band_width: KdeBandWidthType = "scott",
         fill_alpha: float = 0.2,
     ) -> Self:
+        """
+        Configure both of the marginal canvases to have KDE plots.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the line. Use theme default if not specified.
+        band_width : "scott", "silverman" or float, default "scott"
+            Bandwidth of the kernel.
+        fill_alpha : float, default 0.2
+            Alpha value of the fill color.
+        """
         self.with_kde_x(width=width, band_width=band_width, fill_alpha=fill_alpha)
         self.with_kde_y(width=width, band_width=band_width, fill_alpha=fill_alpha)
         return self
 
     def with_rug_x(self, *, width: float | None = None) -> Self:
+        """
+        Configure the x-marginal canvas to have a rug plot.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the line. Use theme default if not specified.
+        """
         width = theme._default("line.width", width)
         self._x_plotters.append(MarginalRugPlotter(Orientation.VERTICAL, width=width))
         return self
 
     def with_rug_y(self, *, width: float | None = None) -> Self:
+        """
+        Configure the y-marginal canvas to have a rug plot.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the line. Use theme default if not specified.
+        """
         width = theme._default("line.width", width)
         self._y_plotters.append(MarginalRugPlotter(Orientation.HORIZONTAL, width=width))
         return self
 
     def with_rug(self, *, width: float | None = None) -> Self:
+        """
+        Configure both of the marginal canvases to have rug plots.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the line. Use theme default if not specified.
+        """
         self.with_rug_x(width=width)
         self.with_rug_y(width=width)
         return self

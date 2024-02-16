@@ -1327,13 +1327,13 @@ is correctly typed, IDE will recognize the returned layer as a multi-face layer.
 when the density is high. In this case, <code>color_by_density</code> method is very useful. It
 colors the markers by the density of the points using kernel density estimation.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">hgrid</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_row</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
-<span class="n">grid</span> <span class="o">=</span> <span class="n">hgrid</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_row</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="p">(</span>
     <span class="n">grid</span>
     <span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>

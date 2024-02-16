@@ -1144,9 +1144,9 @@ either layers or the <code>add_*</code> methods.</p>
 <p>Once a grid is created, you can add chid canvases using the <code>add_canvas</code> method.
 The signature of the method differs between 1D and 2D grid.</p>
 <h2 id="verticalhorizontal-grid">Vertical/Horizontal Grid</h2>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">vgrid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_col</span>
 
-<span class="n">grid</span> <span class="o">=</span> <span class="n">vgrid</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_col</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
 <span class="n">c0</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">c0</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 0&quot;</span><span class="p">)</span>
@@ -1157,9 +1157,9 @@ The signature of the method differs between 1D and 2D grid.</p>
 <span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/canvas_grid_vertical.png" width="360px" /></p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">hgrid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_row</span>
 
-<span class="n">grid</span> <span class="o">=</span> <span class="n">hgrid</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_row</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
 <span class="n">c0</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">c0</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 0&quot;</span><span class="p">)</span>
@@ -1171,9 +1171,9 @@ The signature of the method differs between 1D and 2D grid.</p>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/canvas_grid_horizontal.png" width="360px" /></p>
 <h2 id="2d-grid">2D Grid</h2>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">grid</span> <span class="k">as</span> <span class="n">grid2d</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_grid</span>
 
-<span class="n">grid</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_grid</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]:</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>

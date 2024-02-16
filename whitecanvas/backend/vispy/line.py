@@ -80,7 +80,7 @@ def _make_connection(data: NDArray[np.number]):
     return np.concatenate(connections)
 
 
-def _safe_concat(data: list[NDArray[np.floating]], size: int):
+def _safe_concat(data: list[NDArray[np.floating]]):
     if len(data) == 0:
         return None
     return np.concatenate(data, axis=0)
@@ -89,13 +89,12 @@ def _safe_concat(data: list[NDArray[np.floating]], size: int):
 @check_protocol(MultiLineProtocol)
 class MultiLine(visuals.Line):
     def __init__(self, data: list[NDArray[np.float32]]):
-        connections = _make_connection(data)
         self._data_raw = data
         self._seg_colors = np.ones((len(data), 4), dtype=np.float32)
         super().__init__(
-            pos=_safe_concat(data, size=2),
+            pos=_safe_concat(data),
             antialias=True,
-            connect=connections,
+            connect=_make_connection(data),
         )
         self.unfreeze()
 
@@ -113,7 +112,7 @@ class MultiLine(visuals.Line):
     def _plt_set_data(self, data: list[NDArray[np.floating]]):
         connections = _make_connection(data)
         self._data_raw = data
-        self.set_data(pos=_safe_concat(data, size=2), connect=connections)
+        self.set_data(pos=_safe_concat(data), connect=connections)
 
     ##### HasEdges #####
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
@@ -149,7 +148,7 @@ class MultiLine(visuals.Line):
         raw_colors = []
         for color, seg in zip(colors, self._data_raw):
             raw_colors.append(np.repeat(color[np.newaxis], len(seg), axis=0))
-        self.set_data(color=_safe_concat(raw_colors, size=4))
+        self.set_data(color=_safe_concat(raw_colors))
         self._seg_colors = colors
 
     def _plt_get_antialias(self) -> bool:

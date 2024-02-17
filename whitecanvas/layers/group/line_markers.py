@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from numpy.typing import ArrayLike
 
+from whitecanvas.layers import _legend
 from whitecanvas.layers._primitive import Errorbars, Line, Markers, Texts
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import Alignment, ColorType, LineStyle, Orientation, _Void
@@ -242,3 +243,8 @@ class Plot(LayerContainer):
     def set_data(self, xdata=None, ydata=None):
         self.line.set_data(xdata, ydata)
         self.markers.set_data(xdata, ydata)
+
+    def _as_legend_item(self):
+        line = self.line._as_legend_item()
+        markers = self.markers._as_legend_item()
+        return _legend.PlotLegendItem(line, markers)

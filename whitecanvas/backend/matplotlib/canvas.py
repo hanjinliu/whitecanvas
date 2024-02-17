@@ -27,9 +27,11 @@ from whitecanvas.backend.matplotlib._labels import (
     YLabel,
     YTicks,
 )
+from whitecanvas.backend.matplotlib._legend import make_sample_item
 from whitecanvas.backend.matplotlib.bars import Bars
 from whitecanvas.backend.matplotlib.image import Image as whitecanvasImage
 from whitecanvas.backend.matplotlib.text import Texts as whitecanvasText
+from whitecanvas.layers._legend import LegendItem
 from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType, Rect
 
 
@@ -272,6 +274,17 @@ class Canvas:
     ):
         """Connect callback to y-limits changed event"""
         self._axes.callbacks.connect("ylim_changed", lambda ax: callback(ax.get_ylim()))
+
+    def _plt_make_legend(self, items: list[tuple[str, LegendItem]]):
+        artists = []
+        names = []
+        for name, item in items:
+            sample = make_sample_item(item)
+            if sample is not None:
+                artists.append(sample)
+                names.append(name)
+        if artists:
+            self._axes.legend(artists, names)
 
 
 _MOUSE_BUTTON_MAP = {

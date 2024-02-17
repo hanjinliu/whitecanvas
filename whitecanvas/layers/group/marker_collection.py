@@ -7,6 +7,7 @@ from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._mixin import (
     EdgeNamespace,
     EnumArray,
@@ -461,3 +462,8 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
         self.extend(new_markers)
         self._slices = new_slices
         return new_markers
+
+    def _as_legend_item(self):
+        if self._children:
+            return self._children[0]._as_legend_item()
+        return _legend.EmptyLegendItem()

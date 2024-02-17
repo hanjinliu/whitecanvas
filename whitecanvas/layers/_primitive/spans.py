@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import (
     ConstEdge,
@@ -186,3 +187,8 @@ class Spans(
         alpha: float = 1,
     ) -> Spans[_Face, MultiEdge]:
         return super().with_edge_multi(color, width, style, alpha)
+
+    def _as_legend_item(self) -> _legend.BarLegendItem:
+        return _legend.BarLegendItem(
+            self.face._as_legend_info(), self.edge._as_legend_info()
+        )

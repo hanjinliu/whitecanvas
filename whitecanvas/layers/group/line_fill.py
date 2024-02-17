@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._primitive import Band, Line
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import (
@@ -65,6 +66,10 @@ class LineFillBase(LayerContainer):
         self._fill_alpha = alpha
         self.fill.face.alpha = alpha
         self.fill.edge.alpha = alpha
+
+    def _as_legend_item(self) -> _legend.BarLegendItem:
+        edge = _legend.EdgeInfo(self.line.color, self.line.width, self.line.style)
+        return _legend.BarLegendItem(self.fill.face, edge)
 
 
 class Histogram(LineFillBase):

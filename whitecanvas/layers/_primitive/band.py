@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import FaceEdgeMixin, FaceEdgeMixinEvents
 from whitecanvas.layers._sizehint import xyy_size_hint
@@ -106,3 +107,8 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         """Add hover text to the data points."""
         self._backend._plt_set_hover_text(str(text))
         return self
+
+    def _as_legend_item(self) -> _legend.BarLegendItem:
+        face = _legend.FaceInfo(self.face.color, self.face.hatch)
+        edge = _legend.EdgeInfo(self.edge.color, self.edge.width, self.edge.style)
+        return _legend.BarLegendItem(face, edge)

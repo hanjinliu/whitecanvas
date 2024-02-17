@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import (
     ConstEdge,
@@ -433,6 +434,11 @@ class Bars(
         ]
         self._backend._plt_set_hover_text(texts)
         return self
+
+    def _as_legend_item(self) -> _legend.BarLegendItem:
+        return _legend.BarLegendItem(
+            self.face._as_legend_info(), self.edge._as_legend_info()
+        )
 
 
 def _norm_bar_inputs(t0, height, bot, orient: Orientation, bar_width: float):

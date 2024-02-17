@@ -19,6 +19,7 @@ import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
 from whitecanvas.protocols import layer_protocols as _lp
 from whitecanvas.theme import get_theme
@@ -85,6 +86,10 @@ class LayerNamespace(ABC, Generic[_L]):
 
     def _setattr(self, name: str, value: Any) -> None:
         raise AttributeError(f"Cannot set attribute {name!r} on {self!r}")
+
+    @abstractmethod
+    def _as_legend_info(self) -> _legend.LegendItem:
+        """Get the legend information of the namespace."""
 
 
 class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
@@ -193,6 +198,9 @@ class MonoFace(FaceNamespace):
             self.alpha = alpha
         return self._layer
 
+    def _as_legend_info(self):
+        return _legend.FaceInfo(self.color, self.hatch)
+
 
 class ConstFace(FaceNamespace):
     @property
@@ -254,6 +262,9 @@ class ConstFace(FaceNamespace):
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
+
+    def _as_legend_info(self):
+        return _legend.FaceInfo(self.color, self.hatch)
 
 
 class MonoEdge(EdgeNamespace):
@@ -317,6 +328,9 @@ class MonoEdge(EdgeNamespace):
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
+
+    def _as_legend_info(self):
+        return _legend.EdgeInfo(self.color, self.width, self.style)
 
 
 class ConstEdge(EdgeNamespace):
@@ -385,6 +399,9 @@ class ConstEdge(EdgeNamespace):
             self.alpha = alpha
         return self._layer
 
+    def _as_legend_info(self):
+        return _legend.EdgeInfo(self.color, self.width, self.style)
+
 
 class MultiFace(FaceNamespace):
     @property
@@ -450,6 +467,15 @@ class MultiFace(FaceNamespace):
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
+
+    def _as_legend_info(self):
+        _hatch_candidates = list(set(self.hatch))
+        if len(_hatch_candidates) == 1:
+            hatch = _hatch_candidates[0]
+        else:
+            hatch = Hatch.SOLID
+        color = np.mean(self.color, axis=0)
+        return _legend.FaceInfo(color, hatch)
 
 
 class MultiEdge(EdgeNamespace):
@@ -526,6 +552,16 @@ class MultiEdge(EdgeNamespace):
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
+
+    def _as_legend_info(self):
+        color = np.mean(self.color, axis=0)
+        width = np.mean(self.width)
+        _style_candidates = list(set(self.style))
+        if len(_style_candidates) == 1:
+            style = _style_candidates[0]
+        else:
+            style = LineStyle.SOLID
+        return _legend.EdgeInfo(color, width, style)
 
 
 _NFace = TypeVar("_NFace", bound=FaceNamespace)
@@ -764,6 +800,15 @@ class CollectionFace(FaceNamespace):
             self.alpha = alpha
         return self._layer
 
+    def _as_legend_info(self):
+        _hatch_candidates = list(set(self.hatch))
+        if len(_hatch_candidates) == 1:
+            hatch = _hatch_candidates[0]
+        else:
+            hatch = Hatch.SOLID
+        color = np.mean(self.color, axis=0)
+        return _legend.FaceInfo(color, hatch)
+
 
 class CollectionEdge(EdgeNamespace):
     _layer: LayerCollectionBase
@@ -842,6 +887,16 @@ class CollectionEdge(EdgeNamespace):
             self.alpha = alpha
         return self._layer
 
+    def _as_legend_info(self):
+        color = np.mean(self.color, axis=0)
+        width = np.mean(self.width)
+        _style_candidates = list(set(self.style))
+        if len(_style_candidates) == 1:
+            style = _style_candidates[0]
+        else:
+            style = LineStyle.SOLID
+        return _legend.EdgeInfo(color, width, style)
+
 
 class CollectionFaceEdgeMixin(AbstractFaceEdgeMixin[CollectionFace, CollectionEdge]):
     def __init__(self):
@@ -901,6 +956,9 @@ class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
 
     @abstractmethod
     def update(self, *, color=_void, size=_void, family=_void):
+        raise NotImplementedError
+
+    def _as_legend_info(self):
         raise NotImplementedError
 
 

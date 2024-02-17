@@ -545,6 +545,17 @@ class CanvasBase(ABC):
         """The fit plotter namespace."""
         return FitPlotter(self, layer)
 
+    def add_legend(self, layers=None):
+        if layers is None:
+            layers = list(self.layers)
+
+        items = []
+        for layer in layers:
+            if not isinstance(layer, _l.Layer):
+                raise TypeError(f"Expected a list of layers, got {type(layer)}.")
+            items.append((layer.name, layer._as_legend_item()))
+        self._canvas()._plt_make_legend(items)
+
     @overload
     def add_line(
         self, ydata: ArrayLike1D, *, name: str | None = None,

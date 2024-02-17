@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._primitive import Markers, MultiLine
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import ArrayLike1D, Orientation, XYData
@@ -98,4 +99,9 @@ class StemPlot(LayerContainer):
         top = ydata + bottom
         return Markers(xdata, top, name=name, backend=backend).with_stem(
             orient, bottom=bottom
+        )
+
+    def _as_legend_item(self) -> _legend.StemLegendItem:
+        return _legend.StemLegendItem(
+            self.lines._as_legend_item(), self.markers._as_legend_item()
         )

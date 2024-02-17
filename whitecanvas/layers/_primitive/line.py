@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import (
     HoverableDataBoundLayer,
     LayerEvents,
@@ -136,6 +137,9 @@ class LineMixin(PrimitiveLayer[_Line]):
         if antialias is not _void:
             self.antialias = antialias
         return self
+
+    def _as_legend_item(self) -> _legend.LineLegendItem:
+        return _legend.LineLegendItem(self.color, self.width, self.style)
 
 
 class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData]):
@@ -661,6 +665,11 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         ]
         self._backend._plt_set_hover_text(texts)
         return self
+
+    def _as_legend_item(self) -> _legend.LineLegendItem:
+        if self.nlines == 0:
+            return _legend.EmptyLegendItem()
+        return _legend.LineLegendItem(self.color[0], self.width[0], self.style[0])
 
 
 def _norm_data(data: list[ArrayLike1D]) -> NDArray[np.number]:

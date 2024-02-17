@@ -91,3 +91,8 @@ class StemLegendItem(LegendItem):
 @dataclass(frozen=True)
 class LegendItemCollection(LegendItem):
     items: list[tuple[str, LegendItem]]
+
+
+@dataclass(frozen=True)
+class TitleItem(LegendItem):
+    pass

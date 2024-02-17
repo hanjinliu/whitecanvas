@@ -9,7 +9,7 @@ from cmap import Color, Colormap
 from numpy.typing import NDArray
 
 from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.layers.tabular._utils import unique
+from whitecanvas.layers.tabular._shared import unique
 from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.utils.type_check import is_real_number
 

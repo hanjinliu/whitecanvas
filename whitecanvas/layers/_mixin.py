@@ -579,6 +579,11 @@ class AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
     def _make_sure_hatch_visible(self):
         pass
 
+    if TYPE_CHECKING:
+
+        def _as_legend_item(self) -> _legend.LegendItem:
+            ...
+
 
 class FaceEdgeMixin(AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
     def __init__(self):

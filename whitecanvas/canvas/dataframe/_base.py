@@ -15,7 +15,7 @@ from typing import (
 import numpy as np
 
 from whitecanvas._exceptions import ReferenceDeletedError
-from whitecanvas.layers.tabular import _utils, parse
+from whitecanvas.layers.tabular import _shared, parse
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -79,12 +79,12 @@ class CatIterator(Generic[_DF]):
         if key in self._cat_map_cache:
             return self._cat_map_cache[key]
         if self._full:
-            each_uni = [_utils.unique(self._df[c], axis=None) for c in key]
+            each_uni = [_shared.unique(self._df[c], axis=None) for c in key]
             _map = {uni: i for i, uni in enumerate(itertools.product(*each_uni))}
         else:
             group_keys = [sl for sl, _ in self._df.group_by(key)]
             labels = np.array(group_keys, dtype=object)
-            each_uni = [_utils.unique(_l, axis=None) for _l in labels.T]
+            each_uni = [_shared.unique(_l, axis=None) for _l in labels.T]
             exists = set(group_keys)
             i = 0
             for uni in itertools.product(*each_uni):

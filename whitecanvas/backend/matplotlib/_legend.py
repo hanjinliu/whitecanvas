@@ -111,6 +111,11 @@ def _(item: _leg.StemLegendItem):
     return StemContainer((markers, [stemlines], baseline))
 
 
+@make_sample_item.register
+def _(item: _leg.TitleItem):
+    return patches.Rectangle((0, 0), 0, 0, color="#00000000")
+
+
 def _norm_xyerr(xerr: _leg.LineLegendItem | None, yerr: _leg.LineLegendItem | None):
     has_xerr = xerr is not None
     has_yerr = yerr is not None

@@ -9,7 +9,7 @@ from cmap import Color
 
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _mixin
+from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
@@ -55,6 +55,13 @@ def _norm_color_hatch(
     else:
         hatch_by = _p.HatchPlan.default()
     return color_by, hatch_by
+
+
+def _bar_legend_item(color, hatch):
+    return _legend.BarLegendItem(
+        _legend.FaceInfo(color, hatch),
+        _legend.EdgeInfo(np.zeros(4), 0, LineStyle.SOLID),
+    )
 
 
 class _BoxLikeMixin:
@@ -197,6 +204,71 @@ class _BoxLikeMixin:
         self._get_base().with_edge(color=color, width=width, style=style, alpha=alpha)
         return self
 
+    def _prep_legend_info(
+        self,
+    ) -> tuple[list[tuple[str, ColorType]], list[tuple[str, Hatch]]]:
+        df = self._simple_dataframe()
+        colors = self._color_by.map(df)
+        if self._color_by.by:
+            color_columns = list(zip(*[df[c] for c in self._color_by.by]))
+            color_entries = []
+            cat_found = set()
+            for category, color in zip(color_columns, colors):
+                if category in cat_found:
+                    continue
+                name = ", ".join(str(n) for n in category)
+                color_entries.append((name, color))
+                cat_found.add(category)
+        else:
+            color_entries = [("", colors)]
+
+        hatches = self._hatch_by.map(df)
+        if self._hatch_by.by:
+            hatch_columns = list(zip(*[df[c] for c in self._hatch_by.by]))
+            hatch_entries = []
+            cat_found = set()
+            for category, color in zip(hatch_columns, hatches):
+                if category in cat_found:
+                    continue
+                name = ", ".join(str(n) for n in category)
+                hatch_entries.append((name, color))
+                cat_found.add(category)
+        else:
+            hatch_entries = [("", hatches)]
+        return color_entries, hatch_entries
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        colors, hatches = self._prep_legend_info()
+        ncolor = len(colors)
+        nhatch = len(hatches)
+        if ncolor == 1 and nhatch == 1:
+            return _bar_legend_item(colors[0][1], hatches[0][1])
+        elif ncolor == 1:
+            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+            for label, hatch in hatches:
+                item = _bar_legend_item(colors[0][1], hatch)
+                items.append((label, item))
+            return _legend.LegendItemCollection(items)
+        elif nhatch == 1:
+            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+            for label, color in colors:
+                item = _bar_legend_item(color, hatches[0][1])
+                items.append((label, item))
+            return _legend.LegendItemCollection(items)
+        else:
+            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+            for label, color in colors:
+                item = _bar_legend_item(color, hatches[0][1])
+                items.append((label, item))
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for label, hatch in hatches:
+                item = _bar_legend_item(np.zeros(4), hatch)
+                items.append((label, item))
+            return _legend.LegendItemCollection(items)
+
+    def _simple_dataframe(self) -> DataFrameWrapper[dict]:
+        return _shared.list_to_df(self._categories, self._splitby)
+
 
 class DFViolinPlot(
     _shared.DataFrameLayerWrapper[_lg.ViolinPlot, _DF],
@@ -288,6 +360,8 @@ class DFViolinPlot(
         return _lg.LayerTuple([self, rug], name=old_name)
 
     # def with_box(self):
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)
 
 
 class DFBoxPlot(
@@ -342,6 +416,9 @@ class DFBoxPlot(
             extra[key] = [row[i] for row in self._categories]
         self.base.boxes.with_hover_template(template, extra=extra)
         return self
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)
 
 
 class _EstimatorMixin(_BoxLikeMixin):
@@ -493,6 +570,9 @@ class DFPointPlot(
         self.base.markers.with_hover_template(template, extra=extra)
         return self
 
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)
+
 
 class DFBarPlot(
     _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _EstimatorMixin, Generic[_DF]
@@ -559,3 +639,6 @@ class DFBarPlot(
             extra[key] = [row[i] for row in self._categories]
         self.base.bars.with_hover_template(template, extra=extra)
         return self
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)

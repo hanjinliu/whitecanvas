@@ -31,7 +31,7 @@ from whitecanvas.backend.matplotlib._legend import make_sample_item
 from whitecanvas.backend.matplotlib.bars import Bars
 from whitecanvas.backend.matplotlib.image import Image as whitecanvasImage
 from whitecanvas.backend.matplotlib.text import Texts as whitecanvasText
-from whitecanvas.layers._legend import LegendItem
+from whitecanvas.layers._legend import LegendItem, LegendItemCollection, TitleItem
 from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType, Rect
 
 
@@ -279,10 +279,17 @@ class Canvas:
         artists = []
         names = []
         for name, item in items:
-            sample = make_sample_item(item)
-            if sample is not None:
-                artists.append(sample)
-                names.append(name)
+            if isinstance(item, LegendItemCollection):
+                for _name, _it in item.items:
+                    sample = make_sample_item(_it)
+                    if sample is not None:
+                        artists.append(sample)
+                        names.append(_name)
+            else:
+                sample = make_sample_item(item)
+                if sample is not None:
+                    artists.append(sample)
+                    names.append(name)
         if artists:
             self._axes.legend(artists, names)
 

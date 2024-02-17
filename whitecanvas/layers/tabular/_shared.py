@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Generic, Iterable, TypeVar
 
+import numpy as np
+
 from whitecanvas.layers._base import Layer, LayerWrapper
-from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
+from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 
 _L = TypeVar("_L", bound="Layer")
 _DF = TypeVar("_DF")
@@ -127,3 +129,25 @@ def norm_dodge_markers(
         dodge = tuple(dodge)
     splitby = join_columns(offset, dodge, source=source)
     return splitby, dodge
+
+
+def list_to_df(arr: list[tuple], columns: list[str]) -> DataFrameWrapper[dict]:
+    """
+    Convert a list of tuples to a DataFrame.
+
+    >>> list_to_df([(1, 2), (3, 4)], ["a", "b"])
+    # Out: DataFrameWrapper({"a": [1, 3], "b": [2, 4]})
+    """
+    out = {c: [] for c in columns}
+    for row in arr:
+        for c, v in zip(columns, row):
+            out[c].append(v)
+    return parse(out)
+
+
+def unique(arr: np.ndarray, axis=0) -> np.ndarray:
+    """Return unique in the order of appearance."""
+    if arr.dtype.kind in "fc":
+        raise ValueError(f"Cannot handle {arr.dtype} in unique().")
+    _, idx = np.unique(arr, axis=axis, return_index=True)
+    return arr[np.sort(idx)]

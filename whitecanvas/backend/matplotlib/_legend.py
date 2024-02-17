@@ -13,7 +13,7 @@ from whitecanvas.types import Hatch
 
 
 @singledispatch
-def make_sample_item(item) -> Artist | None:
+def make_sample_item(item) -> "Artist | None":
     return None
 
 

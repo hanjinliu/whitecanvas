@@ -140,37 +140,7 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
         ...
 
 
-class MonoFace(FaceNamespace):
-    @property
-    def color(self) -> NDArray[np.floating]:
-        return self._layer._backend._plt_get_face_color()
-
-    @color.setter
-    def color(self, value: ColorType):
-        col = arr_color(value)
-        self._layer._backend._plt_set_face_color(col)
-        self.events.color.emit(col)
-
-    @property
-    def hatch(self) -> Hatch:
-        return self._layer._backend._plt_get_face_hatch()
-
-    @hatch.setter
-    def hatch(self, value: str | Hatch):
-        hatch = Hatch(value)
-        self._layer._backend._plt_set_face_hatch(hatch)
-        self.events.hatch.emit(hatch)
-
-    @property
-    def alpha(self) -> float:
-        return float(self.color[3])
-
-    @alpha.setter
-    def alpha(self, value: float):
-        if not 0 <= value <= 1:
-            raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
-        self.color = (*self.color[:3], value)
-
+class SinglePropertyFaceBase(FaceNamespace):
     def update(
         self,
         *,
@@ -202,7 +172,126 @@ class MonoFace(FaceNamespace):
         return _legend.FaceInfo(self.color, self.hatch)
 
 
-class ConstFace(FaceNamespace):
+class SinglePropertyEdgeBase(EdgeNamespace):
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        style: LineStyle | str | _Void = _void,
+        width: float | _Void = _void,
+        alpha: float | _Void = _void,
+    ) -> _L:
+        if color is not _void:
+            self.color = color
+        if style is not _void:
+            self.style = style
+        if width is not _void:
+            self.width = width
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer
+
+    def _as_legend_info(self):
+        return _legend.EdgeInfo(self.color, self.width, self.style)
+
+
+class MultiPropertyFaceBase(FaceNamespace):
+    def update(
+        self,
+        *,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
+        hatch: Hatch | str | Sequence[Hatch | str] | _Void = _void,
+        alpha: float | Sequence[float] | _Void = _void,
+    ) -> _L:
+        """
+        Update the face properties.
+
+        Parameters
+        ----------
+        color : ColorType, optional
+            Color of the face.
+        hatch : FacePattern, optional
+            Fill hatch of the face.
+        alpha : float, optional
+            Alpha value of the face.
+        """
+        if color is not _void:
+            self.color = color
+        if hatch is not _void:
+            self.hatch = hatch
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer
+
+    def _as_legend_info(self):
+        if self.color.size == 0:
+            return _legend.EmptyLegendItem()
+        color = self.color[0]
+        hatch = self.hatch[0]
+        return _legend.FaceInfo(color, hatch)
+
+
+class MultiPropertyEdgeBase(EdgeNamespace):
+    def update(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        style: LineStyle | str | _Void = _void,
+        width: float | _Void = _void,
+        alpha: float | _Void = _void,
+    ):
+        if color is not _void:
+            self.color = color
+        if style is not _void:
+            self.style = style
+        if width is not _void:
+            self.width = width
+        if alpha is not _void:
+            self.alpha = alpha
+        return self._layer
+
+    def _as_legend_info(self):
+        if self.color.size == 0:
+            return _legend.EmptyLegendItem()
+        color = self.color[0]
+        width = self.width[0]
+        style = self.style[0]
+        return _legend.EdgeInfo(color, width, style)
+
+
+class MonoFace(SinglePropertyFaceBase):
+    @property
+    def color(self) -> NDArray[np.floating]:
+        return self._layer._backend._plt_get_face_color()
+
+    @color.setter
+    def color(self, value: ColorType):
+        col = arr_color(value)
+        self._layer._backend._plt_set_face_color(col)
+        self.events.color.emit(col)
+
+    @property
+    def hatch(self) -> Hatch:
+        return self._layer._backend._plt_get_face_hatch()
+
+    @hatch.setter
+    def hatch(self, value: str | Hatch):
+        hatch = Hatch(value)
+        self._layer._backend._plt_set_face_hatch(hatch)
+        self.events.hatch.emit(hatch)
+
+    @property
+    def alpha(self) -> float:
+        return float(self.color[3])
+
+    @alpha.setter
+    def alpha(self, value: float):
+        if not 0 <= value <= 1:
+            raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
+        self.color = (*self.color[:3], value)
+
+
+class ConstFace(SinglePropertyFaceBase):
     @property
     def color(self) -> NDArray[np.floating]:
         return self._layer._backend._plt_get_face_color()[0]
@@ -236,38 +325,8 @@ class ConstFace(FaceNamespace):
         except IndexError:
             pass  # when the layer is empty
 
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> _L:
-        """
-        Update the face properties.
 
-        Parameters
-        ----------
-        color : ColorType, optional
-            Color of the face.
-        hatch : FacePattern, optional
-            Fill hatch of the face.
-        alpha : float, optional
-            Alpha value of the face.
-        """
-        if color is not _void:
-            self.color = color
-        if hatch is not _void:
-            self.hatch = hatch
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-    def _as_legend_info(self):
-        return _legend.FaceInfo(self.color, self.hatch)
-
-
-class MonoEdge(EdgeNamespace):
+class MonoEdge(SinglePropertyEdgeBase):
     @property
     def color(self) -> NDArray[np.floating]:
         return self._layer._backend._plt_get_edge_color()
@@ -311,29 +370,8 @@ class MonoEdge(EdgeNamespace):
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
 
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> _L:
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
 
-    def _as_legend_info(self):
-        return _legend.EdgeInfo(self.color, self.width, self.style)
-
-
-class ConstEdge(EdgeNamespace):
+class ConstEdge(SinglePropertyEdgeBase):
     _properties = ("color", "style", "width")
 
     @property
@@ -381,29 +419,8 @@ class ConstEdge(EdgeNamespace):
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
 
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> _L:
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
 
-    def _as_legend_info(self):
-        return _legend.EdgeInfo(self.color, self.width, self.style)
-
-
-class MultiFace(FaceNamespace):
+class MultiFace(MultiPropertyFaceBase):
     @property
     def color(self) -> NDArray[np.floating]:
         """Face color of the bar."""
@@ -441,44 +458,8 @@ class MultiFace(FaceNamespace):
         color[:, 3] = value
         self.color = color
 
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> _L:
-        """
-        Update the face properties.
 
-        Parameters
-        ----------
-        color : ColorType, optional
-            Color of the face.
-        hatch : FacePattern, optional
-            Fill hatch of the face.
-        alpha : float, optional
-            Alpha value of the face.
-        """
-        if color is not _void:
-            self.color = color
-        if hatch is not _void:
-            self.hatch = hatch
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-    def _as_legend_info(self):
-        _hatch_candidates = list(set(self.hatch))
-        if len(_hatch_candidates) == 1:
-            hatch = _hatch_candidates[0]
-        else:
-            hatch = Hatch.SOLID
-        color = np.mean(self.color, axis=0)
-        return _legend.FaceInfo(color, hatch)
-
-
-class MultiEdge(EdgeNamespace):
+class MultiEdge(MultiPropertyEdgeBase):
     @property
     def color(self) -> NDArray[np.floating]:
         """Edge color of the bar."""
@@ -534,34 +515,6 @@ class MultiEdge(EdgeNamespace):
         color = self.color.copy()
         color[:, 3] = value
         self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ):
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-    def _as_legend_info(self):
-        color = np.mean(self.color, axis=0)
-        width = np.mean(self.width)
-        _style_candidates = list(set(self.style))
-        if len(_style_candidates) == 1:
-            style = _style_candidates[0]
-        else:
-            style = LineStyle.SOLID
-        return _legend.EdgeInfo(color, width, style)
 
 
 _NFace = TypeVar("_NFace", bound=FaceNamespace)
@@ -726,7 +679,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
                 self.edge.color = get_theme().foreground_color
 
 
-class CollectionFace(FaceNamespace):
+class CollectionFace(MultiPropertyFaceBase):
     _layer: LayerCollectionBase
 
     def _iter_children(self) -> Iterator[FaceEdgeMixin]:
@@ -773,44 +726,8 @@ class CollectionFace(FaceNamespace):
         color[:, 3] = value
         self.color = color
 
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> _L:
-        """
-        Update the face properties.
 
-        Parameters
-        ----------
-        color : ColorType, optional
-            Color of the face.
-        hatch : FacePattern, optional
-            Fill hatch of the face.
-        alpha : float, optional
-            Alpha value of the face.
-        """
-        if color is not _void:
-            self.color = color
-        if hatch is not _void:
-            self.hatch = hatch
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-    def _as_legend_info(self):
-        _hatch_candidates = list(set(self.hatch))
-        if len(_hatch_candidates) == 1:
-            hatch = _hatch_candidates[0]
-        else:
-            hatch = Hatch.SOLID
-        color = np.mean(self.color, axis=0)
-        return _legend.FaceInfo(color, hatch)
-
-
-class CollectionEdge(EdgeNamespace):
+class CollectionEdge(MultiPropertyEdgeBase):
     _layer: LayerCollectionBase
 
     def _iter_children(self) -> Iterator[FaceEdgeMixin]:
@@ -868,34 +785,6 @@ class CollectionEdge(EdgeNamespace):
         color = self.color.copy()
         color[:, 3] = value
         self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ):
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-    def _as_legend_info(self):
-        color = np.mean(self.color, axis=0)
-        width = np.mean(self.width)
-        _style_candidates = list(set(self.style))
-        if len(_style_candidates) == 1:
-            style = _style_candidates[0]
-        else:
-            style = LineStyle.SOLID
-        return _legend.EdgeInfo(color, width, style)
 
 
 class CollectionFaceEdgeMixin(AbstractFaceEdgeMixin[CollectionFace, CollectionEdge]):

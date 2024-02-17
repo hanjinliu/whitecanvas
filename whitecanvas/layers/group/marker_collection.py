@@ -9,11 +9,11 @@ from psygnal import Signal
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
 from whitecanvas.layers._mixin import (
-    EdgeNamespace,
     EnumArray,
-    FaceNamespace,
     MultiEdge,
     MultiFace,
+    SinglePropertyEdgeBase,
+    SinglePropertyFaceBase,
 )
 from whitecanvas.layers._primitive import Markers
 from whitecanvas.layers.group._collections import (
@@ -50,7 +50,7 @@ class MarkerCollectionEvents(LayerContainerEvents):
     symbol = Signal(object)
 
 
-class MarkerCollectionFace(FaceNamespace):
+class MarkerCollectionFace(SinglePropertyFaceBase):
     _layer: MarkerCollection
 
     def _iter_markers(self) -> Iterator[tuple[NDArray[np.bool_], _Markers]]:
@@ -139,8 +139,15 @@ class MarkerCollectionFace(FaceNamespace):
             self.alpha = alpha
         return self._layer
 
+    def _as_legend_info(self):
+        if self.color.size == 0:
+            return _legend.EmptyLegendItem()
+        color = self.color[0]
+        hatch = self.hatch[0]
+        return _legend.FaceInfo(color, hatch)
 
-class MarkerCollectionEdge(EdgeNamespace):
+
+class MarkerCollectionEdge(SinglePropertyEdgeBase):
     _layer: MarkerCollection
 
     def _iter_markers(self) -> Iterator[tuple[NDArray[np.bool_], _Markers]]:
@@ -224,6 +231,14 @@ class MarkerCollectionEdge(EdgeNamespace):
         if alpha is not _void:
             self.alpha = alpha
         return self._layer
+
+    def _as_legend_info(self):
+        if self.color.size == 0:
+            return _legend.EmptyLegendItem()
+        color = self.color[0]
+        width = self.width[0]
+        style = self.style[0]
+        return _legend.EdgeInfo(color, width, style)
 
 
 class MarkerCollection(LayerCollectionBase[_Markers]):

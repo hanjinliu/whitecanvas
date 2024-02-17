@@ -521,7 +521,7 @@ class LabeledPlot(
         return _legend.PlotErrorLegendItem(self.plot._as_legend_item(), xerr, yerr)
 
 
-class PlotFace(_mixin.FaceNamespace):
+class PlotFace(_mixin.SinglePropertyFaceBase):
     _layer: LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]
 
     @property
@@ -559,35 +559,8 @@ class PlotFace(_mixin.FaceNamespace):
         color[:, 3] = value
         self.color = color
 
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> LabeledPlot:
-        """
-        Update the face properties.
 
-        Parameters
-        ----------
-        color : ColorType, optional
-            Color of the face.
-        hatch : FacePattern, optional
-            Fill hatch of the face.
-        alpha : float, optional
-            Alpha value of the face.
-        """
-        if color is not _void:
-            self.color = color
-        if hatch is not _void:
-            self.hatch = hatch
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-
-class PlotEdge(_mixin.EdgeNamespace):
+class PlotEdge(_mixin.SinglePropertyEdgeBase):
     _layer: LabeledPlot[_NFace, _NEdge, float] | LabeledBars[_NFace, _NEdge]
 
     @property
@@ -642,21 +615,3 @@ class PlotEdge(_mixin.EdgeNamespace):
         color = self.color.copy()
         color[:, 3] = value
         self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> LabeledPlot:
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer

@@ -20,7 +20,15 @@ from whitecanvas.backend.bokeh._labels import (
     YLabel,
     YTicks,
 )
-from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType
+from whitecanvas.backend.bokeh._legend import make_sample_item
+from whitecanvas.layers._legend import LegendItem, LegendItemCollection
+from whitecanvas.types import (
+    LegendLocation,
+    Modifier,
+    MouseButton,
+    MouseEvent,
+    MouseEventType,
+)
 from whitecanvas.utils.normalize import arr_color, hex_color
 
 
@@ -106,10 +114,15 @@ class Canvas:
 
     def _plt_reorder_layers(self, layers: list[BokehLayer]):
         model_to_idx_map = {id(layer._model): i for i, layer in enumerate(layers)}
-        renderes = self._bokeh_renderers()
-        self._plot.renderers = [
-            renderes[model_to_idx_map[id(r.glyph)]] for r in renderes
-        ]
+        renderers = self._bokeh_renderers()
+        renderers_sorted = []
+        for r in renderers:
+            idx = model_to_idx_map.get(id(r.glyph))
+            if idx is not None:
+                renderers_sorted.append(renderers[idx])
+            else:
+                renderers_sorted.append(r)
+        self._plot.renderers = renderers_sorted
 
     def _plt_get_aspect_ratio(self) -> float | None:
         return self._plot.aspect_ratio
@@ -230,6 +243,32 @@ class Canvas:
         self._plot.extra_y_ranges = {SECOND_Y: bk_models.DataRange1d()}
         return Canvas(self._plot, second_y=True)
 
+    def _plt_make_legend(
+        self,
+        items: list[tuple[str, LegendItem]],
+        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+    ):
+        bk_items = []
+        bk_samples = []
+        for label, item in items:
+            if item is None:
+                continue
+            if isinstance(item, LegendItemCollection):
+                for sub_label, sub_item in item.items:
+                    sample = make_sample_item(sub_item)
+                    if sample is not None:
+                        bk_items.append((sub_label, sample))
+                        bk_samples.extend(sample)
+            else:
+                sample = make_sample_item(item)
+                if sample is not None:
+                    bk_items.append((label, sample))
+                    bk_samples.extend(sample)
+        location, side = _LEGEND_LOCATIONS[anchor]
+        legend = bk_models.Legend(items=bk_items, location=location)
+        self._plot.add_layout(legend, side)
+        self._plot.renderers.extend(bk_samples)
+
 
 def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, ...]:
     if mod is None:
@@ -242,6 +281,32 @@ def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, 
     if mod["ctrl"]:
         modifiers.append(Modifier.CTRL)
     return tuple(modifiers)
+
+
+# location and side
+_LEGEND_LOCATIONS = {
+    LegendLocation.TOP_LEFT: ("top_left", "center"),
+    LegendLocation.TOP_CENTER: ("center_top", "center"),
+    LegendLocation.TOP_RIGHT: ("top_right", "center"),
+    LegendLocation.CENTER_LEFT: ("center_left", "center"),
+    LegendLocation.CENTER: ("center_center", "center"),
+    LegendLocation.CENTER_RIGHT: ("center_right", "center"),
+    LegendLocation.BOTTOM_LEFT: ("bottom_left", "center"),
+    LegendLocation.BOTTOM_CENTER: ("bottom_center", "center"),
+    LegendLocation.BOTTOM_RIGHT: ("bottom_right", "center"),
+    LegendLocation.LEFT_SIDE_TOP: ("top", "left"),
+    LegendLocation.LEFT_SIDE_CENTER: ("center", "left"),
+    LegendLocation.LEFT_SIDE_BOTTOM: ("bottom", "left"),
+    LegendLocation.RIGHT_SIDE_TOP: ("top", "right"),
+    LegendLocation.RIGHT_SIDE_CENTER: ("center", "right"),
+    LegendLocation.RIGHT_SIDE_BOTTOM: ("bottom", "right"),
+    LegendLocation.TOP_SIDE_LEFT: ("left", "above"),
+    LegendLocation.TOP_SIDE_CENTER: ("center", "above"),
+    LegendLocation.TOP_SIDE_RIGHT: ("right", "above"),
+    LegendLocation.BOTTOM_SIDE_LEFT: ("left", "below"),
+    LegendLocation.BOTTOM_SIDE_CENTER: ("center", "below"),
+    LegendLocation.BOTTOM_SIDE_RIGHT: ("right", "below"),
+}
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
@@ -305,8 +370,8 @@ class CanvasGrid:
 
     def _plt_set_figsize(self, width: int, height: int):
         for r, c, child in self._iter_bokeh_subplots():
-            child.height = int(self._heights[r] / self._height_total * width)
-            child.width = int(self._widths[c] / self._width_total * height)
+            child.height = int(self._heights[r] / self._height_total * height)
+            child.width = int(self._widths[c] / self._width_total * width)
         self._grid_plot.width = width
         self._grid_plot.height = height
 

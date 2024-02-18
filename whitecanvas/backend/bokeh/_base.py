@@ -154,7 +154,7 @@ _SYMBOL_MAP = {
 _SYMBOL_MAP_INV = {v: k for k, v in _SYMBOL_MAP.items()}
 
 _HATCH_MAP = {
-    Hatch.SOLID: "",
+    Hatch.SOLID: "blank",
     Hatch.HORIZONTAL: "horizontal_line",
     Hatch.VERTICAL: "vertical_line",
     Hatch.CROSS: "cross",

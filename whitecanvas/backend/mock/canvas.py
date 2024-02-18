@@ -106,6 +106,9 @@ class Canvas:
     ):
         pass
 
+    def _plt_make_legend(self, *args, **kwargs):
+        pass
+
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:

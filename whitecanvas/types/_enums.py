@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Literal
 
 
 class _StrEnum(Enum):
@@ -141,6 +142,44 @@ class Alignment(_StrEnum):
         else:
             horizontal = Alignment.CENTER
         return vertical, horizontal
+
+
+class LegendLocation(_StrEnum):
+    TOP_CENTER = "top_center"
+    BOTTOM_CENTER = "bottom_center"
+    CENTER_LEFT = "center_left"
+    CENTER_RIGHT = "center_right"
+    CENTER = "center"
+    TOP_LEFT = "top_left"
+    TOP_RIGHT = "top_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM_RIGHT = "bottom_right"
+    LEFT_SIDE_TOP = "left_side_top"
+    LEFT_SIDE_CENTER = "left_side_center"
+    LEFT_SIDE_BOTTOM = "left_side_bottom"
+    RIGHT_SIDE_TOP = "right_side_top"
+    RIGHT_SIDE_CENTER = "right_side_center"
+    RIGHT_SIDE_BOTTOM = "right_side_bottom"
+    TOP_SIDE_LEFT = "top_side_left"
+    TOP_SIDE_CENTER = "top_side_center"
+    TOP_SIDE_RIGHT = "top_side_right"
+    BOTTOM_SIDE_LEFT = "bottom_side_left"
+    BOTTOM_SIDE_CENTER = "bottom_side_center"
+    BOTTOM_SIDE_RIGHT = "bottom_side_right"
+
+    @property
+    def is_side(self) -> bool:
+        """True if the location is in any of the side locations."""
+        return "SIDE" in self.name
+
+
+LegendLocationStr = Literal[
+    "top_center", "bottom_center", "center_left", "center_right", "center", "top_left",
+    "top_right", "bottom_left", "bottom_right", "left_side_top", "left_side_center",
+    "left_side_bottom", "right_side_top", "right_side_center", "right_side_bottom",
+    "top_side_left", "top_side_center", "top_side_right", "bottom_side_left",
+    "bottom_side_center", "bottom_side_right",
+]  # fmt: skip
 
 
 class Orientation(_StrEnum):

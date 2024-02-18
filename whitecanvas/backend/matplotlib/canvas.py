@@ -31,8 +31,15 @@ from whitecanvas.backend.matplotlib._legend import make_sample_item
 from whitecanvas.backend.matplotlib.bars import Bars
 from whitecanvas.backend.matplotlib.image import Image as whitecanvasImage
 from whitecanvas.backend.matplotlib.text import Texts as whitecanvasText
-from whitecanvas.layers._legend import LegendItem, LegendItemCollection, TitleItem
-from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType, Rect
+from whitecanvas.layers._legend import LegendItem, LegendItemCollection
+from whitecanvas.types import (
+    LegendLocation,
+    Modifier,
+    MouseButton,
+    MouseEvent,
+    MouseEventType,
+    Rect,
+)
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -275,9 +282,13 @@ class Canvas:
         """Connect callback to y-limits changed event"""
         self._axes.callbacks.connect("ylim_changed", lambda ax: callback(ax.get_ylim()))
 
-    def _plt_make_legend(self, items: list[tuple[str, LegendItem]]):
-        artists = []
-        names = []
+    def _plt_make_legend(
+        self,
+        items: list[tuple[str, LegendItem]],
+        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+    ):
+        artists: list[Artist] = []
+        names: list[str] = []
         for name, item in items:
             if isinstance(item, LegendItemCollection):
                 for _name, _it in item.items:
@@ -291,7 +302,8 @@ class Canvas:
                     artists.append(sample)
                     names.append(name)
         if artists:
-            self._axes.legend(artists, names)
+            loc, bbox_to_anchor = _LEGEND_LOC_MAP[anchor]
+            self._axes.legend(artists, names, loc=loc, bbox_to_anchor=bbox_to_anchor)
 
 
 _MOUSE_BUTTON_MAP = {
@@ -307,6 +319,29 @@ _MOUSE_MOD_MAP = {
     "shift": Modifier.SHIFT,
     "alt": Modifier.ALT,
     "meta": Modifier.META,
+}
+_LEGEND_LOC_MAP = {
+    LegendLocation.TOP_RIGHT: ("upper right", None),
+    LegendLocation.TOP_CENTER: ("upper center", None),
+    LegendLocation.TOP_LEFT: ("upper left", None),
+    LegendLocation.BOTTOM_RIGHT: ("lower right", None),
+    LegendLocation.BOTTOM_CENTER: ("lower center", None),
+    LegendLocation.BOTTOM_LEFT: ("lower left", None),
+    LegendLocation.CENTER_RIGHT: ("center right", None),
+    LegendLocation.CENTER_LEFT: ("center left", None),
+    LegendLocation.CENTER: ("center", None),
+    LegendLocation.TOP_SIDE_LEFT: ("lower left", (0, 1.03)),
+    LegendLocation.TOP_SIDE_CENTER: ("lower center", (0.5, 1.03)),
+    LegendLocation.TOP_SIDE_RIGHT: ("lower right", (1, 1.03)),
+    LegendLocation.BOTTOM_SIDE_LEFT: ("upper left", (0, -0.03)),
+    LegendLocation.BOTTOM_SIDE_CENTER: ("upper center", (0.5, -0.03)),
+    LegendLocation.BOTTOM_SIDE_RIGHT: ("upper right", (1, -0.03)),
+    LegendLocation.LEFT_SIDE_TOP: ("upper right", (-0.03, 1)),
+    LegendLocation.LEFT_SIDE_CENTER: ("center right", (-0.03, 0.5)),
+    LegendLocation.LEFT_SIDE_BOTTOM: ("lower right", (-0.03, 0)),
+    LegendLocation.RIGHT_SIDE_TOP: ("upper left", (1.03, 1)),
+    LegendLocation.RIGHT_SIDE_CENTER: ("center left", (1.03, 0.5)),
+    LegendLocation.RIGHT_SIDE_BOTTOM: ("lower left", (1.03, 0)),
 }
 
 

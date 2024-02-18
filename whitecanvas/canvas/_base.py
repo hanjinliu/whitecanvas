@@ -47,6 +47,8 @@ from whitecanvas.types import (
     Hatch,
     HistBinType,
     KdeBandWidthType,
+    LegendLocation,
+    LegendLocationStr,
     LineStyle,
     Orientation,
     Rect,
@@ -545,16 +547,21 @@ class CanvasBase(ABC):
         """The fit plotter namespace."""
         return FitPlotter(self, layer)
 
-    def add_legend(self, layers=None):
+    def add_legend(
+        self,
+        layers: list[_l.Layer] | None = None,
+        location: LegendLocation | LegendLocationStr = "top_right",
+    ):
         if layers is None:
             layers = list(self.layers)
+        location = LegendLocation(location)
 
         items = []
         for layer in layers:
             if not isinstance(layer, _l.Layer):
                 raise TypeError(f"Expected a list of layers, got {type(layer)}.")
             items.append((layer.name, layer._as_legend_item()))
-        self._canvas()._plt_make_legend(items)
+        self._canvas()._plt_make_legend(items, location)
 
     @overload
     def add_line(

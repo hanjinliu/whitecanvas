@@ -52,7 +52,7 @@ def _(item: _leg.BarLegendItem):
         hatch_pattern=to_bokeh_hatch(item.face.hatch),
         line_color=hex_color(item.edge.color),
         line_width=item.edge.width,
-        line_dash=item.edge.style,
+        line_dash=to_bokeh_line_style(item.edge.style),
     )
     return [bk_models.GlyphRenderer(glyph=quad, data_source=_DATA, visible=False)]
 

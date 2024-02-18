@@ -10,7 +10,9 @@ from plotly import graph_objects as go
 from whitecanvas import protocols
 from whitecanvas.backend.plotly._base import Location, PlotlyHoverableLayer, PlotlyLayer
 from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
-from whitecanvas.types import MouseEvent
+from whitecanvas.backend.plotly._legend import make_sample_item
+from whitecanvas.layers._legend import LegendItem, LegendItemCollection
+from whitecanvas.types import LegendLocation, MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
 
 if TYPE_CHECKING:
@@ -42,11 +44,6 @@ class Canvas:
         self._title = Title(self)
         self._xlabel = AxisLabel(self, axis="xaxis")
         self._ylabel = AxisLabel(self, axis="yaxis")
-        # add empty scatter just for click events (may not work)
-        self._scatter = go.Scatter(
-            x=[], y=[], mode="markers", marker_opacity=0, showlegend=False
-        )
-        self._fig.add_trace(self._scatter)
 
     def _subplot_layout(self) -> SubplotXY:
         try:
@@ -81,7 +78,7 @@ class Canvas:
 
     def _plt_reorder_layers(self, layers: list[PlotlyLayer]):
         model_to_idx_map = {id(layer._props): i for i, layer in enumerate(layers)}
-        first, *data = self._fig._data
+        data = self._fig._data
         ordered_data = []
         data_in_other = []
         for _data in data:
@@ -90,7 +87,7 @@ class Canvas:
                 ordered_data.append(data[model_to_idx_map[data_id]])
             else:
                 data_in_other.append(_data)
-        self._fig._data = [first, *ordered_data, *data_in_other]
+        self._fig._data = [*ordered_data, *data_in_other]
 
     def _plt_get_aspect_ratio(self) -> float | None:
         """Get aspect ratio of canvas"""
@@ -115,7 +112,6 @@ class Canvas:
 
     def _plt_add_layer(self, layer: PlotlyLayer):
         self._fig.add_trace(layer._props, **self._loc.asdict())
-        # layer._props = self._fig._data[-1]
         layer._props = self._fig.data[-1]
         layer._props["uid"] = layer._props.uid
         if isinstance(layer, PlotlyHoverableLayer):
@@ -194,8 +190,162 @@ class Canvas:
         kwargs["secondary_y"] = True
         return Canvas(self._fig, **kwargs)
 
+    def _plt_make_legend(
+        self,
+        items: list[tuple[str, LegendItem]],
+        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+    ):
+        plotly_traces = []
+        for label, item in items:
+            if item is None:
+                continue
+            if isinstance(item, LegendItemCollection):
+                for sub_label, sub_item in item.items:
+                    sample = make_sample_item(sub_item)
+                    if sample is not None:
+                        sample.name = sub_label
+                        plotly_traces.append(sample)
+            else:
+                sample = make_sample_item(item)
+                if sample is not None:
+                    sample.name = label
+                    plotly_traces.append(sample)
+        legend_kwargs = _LEGEND_KWARGS[anchor]
+        self._fig.add_traces(plotly_traces, **self._loc.asdict())
+        self._fig.update_layout(showlegend=True, legend=legend_kwargs, overwrite=True)
+
     def _repr_mimebundle_(self, *args, **kwargs):
         return self._fig._repr_mimebundle_(*args, **kwargs)
+
+
+_LEGEND_KWARGS = {
+    LegendLocation.TOP_LEFT: {
+        "x": 0.01,
+        "y": 0.99,
+        "xanchor": "left",
+        "yanchor": "top",
+    },
+    LegendLocation.TOP_CENTER: {
+        "x": 0.5,
+        "y": 0.99,
+        "xanchor": "center",
+        "yanchor": "top",
+    },
+    LegendLocation.TOP_RIGHT: {
+        "x": 0.99,
+        "y": 0.99,
+        "xanchor": "right",
+        "yanchor": "top",
+    },
+    LegendLocation.BOTTOM_LEFT: {
+        "x": 0.01,
+        "y": 0.01,
+        "xanchor": "left",
+        "yanchor": "bottom",
+    },
+    LegendLocation.BOTTOM_CENTER: {
+        "x": 0.5,
+        "y": 0.01,
+        "xanchor": "center",
+        "yanchor": "bottom",
+    },
+    LegendLocation.BOTTOM_RIGHT: {
+        "x": 0.99,
+        "y": 0.01,
+        "xanchor": "right",
+        "yanchor": "bottom",
+    },
+    LegendLocation.CENTER_LEFT: {
+        "x": 0.01,
+        "y": 0.5,
+        "xanchor": "left",
+        "yanchor": "middle",
+    },
+    LegendLocation.CENTER_RIGHT: {
+        "x": 0.99,
+        "y": 0.5,
+        "xanchor": "right",
+        "yanchor": "middle",
+    },
+    LegendLocation.CENTER: {
+        "x": 0.5,
+        "y": 0.5,
+        "xanchor": "center",
+        "yanchor": "middle",
+    },
+    LegendLocation.TOP_SIDE_LEFT: {
+        "x": 0.01,
+        "y": 1.03,
+        "xanchor": "left",
+        "yanchor": "bottom",
+    },
+    LegendLocation.TOP_SIDE_CENTER: {
+        "x": 0.5,
+        "y": 1.03,
+        "xanchor": "center",
+        "yanchor": "bottom",
+    },
+    LegendLocation.TOP_SIDE_RIGHT: {
+        "x": 0.99,
+        "y": 1.03,
+        "xanchor": "right",
+        "yanchor": "bottom",
+    },
+    LegendLocation.BOTTOM_SIDE_LEFT: {
+        "x": 0.01,
+        "y": -0.03,
+        "xanchor": "left",
+        "yanchor": "top",
+    },
+    LegendLocation.BOTTOM_SIDE_CENTER: {
+        "x": 0.5,
+        "y": -0.03,
+        "xanchor": "center",
+        "yanchor": "top",
+    },
+    LegendLocation.BOTTOM_SIDE_RIGHT: {
+        "x": 0.99,
+        "y": -0.03,
+        "xanchor": "right",
+        "yanchor": "top",
+    },
+    LegendLocation.LEFT_SIDE_TOP: {
+        "x": -0.03,
+        "y": 0.99,
+        "xanchor": "right",
+        "yanchor": "top",
+    },
+    LegendLocation.LEFT_SIDE_CENTER: {
+        "x": -0.03,
+        "y": 0.5,
+        "xanchor": "right",
+        "yanchor": "middle",
+    },
+    LegendLocation.LEFT_SIDE_BOTTOM: {
+        "x": -0.03,
+        "y": 0.01,
+        "xanchor": "right",
+        "yanchor": "bottom",
+    },
+    LegendLocation.RIGHT_SIDE_TOP: {
+        "x": 1.03,
+        "y": 0.99,
+        "xanchor": "left",
+        "yanchor": "top",
+    },
+    LegendLocation.RIGHT_SIDE_CENTER: {
+        "x": 1.03,
+        "y": 0.5,
+        "xanchor": "left",
+        "yanchor": "middle",
+    },
+    LegendLocation.RIGHT_SIDE_BOTTOM: {
+        "x": 1.03,
+        "y": 0.01,
+        "xanchor": "left",
+        "yanchor": "bottom",
+    },
+}
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)

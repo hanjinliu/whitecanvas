@@ -260,31 +260,12 @@ class ScalarMapPlan(MapPlan[float]):
         domain: tuple[float, float] | None = None,
     ) -> Self:
         """Add a mapper that maps a range to a value."""
-        _check_min_max(range)
-        _check_min_max(domain)
+        return cls.from_map((on,), RangedMap(on, range, domain))
 
-        def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
-            arr = values[on]
-            if domain is None:
-                valid = np.isfinite(arr)
-                amin, amax = arr[valid].min(), arr[valid].max()
-                if amin == amax:
-                    if range is not None:
-                        w0, w1 = range
-                        return np.full(arr.shape, (w0 + w1) / 2)
-                    else:
-                        return np.full(arr.shape, amin)
-            else:
-                amin, amax = domain
-            _arr = arr.clip(amin, amax)
-            _arr[np.isnan(_arr)] = amin
-            if range is not None:
-                w0, w1 = range
-                return (_arr - amin) / (amax - amin) * (w1 - w0) + w0
-            else:
-                return _arr
-
-        return cls.from_map((on,), mapper)
+    def get_ranged_map(self) -> RangedMap | None:
+        if isinstance(self._mapper, RangedMap):
+            return self._mapper
+        return None
 
 
 class ColorPlan(CyclicPlan[Color]):
@@ -403,23 +384,12 @@ class ColormapPlan(MapPlan[NDArray[np.float32]]):
         *,
         clim: tuple[float, float] | None = None,
     ) -> Self:
-        _check_min_max(clim)
+        return cls.from_map((on,), ColormapMap(on, cmap, clim))
 
-        def mapper(values: dict[str, np.ndarray]) -> Sequence[_V]:
-            arr = values[on]
-            valid = np.isfinite(arr)
-            if clim is None:
-                amin, amax = arr[valid].min(), arr[valid].max()
-            else:
-                amin, amax = clim
-            if amin == amax:
-                color = cmap(0.5)
-                return np.full((arr.size, 4), np.asarray(color))
-            _arr = arr.clip(amin, amax)
-            _arr[np.isnan(_arr)] = amin
-            return cmap((_arr - amin) / (amax - amin))
-
-        return cls.from_map((on,), mapper)
+    def get_colormap_map(self) -> ColormapMap | None:
+        if isinstance(self._mapper, ColormapMap):
+            return self._mapper
+        return None
 
 
 class WidthPlan(ScalarMapPlan):
@@ -444,6 +414,93 @@ class ConstMap:
     def __call__(self, values: dict[str, np.ndarray]) -> Sequence[_V]:
         series = next(iter(values.values()), np.zeros(0))
         return [self._value] * series.size
+
+
+class RangedMap:
+    def __init__(self, on, range=None, domain=None):
+        _check_min_max(range)
+        _check_min_max(domain)
+        self._on = on
+        self._range = range
+        self._domain = domain
+
+    def __call__(self, values: dict[str, np.ndarray]) -> Sequence[_V]:
+        arr = values[self._on]
+        if self._domain is None:
+            valid = np.isfinite(arr)
+            amin, amax = arr[valid].min(), arr[valid].max()
+            if amin == amax:
+                if self._range is not None:
+                    w0, w1 = self._range
+                    return np.full(arr.shape, (w0 + w1) / 2)
+                else:
+                    return np.full(arr.shape, amin)
+        else:
+            amin, amax = self._domain
+        _arr = arr.clip(amin, amax)
+        _arr[np.isnan(_arr)] = amin
+        if self._range is not None:
+            w0, w1 = self._range
+            return (_arr - amin) / (amax - amin) * (w1 - w0) + w0
+        else:
+            return _arr
+
+    def create_samples(self, values: dict[str, np.ndarray]) -> list[tuple[_V, _V]]:
+        arr = values[self._on]
+        if self._domain is None:
+            valid = np.isfinite(arr)
+            amin, amax = arr[valid].min(), arr[valid].max()
+        else:
+            amin, amax = self._domain
+        if self._range is not None:
+            w0, w1 = self._range
+        else:
+            w0, w1 = amin, amax
+
+        if w0 == w1:
+            return [((w0 + w1) / 2, amin)]
+        else:
+            xs = np.linspace(0, 1, 3)
+            return [((x * (w1 - w0) + w0), x * (amax - amin) + amin) for x in xs]
+
+
+class ColormapMap:
+    def __init__(self, on, cmap: Colormap, clim=None):
+        _check_min_max(clim)
+        self._on = on
+        self._cmap = cmap
+        self._clim = clim
+
+    def __call__(self, values: dict[str, np.ndarray]) -> Sequence[_V]:
+        arr = values[self._on]
+        valid = np.isfinite(arr)
+        if self._clim is None:
+            amin, amax = arr[valid].min(), arr[valid].max()
+        else:
+            amin, amax = self._clim
+        if amin == amax:
+            color = self._cmap(0.5)
+            return np.full((arr.size, 4), np.asarray(color))
+        _arr = arr.clip(amin, amax)
+        _arr[np.isnan(_arr)] = amin
+        return self._cmap((_arr - amin) / (amax - amin))
+
+    def create_samples(self, values: dict[str, np.ndarray]) -> list[tuple[Color, _V]]:
+        """Sample colors for the legends."""
+        arr = values[self._on]
+        valid = np.isfinite(arr)
+        if self._clim is None:
+            amin, amax = arr[valid].min(), arr[valid].max()
+        else:
+            amin, amax = self._clim
+        if amin == amax:
+            color = self._cmap(0.5)
+            return [(color, amin)]
+        if len(self._cmap.color_stops) > 4:
+            xs = np.linspace(0, 1, 4)
+        else:
+            xs = self._cmap.color_stops
+        return [(self._cmap(x), amin * (1 - x) + amax * x) for x in xs]
 
 
 def _check_min_max(val: tuple[float, float] | None = None):

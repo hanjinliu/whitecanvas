@@ -258,13 +258,18 @@ class DFMarkers(
         ...
 
     @overload
-    def update_size(self, by: str, limits=None) -> Self:
+    def update_size(
+        self,
+        by: str,
+        map_from: tuple[float, float] | None = None,
+        map_to: tuple[float, float] | None = None,
+    ) -> Self:
         ...
 
-    def update_size(self, by, /, limits=None):
+    def update_size(self, by, /, map_from=None, map_to=None):
         """Set the size of the markers."""
         if isinstance(by, str):
-            size_by = _p.SizePlan.from_range(by, range=limits)
+            size_by = _p.SizePlan.from_range(by, range=map_to, domain=map_from)
         else:
             size_by = _p.SizePlan.from_const(float(by))
         self._base_layer.size = size_by.map(self._source)
@@ -367,7 +372,19 @@ class DFMarkers(
                 )
                 items.append(item)
         elif isinstance(self._color_by, _p.MapPlan):
-            pass  # TODO
+            if _map := self._color_by.get_colormap_map():
+                items.append((", ".join(self._color_by._on), _legend.TitleItem()))
+                for color, value in _map.create_samples(self._source):
+                    item = (
+                        _safe_str(value),
+                        _legend.MarkersLegendItem(
+                            symbol_default,
+                            size_default,
+                            _legend.FaceInfo(color),
+                            edge_info,
+                        ),
+                    )
+                    items.append(item)
 
         if self._hatch_by.is_not_const():
             hatch_entries = self._hatch_by.to_entries(self._source)
@@ -394,6 +411,20 @@ class DFMarkers(
                     ),
                 )
                 items.append(item)
+        if self._size_by.is_not_const():
+            if _map := self._size_by.get_ranged_map():
+                items.append((", ".join(self._size_by._on), _legend.TitleItem()))
+                for size, value in _map.create_samples(self._source):
+                    item = (
+                        _safe_str(value),
+                        _legend.MarkersLegendItem(
+                            symbol_default,
+                            size,
+                            _legend.FaceInfo(color_default),
+                            edge_info,
+                        ),
+                    )
+                    items.append(item)
         return _legend.LegendItemCollection(items)
 
 
@@ -802,3 +833,10 @@ def default_template(it: Iterable[tuple[str, np.ndarray]], max_rows: int = 10) -
         else:
             fmt_list.append(f"{key}: {{{key}!r}}")
     return "\n".join(fmt_list)
+
+
+def _safe_str(value) -> str:
+    if is_real_number(value):
+        return f"{value:.3g}"
+    else:
+        return str(value)

@@ -333,6 +333,8 @@ class DFMarkers(
         """
         for layer in self.base.iter_children():
             layer.as_edge_only(width=width, style=style)
+        self._edge_color_by = self._color_by
+        self._color_by = _p.ColorPlan.from_const("#00000000")
         return self
 
     def with_hover_template(self, template: str) -> Self:
@@ -344,16 +346,26 @@ class DFMarkers(
     def _as_legend_item(self) -> LegendItem:
         items = []
         color_default = theme.get_theme().background_color
+        symbol_default = Symbol.CIRCLE
+        size_default = 8
         edge_info = self._base_layer.edge._as_legend_info()
+        if self._symbol_by.is_const():
+            symbol_default = self._symbol_by.get_const_value()
+        if self._size_by.is_const():
+            size_default = self._size_by.get_const_value()
         if self._color_by.is_const():
             color_default = self._color_by.map(self._source)
         elif isinstance(self._color_by, _p.ColorPlan):
             color_entries = self._color_by.to_entries(self._source)
             items.append((", ".join(self._color_by.by), _legend.TitleItem()))
             for label, color in color_entries:
-                items.append(
-                    (label, _legend.BarLegendItem(_legend.FaceInfo(color), edge_info))
+                item = (
+                    label,
+                    _legend.MarkersLegendItem(
+                        symbol_default, size_default, _legend.FaceInfo(color), edge_info
+                    ),
                 )
+                items.append(item)
         elif isinstance(self._color_by, _p.MapPlan):
             pass  # TODO
 
@@ -363,23 +375,22 @@ class DFMarkers(
             for label, hatch in hatch_entries:
                 item = (
                     label,
-                    _legend.BarLegendItem(
-                        _legend.FaceInfo(color_default, hatch), edge_info
+                    _legend.MarkersLegendItem(
+                        symbol_default,
+                        size_default,
+                        _legend.FaceInfo(color_default, hatch),
+                        edge_info,
                     ),
                 )
                 items.append(item)
         if self._symbol_by.is_not_const():
             symbol_entries = self._symbol_by.to_entries(self._source)
             items.append((", ".join(self._symbol_by.by), _legend.TitleItem()))
-            if self._size_by.is_const():
-                size = self._size_by.get_const_value()
-            else:
-                size = 8
             for label, symbol in symbol_entries:
                 item = (
                     label,
                     _legend.MarkersLegendItem(
-                        symbol, size, _legend.FaceInfo(color_default), edge_info
+                        symbol, size_default, _legend.FaceInfo(color_default), edge_info
                     ),
                 )
                 items.append(item)

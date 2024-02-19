@@ -228,6 +228,7 @@ def _face_to_qbrush(face: _leg.FaceInfo) -> QtGui.QBrush:
 
 def _edge_to_qpen(edge: _leg.EdgeInfo) -> QtGui.QPen:
     pen = QtGui.QPen()
+    pen.setCosmetic(True)
     pen.setColor(array_to_qcolor(edge.color))
     pen.setStyle(to_qt_line_style(edge.style))
     pen.setWidthF(edge.width)

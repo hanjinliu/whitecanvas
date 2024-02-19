@@ -8,22 +8,30 @@ from cmap import Color
 from whitecanvas.types import Hatch, LineStyle, Symbol
 
 
-@dataclass(frozen=True)
+@dataclass
 class LegendItem:
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class FaceInfo:
     color: Color
     hatch: Hatch = Hatch.SOLID
 
+    def __post_init__(self):
+        self.color = np.array(Color(self.color).rgba)
+        self.hatch = Hatch(self.hatch)
 
-@dataclass(frozen=True)
+
+@dataclass
 class EdgeInfo:
     color: Color
     width: float
     style: LineStyle = LineStyle.SOLID
+
+    def __post_init__(self):
+        self.color = np.array(Color(self.color).rgba)
+        self.style = LineStyle(self.style)
 
 
 class EmptyLegendItem(LegendItem):
@@ -34,15 +42,15 @@ class LineLegendItem(EdgeInfo):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class ErrorLegendItem(EdgeInfo):
     color: Color
     width: float
     style: LineStyle = LineStyle.SOLID
-    capsize: float = 1.0
+    capsize: float = 0.0
 
 
-@dataclass(frozen=True)
+@dataclass
 class MarkersLegendItem(LegendItem):
     symbol: Symbol
     size: float
@@ -50,58 +58,50 @@ class MarkersLegendItem(LegendItem):
     edge: EdgeInfo
 
 
-@dataclass(frozen=True)
+@dataclass
 class BarLegendItem(LegendItem):
     face: FaceInfo
     edge: EdgeInfo
 
-    @classmethod
-    def simple(cls, color, hatch, edge_color):
-        hatch = Hatch(hatch)
-        return BarLegendItem(
-            FaceInfo(np.array(Color(color).rgba), hatch),
-            EdgeInfo(np.array(Color(edge_color).rgba), 1.0, LineStyle.SOLID),
-        )
 
-
-@dataclass(frozen=True)
+@dataclass
 class PlotLegendItem(LegendItem):
     line: LineLegendItem
     markers: MarkersLegendItem
 
 
-@dataclass(frozen=True)
+@dataclass
 class LineErrorLegendItem(LegendItem):
     line: LineLegendItem
     xerr: ErrorLegendItem | None = None
     yerr: ErrorLegendItem | None = None
 
 
-@dataclass(frozen=True)
+@dataclass
 class MarkerErrorLegendItem(LegendItem):
     markers: MarkersLegendItem
     xerr: ErrorLegendItem | None = None
     yerr: ErrorLegendItem | None = None
 
 
-@dataclass(frozen=True)
+@dataclass
 class PlotErrorLegendItem(LegendItem):
     plot: PlotLegendItem
     xerr: ErrorLegendItem | None = None
     yerr: ErrorLegendItem | None = None
 
 
-@dataclass(frozen=True)
+@dataclass
 class StemLegendItem(LegendItem):
     line: LineLegendItem
     markers: MarkersLegendItem
 
 
-@dataclass(frozen=True)
+@dataclass
 class LegendItemCollection(LegendItem):
     items: list[tuple[str, LegendItem]]
 
 
-@dataclass(frozen=True)
+@dataclass
 class TitleItem(LegendItem):
     pass

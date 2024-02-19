@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _mixin
+from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers._primitive import Bars, Errorbars, Line, Markers, Texts
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -254,11 +254,35 @@ class LabeledLine(_LabeledLayerBase):
         """The line layer."""
         return self._children[0]
 
+    def _as_legend_item(self) -> _legend.LineErrorLegendItem:
+        line = self.line._as_legend_item()
+        if self.xerr.nlines == 0:
+            xerr = None
+        else:
+            xerr = self.xerr._as_legend_item()
+        if self.yerr.nlines == 0:
+            yerr = None
+        else:
+            yerr = self.yerr._as_legend_item()
+        return _legend.LineErrorLegendItem(line, xerr, yerr)
+
 
 class LabeledMarkers(_LabeledLayerBase, Generic[_NFace, _NEdge, _Size]):
     @property
     def markers(self) -> Markers[_NFace, _NEdge, _Size]:
         return self._children[0]
+
+    def _as_legend_item(self) -> _legend.MarkerErrorLegendItem:
+        markers = self.markers._as_legend_item()
+        if self.xerr.nlines == 0:
+            xerr = None
+        else:
+            xerr = self.xerr._as_legend_item()
+        if self.yerr.nlines == 0:
+            yerr = None
+        else:
+            yerr = self.yerr._as_legend_item()
+        return _legend.MarkerErrorLegendItem(markers, xerr, yerr)
 
 
 def _init_mean_sd(x, data, color):
@@ -359,6 +383,9 @@ class LabeledBars(
         )
         xerr, yerr = _init_error_bars(x, height, err_data, orient, capsize, backend)
         return cls(bars, xerr=xerr, yerr=yerr, name=name)
+
+    def _as_legend_item(self):
+        return self.bars._as_legend_item()
 
 
 class LabeledPlot(
@@ -482,8 +509,19 @@ class LabeledPlot(
         )
         return cls(plot, xerr=xerr, yerr=yerr, name=name)
 
+    def _as_legend_item(self) -> _legend.LegendItem:
+        if self.xerr.nlines == 0:
+            xerr = None
+        else:
+            xerr = self.xerr._as_legend_item()
+        if self.yerr.nlines == 0:
+            yerr = None
+        else:
+            yerr = self.yerr._as_legend_item()
+        return _legend.PlotErrorLegendItem(self.plot._as_legend_item(), xerr, yerr)
 
-class PlotFace(_mixin.FaceNamespace):
+
+class PlotFace(_mixin.SinglePropertyFaceBase):
     _layer: LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]
 
     @property
@@ -521,35 +559,8 @@ class PlotFace(_mixin.FaceNamespace):
         color[:, 3] = value
         self.color = color
 
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> LabeledPlot:
-        """
-        Update the face properties.
 
-        Parameters
-        ----------
-        color : ColorType, optional
-            Color of the face.
-        hatch : FacePattern, optional
-            Fill hatch of the face.
-        alpha : float, optional
-            Alpha value of the face.
-        """
-        if color is not _void:
-            self.color = color
-        if hatch is not _void:
-            self.hatch = hatch
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-
-class PlotEdge(_mixin.EdgeNamespace):
+class PlotEdge(_mixin.SinglePropertyEdgeBase):
     _layer: LabeledPlot[_NFace, _NEdge, float] | LabeledBars[_NFace, _NEdge]
 
     @property
@@ -604,21 +615,3 @@ class PlotEdge(_mixin.EdgeNamespace):
         color = self.color.copy()
         color[:, 3] = value
         self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> LabeledPlot:
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer

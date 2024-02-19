@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Iterable, Iterator, MutableSequence, Sequence,
 
 from psygnal import Signal
 
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import Layer, LayerEvents, LayerGroup, PrimitiveLayer
 
 if TYPE_CHECKING:
@@ -123,6 +124,11 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
         self._children.insert(n, layer)
         self._ordering_indices.insert(n, len(self._ordering_indices))
         return None
+
+    def _as_legend_item(self):
+        if len(self) == 0:
+            return _legend.EmptyLegendItem()
+        return self[0]._as_legend_item()
 
     if TYPE_CHECKING:
 

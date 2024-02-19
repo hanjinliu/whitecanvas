@@ -9,7 +9,7 @@ from cmap import Color
 
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _mixin
+from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
@@ -197,6 +197,38 @@ class _BoxLikeMixin:
         self._get_base().with_edge(color=color, width=width, style=style, alpha=alpha)
         return self
 
+    def _prep_legend_info(
+        self,
+    ) -> tuple[list[tuple[str, ColorType]], list[tuple[str, Hatch]]]:
+        df = self._simple_dataframe()
+        color_entries = self._color_by.to_entries(df)
+        hatch_entries = self._hatch_by.to_entries(df)
+        return color_entries, hatch_entries
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        colors, hatches = self._prep_legend_info()
+        items = []
+        color_default = theme.get_theme().background_color
+        edge_info = self._get_base().edge._as_legend_info()
+        if self._color_by.is_const():
+            color_default = self._color_by.values[0]
+        else:
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for label, color in colors:
+                item = _legend.BarLegendItem(_legend.FaceInfo(color), edge_info)
+                items.append((label, item))
+        if self._hatch_by.is_not_const():
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for label, hatch in hatches:
+                item = _legend.BarLegendItem(
+                    _legend.FaceInfo(color_default, hatch), edge_info
+                )
+                items.append((label, item))
+        return _legend.LegendItemCollection(items)
+
+    def _simple_dataframe(self) -> DataFrameWrapper[dict]:
+        return _shared.list_to_df(self._categories, self._splitby)
+
 
 class DFViolinPlot(
     _shared.DataFrameLayerWrapper[_lg.ViolinPlot, _DF],
@@ -288,6 +320,8 @@ class DFViolinPlot(
         return _lg.LayerTuple([self, rug], name=old_name)
 
     # def with_box(self):
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)
 
 
 class DFBoxPlot(
@@ -342,6 +376,9 @@ class DFBoxPlot(
             extra[key] = [row[i] for row in self._categories]
         self.base.boxes.with_hover_template(template, extra=extra)
         return self
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)
 
 
 class _EstimatorMixin(_BoxLikeMixin):
@@ -493,6 +530,9 @@ class DFPointPlot(
         self.base.markers.with_hover_template(template, extra=extra)
         return self
 
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)
+
 
 class DFBarPlot(
     _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _EstimatorMixin, Generic[_DF]
@@ -559,3 +599,6 @@ class DFBarPlot(
             extra[key] = [row[i] for row in self._categories]
         self.base.bars.with_hover_template(template, extra=extra)
         return self
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        return _BoxLikeMixin._as_legend_item(self)

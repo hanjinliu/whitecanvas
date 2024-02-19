@@ -218,7 +218,7 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
         return PandasWrapper(self._data.groupby(list(by))[on].agg(method).reset_index())
 
     def value_count(self, by: tuple[str, ...]) -> Self:
-        import pandas as pd
+        import pandas as pd  # noqa: F811, RUF100
 
         rows = []
         for sl, sub in self._data.groupby(list(by), observed=True):
@@ -236,7 +236,7 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         try:
             return self._data[item].to_numpy()
         except Exception as e:
-            import polars as pl
+            import polars as pl  # noqa: F811, RUF100
 
             if isinstance(e, pl.ColumnNotFoundError):
                 raise KeyError(item) from None
@@ -271,7 +271,7 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
             yield sl, PolarsWrapper(sub)
 
     def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
-        import polars as pl
+        import polars as pl  # noqa: F811, RUF100
 
         exprs = [getattr(pl.col(o), method)() for o in on]
         return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(*exprs))

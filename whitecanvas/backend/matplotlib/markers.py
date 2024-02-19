@@ -3,13 +3,12 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
-import matplotlib.markers as mmarkers
 import matplotlib.transforms as mtransforms
 import numpy as np
 from matplotlib.collections import PathCollection
 from numpy.typing import NDArray
 
-from whitecanvas.backend.matplotlib._base import MplMouseEventsMixin
+from whitecanvas.backend.matplotlib._base import MplMouseEventsMixin, symbol_to_path
 from whitecanvas.protocols import MarkersProtocol, check_protocol
 from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.utils.normalize import as_color_array
@@ -19,18 +18,13 @@ if TYPE_CHECKING:
     from whitecanvas.backend.matplotlib.canvas import Canvas
 
 
-def _get_path(symbol: Symbol):
-    marker_obj = mmarkers.MarkerStyle(symbol.value)
-    return marker_obj.get_path().transformed(marker_obj.get_transform())
-
-
 @check_protocol(MarkersProtocol)
 class Markers(PathCollection, MplMouseEventsMixin):
     def __init__(self, xdata, ydata):
         offsets = np.stack([xdata, ydata], axis=1)
         self._symbol = Symbol.CIRCLE
         super().__init__(
-            (_get_path(self._symbol),),
+            (symbol_to_path(self._symbol),),
             sizes=[6] * len(offsets),
             offsets=offsets,
             picker=True,
@@ -54,7 +48,7 @@ class Markers(PathCollection, MplMouseEventsMixin):
         return self._symbol
 
     def _plt_set_symbol(self, symbol: Symbol):
-        path = _get_path(symbol)
+        path = symbol_to_path(symbol)
         self.set_paths([path] * len(self.get_offsets()))
         self._symbol = symbol
 
@@ -107,10 +101,11 @@ class Markers(PathCollection, MplMouseEventsMixin):
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         if isinstance(style, LineStyle):
             styles = [style.value] * len(self.get_offsets())
+            self._edge_styles = [style] * len(self.get_offsets())
         else:
             styles = [s.value for s in style]
+            self._edge_styles = style
         self.set_linestyle(styles)
-        self._edge_styles = styles
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
         return self.get_linewidth()

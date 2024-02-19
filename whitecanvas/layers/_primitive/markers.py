@@ -9,6 +9,7 @@ from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import (
     EdgeNamespace,
@@ -747,4 +748,13 @@ class Markers(
     def _as_all_multi(self) -> Markers[MultiFace, MultiEdge, NDArray[np.float32]]:
         return (
             self.with_face_multi().with_edge_multi(width=0.0).with_size_multi(self.size)
+        )
+
+    def _as_legend_item(self) -> _legend.MarkersLegendItem:
+        if self._size_is_array:
+            size = np.mean(self.size)
+        else:
+            size = self.size
+        return _legend.MarkersLegendItem(
+            self.symbol, size, self.face._as_legend_info(), self.edge._as_legend_info()
         )

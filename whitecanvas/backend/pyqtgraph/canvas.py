@@ -13,8 +13,10 @@ from qtpy.QtCore import Signal
 from whitecanvas import protocols
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
 from whitecanvas.backend.pyqtgraph._labels import Axis, AxisLabel, Ticks, Title
+from whitecanvas.backend.pyqtgraph._legend import QtItemSampleBase, make_sample_item
 from whitecanvas.backend.pyqtgraph._qt_utils import from_qt_button, from_qt_modifiers
-from whitecanvas.types import MouseButton, MouseEvent, MouseEventType
+from whitecanvas.layers._legend import LegendItem, LegendItemCollection
+from whitecanvas.types import LegendLocation, MouseButton, MouseEvent, MouseEventType
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -200,6 +202,27 @@ class Canvas:
     def _plt_draw(self):
         pass  # pyqtgraph has its own draw mechanism
 
+    def _plt_make_legend(
+        self,
+        items: list[tuple[str, LegendItem]],
+        anchor: LegendLocation,
+    ):
+        pos, offset = _LEGEND_POS[anchor]
+        legend = self._plot_item.addLegend(sampleType=QtItemSampleBase)
+        legend.anchor(pos, pos, offset=offset)
+        for label, item in items:
+            if item is None:
+                continue
+            if isinstance(item, LegendItemCollection):
+                for sub_label, sub_item in item.items:
+                    sample = make_sample_item(sub_item)
+                    if sample is not None:
+                        legend.addItem(sample, sub_label)
+            else:
+                sample = make_sample_item(item)
+                if sample is not None:
+                    legend.addItem(sample, label)
+
     def _translate_mouse_event(
         self,
         ev: QtGui.QMouseEvent | QtCore.QPointF,
@@ -238,6 +261,32 @@ class Canvas:
                 type=typ,
             )
         return mev
+
+
+_LEGEND_POS = {
+    LegendLocation.TOP_LEFT: ((0.0, 0.0), (10, 10)),
+    LegendLocation.TOP_CENTER: ((0.5, 0.0), (0, 10)),
+    LegendLocation.TOP_RIGHT: ((1.0, 0.0), (-10, 10)),
+    LegendLocation.CENTER_LEFT: ((0.0, 0.5), (10, 0)),
+    LegendLocation.CENTER: ((0.5, 0.5), (0, 0)),
+    LegendLocation.CENTER_RIGHT: ((1.0, 0.5), (-10, 0)),
+    LegendLocation.BOTTOM_LEFT: ((0.0, 1.0), (10, -10)),
+    LegendLocation.BOTTOM_CENTER: ((0.5, 1.0), (0, -10)),
+    LegendLocation.BOTTOM_RIGHT: ((1.0, 1.0), (-10, -10)),
+    # These are not supported in pyqtgraph. Use the closest one.
+    LegendLocation.LEFT_SIDE_TOP: ((0.0, 0.0), (10, 10)),
+    LegendLocation.LEFT_SIDE_CENTER: ((0.0, 0.5), (10, 0)),
+    LegendLocation.LEFT_SIDE_BOTTOM: ((0.0, 1.0), (10, -10)),
+    LegendLocation.RIGHT_SIDE_TOP: ((1.0, 0.0), (-10, 10)),
+    LegendLocation.RIGHT_SIDE_CENTER: ((1.0, 0.5), (-10, 0)),
+    LegendLocation.RIGHT_SIDE_BOTTOM: ((1.0, 1.0), (-10, -10)),
+    LegendLocation.TOP_SIDE_LEFT: ((0.0, 0.0), (10, 10)),
+    LegendLocation.TOP_SIDE_CENTER: ((0.5, 0.0), (0, 10)),
+    LegendLocation.TOP_SIDE_RIGHT: ((1.0, 0.0), (-10, 10)),
+    LegendLocation.BOTTOM_SIDE_LEFT: ((0.0, 1.0), (10, -10)),
+    LegendLocation.BOTTOM_SIDE_CENTER: ((0.5, 1.0), (0, -10)),
+    LegendLocation.BOTTOM_SIDE_RIGHT: ((1.0, 1.0), (-10, -10)),
+}
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Protocol, runtime_checkable
-
-import numpy as np
-from numpy.typing import NDArray
+from typing import TYPE_CHECKING, Any, Callable, Protocol, runtime_checkable
 
 from whitecanvas.protocols.layer_protocols import BaseProtocol
-from whitecanvas.types import LineStyle, MouseEvent
+
+if TYPE_CHECKING:
+    import numpy as np
+    from numpy.typing import NDArray
+
+    from whitecanvas.layers._legend import LegendItem
+    from whitecanvas.types import LegendLocation, LineStyle, MouseEvent
 
 
 @runtime_checkable
@@ -86,6 +89,13 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
 
     def _plt_draw(self):
         """Draw (update) canvas"""
+
+    def _plt_make_legend(
+        self,
+        items: list[tuple[str, LegendItem]],
+        anchor: LegendLocation,
+    ):
+        """Make legend for the given legend items"""
 
 
 @runtime_checkable

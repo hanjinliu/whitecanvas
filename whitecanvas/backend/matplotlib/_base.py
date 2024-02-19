@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import matplotlib.markers as mmarkers
+
 if TYPE_CHECKING:
     from matplotlib.backend_bases import MouseEvent as mplMouseEvent
 
     from whitecanvas.backend.matplotlib.canvas import Canvas
+    from whitecanvas.types import Symbol
 
 
 class MplLayer:
@@ -17,6 +20,11 @@ class MplLayer:
 
     def _plt_set_zorder(self, zorder: int):
         self.set_zorder(zorder)
+
+
+def symbol_to_path(symbol: Symbol):
+    marker_obj = mmarkers.MarkerStyle(symbol.value)
+    return marker_obj.get_path().transformed(marker_obj.get_transform())
 
 
 OVERLAY_ZORDER = 10000

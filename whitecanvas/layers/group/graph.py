@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
+from whitecanvas.layers import _legend
 from whitecanvas.layers._primitive import Markers, MultiLine, Texts
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._offsets import NoOffset, TextOffset
@@ -100,3 +101,8 @@ class Graph(LayerContainer):
             family=fontfamily,
         )
         return self
+
+    def _as_legend_item(self):
+        line = self.edges._as_legend_item()
+        markers = self.nodes._as_legend_item()
+        return _legend.PlotLegendItem(line, markers)

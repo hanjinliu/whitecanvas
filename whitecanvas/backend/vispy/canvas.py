@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 import weakref
 from typing import TYPE_CHECKING, Callable, cast
 
@@ -189,6 +190,13 @@ class Canvas:
 
     def _plt_draw(self):
         pass  # vispy has its own draw mechanism
+
+    def _plt_make_legend(self, *args, **kwargs):
+        warnings.warn(
+            "Legend is not supported in vispy backend",
+            UserWarning,
+            stacklevel=2,
+        )
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)

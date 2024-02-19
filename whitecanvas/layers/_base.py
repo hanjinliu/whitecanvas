@@ -10,6 +10,7 @@ from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers._legend import EmptyLegendItem, LegendItem
 from whitecanvas.protocols import BaseProtocol
 
 if TYPE_CHECKING:
@@ -94,6 +95,10 @@ class Layer(ABC):
         canvas.layers.remove(self)
         canvas.overlays.append(self)
         return self
+
+    def _as_legend_item(self) -> LegendItem:
+        """Return the legend item for this layer."""
+        return EmptyLegendItem()
 
 
 class PrimitiveLayer(Layer, Generic[_P]):
@@ -307,6 +312,10 @@ class LayerWrapper(Layer, Generic[_L]):
     @property
     def _ATTACH_TO_AXIS(self) -> bool:
         return self._base_layer._ATTACH_TO_AXIS
+
+    def _as_legend_item(self) -> LegendItem:
+        """Return the legend item for this layer."""
+        return self._base_layer._as_legend_item()
 
 
 # deprecated, new

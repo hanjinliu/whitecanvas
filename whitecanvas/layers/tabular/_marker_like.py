@@ -16,8 +16,9 @@ from numpy.typing import NDArray
 from whitecanvas import layers as _l
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _mixin
+from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
+from whitecanvas.layers._legend import LegendItem
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
@@ -177,8 +178,8 @@ class DFMarkers(
     ):
         self._x = x
         self._y = y
-        self._color_by = _p.ColorPlan.default()
-        self._edge_color_by = _p.ColorPlan.default()
+        self._color_by: _p.ColorPlan | _p.ColormapPlan = _p.ColorPlan.default()
+        self._edge_color_by: _p.ColorPlan | _p.ColormapPlan = _p.ColorPlan.default()
         self._hatch_by = _p.HatchPlan.default()
         self._size_by = _p.SizePlan.default()
         self._symbol_by = _p.SymbolPlan.default()
@@ -257,13 +258,18 @@ class DFMarkers(
         ...
 
     @overload
-    def update_size(self, by: str, limits=None) -> Self:
+    def update_size(
+        self,
+        by: str,
+        map_from: tuple[float, float] | None = None,
+        map_to: tuple[float, float] | None = None,
+    ) -> Self:
         ...
 
-    def update_size(self, by, /, limits=None):
+    def update_size(self, by, /, map_from=None, map_to=None):
         """Set the size of the markers."""
         if isinstance(by, str):
-            size_by = _p.SizePlan.from_range(by, range=limits)
+            size_by = _p.SizePlan.from_range(by, range=map_to, domain=map_from)
         else:
             size_by = _p.SizePlan.from_const(float(by))
         self._base_layer.size = size_by.map(self._source)
@@ -332,6 +338,8 @@ class DFMarkers(
         """
         for layer in self.base.iter_children():
             layer.as_edge_only(width=width, style=style)
+        self._edge_color_by = self._color_by
+        self._color_by = _p.ColorPlan.from_const("#00000000")
         return self
 
     def with_hover_template(self, template: str) -> Self:
@@ -339,6 +347,85 @@ class DFMarkers(
         extra = dict(self._source.iter_items())
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def _as_legend_item(self) -> LegendItem:
+        items = []
+        color_default = theme.get_theme().background_color
+        symbol_default = Symbol.CIRCLE
+        size_default = 8
+        edge_info = self._base_layer.edge._as_legend_info()
+        if self._symbol_by.is_const():
+            symbol_default = self._symbol_by.get_const_value()
+        if self._size_by.is_const():
+            size_default = self._size_by.get_const_value()
+        if self._color_by.is_const():
+            color_default = self._color_by.map(self._source)
+        elif isinstance(self._color_by, _p.ColorPlan):
+            color_entries = self._color_by.to_entries(self._source)
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for label, color in color_entries:
+                item = (
+                    label,
+                    _legend.MarkersLegendItem(
+                        symbol_default, size_default, _legend.FaceInfo(color), edge_info
+                    ),
+                )
+                items.append(item)
+        elif isinstance(self._color_by, _p.MapPlan):
+            if _map := self._color_by.get_colormap_map():
+                items.append((", ".join(self._color_by._on), _legend.TitleItem()))
+                for color, value in _map.create_samples(self._source):
+                    item = (
+                        _safe_str(value),
+                        _legend.MarkersLegendItem(
+                            symbol_default,
+                            size_default,
+                            _legend.FaceInfo(color),
+                            edge_info,
+                        ),
+                    )
+                    items.append(item)
+
+        if self._hatch_by.is_not_const():
+            hatch_entries = self._hatch_by.to_entries(self._source)
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for label, hatch in hatch_entries:
+                item = (
+                    label,
+                    _legend.MarkersLegendItem(
+                        symbol_default,
+                        size_default,
+                        _legend.FaceInfo(color_default, hatch),
+                        edge_info,
+                    ),
+                )
+                items.append(item)
+        if self._symbol_by.is_not_const():
+            symbol_entries = self._symbol_by.to_entries(self._source)
+            items.append((", ".join(self._symbol_by.by), _legend.TitleItem()))
+            for label, symbol in symbol_entries:
+                item = (
+                    label,
+                    _legend.MarkersLegendItem(
+                        symbol, size_default, _legend.FaceInfo(color_default), edge_info
+                    ),
+                )
+                items.append(item)
+        if self._size_by.is_not_const():
+            if _map := self._size_by.get_ranged_map():
+                items.append((", ".join(self._size_by._on), _legend.TitleItem()))
+                for size, value in _map.create_samples(self._source):
+                    item = (
+                        _safe_str(value),
+                        _legend.MarkersLegendItem(
+                            symbol_default,
+                            size,
+                            _legend.FaceInfo(color_default),
+                            edge_info,
+                        ),
+                    )
+                    items.append(item)
+        return _legend.LegendItemCollection(items)
 
 
 class DFMarkerGroups(DFMarkers):
@@ -481,6 +568,33 @@ class DFBars(
         extra = dict(self._source.iter_items())
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def _as_legend_item(self) -> LegendItem:
+        items = []
+        color_default = theme.get_theme().background_color
+        edge_info = self._base_layer.edge._as_legend_info()
+        if self._color_by.is_const():
+            color_default = self._color_by.map(self._source)
+        else:
+            color_entries = self._color_by.to_entries(self._source)
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for label, color in color_entries:
+                items.append(
+                    (label, _legend.BarLegendItem(_legend.FaceInfo(color), edge_info))
+                )
+
+        if self._hatch_by.is_not_const():
+            hatch_entries = self._hatch_by.to_entries(self._source)
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for label, hatch in hatch_entries:
+                item = (
+                    label,
+                    _legend.BarLegendItem(
+                        _legend.FaceInfo(color_default, hatch), edge_info
+                    ),
+                )
+                items.append(item)
+        return _legend.LegendItemCollection(items)
 
 
 class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generic[_DF]):
@@ -719,3 +833,10 @@ def default_template(it: Iterable[tuple[str, np.ndarray]], max_rows: int = 10) -
         else:
             fmt_list.append(f"{key}: {{{key}!r}}")
     return "\n".join(fmt_list)
+
+
+def _safe_str(value) -> str:
+    if is_real_number(value):
+        return f"{value:.3g}"
+    else:
+        return str(value)

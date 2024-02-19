@@ -144,3 +144,17 @@ def test_jointgrid(backend: str):
     rng = np.random.default_rng(0)
     joint = wc.new_jointgrid(backend=backend).with_hist().with_kde().with_rug()
     joint.add_markers(rng.random(100), rng.random(100), color="red")
+
+def test_legend(backend: str):
+    if backend == "vispy":
+        pytest.skip("vispy does not support legend")
+    canvas = new_canvas(backend=backend)
+    canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
+    canvas.add_markers([0, 1, 2], [0, 1, 2], name="markers")
+    canvas.add_bars([0, 1, 2], [0, 1, 2], name="bars")
+    canvas.add_line([3, 4, 5], [1, 2, 1], name="plot").with_markers()
+    canvas.add_line([3, 4, 5], [2, 3, 2], name="line+err").with_yerr([1, 1, 1])
+    canvas.add_markers([3, 4, 5], [3, 4, 3], name="markers+err").with_xerr([1, 1, 1])
+    canvas.add_line([3, 4, 5], [4, 5, 4], name="plot+err").with_markers().with_xerr([1, 1, 1])
+    canvas.add_markers([3, 4, 5], [5, 6, 5], name="markers+err+err").with_stem()
+    canvas.add_legend(location="bottom_right")

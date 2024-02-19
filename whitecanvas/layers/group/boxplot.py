@@ -9,11 +9,11 @@ from numpy.typing import NDArray
 from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import (
     AbstractFaceEdgeMixin,
-    EdgeNamespace,
     EnumArray,
-    FaceNamespace,
     MonoEdge,
     MultiFace,
+    SinglePropertyEdgeBase,
+    SinglePropertyFaceBase,
 )
 from whitecanvas.layers._primitive import Bars, MultiLine
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -241,7 +241,7 @@ def _yxx_to_segments(
     return segments_0 + segments_1 + cap0 + cap1
 
 
-class BoxFace(FaceNamespace):
+class BoxFace(SinglePropertyFaceBase):
     _layer: BoxPlot
 
     @property
@@ -307,7 +307,7 @@ class BoxFace(FaceNamespace):
         return self._layer
 
 
-class BoxEdge(EdgeNamespace):
+class BoxEdge(SinglePropertyEdgeBase):
     _layer: BoxPlot
 
     @property

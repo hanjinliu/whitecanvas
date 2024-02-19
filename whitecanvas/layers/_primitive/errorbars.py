@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import EnumArray
 from whitecanvas.layers._primitive.line import LineLayerEvents, MultiLine
@@ -251,6 +252,13 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         if self._has_caps():
             texts = texts + texts + texts
         return super().with_hover_text(text)
+
+    def _as_legend_item(self):
+        if self.nlines == 0:
+            return _legend.EmptyLegendItem()
+        return _legend.ErrorLegendItem(
+            self.color[0], self.width[0], self.style[0], self.capsize
+        )
 
 
 def _xyy_to_segments(

@@ -16,6 +16,7 @@ from cmap import Color, Colormap
 
 from whitecanvas import layers as _l
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
@@ -51,7 +52,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
         self._style_by = _p.StylePlan.default()
-        self._labels = labels
+        self._categories = labels
         self._splitby = splitby
         base = _lg.LineCollection(segs, name=name, backend=backend)
         super().__init__(base, source)
@@ -113,7 +114,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
             color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
         else:
             color_by = _p.ColorPlan.from_const(Color(cov.value))
-        self._base_layer.color = color_by.generate(self._labels, self._splitby)
+        self._base_layer.color = color_by.generate(self._categories, self._splitby)
         self._color_by = color_by
         return self
 
@@ -129,7 +130,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
             style_by = _p.StylePlan.new(cov.columns, values=styles)
         else:
             style_by = _p.StylePlan.from_const(LineStyle(cov.value))
-        self._base_layer.style = style_by.generate(self._labels, self._splitby)
+        self._base_layer.style = style_by.generate(self._categories, self._splitby)
         self._style_by = style_by
         return self
 
@@ -146,9 +147,54 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
     def with_hover_template(self, template: str) -> Self:
         extra = {}
         for i, key in enumerate(self._splitby):
-            extra[key] = [row[i] for row in self._labels]
+            extra[key] = [row[i] for row in self._categories]
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def _simple_dataframe(self) -> DataFrameWrapper[dict]:
+        return _shared.list_to_df(self._categories, self._splitby)
+
+    def _prep_legend_info(
+        self,
+    ) -> tuple[list[tuple[str, ColorType]], list[tuple[str, LineStyle]]]:
+        df = self._simple_dataframe()
+        color_entries = self._color_by.to_entries(df)
+        style_entries = self._style_by.to_entries(df)
+        return color_entries, style_entries
+
+    def _as_legend_item(self):
+        colors, styles = self._prep_legend_info()
+        ncolor = len(colors)
+        nstyle = len(styles)
+        width = self._base_layer.width
+
+        def _line_item(color, style):
+            return _legend.LineLegendItem(color, width, style)
+
+        if ncolor == 1 and nstyle == 1:
+            return _line_item(colors[0][1], width, styles[0][1])
+        elif ncolor == 1:
+            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+            for label, hatch in styles:
+                item = _line_item(colors[0][1], hatch)
+                items.append((label, item))
+            return _legend.LegendItemCollection(items)
+        elif nstyle == 1:
+            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+            for label, color in colors:
+                item = _line_item(color, styles[0][1])
+                items.append((label, item))
+            return _legend.LegendItemCollection(items)
+        else:
+            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+            for label, color in colors:
+                item = _line_item(color, styles[0][1])
+                items.append((label, item))
+            items.append((", ".join(self._style_by.by), _legend.TitleItem()))
+            for label, hatch in styles:
+                item = _line_item(np.zeros(4), hatch)
+                items.append((label, item))
+            return _legend.LegendItemCollection(items)
 
 
 class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):

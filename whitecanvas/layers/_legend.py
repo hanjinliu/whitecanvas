@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import numpy as np
 from cmap import Color
 
 from whitecanvas.types import Hatch, LineStyle, Symbol
@@ -15,14 +16,14 @@ class LegendItem:
 @dataclass(frozen=True)
 class FaceInfo:
     color: Color
-    hatch: Hatch
+    hatch: Hatch = Hatch.SOLID
 
 
 @dataclass(frozen=True)
 class EdgeInfo:
     color: Color
     width: float
-    style: LineStyle
+    style: LineStyle = LineStyle.SOLID
 
 
 class EmptyLegendItem(LegendItem):
@@ -37,8 +38,8 @@ class LineLegendItem(EdgeInfo):
 class ErrorLegendItem(EdgeInfo):
     color: Color
     width: float
-    style: LineStyle
-    capsize: float
+    style: LineStyle = LineStyle.SOLID
+    capsize: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,14 @@ class MarkersLegendItem(LegendItem):
 class BarLegendItem(LegendItem):
     face: FaceInfo
     edge: EdgeInfo
+
+    @classmethod
+    def simple(cls, color, hatch, edge_color):
+        hatch = Hatch(hatch)
+        return BarLegendItem(
+            FaceInfo(np.array(Color(color).rgba), hatch),
+            EdgeInfo(np.array(Color(edge_color).rgba), 1.0, LineStyle.SOLID),
+        )
 
 
 @dataclass(frozen=True)

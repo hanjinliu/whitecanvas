@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Generic, Iterable, TypeVar
 
-import numpy as np
-
 from whitecanvas.layers._base import Layer, LayerWrapper
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 
@@ -143,11 +141,3 @@ def list_to_df(arr: list[tuple], columns: list[str]) -> DataFrameWrapper[dict]:
         for c, v in zip(columns, row):
             out[c].append(v)
     return parse(out)
-
-
-def unique(arr: np.ndarray, axis=0) -> np.ndarray:
-    """Return unique in the order of appearance."""
-    if arr.dtype.kind in "fc":
-        raise ValueError(f"Cannot handle {arr.dtype} in unique().")
-    _, idx = np.unique(arr, axis=axis, return_index=True)
-    return arr[np.sort(idx)]

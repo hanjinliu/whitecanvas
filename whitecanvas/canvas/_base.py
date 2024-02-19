@@ -549,7 +549,7 @@ class CanvasBase(ABC):
 
     def add_legend(
         self,
-        layers: list[_l.Layer] | None = None,
+        layers: Sequence[_l.Layer] | None = None,
         location: LegendLocation | LegendLocationStr = "top_right",
     ):
         if layers is None:

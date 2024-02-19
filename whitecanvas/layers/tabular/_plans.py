@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 
@@ -9,8 +8,8 @@ from cmap import Color, Colormap
 from numpy.typing import NDArray
 
 from whitecanvas.canvas._palette import ColorPalette
-from whitecanvas.layers.tabular._shared import unique
 from whitecanvas.types import Hatch, LineStyle, Symbol
+from whitecanvas.utils.collections import OrderedSet
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
@@ -19,6 +18,7 @@ if TYPE_CHECKING:
     from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
 
 _V = TypeVar("_V", bound=Any)
+_DF = TypeVar("_DF")
 
 
 class Plan(ABC, Generic[_V]):
@@ -98,6 +98,16 @@ class CyclicPlan(CategoricalPlan[_V]):
         """Return True if the plan is a constant plan."""
         return len(self.by) == 0
 
+    def is_not_const(self) -> bool:
+        """Return True if the plan is not a constant plan."""
+        return not self.is_const()
+
+    def get_const_value(self) -> _V:
+        """Return the constant value if the plan is a constant plan."""
+        if self.is_const():
+            return self.values[0]
+        raise ValueError("The plan is not a constant plan.")
+
     def generate(
         self,
         labels: list[tuple[Any, ...]],
@@ -107,7 +117,6 @@ class CyclicPlan(CategoricalPlan[_V]):
         # by_all = ("column-0", "column-1")
         indices = [by_all.index(b) for b in self.by]
         size = len(self.values)
-        # filt = _filter_unique(labels, indices)
         out_lookup: dict[tuple[Any, ...], _V] = {}
         i = 0
         for row in labels:
@@ -119,28 +128,56 @@ class CyclicPlan(CategoricalPlan[_V]):
         ret = [out_lookup[tuple(_r[i] for i in indices)] for _r in labels]
         return ret
 
+    def create_key_values(
+        self,
+        values: DataFrameWrapper[_DF],  # the data frame
+    ) -> list[tuple[tuple, _V]]:
+        """Map dataframe to values of the same size."""
+        if self._by:
+            series = [values[k] for k in self._by]
+        else:
+            # constant, no key filter
+            return [((), self.values[0])]
+        out = []
+        i = 0
+        for row in OrderedSet(zip(*series)):
+            val = self.values[i % len(self.values)]
+            out.append((row, val))
+            i += 1
+        return out
+
     def map(
         self,
-        values: DataFrameWrapper,  # the data frame
+        values: DataFrameWrapper[_DF],  # the data frame
     ) -> Sequence[_V]:
+        """Map dataframe to values of the same size."""
         if self._by:
             series = [values[k] for k in self._by]
         else:
             # constant, no key filter
             return self.values[0]
-        uniques = [unique(ar, axis=None) for ar in series]
         out = np.empty(series[0].shape, dtype=object)
         i = 0
-        for row in itertools.product(*uniques):
+        for row in OrderedSet(zip(*series)):
             sl: NDArray[np.bool_] = np.all(
                 np.column_stack([a == b for a, b in zip(series, row)]), axis=1
             )
             ntrue = sl.sum()
-            if ntrue > 0:
-                val = self.values[i % len(self.values)]
-                out[sl] = np.full(ntrue, val, dtype=object)
-                i += 1
+            val = self.values[i % len(self.values)]
+            out[sl] = np.full(ntrue, val, dtype=object)
+            i += 1
         return out
+
+    def to_entries(self, df: DataFrameWrapper[_DF]) -> list[tuple[str, _V]]:
+        values = self.map(df)
+        if self.by:
+            entries = [
+                (", ".join(str(n) for n in key), value)
+                for key, value in self.create_key_values(df)
+            ]
+        else:
+            entries = [("", values)]
+        return entries
 
 
 class MapPlan(ABC, Generic[_V]):
@@ -178,6 +215,16 @@ class MapPlan(ABC, Generic[_V]):
         """Return True if the plan is a constant plan."""
         return isinstance(self._mapper, ConstMap)
 
+    def is_not_const(self) -> bool:
+        """Return True if the plan is not a constant plan."""
+        return not self.is_const()
+
+    def get_const_value(self) -> _V:
+        """Return the constant value if the plan is a constant plan."""
+        if isinstance(self._mapper, ConstMap):
+            return self._mapper._value
+        raise ValueError("The plan is not a constant plan.")
+
     @classmethod
     def default(cls) -> Self:
         return cls((), cls._default_mapper())
@@ -189,7 +236,7 @@ class MapPlan(ABC, Generic[_V]):
 
     def map(
         self,
-        values: DataFrameWrapper,  # the data frame
+        values: DataFrameWrapper[_DF],  # the data frame
     ) -> Sequence[_V]:
         """Calculate the values for the input data frame."""
         if self._on:
@@ -268,17 +315,16 @@ class ColorPlan(CyclicPlan[Color]):
     #       so we need to override the default mapper
     def map(
         self,
-        values: dict[str, np.ndarray],  # the data frame
+        values: DataFrameWrapper[_DF],  # the data frame
     ) -> Sequence[_V]:
         if self._by:
             series = [values[k] for k in self._by]
         else:
             # constant, no key filter
-            return self.values[0]
-        uniques = [unique(ar, axis=None) for ar in series]
+            return [self.values[0]] * len(values)
         out = np.empty((series[0].size, 4), dtype=np.float32)
         i = 0
-        for row in itertools.product(*uniques):
+        for row in OrderedSet(zip(*series)):
             sl: NDArray[np.bool_] = np.all(
                 np.column_stack([a == b for a, b in zip(series, row)]), axis=1
             )
@@ -409,3 +455,23 @@ def _check_min_max(val: tuple[float, float] | None = None):
     if mn > mx:
         raise ValueError(f"min must be less than or equal to max, got {mn} and {mx}.")
     return
+
+
+def plan_to_entries(
+    plan: CyclicPlan[_V],
+    df: DataFrameWrapper[_DF],
+) -> list[tuple[str, _V]]:
+    values = plan.map(df)
+    if plan.by:
+        columns_of_interest = list(zip(*[df[c] for c in plan.by]))
+        entries = []
+        cat_found = set()
+        for category, color in zip(columns_of_interest, values):
+            if category in cat_found:
+                continue
+            name = ", ".join(str(n) for n in category)
+            entries.append((name, color))
+            cat_found.add(category)
+    else:
+        entries = [("", values)]
+    return entries

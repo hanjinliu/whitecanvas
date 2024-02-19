@@ -57,13 +57,6 @@ def _norm_color_hatch(
     return color_by, hatch_by
 
 
-def _bar_legend_item(color, hatch):
-    return _legend.BarLegendItem(
-        _legend.FaceInfo(color, hatch),
-        _legend.EdgeInfo(np.zeros(4), 0, LineStyle.SOLID),
-    )
-
-
 class _BoxLikeMixin:
     _source: DataFrameWrapper[_DF]
 
@@ -208,63 +201,30 @@ class _BoxLikeMixin:
         self,
     ) -> tuple[list[tuple[str, ColorType]], list[tuple[str, Hatch]]]:
         df = self._simple_dataframe()
-        colors = self._color_by.map(df)
-        if self._color_by.by:
-            color_columns = list(zip(*[df[c] for c in self._color_by.by]))
-            color_entries = []
-            cat_found = set()
-            for category, color in zip(color_columns, colors):
-                if category in cat_found:
-                    continue
-                name = ", ".join(str(n) for n in category)
-                color_entries.append((name, color))
-                cat_found.add(category)
-        else:
-            color_entries = [("", colors)]
-
-        hatches = self._hatch_by.map(df)
-        if self._hatch_by.by:
-            hatch_columns = list(zip(*[df[c] for c in self._hatch_by.by]))
-            hatch_entries = []
-            cat_found = set()
-            for category, color in zip(hatch_columns, hatches):
-                if category in cat_found:
-                    continue
-                name = ", ".join(str(n) for n in category)
-                hatch_entries.append((name, color))
-                cat_found.add(category)
-        else:
-            hatch_entries = [("", hatches)]
+        color_entries = self._color_by.to_entries(df)
+        hatch_entries = self._hatch_by.to_entries(df)
         return color_entries, hatch_entries
 
     def _as_legend_item(self) -> _legend.LegendItemCollection:
         colors, hatches = self._prep_legend_info()
-        ncolor = len(colors)
-        nhatch = len(hatches)
-        if ncolor == 1 and nhatch == 1:
-            return _bar_legend_item(colors[0][1], hatches[0][1])
-        elif ncolor == 1:
-            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
-            for label, hatch in hatches:
-                item = _bar_legend_item(colors[0][1], hatch)
-                items.append((label, item))
-            return _legend.LegendItemCollection(items)
-        elif nhatch == 1:
-            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
-            for label, color in colors:
-                item = _bar_legend_item(color, hatches[0][1])
-                items.append((label, item))
-            return _legend.LegendItemCollection(items)
+        items = []
+        color_default = theme.get_theme().background_color
+        edge_info = self._get_base().edge._as_legend_info()
+        if self._color_by.is_const():
+            color_default = self._color_by.values[0]
         else:
-            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
             for label, color in colors:
-                item = _bar_legend_item(color, hatches[0][1])
+                item = _legend.BarLegendItem(_legend.FaceInfo(color), edge_info)
                 items.append((label, item))
+        if self._hatch_by.is_not_const():
             items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
             for label, hatch in hatches:
-                item = _bar_legend_item(np.zeros(4), hatch)
+                item = _legend.BarLegendItem(
+                    _legend.FaceInfo(color_default, hatch), edge_info
+                )
                 items.append((label, item))
-            return _legend.LegendItemCollection(items)
+        return _legend.LegendItemCollection(items)
 
     def _simple_dataframe(self) -> DataFrameWrapper[dict]:
         return _shared.list_to_df(self._categories, self._splitby)

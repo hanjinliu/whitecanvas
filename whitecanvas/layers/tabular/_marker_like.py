@@ -16,8 +16,9 @@ from numpy.typing import NDArray
 from whitecanvas import layers as _l
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _mixin
+from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
+from whitecanvas.layers._legend import LegendItem
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
@@ -177,8 +178,8 @@ class DFMarkers(
     ):
         self._x = x
         self._y = y
-        self._color_by = _p.ColorPlan.default()
-        self._edge_color_by = _p.ColorPlan.default()
+        self._color_by: _p.ColorPlan | _p.ColormapPlan = _p.ColorPlan.default()
+        self._edge_color_by: _p.ColorPlan | _p.ColormapPlan = _p.ColorPlan.default()
         self._hatch_by = _p.HatchPlan.default()
         self._size_by = _p.SizePlan.default()
         self._symbol_by = _p.SymbolPlan.default()
@@ -340,6 +341,50 @@ class DFMarkers(
         self.base.with_hover_template(template, extra=extra)
         return self
 
+    def _as_legend_item(self) -> LegendItem:
+        items = []
+        color_default = theme.get_theme().background_color
+        edge_info = self._base_layer.edge._as_legend_info()
+        if self._color_by.is_const():
+            color_default = self._color_by.map(self._source)
+        elif isinstance(self._color_by, _p.ColorPlan):
+            color_entries = self._color_by.to_entries(self._source)
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for label, color in color_entries:
+                items.append(
+                    (label, _legend.BarLegendItem(_legend.FaceInfo(color), edge_info))
+                )
+        elif isinstance(self._color_by, _p.MapPlan):
+            pass  # TODO
+
+        if self._hatch_by.is_not_const():
+            hatch_entries = self._hatch_by.to_entries(self._source)
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for label, hatch in hatch_entries:
+                item = (
+                    label,
+                    _legend.BarLegendItem(
+                        _legend.FaceInfo(color_default, hatch), edge_info
+                    ),
+                )
+                items.append(item)
+        if self._symbol_by.is_not_const():
+            symbol_entries = self._symbol_by.to_entries(self._source)
+            items.append((", ".join(self._symbol_by.by), _legend.TitleItem()))
+            if self._size_by.is_const():
+                size = self._size_by.get_const_value()
+            else:
+                size = 8
+            for label, symbol in symbol_entries:
+                item = (
+                    label,
+                    _legend.MarkersLegendItem(
+                        symbol, size, _legend.FaceInfo(color_default), edge_info
+                    ),
+                )
+                items.append(item)
+        return _legend.LegendItemCollection(items)
+
 
 class DFMarkerGroups(DFMarkers):
     def __init__(self, *args, orient: Orientation = Orientation.VERTICAL, **kwargs):
@@ -481,6 +526,33 @@ class DFBars(
         extra = dict(self._source.iter_items())
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def _as_legend_item(self) -> LegendItem:
+        items = []
+        color_default = theme.get_theme().background_color
+        edge_info = self._base_layer.edge._as_legend_info()
+        if self._color_by.is_const():
+            color_default = self._color_by.map(self._source)
+        else:
+            color_entries = self._color_by.to_entries(self._source)
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for label, color in color_entries:
+                items.append(
+                    (label, _legend.BarLegendItem(_legend.FaceInfo(color), edge_info))
+                )
+
+        if self._hatch_by.is_not_const():
+            hatch_entries = self._hatch_by.to_entries(self._source)
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for label, hatch in hatch_entries:
+                item = (
+                    label,
+                    _legend.BarLegendItem(
+                        _legend.FaceInfo(color_default, hatch), edge_info
+                    ),
+                )
+                items.append(item)
+        return _legend.LegendItemCollection(items)
 
 
 class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generic[_DF]):

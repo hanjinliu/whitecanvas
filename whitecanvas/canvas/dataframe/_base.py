@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import weakref
 from typing import (
     TYPE_CHECKING,
@@ -15,7 +14,8 @@ from typing import (
 import numpy as np
 
 from whitecanvas._exceptions import ReferenceDeletedError
-from whitecanvas.layers.tabular import _shared, parse
+from whitecanvas.layers.tabular import parse
+from whitecanvas.utils.collections import OrderedSet
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -55,11 +55,9 @@ class CatIterator(Generic[_DF]):
         self,
         df: DataFrameWrapper[_DF],
         offsets: tuple[str, ...],
-        full: bool = True,
     ):
         self._df = df
         self._offsets = offsets
-        self._full = full
         self._cat_map_cache = {}
 
     @property
@@ -78,20 +76,10 @@ class CatIterator(Generic[_DF]):
             key = tuple(columns)
         if key in self._cat_map_cache:
             return self._cat_map_cache[key]
-        if self._full:
-            each_uni = [_shared.unique(self._df[c], axis=None) for c in key]
-            _map = {uni: i for i, uni in enumerate(itertools.product(*each_uni))}
-        else:
-            group_keys = [sl for sl, _ in self._df.group_by(key)]
-            labels = np.array(group_keys, dtype=object)
-            each_uni = [_shared.unique(_l, axis=None) for _l in labels.T]
-            exists = set(group_keys)
-            i = 0
-            for uni in itertools.product(*each_uni):
-                if uni not in exists:
-                    continue
-                _map[uni] = i
-                i += 1
+        if len(key) == 0:
+            return {(): 0}
+        columns = [self._df[c] for c in key]
+        _map = {uni: i for i, uni in enumerate(OrderedSet(zip(*columns)))}
         self._cat_map_cache[key] = _map
         return _map
 

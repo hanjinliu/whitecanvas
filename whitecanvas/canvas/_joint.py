@@ -25,6 +25,8 @@ from whitecanvas.types import (
     HistogramKind,
     HistogramShape,
     KdeBandWidthType,
+    LegendLocation,
+    LegendLocationStr,
     Orientation,
     Symbol,
 )
@@ -157,6 +159,14 @@ class JointGrid(CanvasGrid):
     def _link_marginal_to_main(self, layer: _l.Layer, main: _l.Layer) -> None:
         # TODO: this is not the only thing to be done
         main.events.visible.connect_setattr(layer, "visible")
+
+    def add_legend(
+        self,
+        layers: Sequence[_l.Layer] | None = None,
+        location: LegendLocation | LegendLocationStr = "top_right",
+    ):
+        self.main_canvas.add_legend(layers, location=location)
+        return None
 
     def add_markers(
         self,

@@ -37,7 +37,7 @@ from whitecanvas.canvas._fit import FitPlotter
 from whitecanvas.canvas._imageref import ImageRef
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
-from whitecanvas.layers import _mixin
+from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.types import (
     Alignment,
@@ -549,18 +549,61 @@ class CanvasBase(ABC):
 
     def add_legend(
         self,
-        layers: Sequence[_l.Layer] | None = None,
+        layers: Sequence[str | _l.Layer] | None = None,
+        *,
         location: LegendLocation | LegendLocationStr = "top_right",
+        title: str | None = None,
     ):
+        """
+        Add legend item to the canvas.
+
+        Parameters
+        ----------
+        layers : sequence of layer or str, optional
+            Which item to be added to the legend. If str is given, it will be converted
+            into a title label.
+        location : LegendLocation, default "top_right"
+            Location of the legend. Can be following strings. Combination of the
+            following strings (e.g., "top_left", "center_right").
+
+            ```
+                   (2) left  center right
+                         v     v     v
+              (1)     ┌─────────────────┐
+               top -> │                 │
+            center -> │     canvas      │
+            bottom -> │                 │
+                      └─────────────────┘
+            ```
+
+            Some backends also support adding legend outside the canvas. Following
+            strings suffixed with "_side" can be used in combination with those strings
+            above (e.g., "bottom_side_rigth", "right_side_top").
+
+            ```
+               top_side -> ┌────────┐
+                        ┌──┼────────┼──┐
+            left_side ->│  │ canvas │  │<- right_side
+                        └──┼────────┼──┘
+            bottom_side -> └────────┘
+            ```
+        title : str, optional
+            If given, title label will be added as the first legend item.
+        """
         if layers is None:
             layers = list(self.layers)
+        if title is not None:
+            layers = [title, *layers]
         location = LegendLocation(location)
 
-        items = []
+        items = list[tuple[str, _legend.LegendItem]]()
         for layer in layers:
-            if not isinstance(layer, _l.Layer):
-                raise TypeError(f"Expected a list of layers, got {type(layer)}.")
-            items.append((layer.name, layer._as_legend_item()))
+            if isinstance(layer, str):
+                items.append((layer, _legend.TitleItem()))
+            elif isinstance(layer, _l.Layer):
+                items.append((layer.name, layer._as_legend_item()))
+            else:
+                raise TypeError(f"Expected a list of layer or str, got {type(layer)}.")
         self._canvas()._plt_make_legend(items, location)
 
     @overload

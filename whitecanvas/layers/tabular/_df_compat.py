@@ -89,6 +89,10 @@ class DataFrameWrapper(ABC, Generic[_T]):
         ...
 
     @abstractmethod
+    def melt(self, id_vars: list[str], value_vars: list[str]) -> Self:
+        ...
+
+    @abstractmethod
     def value_count(self, by: tuple[str, ...]) -> Self:
         """Return the count of each group."""
 
@@ -159,6 +163,28 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
                 out[o].append(agg(sub[o]))
         return DictWrapper({k: np.array(v) for k, v in out.items()})
 
+    def melt(
+        self,
+        id_vars: list[str],
+        value_vars: list[str],
+        var_name: str | None = None,
+        value_name: str | None = None,
+    ) -> Self:
+        out = {k: [] for k in id_vars + value_vars}
+        if var_name is None:
+            var_name = "variable"
+        if value_name is None:
+            value_name = "value"
+        for k, v in self._data.items():
+            if k in id_vars:
+                out[k].extend(v)
+            elif k in value_vars:
+                out[var_name] += [k] * len(v)
+                out[value_name].extend(v)
+            else:
+                pass
+        return DictWrapper({k: np.array(v) for k, v in out.items()})
+
     def value_count(self, by: tuple[str, ...]) -> Self:
         out = {k: [] for k in [*by, "size"]}
         for sl, sub in self.group_by(by):
@@ -216,6 +242,25 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
         on = list(on)
         return PandasWrapper(self._data.groupby(list(by))[on].agg(method).reset_index())
+
+    def melt(
+        self,
+        id_vars: list[str],
+        value_vars: list[str],
+        var_name: str | None = None,
+        value_name: str | None = None,
+    ) -> Self:
+        if value_name is None:
+            value_name = "value"
+        return PandasWrapper(
+            self._data.melt(
+                id_vars=id_vars,
+                value_vars=value_vars,
+                var_name=var_name,
+                value_name=value_name,
+                ignore_index=True,
+            )
+        )
 
     def value_count(self, by: tuple[str, ...]) -> Self:
         import pandas as pd  # noqa: F811, RUF100
@@ -275,6 +320,22 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
 
         exprs = [getattr(pl.col(o), method)() for o in on]
         return PolarsWrapper(self._data.group_by(by, maintain_order=True).agg(*exprs))
+
+    def melt(
+        self,
+        id_vars: list[str],
+        value_vars: list[str],
+        var_name: str | None = None,
+        value_name: str | None = None,
+    ) -> Self:
+        return PolarsWrapper(
+            self._data.melt(
+                id_vars=id_vars,
+                value_vars=value_vars,
+                var_name=var_name,
+                value_name=value_name,
+            )
+        )
 
     def value_count(self, by: tuple[str, ...]) -> Self:
         return PolarsWrapper(

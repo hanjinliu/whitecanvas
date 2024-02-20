@@ -149,6 +149,46 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         else:
             canvas.y.ticks.set_labels(pos, label)
 
+    def melt(
+        self,
+        id_vars: str | Sequence[str] | None = None,
+        value_vars: str | Sequence[str] | None = None,
+        var_name: str | None = None,
+        value_name: str | None = None,
+    ) -> Self:
+        """
+        Melt the dataframe to long format and update the x/y column names.
+
+        This method should be used without setting x or y.
+
+        >>> canvas.cat_x(df).melt().add_stripplot()
+
+        Parameters
+        ----------
+        id_vars : str or sequence of str
+            Column name(s) to use as identifier variables.
+        value_vars : str or sequence of str
+            Column name(s) to use as value variables.
+        var_name : str, optional
+            Name of the variable column. If None, it will be set to "variable".
+        value_name : str, optional
+            Name of the value column. If None, it will be set to "value".
+        """
+        if self._value is not None:
+            raise ValueError("Cannot melt the dataframe with x or y set.")
+        if id_vars is None:
+            id_vars = []
+        if value_vars is None:
+            value_vars = self._df.columns
+        if var_name is None:
+            var_name = "variable"
+        if value_name is None:
+            value_name = "value"
+        df = self._df.melt(id_vars, value_vars, var_name, value_name)
+        out = type(self)(self._canvas(), df, var_name, value_name, self._update_labels)
+        out._df = df
+        return out
+
     ### 1-D categorical ###
 
     def add_violinplot(

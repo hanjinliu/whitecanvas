@@ -185,7 +185,7 @@ class DFMarkers(
         self._symbol_by = _p.SymbolPlan.default()
         self._width_by = _p.WidthPlan.default()
 
-        base = _lg.MarkerCollection(
+        base = _lg.MarkerCollection.from_arrays(
             x.map(source), y.map(source), name=name, backend=backend
         )
 

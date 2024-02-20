@@ -247,16 +247,29 @@ class MarkerCollection(LayerCollectionBase[_Markers]):
 
     def __init__(
         self,
+        layers: list[_Markers],
+        name: str | None = None,
+    ):
+        super().__init__(layers, name)
+        self._face_namespace = MarkerCollectionFace(self)
+        self._edge_namespace = MarkerCollectionEdge(self)
+        sizes = [layer.ndata for layer in layers]
+        cum_size = np.cumsum([0, *sizes])
+        ndata = cum_size[-1]
+        self._slices = [np.zeros(ndata, dtype=np.bool_) for _ in sizes]
+        for i, sl in enumerate(self._slices):
+            sl[cum_size[i] : cum_size[i + 1]] = True
+
+    @classmethod
+    def from_arrays(
+        cls,
         xdata: ArrayLike1D,
         ydata: ArrayLike1D,
         name: str | None = None,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         markers = Markers(xdata, ydata, backend=backend)._as_all_multi()
-        super().__init__([markers], name)
-        self._face_namespace = MarkerCollectionFace(self)
-        self._edge_namespace = MarkerCollectionEdge(self)
-        self._slices: list[NDArray[np.bool_]] = [np.ones(markers.ndata, dtype=np.bool_)]
+        return cls([markers], name=name)
 
     @property
     def face(self) -> MarkerCollectionFace:

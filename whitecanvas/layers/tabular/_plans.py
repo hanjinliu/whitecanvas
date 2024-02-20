@@ -176,7 +176,7 @@ class CyclicPlan(CategoricalPlan[_V]):
                 for key, value in self.create_key_values(df)
             ]
         else:
-            entries = [("", values)]
+            entries = [("", values[0])]
         return entries
 
 

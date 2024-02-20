@@ -5,10 +5,11 @@ from typing import TYPE_CHECKING, Any, Iterable, Sequence
 import numpy as np
 from numpy.typing import NDArray
 
+from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers._primitive import Line
+from whitecanvas.layers._primitive import Line, Markers
 from whitecanvas.layers.group._collections import LayerCollectionBase
-from whitecanvas.types import LineStyle, XYData
+from whitecanvas.types import Hatch, LineStyle, Symbol, XYData
 from whitecanvas.utils.normalize import as_any_1d_array, as_color_array, parse_texts
 from whitecanvas.utils.type_check import is_real_number
 
@@ -100,7 +101,7 @@ class LineCollection(LayerCollectionBase[Line]):
         template: str,
         extra: Any | None = None,
     ) -> Self:
-        """Add hover template to the markers."""
+        """Define hover template to the layer."""
         if self._backend_name in ("plotly", "bokeh"):  # conversion for HTML
             template = template.replace("\n", "<br>")
         params = parse_texts(template, len(self), extra)
@@ -112,3 +113,25 @@ class LineCollection(LayerCollectionBase[Line]):
             for i in range(len(self))
         ]
         return self.with_hover_texts(texts)
+
+    def _prep_markers(
+        self,
+        *,
+        symbol: Symbol,
+        size: float | None = None,
+        alpha: float = 1.0,
+        hatch: str | Hatch = Hatch.SOLID,
+    ):
+        from whitecanvas.layers.group import MarkerCollection
+
+        markers = []
+        size = theme._default("markers.size", size)
+        for layer in self:
+            color = layer.color
+            mk = Markers(
+                *layer.data, symbol=symbol, size=size, color=color, alpha=alpha,
+                hatch=hatch, name=f"markers-of-{layer.name}", backend=self._backend_name
+            )  # fmt: skip
+            markers.append(mk)
+        mcol = MarkerCollection(markers, name=f"markers-of-{self.name}")
+        return mcol

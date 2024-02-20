@@ -88,6 +88,10 @@ class LayerTuple(LayerContainer, Sequence[Layer]):
         cname = type(self).__name__
         return f"{cname}{tuple(self.iter_children())!r}"
 
+    def _as_legend_item(self) -> _legend.LegendItem:
+        items = [(layer.name, layer._as_legend_item()) for layer in self]
+        return _legend.LegendItemCollection(items)
+
 
 class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
     _children: list[_L]

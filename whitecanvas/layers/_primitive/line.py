@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal
 
+from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
 from whitecanvas.layers._base import (
@@ -214,7 +215,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
     def with_markers(
         self,
         symbol: Symbol | str = Symbol.CIRCLE,
-        size: float = 10,
+        size: float | None = None,
         color: ColorType | _Void = _void,
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
@@ -229,12 +230,11 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         symbol : str or Symbol, default Symbol.CIRCLE
             Marker symbols.
         size : float, optional
-            Marker size, by default 10
+            Marker size. Use theme default if not given.
         color : color-like, optional
-            Marker face colors. To set edge colors, use `with_edge` method.
-            Set to the line color by default.
+            Marker face colors. Set to the line color by default.
         alpha : float, default 1.0
-            The alpha channel.
+            The alpha channel value of the markers.
         hatch : str or FacePattern, default FacePattern.SOLID
             The marker face hatch.
 
@@ -248,7 +248,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
 
         if color is _void:
             color = self.color
-
+        size = theme._default("markers.size", size)
         markers = Markers(
             *self.data, symbol=symbol, size=size, color=color, alpha=alpha,
             hatch=hatch, name=f"markers-of-{self.name}", backend=self._backend_name,

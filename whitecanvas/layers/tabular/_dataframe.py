@@ -15,6 +15,7 @@ import numpy as np
 from cmap import Color, Colormap
 
 from whitecanvas import layers as _l
+from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
 from whitecanvas.layers import group as _lg
@@ -24,10 +25,12 @@ from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 from whitecanvas.types import (
     ColormapType,
     ColorType,
+    Hatch,
     HistBinType,
     KdeBandWidthType,
     LineStyle,
     Orientation,
+    Symbol,
 )
 from whitecanvas.utils.hist import histograms
 
@@ -107,6 +110,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         ...
 
     def update_color(self, by, /, palette=None):
+        """Update the color rule of the layer."""
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -119,10 +123,12 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         return self
 
     def update_width(self, value: float) -> Self:
+        """Update width of the lines."""
         self._base_layer.width = value
         return self
 
     def update_style(self, by: str | Iterable[str], styles=None) -> Self:
+        """Update the styling rule of the layer."""
         cov = _shared.ColumnOrValue(by, self._source)
         if cov.is_column:
             if set(cov.columns) > set(self._splitby):
@@ -145,11 +151,25 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         return self
 
     def with_hover_template(self, template: str) -> Self:
+        """Define hover template to the layer."""
         extra = {}
         for i, key in enumerate(self._splitby):
             extra[key] = [row[i] for row in self._categories]
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def with_markers(
+        self,
+        *,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: float | None = None,
+        alpha: float = 1.0,
+        hatch: str | Hatch = Hatch.SOLID,
+    ) -> _LineMarkerTuple[_DF]:
+        markers = self._base_layer._prep_markers(
+            symbol=symbol, size=size, alpha=alpha, hatch=hatch,
+        )  # fmt: skip
+        return _LineMarkerTuple([self, markers], name=self.name)
 
     def _simple_dataframe(self) -> DataFrameWrapper[dict]:
         return _shared.list_to_df(self._categories, self._splitby)
@@ -162,39 +182,33 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         style_entries = self._style_by.to_entries(df)
         return color_entries, style_entries
 
-    def _as_legend_item(self):
+    def _as_legend_item(self) -> _legend.LegendItemCollection | _legend.LineLegendItem:
         colors, styles = self._prep_legend_info()
         ncolor = len(colors)
         nstyle = len(styles)
-        width = self._base_layer.width
+        widths = self._base_layer.width
 
-        def _line_item(color, style):
-            return _legend.LineLegendItem(color, width, style)
+        color_default = theme.get_theme().foreground_color
+        style_default = LineStyle.SOLID
+        if ncolor == 1:
+            _, color_default = colors[0]
+        if nstyle == 1:
+            _, style_default = styles[0]
 
         if ncolor == 1 and nstyle == 1:
-            return _line_item(colors[0][1], width, styles[0][1])
-        elif ncolor == 1:
-            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
-            for label, hatch in styles:
-                item = _line_item(colors[0][1], hatch)
+            return _legend.LineLegendItem(color_default, widths[0], style_default)
+        items = []
+        if ncolor > 1:
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for (label, color), w in zip(colors, widths):
+                item = _legend.LineLegendItem(color, w, style_default)
                 items.append((label, item))
-            return _legend.LegendItemCollection(items)
-        elif nstyle == 1:
-            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
-            for label, color in colors:
-                item = _line_item(color, styles[0][1])
-                items.append((label, item))
-            return _legend.LegendItemCollection(items)
-        else:
-            items = [(", ".join(self._color_by.by), _legend.TitleItem())]
-            for label, color in colors:
-                item = _line_item(color, styles[0][1])
-                items.append((label, item))
+        if nstyle > 1:
             items.append((", ".join(self._style_by.by), _legend.TitleItem()))
-            for label, hatch in styles:
-                item = _line_item(np.zeros(4), hatch)
+            for (label, style), w in zip(styles, widths):
+                item = _legend.LineLegendItem(color_default, w, style)
                 items.append((label, item))
-            return _legend.LegendItemCollection(items)
+        return _legend.LegendItemCollection(items)
 
 
 class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
@@ -522,3 +536,17 @@ class DFKde(
             self._base_layer[i].fill.face.hatch = st
         self._hatch_by = hatch_by
         return self
+
+
+class _LineMarkerTuple(_lg.LayerTuple, Generic[_DF]):
+    @property
+    def line(self) -> DFLines[_DF]:
+        return self._children[0]
+
+    @property
+    def markers(self) -> _lg.MarkerCollection:
+        return self._children[1]
+
+    def _as_legend_item(self) -> _legend.LegendItem:
+        # TODO: it's better to add markers to the legend, but it's not easy.
+        return self.line._as_legend_item()

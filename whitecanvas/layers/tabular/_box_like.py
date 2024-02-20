@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.canvas.dataframe._base import CatIterator
+    from whitecanvas.layers.tabular import DFRugGroups
 
     _FE = _mixin.AbstractFaceEdgeMixin[_mixin.FaceNamespace, _mixin.EdgeNamespace]
 
@@ -297,6 +298,7 @@ class DFViolinPlot(
         width: float = 1.0,
         color="black",
     ):
+        """Overlay rug plot on the violins."""
         from whitecanvas.layers.tabular import DFRugGroups
 
         _extent = self.base.extent
@@ -308,16 +310,11 @@ class DFViolinPlot(
         else:
             align = "low"
         rug = DFRugGroups.from_table(
-            self._source,
-            jitter,
-            self._value,
-            color=color,
-            width=width,
-            extent=_extent,
+            self._source, jitter, self._value, color=color, width=width, extent=_extent,
             backend=self.base._backend_name,
-        ).scale_by_density(align=align)
+        ).scale_by_density(align=align)  # fmt: skip
         old_name = self.name
-        return _lg.LayerTuple([self, rug], name=old_name)
+        return _ViolinRugTuple([self, rug], name=old_name)
 
     # def with_box(self):
     def _as_legend_item(self) -> _legend.LegendItemCollection:
@@ -602,3 +599,16 @@ class DFBarPlot(
 
     def _as_legend_item(self) -> _legend.LegendItemCollection:
         return _BoxLikeMixin._as_legend_item(self)
+
+
+class _ViolinRugTuple(_lg.LayerTuple):
+    @property
+    def violin(self) -> DFViolinPlot:
+        return self._children[0]
+
+    @property
+    def rug(self) -> DFRugGroups:
+        return self._children[1]
+
+    def _as_legend_item(self) -> _legend.LegendItem:
+        return self.violin._as_legend_item()

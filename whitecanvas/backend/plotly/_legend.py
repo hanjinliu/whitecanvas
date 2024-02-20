@@ -58,7 +58,7 @@ def _(item: _leg.ErrorLegendItem):
         y=[None],
         mode="markers",
         line={"color": hex_color(item.color), "width": item.width},
-        marker={"color": "#00000000", "size": 0},
+        marker={"color": "#000000", "size": 0},
         error_y={"type": "data", "array": None, "visible": True},
         showlegend=True,
     )
@@ -239,6 +239,6 @@ def _(item: _leg.TitleItem):
         x=[None],
         y=[None],
         mode="markers",
-        marker={"color": "#00000000"},
+        marker={"color": "#000000", "size": 0},
         showlegend=True,
     )

@@ -212,7 +212,7 @@ class _BoxLikeMixin:
         color_default = theme.get_theme().background_color
         edge_info = self._get_base().edge._as_legend_info()
         if self._color_by.is_const():
-            color_default = self._color_by.values[0]
+            color_default = Color(self._color_by.values[0])
         else:
             items.append((", ".join(self._color_by.by), _legend.TitleItem()))
             for label, color in colors:

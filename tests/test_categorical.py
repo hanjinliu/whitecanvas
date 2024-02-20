@@ -102,3 +102,36 @@ def test_heatmap(backend: str):
     im = canvas.cat_xy(df, "x", "y").mean().add_heatmap(value="z", fill=-1)
     canvas.imref(im).add_text(fmt=".1f")
     assert im.clim == (1.1, 6.6)
+
+def test_cat_legend(backend: str):
+    if backend == "vispy":
+        pytest.skip("vispy does not support legend")
+    canvas = new_canvas(backend=backend)
+    df = {
+        "x": np.arange(30),
+        "y": np.arange(30),
+        "label": np.repeat(["A", "B", "C"], 10),
+    }
+
+    _c = canvas.cat(df, "x", "y")
+    _c.add_line(color="label")
+    _c.add_markers(color="label")
+    canvas.add_legend()
+
+def test_catx_legend(backend: str):
+    if backend == "vispy":
+        pytest.skip("vispy does not support legend")
+    canvas = new_canvas(backend=backend)
+    df = {
+        "x": ["P", "Q"] * 15,
+        "y": np.arange(30),
+        "label": np.repeat(["A", "B", "C"], 10),
+    }
+    _c = canvas.cat_x(df, "x", "y")
+    _c.add_stripplot(color="label")
+    _c.add_swarmplot(color="label")
+    _c.add_boxplot(color="label")
+    _c.add_violinplot(color="label").with_rug()
+    _c.add_pointplot(color="label").err_by_se()
+    _c.add_barplot(color="label")
+    canvas.add_legend()

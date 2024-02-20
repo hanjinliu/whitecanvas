@@ -117,6 +117,8 @@ class SwarmJitter(CategoricalLikeJitter):
             offset_pre[sl] = self._map_one(v_indices[sl], nbin)
 
         offset_max = np.abs(offset_pre).max()
+        if offset_max == 0:  # when the swarm plot is sparse
+            return self._map(src)
         width_default = dv * offset_max
         offsets = offset_pre / offset_max * min(self._extent / 2, width_default)
         out = self._map(src) + offsets

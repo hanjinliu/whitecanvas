@@ -521,7 +521,7 @@ class LabeledPlot(
         return _legend.PlotErrorLegendItem(self.plot._as_legend_item(), xerr, yerr)
 
 
-class PlotFace(_mixin.SinglePropertyFaceBase):
+class PlotFace(_mixin.MultiPropertyFaceBase):
     _layer: LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]
 
     @property
@@ -560,7 +560,7 @@ class PlotFace(_mixin.SinglePropertyFaceBase):
         self.color = color
 
 
-class PlotEdge(_mixin.SinglePropertyEdgeBase):
+class PlotEdge(_mixin.MultiPropertyEdgeBase):
     _layer: LabeledPlot[_NFace, _NEdge, float] | LabeledBars[_NFace, _NEdge]
 
     @property

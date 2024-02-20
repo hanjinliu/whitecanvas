@@ -155,7 +155,7 @@ class CyclicPlan(CategoricalPlan[_V]):
             series = [values[k] for k in self._by]
         else:
             # constant, no key filter
-            return self.values[0]
+            return [self.values[0]] * len(values)
         out = np.empty(series[0].shape, dtype=object)
         i = 0
         for row in OrderedSet(zip(*series)):

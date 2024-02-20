@@ -26,23 +26,23 @@ def main():
     def model(x, a, tau, b):
         return a * np.exp(-x / tau) + b
 
-    for p in params_true:
+    for i, p in enumerate(params_true):
         # add raw data
         x, y = sample_data(*p)
-        line = canvas.add_line(x, y, alpha=0.25)
+        markers = canvas.add_markers(x, y, alpha=0.25, name=f"data-{i}")
 
         # add the fitting curve
         params, _ = curve_fit(model, x, y, p0=[2, 1, 0])
         (
             canvas
-            .add_infcurve(model, color=line.color, alpha=1)
+            .add_infcurve(model, color=markers.face.color, name=f"fit of data-{i}")
             .update_params(*params)
             .with_hover_text("a={:.3g}, tau={:.3g}, b={:.3g}".format(*params))
         )
 
-    canvas.update_labels(
-        x="time [sec]", y="intensity [a.u.]", title="Fitting results"
-    ).show(block=True)
+    canvas.add_legend()
+    canvas.update_labels(x="time [sec]", y="intensity [a.u.]", title="Fitting results")
+    canvas.show(block=True)
 
 if __name__ == "__main__":
     main()

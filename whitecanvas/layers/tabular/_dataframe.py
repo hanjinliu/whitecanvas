@@ -297,10 +297,119 @@ class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic
         super().__init__(base, source)
 
 
-class DFHistograms(
-    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_lg.Histogram], _DF],
-    Generic[_DF],
+_L = TypeVar("_L", bound=_lg.LineFillBase)
+
+
+class DFLineFillBase(
+    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_L], _DF],
+    Generic[_L, _DF],
 ):
+    _ATTACH_TO_AXIS = True
+
+    def __init__(
+        self,
+        base: _lg.LayerCollectionBase[_L],
+        source: DataFrameWrapper[_DF],
+        categories: list[tuple[Any, ...]],
+        splitby: tuple[str, ...],
+    ):
+        self._categories = categories
+        self._splitby = splitby
+        super().__init__(base, source)
+        self._color_by = _p.ColorPlan.default()
+        self._width_by = _p.WidthPlan.default()
+        self._style_by = _p.StylePlan.default()
+        self._hatch_by = _p.HatchPlan.default()
+
+    @overload
+    def update_color(self, value: ColorType) -> Self:
+        ...
+
+    @overload
+    def update_color(
+        self,
+        by: str | Iterable[str],
+        palette: ColormapType | None = None,
+    ) -> Self:
+        ...
+
+    def update_color(self, by, /, palette=None):
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot color by a column other than {self._splitby}")
+            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
+        else:
+            color_by = _p.ColorPlan.from_const(Color(cov.value))
+        for i, col in enumerate(color_by.generate(self._categories, self._splitby)):
+            self._base_layer[i].color = col
+        self._color_by = color_by
+        return self
+
+    def update_width(self, value: float) -> Self:
+        for hist in self._base_layer:
+            hist.line.width = value
+        return self
+
+    def update_style(self, by: str | Iterable[str], palette=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot style by a column other than {self._splitby}")
+            style_by = _p.StylePlan.new(cov.columns, values=palette)
+        else:
+            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
+        for i, st in enumerate(style_by.generate(self._categories, self._splitby)):
+            self._base_layer[i].line.style = st
+        self._style_by = style_by
+        return self
+
+    def update_hatch(self, by: str | Iterable[str], styles=None) -> Self:
+        cov = _shared.ColumnOrValue(by, self._source)
+        if cov.is_column:
+            if set(cov.columns) > set(self._splitby):
+                raise ValueError(f"Cannot hatch by a column other than {self._splitby}")
+            hatch_by = _p.HatchPlan.new(cov.columns, values=styles)
+        else:
+            hatch_by = _p.HatchPlan.from_const(cov.value)
+        for i, st in enumerate(hatch_by.generate(self._categories, self._splitby)):
+            self._base_layer[i].fill.face.hatch = st
+        self._hatch_by = hatch_by
+        return self
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection:
+        if len(self.base) == 0:
+            return _legend.LegendItemCollection([])
+        df = _shared.list_to_df(self._categories, self._splitby)
+        colors = self._color_by.to_entries(df)
+        hatches = self._hatch_by.to_entries(df)
+        items = []
+        color_default = theme.get_theme().background_color
+        fill_alpha = self.base[0].fill_alpha
+        width = self.base[0].line.width
+        style = self.base[0].line.style
+        if self._color_by.is_const():
+            color_default = Color(self._color_by.values[0])
+        else:
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for label, color in colors:
+                fc = Color([*color.rgba[:3], fill_alpha])
+                _face = _legend.FaceInfo(fc)
+                _edge = _legend.EdgeInfo(color, width, style)
+                item = _legend.BarLegendItem(_face, _edge)
+                items.append((label, item))
+        if self._hatch_by.is_not_const():
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for label, hatch in hatches:
+                fc = Color([*color_default.rgba[:3], fill_alpha])
+                _face = _legend.FaceInfo(fc, hatch)
+                _edge = _legend.EdgeInfo(color_default, width, style)
+                item = _legend.BarLegendItem(_face, _edge)
+                items.append((label, item))
+        return _legend.LegendItemCollection(items)
+
+
+class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
@@ -312,13 +421,7 @@ class DFHistograms(
         hatch: str | tuple[str, ...] | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
-        self._color_by = _p.ColorPlan.default()
-        self._width_by = _p.WidthPlan.default()
-        self._style_by = _p.StylePlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._labels = labels
-        self._splitby = splitby
-        super().__init__(base, source)
+        super().__init__(base, source, labels, splitby)
         if color is not None:
             self.update_color(color)
         if isinstance(width, str):
@@ -364,67 +467,8 @@ class DFHistograms(
         base = _lg.LayerCollectionBase(layers, name=name)
         return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
 
-    @overload
-    def update_color(self, value: ColorType) -> Self:
-        ...
 
-    @overload
-    def update_color(
-        self,
-        by: str | Iterable[str],
-        palette: ColormapType | None = None,
-    ) -> Self:
-        ...
-
-    def update_color(self, by, /, palette=None):
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
-        else:
-            color_by = _p.ColorPlan.from_const(Color(cov.value))
-        for i, col in enumerate(color_by.generate(self._labels, self._splitby)):
-            self._base_layer[i].color = col
-        self._color_by = color_by
-        return self
-
-    def update_width(self, value: float) -> Self:
-        for hist in self._base_layer:
-            hist.line.width = value
-        return self
-
-    def update_style(self, by: str | Iterable[str], palette=None) -> Self:
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot style by a column other than {self._splitby}")
-            style_by = _p.StylePlan.new(cov.columns, values=palette)
-        else:
-            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
-        for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
-            self._base_layer[i].line.style = st
-        self._style_by = style_by
-        return self
-
-    def update_hatch(self, by: str | Iterable[str], styles=None) -> Self:
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot hatch by a column other than {self._splitby}")
-            hatch_by = _p.HatchPlan.new(cov.columns, values=styles)
-        else:
-            hatch_by = _p.HatchPlan.from_const(cov.value)
-        for i, st in enumerate(hatch_by.generate(self._labels, self._splitby)):
-            self._base_layer[i].fill.face.hatch = st
-        self._hatch_by = hatch_by
-        return self
-
-
-class DFKde(
-    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_lg.Kde], _DF],
-    Generic[_DF],
-):
+class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
@@ -436,12 +480,7 @@ class DFKde(
         hatch: str | tuple[str, ...] | None = None,
     ):
         splitby = _shared.join_columns(color, style, source=source)
-        self._color_by = _p.ColorPlan.default()
-        self._width_by = _p.WidthPlan.default()
-        self._style_by = _p.StylePlan.default()
-        self._labels = labels
-        self._splitby = splitby
-        super().__init__(base, source)
+        super().__init__(base, source, labels, splitby)
         if color is not None:
             self.update_color(color)
         if isinstance(width, str):
@@ -480,62 +519,6 @@ class DFKde(
             layers.append(each_layer)
         base = _lg.LayerCollectionBase(layers, name=name)
         return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
-
-    @overload
-    def update_color(self, value: ColorType) -> Self:
-        ...
-
-    @overload
-    def update_color(
-        self,
-        by: str | Iterable[str],
-        palette: ColormapType | None = None,
-    ) -> Self:
-        ...
-
-    def update_color(self, by, /, palette=None):
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot color by a column other than {self._splitby}")
-            color_by = _p.ColorPlan.from_palette(cov.columns, palette=palette)
-        else:
-            color_by = _p.ColorPlan.from_const(Color(cov.value))
-        for i, col in enumerate(color_by.generate(self._labels, self._splitby)):
-            self._base_layer[i].color = col
-        self._color_by = color_by
-        return self
-
-    def update_width(self, value: float) -> Self:
-        for hist in self._base_layer:
-            hist.line.width = value
-        return self
-
-    def update_style(self, by: str | Iterable[str], styles=None) -> Self:
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot style by a column other than {self._splitby}")
-            style_by = _p.StylePlan.new(cov.columns, values=styles)
-        else:
-            style_by = _p.StylePlan.from_const(LineStyle(cov.value))
-        for i, st in enumerate(style_by.generate(self._labels, self._splitby)):
-            self._base_layer[i].line.style = st
-        self._style_by = style_by
-        return self
-
-    def update_hatch(self, by: str | Iterable[str], styles=None) -> Self:
-        cov = _shared.ColumnOrValue(by, self._source)
-        if cov.is_column:
-            if set(cov.columns) > set(self._splitby):
-                raise ValueError(f"Cannot hatch by a column other than {self._splitby}")
-            hatch_by = _p.HatchPlan.new(cov.columns, values=styles)
-        else:
-            hatch_by = _p.HatchPlan.from_const(cov.value)
-        for i, st in enumerate(hatch_by.generate(self._labels, self._splitby)):
-            self._base_layer[i].fill.face.hatch = st
-        self._hatch_by = hatch_by
-        return self
 
 
 class _LineMarkerTuple(_lg.LayerTuple, Generic[_DF]):

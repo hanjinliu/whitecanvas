@@ -100,11 +100,11 @@ class _MarkerLikeMixin:
     @overload
     def update_width(
         self, by: str, map_from: tuple[float, float] | None = None,
-        map_to: tuple[float, float] | None = None,
+        map_to: tuple[float, float] = (1.0, 4.0),
     ) -> Self:  # fmt: skip
         ...
 
-    def update_width(self, by, /, map_from=None, map_to=None) -> Self:
+    def update_width(self, by, /, map_from=None, map_to=(1.0, 4.0)) -> Self:
         """
         Update the line widths by a constant number or according to a column.
 
@@ -114,10 +114,8 @@ class _MarkerLikeMixin:
         if isinstance(by, str):
             width_by = _p.WidthPlan.from_range(by, range=map_to, domain=map_from)
         else:
-            if map_from is not None or map_to is not None:
-                raise TypeError(
-                    "`map_from` and `map_to` can only be used with a column name."
-                )
+            if map_from is not None:
+                raise TypeError("`map_from` can only be used with a column name.")
             width_by = _p.WidthPlan.from_const(float(by))
         self._apply_width(width_by.map(self._source))
         self._width_by = width_by
@@ -262,11 +260,11 @@ class DFMarkers(
         self,
         by: str,
         map_from: tuple[float, float] | None = None,
-        map_to: tuple[float, float] | None = None,
+        map_to: tuple[float, float] = (3, 15),
     ) -> Self:
         ...
 
-    def update_size(self, by, /, map_from=None, map_to=None):
+    def update_size(self, by, /, map_from=None, map_to=(3, 15)):
         """Set the size of the markers."""
         if isinstance(by, str):
             size_by = _p.SizePlan.from_range(by, range=map_to, domain=map_from)
@@ -350,7 +348,7 @@ class DFMarkers(
 
     def _as_legend_item(self) -> LegendItem:
         items = []
-        color_default = theme.get_theme().background_color
+        color_default = Color("transparent")
         symbol_default = Symbol.CIRCLE
         size_default = 8
         edge_info = self._base_layer.edge._as_legend_info()

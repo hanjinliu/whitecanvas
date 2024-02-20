@@ -162,10 +162,13 @@ class JointGrid(CanvasGrid):
 
     def add_legend(
         self,
-        layers: Sequence[_l.Layer] | None = None,
+        layers: Sequence[str | _l.Layer] | None = None,
         location: LegendLocation | LegendLocationStr = "top_right",
+        *,
+        title: str | None = None,
     ):
-        self.main_canvas.add_legend(layers, location=location)
+        """Add legend to the main canvas."""
+        self.main_canvas.add_legend(layers, location=location, title=title)
         return None
 
     def add_markers(

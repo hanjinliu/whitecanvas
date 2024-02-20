@@ -17,6 +17,7 @@ def main():
         .add_markers(color="species")
     )
 
+    joint.add_legend()
     joint.show(block=True)
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ def main():
         [0, 1, 2], [1, 2, 3], color="blue"
     ).with_hover_template(
         "x: {x:.2f}, y: {y:.2f}, index: {i},\ncustom_data: {c}",
-        c=[123, 234, 345]
+        extra=dict(c=[123, 234, 345]),
     )
 
     canvas.show(block=True)

@@ -55,6 +55,20 @@ canvas.cat(df, "x", "y").add_markers(color="label")
 canvas.show()
 ```
 
+## Automatic Creation of Legends
+
+As mentioned in [Legend for the Layers](../canvas/legend.md), legends can be
+automatically created by `add_legend` function. In the case of the categorical plot,
+the legend is created based on the categories.
+
+``` python
+#!name: categorical_add_line_color_with_legend
+canvas = new_canvas("matplotlib")
+canvas.cat(df, "x", "y").add_line(color="label")
+canvas.add_legend()
+canvas.show()
+```
+
 ## Distribution of Numerical Data
 
 There are several ways to visualize the distribution of numerical data.

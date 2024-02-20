@@ -1,6 +1,7 @@
 # modified from:
 # https://github.com/pyapp-kit/magicgui/blob/main/docs/scripts/_gen_screenshots.py
 import re
+import warnings
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -36,7 +37,9 @@ def _write_image(src: str, ns: dict, dest: str) -> None:
         canvas = ns["canvas"]
     assert isinstance(canvas, (CanvasGrid, SingleCanvas)), type(canvas)
     with mkdocs_gen_files.open(dest, "wb") as f:
-        plt.tight_layout()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            plt.tight_layout()
         img = canvas.screenshot()
         imwrite(f.name, img, format="png")
 

@@ -10,7 +10,7 @@ from whitecanvas.layers.group.labeled import (
 )
 from whitecanvas.layers.group.line_band import LineBand
 from whitecanvas.layers.group.line_collection import LineCollection
-from whitecanvas.layers.group.line_fill import Histogram, Kde
+from whitecanvas.layers.group.line_fill import Histogram, Kde, LineFillBase
 from whitecanvas.layers.group.line_markers import Plot
 from whitecanvas.layers.group.marker_collection import MarkerCollection
 from whitecanvas.layers.group.stemplot import StemPlot
@@ -26,6 +26,7 @@ __all__ = [
     "LabeledMarkers",
     "LabeledBars",
     "LabeledPlot",
+    "LineFillBase",
     "ViolinPlot",
     "MarkerCollection",
     "LineCollection",

@@ -14,7 +14,7 @@
         <link rel="prev" href="../namespaces/">
       
       
-        <link rel="next" href="../native_objects/">
+        <link rel="next" href="../joint_grid/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -282,6 +282,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -450,6 +454,48 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../joint_grid/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Joint Grid
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../legend/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Legend for the Layers
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1141,9 +1187,10 @@
 <p>A "canvas grid" is a grid of canvases (which is called "figure" in <code>matplotlib</code>).
 A grid is composed of multiple canvas objects, so that grid itself does not have
 either layers or the <code>add_*</code> methods.</p>
-<p>Once a grid is created, you can add chid canvases using the <code>add_canvas</code> method.
+<p>Once a grid is created, you can add chid canvases using the <code>add_canvas</code> method, or fill the grid with canvases using the <code>fill</code> method.
 The signature of the method differs between 1D and 2D grid.</p>
 <h2 id="verticalhorizontal-grid">Vertical/Horizontal Grid</h2>
+<p>This is an example of a grid with a single column, and the canvases are added one by one.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_col</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_col</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
@@ -1157,20 +1204,20 @@ The signature of the method differs between 1D and 2D grid.</p>
 <span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/canvas_grid_vertical.png" width="360px" /></p>
+<p>This is an example of a grid with a single row, and the canvases are added at once.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_row</span>
 
-<span class="n">grid</span> <span class="o">=</span> <span class="n">new_row</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_row</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
 
-<span class="n">c0</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">c0</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 0&quot;</span><span class="p">)</span>
-<span class="n">c1</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">c1</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 1&quot;</span><span class="p">)</span>
-<span class="n">c2</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">c2</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 2&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 0&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 1&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Canvas 2&quot;</span><span class="p">)</span>
 <span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/canvas_grid_horizontal.png" width="360px" /></p>
 <h2 id="2d-grid">2D Grid</h2>
+<p>The <code>new_grid</code> function creates a 2D grid. Since it is a 2D grid, you need to specify
+two integers for the number of rows and columns.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_grid</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_grid</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
@@ -1182,15 +1229,14 @@ The signature of the method differs between 1D and 2D grid.</p>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/canvas_grid_2d.png" width="360px" /></p>
 <h2 id="non-uniform-grid">Non-uniform Grid</h2>
-<p>The <code>*_nonuniform</code> functions allow you to create a grid with non-uniform sizes.
-Instead of specifying the number of rows and columns, these functions take a list of size ratios.</p>
+<p>If a sequence of integers are given, the grid will be non-uniform.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This feature is work in progress. Some backends does not support it yet.</p>
 </div>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">grid_nonuniform</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_grid</span>
 
-<span class="n">grid</span> <span class="o">=</span> <span class="n">grid_nonuniform</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_grid</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]:</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">add_canvas</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
@@ -1244,13 +1290,13 @@ Instead of specifying the number of rows and columns, these functions take a lis
         
         
           
-          <a href="../native_objects/" class="md-footer__link md-footer__link--next" aria-label="Next: Working with the Backend Objects">
+          <a href="../joint_grid/" class="md-footer__link md-footer__link--next" aria-label="Next: Joint Grid">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Working with the Backend Objects
+                Joint Grid
               </div>
             </div>
             <div class="md-footer__button md-icon">

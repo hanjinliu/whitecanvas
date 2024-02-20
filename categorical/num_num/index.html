@@ -280,6 +280,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -377,6 +381,48 @@
   
   <span class="md-ellipsis">
     Canvas Grid
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../canvas/joint_grid/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Joint Grid
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../canvas/legend/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Legend for the Layers
   </span>
   
 
@@ -764,6 +810,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#automatic-creation-of-legends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automatic Creation of Legends
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#distribution-of-numerical-data" class="md-nav__link">
     <span class="md-ellipsis">
       Distribution of Numerical Data
@@ -1093,6 +1148,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#automatic-creation-of-legends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automatic Creation of Legends
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#distribution-of-numerical-data" class="md-nav__link">
     <span class="md-ellipsis">
       Distribution of Numerical Data
@@ -1160,6 +1224,16 @@ different colors are used for each group.</p>
 </code></pre></div>
 <iframe src=../../_images/categorical_add_markers_hover_text.html frameborder="0" width="400px" height="300px" scrolling="no"></iframe>
 
+<h2 id="automatic-creation-of-legends">Automatic Creation of Legends</h2>
+<p>As mentioned in <a href="../../canvas/legend/">Legend for the Layers</a>, legends can be
+automatically created by <code>add_legend</code> function. In the case of the categorical plot,
+the legend is created based on the categories.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_legend</span><span class="p">()</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_add_line_color_with_legend.png" width="360px" /></p>
 <h2 id="distribution-of-numerical-data">Distribution of Numerical Data</h2>
 <p>There are several ways to visualize the distribution of numerical data.</p>
 <ul>

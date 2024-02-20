@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../cat_num/">
+        <link rel="prev" href="../grid/">
       
       
-        <link rel="next" href="../../events/">
+        <link rel="next" href="../legend/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Aggregation - whitecanvas</title>
+        <title>Joint Grid - whitecanvas</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#aggregation" class="md-skip">
+        <a href="#joint-plot" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Aggregation
+              Joint Grid
             
           </span>
         </div>
@@ -263,6 +263,8 @@
       
   
   
+    
+  
   
   
     
@@ -291,17 +293,17 @@
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../canvas/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -318,7 +320,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Canvas
@@ -334,7 +336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/basics/" class="md-nav__link">
+      <a href="../basics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -355,7 +357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/namespaces/" class="md-nav__link">
+      <a href="../namespaces/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -376,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/grid/" class="md-nav__link">
+      <a href="../grid/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -394,10 +396,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../canvas/joint_grid/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Joint Grid
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -406,6 +428,44 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#plotting-data-on-the-joint-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plotting Data on the Joint Grid
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#categorical-plots-on-joint-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Categorical Plots on Joint Grid
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -418,7 +478,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/legend/" class="md-nav__link">
+      <a href="../legend/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -439,7 +499,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas/native_objects/" class="md-nav__link">
+      <a href="../native_objects/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -688,8 +748,6 @@
       
   
   
-    
-  
   
   
     
@@ -712,17 +770,17 @@
       
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../categorical/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -739,7 +797,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Categorical Plot
@@ -755,7 +813,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../num_num/" class="md-nav__link">
+      <a href="../../categorical/num_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -776,7 +834,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cat_num/" class="md-nav__link">
+      <a href="../../categorical/cat_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -794,19 +852,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../categorical/aggregation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -815,7 +864,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1075,6 +1123,32 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#plotting-data-on-the-joint-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plotting Data on the Joint Grid
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#categorical-plots-on-joint-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Categorical Plots on Joint Grid
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1091,61 +1165,99 @@
   
 
 
-<h1 id="aggregation">Aggregation</h1>
-<p>Showing the aggregated data is a common way to efficiently visualize a lot of data. This
-task is usually done by the module specific group-by methods, but <code>whitecanvas</code> provides
-a built-in method to simplify the process.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<h1 id="joint-plot">Joint Plot</h1>
+<p>A joint plot is a plot that combines a main plot and two marginal plots. The main plot is usually a scatter plot, and the marginal plots are layers of histograms, KDE or rug
+plot.</p>
+<p><code>whitecanvas</code> provides a canvas grid class that is specifically designed for creating joint plots. It can be constructed using the <code>new_jointgrid</code> function.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
 
-<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">40</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">50</span><span class="p">,</span>
-    <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">40</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.3</span><span class="p">]),</span>
-    <span class="s2">&quot;replicate&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">23</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">17</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">22</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">28</span><span class="p">,</span>
-    <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">2.8</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span> <span class="o">+</span> <span class="mf">22.0</span><span class="p">,</span>
-<span class="p">}</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_jointgrid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<p>In following example, <code>mean()</code> is used to prepare a mean-aggregated plotter, which has
-<code>add_markers</code> method to add the mean markers to the plotter.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<img alt="" loading="lazy," src="../../_images/joint_grid_empty.png" width="360px" /></p>
+<p>The layout of the joint grid can be customized using the <code>loc</code> argument. It indicates
+the indices of the main canvas. The default value is <code>(1, 0)</code>.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
 
-<span class="c1"># create a categorical plotter</span>
-<span class="n">cat_plt</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
-
-<span class="c1"># plot all the data</span>
-<span class="n">cat_plt</span><span class="o">.</span><span class="n">add_stripplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
-<span class="c1"># plot the mean</span>
-<span class="n">cat_plt</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_jointgrid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/categorical_axis_stripplot_and_agg_mean.png" width="360px" /></p>
-<p>Similar <code>add_*</code> methods include <code>add_line()</code> and <code>add_bars()</code>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-
-<span class="c1"># create a categorical plotter</span>
-<span class="n">cat_plt</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
-
-<span class="c1"># plot all the data</span>
-<span class="n">cat_plt</span><span class="o">.</span><span class="n">add_stripplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
-<span class="c1"># plot the mean</span>
-<span class="n">cat_plt</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
-
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<img alt="" loading="lazy," src="../../_images/joint_grid_empty_with_loc.png" width="360px" /></p>
+<p>A good thing is that three canvases can be accessed using <code>main_canvas</code>, <code>x_canvas</code> and
+<code>y_canvas</code> no matter what the layout is.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">grid</span><span class="o">.</span><span class="n">main_canvas</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;this is the</span><span class="se">\n</span><span class="s2">main canvas&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">x_canvas</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;this is</span><span class="se">\n</span><span class="s2">the x</span><span class="se">\n</span><span class="s2">marginal</span><span class="se">\n</span><span class="s2">canvas&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">y_canvas</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;this is</span><span class="se">\n</span><span class="s2">the y</span><span class="se">\n</span><span class="s2">marginal</span><span class="se">\n</span><span class="s2">canvas&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/categorical_axis_stripplot_and_agg_line.png" width="360px" /></p>
-<p>Count plot is a special case of the aggregation. Use <code>count()</code> to make the plotter.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-<span class="p">(</span>
-    <span class="n">canvas</span>
-    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">count</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">add_bars</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">,</span> <span class="n">dodge</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<img alt="" loading="lazy," src="../../_images/joint_grid_with_text.png" width="360px" /></p>
+<h2 id="plotting-data-on-the-joint-grid">Plotting Data on the Joint Grid</h2>
+<p>Joint grid provides methods to plot the 2D distribution on the main canvas and the marginal distributions on the marginal canvases.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
+
+<span class="c1"># sample data</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+<span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">new_jointgrid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/joint_grid_scatter.png" width="360px" /></p>
+<p>Joint grid uses histograms to visualize the marginal distributions by default. You can change the type of the marginal plots using <code>with_*</code> methods on construction.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
+
+<span class="c1"># sample data</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+<span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># create a joint grid with customized marginal plots</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">new_jointgrid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_hist_x</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="s2">&quot;step&quot;</span><span class="p">)</span>  <span class="c1"># show histogram as the x-marginal distribution</span>
+    <span class="o">.</span><span class="n">with_kde_y</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># show kde as the y-marginal distribution</span>
+    <span class="o">.</span><span class="n">with_rug</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># show rug plot for both marginal distributions</span>
 <span class="p">)</span>
-<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">grid</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<img alt="" loading="lazy," src="../../_images/categorical_axis_countplot.png" width="360px" /></p>
+<img alt="" loading="lazy," src="../../_images/joint_grid_scatter_with_methods.png" width="360px" /></p>
+<h2 id="categorical-plots-on-joint-grid">Categorical Plots on Joint Grid</h2>
+<p><code>whitecanvas</code> has a flexible API for creating <a href="../../categorical/">categorical plots</a>. With the similar API, you can create a joint grid similarly. Here, we use the same
+data as <a href="../../categorical/num_num/">here</a>.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="c1"># sample data</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+<span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">([</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">],</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">40</span><span class="p">]),</span>
+<span class="p">}</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">new_jointgrid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_kde</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">with_rug</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/joint_grid_cat.png" width="360px" /></p>
 
 
 
@@ -1175,7 +1287,7 @@ a built-in method to simplify the process.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../cat_num/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Categorical &amp;times; Numerical Data">
+          <a href="../grid/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Canvas Grid">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -1185,20 +1297,20 @@ a built-in method to simplify the process.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Categorical &times; Numerical Data
+                Canvas Grid
               </div>
             </div>
           </a>
         
         
           
-          <a href="../../events/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
+          <a href="../legend/" class="md-footer__link md-footer__link--next" aria-label="Next: Legend for the Layers">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Overview
+                Legend for the Layers
               </div>
             </div>
             <div class="md-footer__button md-icon">

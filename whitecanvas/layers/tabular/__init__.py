@@ -9,6 +9,7 @@ from whitecanvas.layers.tabular._dataframe import (
     DFHistograms,
     DFKde,
     DFLines,
+    DFMultiHeatmap,
     DFPointPlot2D,
 )
 from whitecanvas.layers.tabular._df_compat import parse
@@ -27,6 +28,7 @@ __all__ = [
     "DFMarkerGroups",
     "DFPointPlot",
     "DFMarkers",
+    "DFMultiHeatmap",
     "DFBars",
     "DFBoxPlot",
     "DFHeatmap",

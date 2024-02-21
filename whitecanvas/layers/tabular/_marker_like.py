@@ -357,7 +357,7 @@ class DFMarkers(
         if self._size_by.is_const():
             size_default = self._size_by.get_const_value()
         if self._color_by.is_const():
-            color_default = self._color_by.map(self._source)
+            color_default = self._color_by.map(self._source)[0]
         elif isinstance(self._color_by, _p.ColorPlan):
             color_entries = self._color_by.to_entries(self._source)
             items.append((", ".join(self._color_by.by), _legend.TitleItem()))
@@ -572,7 +572,7 @@ class DFBars(
         color_default = theme.get_theme().background_color
         edge_info = self._base_layer.edge._as_legend_info()
         if self._color_by.is_const():
-            color_default = self._color_by.map(self._source)
+            color_default = self._color_by.map(self._source)[0]
         else:
             color_entries = self._color_by.to_entries(self._source)
             items.append((", ".join(self._color_by.by), _legend.TitleItem()))

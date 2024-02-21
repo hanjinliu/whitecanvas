@@ -249,7 +249,43 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         canvas = self._canvas()
         layer = _lt.DFMultiHeatmap.build_hist(
             self._df, self._get_x(), self._get_y(), color=color,name=name, bins=bins,
-            range=(rangex, rangey), backend=canvas._get_backend(),
+            range=(rangex, rangey), palette=canvas._color_palette,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        return canvas.add_layer(layer)
+
+    def add_kde2d(
+        self,
+        *,
+        name: str | None = None,
+        color: str | None = None,
+        band_width: KdeBandWidthType = "scott",
+    ) -> _lt.DFHeatmap[_DF]:
+        """
+        Add 2-D kernel density estimation of given x/y columns.
+
+        >>> ### Use "tip" column as x-axis and "total_bill" column as y-axis
+        >>> canvas.cat(df, "tip", "total_bill").add_kde2d()
+
+        Parameters
+        ----------
+        cmap : colormap-like, default "inferno"
+            Colormap to use for the heatmap.
+        name : str, optional
+            Name of the layer.
+        band_width : float, default None
+            Bandwidth of the kernel density estimation. If None, use Scott's rule.
+
+        Returns
+        -------
+        DFHeatmap
+            Dataframe bound heatmap layer.
+        """
+        canvas = self._canvas()
+        layer = _lt.DFMultiHeatmap.build_kde(
+            self._df, self._get_x(), self._get_y(), color=color, name=name,
+            band_width=band_width, palette=canvas._color_palette,
+            backend=canvas._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(layer)
 

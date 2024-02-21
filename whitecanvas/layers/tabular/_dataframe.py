@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from itertools import cycle
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -272,8 +273,79 @@ class DFMultiHeatmap(
         palette: ColormapType = "tab10",
         backend: Backend | str | None = None,
     ) -> Self:
-        from itertools import cycle
+        src, color = cls._norm_df_xy_color(df, x, y, color)
+        # normalize bins
+        if isinstance(bins, tuple):
+            xbins, ybins = bins
+        else:
+            xbins = ybins = bins
+        if range is None:
+            xrange = yrange = None
+        else:
+            xrange, yrange = range
+        _bins = (
+            np.histogram_bin_edges(src[x], xbins, xrange),
+            np.histogram_bin_edges(src[y], ybins, yrange),
+        )
 
+        color_by = _p.ColorPlan.from_palette(color, palette)
+        image_layers: list[_l.Image] = []
+        categories = []
+        color_iter = cycle(color_by.values)
+        for sl, sub in src.group_by(color):
+            categories.append(sl)
+            xdata, ydata = sub[x], sub[y]
+            next_color = next(color_iter)
+            next_background = Color([*next_color.rgba[:3], 0.0])
+            cmap = [next_background, next_color]
+            img = _l.Image.build_hist(
+                xdata, ydata, name=name, cmap=cmap, bins=_bins, density=True,
+                backend=backend,
+            )  # fmt: skip
+            image_layers.append(img)
+        base = _lg.LayerCollectionBase(image_layers)
+        return cls(base, src, color_by, categories)
+
+    @classmethod
+    def build_kde(
+        cls,
+        df: _DF,
+        x: str,
+        y: str,
+        name: str | None = None,
+        color: str | list[str] | None = None,
+        band_width: KdeBandWidthType = "scott",
+        palette: ColormapType = "tab10",
+        backend: Backend | str | None = None,
+    ) -> Self:
+        src, color = cls._norm_df_xy_color(df, x, y, color)
+        color_by = _p.ColorPlan.from_palette(color, palette)
+        image_layers: list[_l.Image] = []
+        categories = []
+        color_iter = cycle(color_by.values)
+        xrange = src[x].min(), src[x].max()
+        yrange = src[y].min(), src[y].max()
+        for sl, sub in src.group_by(color):
+            categories.append(sl)
+            xdata, ydata = sub[x], sub[y]
+            next_color = next(color_iter)
+            next_background = Color([*next_color.rgba[:3], 0.0])
+            cmap = [next_background, next_color]
+            img = _l.Image.build_kde(
+                xdata,
+                ydata,
+                name=name,
+                cmap=cmap,
+                band_width=band_width,
+                range=(xrange, yrange),
+                backend=backend,
+            )
+            image_layers.append(img)
+        base = _lg.LayerCollectionBase(image_layers)
+        return cls(base, src, color_by, categories)
+
+    @staticmethod
+    def _norm_df_xy_color(df, x, y, color):
         src = parse(df)
         # dtype check
         if src[x].dtype.kind not in "fiub":
@@ -287,23 +359,13 @@ class DFMultiHeatmap(
             color = ()
         else:
             color = tuple(color)
-        color_by = _p.ColorPlan.from_palette(color, palette)
-        image_layers: list[_l.Image] = []
-        categories = []
-        color_iter = cycle(color_by.values)
-        for sl, sub in src.group_by(color):
-            categories.append(sl)
-            xdata, ydata = sub[x], sub[y]
-            cmap = [Color("transparent"), next(color_iter)]
-            img = _l.Image.build_hist(
-                xdata, ydata, name=name, cmap=cmap, bins=bins, range=range,
-                density=True, backend=backend,
-            )  # fmt: skip
-            image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers)
-        return cls(base, src, color_by, categories)
+        return src, color
 
     def _as_legend_item(self) -> _legend.LegendItem:
+        if len(self._categories) == 1:
+            face = _legend.FaceInfo(self._color_by.values[0])
+            edge = _legend.EdgeInfo(self._color_by.values[0], width=0)
+            return _legend.BarLegendItem(face, edge)
         df = _shared.list_to_df(self._categories, self._color_by.by)
         colors = self._color_by.to_entries(df)
         items = [(", ".join(self._color_by.by), _legend.TitleItem())]

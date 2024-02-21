@@ -467,6 +467,7 @@ class DFBars(
     ):
         splitby = _shared.join_columns(color, hatch, source=source)
         self._color_by = _p.ColorPlan.default()
+        self._hatch_by = _p.HatchPlan.default()
         self._style_by = _p.StylePlan.default()
         self._splitby = splitby
 
@@ -494,7 +495,6 @@ class DFBars(
         orient: Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
     ) -> DFBars[_DF]:
-        splitby = _shared.join_columns(color, hatch, source=df)
         if isinstance(x, _jitter.JitterBase):
             xj = x
         else:
@@ -503,17 +503,8 @@ class DFBars(
             yj = y
         else:
             yj = _jitter.IdentityJitter(y)
-        xs: list[np.ndarray] = []
-        ys: list[np.ndarray] = []
-        for _, sub in df.group_by(splitby):
-            xcur = xj.map(sub)
-            ycur = yj.map(sub)
-            order = np.argsort(xcur)
-            xs.append(xcur[order])
-            ys.append(ycur[order])
-        # BUG: order of coloring and x/y do not match
-        x0 = np.concatenate(xs)
-        y0 = np.concatenate(ys)
+        x0 = xj.map(df)
+        y0 = yj.map(df)
         return DFBars(
             df, x0, y0, name=name, color=color, hatch=hatch, extent=extent,
             orient=orient, backend=backend,

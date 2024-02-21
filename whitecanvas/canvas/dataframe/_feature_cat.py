@@ -11,7 +11,7 @@ from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
-from whitecanvas.types import ColormapType, HistBinType, KdeBandWidthType, Orientation
+from whitecanvas.types import HistBinType, KdeBandWidthType, Orientation
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -214,12 +214,12 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
     def add_hist2d(
         self,
         *,
-        cmap: ColormapType = "inferno",
         name: str | None = None,
+        color: str | None = None,
         bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         rangex: tuple[float, float] | None = None,
         rangey: tuple[float, float] | None = None,
-        density: bool = False,
+        cmap=None,  # deprecated
     ) -> _lt.DFHeatmap[_DF]:
         """
         Add 2-D histogram of given x/y columns.
@@ -240,9 +240,6 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             Range of x values in which histogram will be built.
         rangey : (float, float), optional
             Range of y values in which histogram will be built.
-        density : bool, default False
-            If True, the result is the value of the probability density function at the
-            bin, normalized such that the integral over the range is 1.
 
         Returns
         -------
@@ -250,9 +247,45 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             Dataframe bound heatmap layer.
         """
         canvas = self._canvas()
-        layer = _lt.DFHeatmap.build_hist(
-            self._df, self._get_x(), self._get_y(), cmap=cmap, name=name, bins=bins,
-            range=(rangex, rangey), density=density, backend=canvas._get_backend(),
+        layer = _lt.DFMultiHeatmap.build_hist(
+            self._df, self._get_x(), self._get_y(), color=color,name=name, bins=bins,
+            range=(rangex, rangey), palette=canvas._color_palette,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        return canvas.add_layer(layer)
+
+    def add_kde2d(
+        self,
+        *,
+        name: str | None = None,
+        color: str | None = None,
+        band_width: KdeBandWidthType = "scott",
+    ) -> _lt.DFHeatmap[_DF]:
+        """
+        Add 2-D kernel density estimation of given x/y columns.
+
+        >>> ### Use "tip" column as x-axis and "total_bill" column as y-axis
+        >>> canvas.cat(df, "tip", "total_bill").add_kde2d()
+
+        Parameters
+        ----------
+        cmap : colormap-like, default "inferno"
+            Colormap to use for the heatmap.
+        name : str, optional
+            Name of the layer.
+        band_width : float, default None
+            Bandwidth of the kernel density estimation. If None, use Scott's rule.
+
+        Returns
+        -------
+        DFHeatmap
+            Dataframe bound heatmap layer.
+        """
+        canvas = self._canvas()
+        layer = _lt.DFMultiHeatmap.build_kde(
+            self._df, self._get_x(), self._get_y(), color=color, name=name,
+            band_width=band_width, palette=canvas._color_palette,
+            backend=canvas._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(layer)
 

@@ -10,7 +10,14 @@ from psygnal import Signal
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer, LayerEvents
 from whitecanvas.protocols import ImageProtocol
-from whitecanvas.types import ArrayLike1D, ColormapType, HistBinType, Origin, _Void
+from whitecanvas.types import (
+    ArrayLike1D,
+    ColormapType,
+    HistBinType,
+    KdeBandWidthType,
+    Origin,
+    _Void,
+)
 from whitecanvas.utils.normalize import as_array_1d
 from whitecanvas.utils.type_check import is_real_number
 
@@ -281,6 +288,42 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         self = cls(
             hist_t, name=name, cmap=cmap, shift=shift, scale=scale, backend=backend
         )
+        self.origin = Origin.EDGE
+        return self
+
+    @classmethod
+    def build_kde(
+        cls,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        shape: tuple[int, int] = (256, 256),
+        range=None,
+        band_width: KdeBandWidthType = "scott",
+        name: str | None = None,
+        cmap: ColormapType = "inferno",
+        backend: Backend | str | None = None,
+    ) -> Image:
+        from whitecanvas.utils.kde import gaussian_kde
+
+        _x = as_array_1d(x)
+        _y = as_array_1d(y)
+        kde = gaussian_kde([_x, _y], bw_method=band_width)
+        if range is None:
+            xrange = yrange = None
+        else:
+            xrange, yrange = range
+        if xrange is None:
+            xrange = _x.min(), _x.max()
+        if yrange is None:
+            yrange = _y.min(), _y.max()
+        xedges = np.linspace(*xrange, shape[0])
+        yedges = np.linspace(*yrange, shape[1])
+        xx, yy = np.meshgrid(xedges, yedges)
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        val = np.reshape(kde(positions).T, xx.shape)
+        shift = (xedges[0], yedges[0])
+        scale = (xedges[1] - xedges[0], yedges[1] - yedges[0])
+        self = cls(val, name=name, cmap=cmap, shift=shift, scale=scale, backend=backend)
         self.origin = Origin.EDGE
         return self
 

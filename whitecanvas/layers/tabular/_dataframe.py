@@ -37,6 +37,7 @@ from whitecanvas.utils.hist import histograms
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+
 _DF = TypeVar("_DF")
 
 
@@ -231,32 +232,6 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
         self._base_layer.clim = clim
 
     @classmethod
-    def build_hist(
-        cls,
-        df: _DF,
-        x: str,
-        y: str,
-        name: str | None = None,
-        cmap: ColormapType = "gray",
-        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
-        range=None,
-        density: bool = False,
-        backend: Backend | str | None = None,
-    ) -> Self:
-        src = parse(df)
-        xdata = src[x]
-        ydata = src[y]
-        if xdata.dtype.kind not in "fiub":
-            raise ValueError(f"Column {x!r} is not numeric.")
-        if ydata.dtype.kind not in "fiub":
-            raise ValueError(f"Column {y!r} is not numeric.")
-        base = _l.Image.build_hist(
-            xdata, ydata, name=name, cmap=cmap, bins=bins, range=range,
-            density=density, backend=backend,
-        )  # fmt: skip
-        return cls(base, src)
-
-    @classmethod
     def from_array(
         cls,
         src: DataFrameWrapper[_DF],
@@ -267,6 +242,76 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
         backend: Backend | str | None = None,
     ) -> DFHeatmap[_DF]:
         return cls(_l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend), src)
+
+
+class DFMultiHeatmap(
+    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_l.Image], _DF],
+    Generic[_DF],
+):
+    def __init__(
+        self,
+        base: _lg.LayerCollectionBase[_l.Image],
+        source: DataFrameWrapper[_DF],
+        color_by: _p.ColorPlan,
+        categories: list[tuple],
+    ):
+        self._color_by = color_by
+        self._categories = categories
+        super().__init__(base, source)
+
+    @classmethod
+    def build_hist(
+        cls,
+        df: _DF,
+        x: str,
+        y: str,
+        name: str | None = None,
+        color: str | list[str] | None = None,
+        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
+        range=None,
+        palette: ColormapType = "tab10",
+        backend: Backend | str | None = None,
+    ) -> Self:
+        from itertools import cycle
+
+        src = parse(df)
+        # dtype check
+        if src[x].dtype.kind not in "fiub":
+            raise ValueError(f"Column {x!r} is not numeric.")
+        if src[y].dtype.kind not in "fiub":
+            raise ValueError(f"Column {y!r} is not numeric.")
+
+        if isinstance(color, str):
+            color = (color,)
+        elif color is None:
+            color = ()
+        else:
+            color = tuple(color)
+        color_by = _p.ColorPlan.from_palette(color, palette)
+        image_layers: list[_l.Image] = []
+        categories = []
+        color_iter = cycle(color_by.values)
+        for sl, sub in src.group_by(color):
+            categories.append(sl)
+            xdata, ydata = sub[x], sub[y]
+            cmap = [Color("transparent"), next(color_iter)]
+            img = _l.Image.build_hist(
+                xdata, ydata, name=name, cmap=cmap, bins=bins, range=range,
+                density=True, backend=backend,
+            )  # fmt: skip
+            image_layers.append(img)
+        base = _lg.LayerCollectionBase(image_layers)
+        return cls(base, src, color_by, categories)
+
+    def _as_legend_item(self) -> _legend.LegendItem:
+        df = _shared.list_to_df(self._categories, self._color_by.by)
+        colors = self._color_by.to_entries(df)
+        items = [(", ".join(self._color_by.by), _legend.TitleItem())]
+        for label, color in colors:
+            face = _legend.FaceInfo(color)
+            edge = _legend.EdgeInfo(color, width=0)
+            items.append((label, _legend.BarLegendItem(face, edge)))
+        return _legend.LegendItemCollection(items)
 
 
 class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):

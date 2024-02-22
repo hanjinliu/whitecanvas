@@ -173,7 +173,8 @@ class ViolinPlot(BandCollection):
 
     @property
     def orient(self) -> Orientation:
-        return self._orient
+        """Orientation of the violin plot (perpendicular to the fill orientation)."""
+        return self._orient.transpose()
 
     @property
     def ndata(self) -> int:

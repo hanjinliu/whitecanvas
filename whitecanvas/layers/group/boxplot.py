@@ -3,17 +3,16 @@ from __future__ import annotations
 from typing import Iterable
 
 import numpy as np
-from cmap import Color
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import (
     AbstractFaceEdgeMixin,
     EnumArray,
-    MonoEdge,
+    MultiEdge,
     MultiFace,
-    SinglePropertyEdgeBase,
-    SinglePropertyFaceBase,
+    MultiPropertyEdgeBase,
+    MultiPropertyFaceBase,
 )
 from whitecanvas.layers._primitive import Bars, MultiLine
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -56,10 +55,9 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
 
     def __init__(
         self,
-        boxes: Bars[MultiFace, MonoEdge],
+        boxes: Bars[MultiFace, MultiEdge],
         whiskers: MultiLine,
         medians: MultiLine,
-        # outliers: Markers | None = None,
         *,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
@@ -70,7 +68,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         self._init_events()
 
     @property
-    def boxes(self) -> Bars[MultiFace, MonoEdge]:
+    def boxes(self) -> Bars[MultiFace, MultiEdge]:
         """The boxes layer (Bars)."""
         return self._children[0]
 
@@ -111,7 +109,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
             extent=extent, backend=backend,
         ).with_face_multi(
             hatch=hatch, color=color, alpha=alpha,
-        ).with_edge(color="black")  # fmt: skip
+        ).with_edge_multi(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], capsize
@@ -241,7 +239,7 @@ def _yxx_to_segments(
     return segments_0 + segments_1 + cap0 + cap1
 
 
-class BoxFace(SinglePropertyFaceBase):
+class BoxFace(MultiPropertyFaceBase):
     _layer: BoxPlot
 
     @property
@@ -307,8 +305,14 @@ class BoxFace(SinglePropertyFaceBase):
         return self._layer
 
 
-class BoxEdge(SinglePropertyEdgeBase):
+class BoxEdge(MultiPropertyEdgeBase):
     _layer: BoxPlot
+
+    def _xndata(self) -> int:
+        nboxes = self._layer.boxes.ndata
+        nlines = self._layer.whiskers.ndata
+        assert nboxes * 2 == nlines or nboxes * 4 == nlines, f"{nboxes=}, {nlines=}"
+        return nlines // nboxes
 
     @property
     def color(self) -> NDArray[np.floating]:
@@ -317,9 +321,10 @@ class BoxEdge(SinglePropertyEdgeBase):
 
     @color.setter
     def color(self, color: ColorType):
-        col = np.array(Color(color), dtype=np.float32)  # assert a single color
+        ndata = self._layer.boxes.ndata
+        col = as_color_array(color, ndata)
         self._layer.boxes.edge.color = col
-        self._layer.whiskers.color = col
+        self._layer.whiskers.color = np.tile(col, [self._xndata(), 1])
         self._layer.medians.color = col
         self.events.color.emit(col)
 
@@ -330,10 +335,12 @@ class BoxEdge(SinglePropertyEdgeBase):
 
     @width.setter
     def width(self, width: float):
-        self._layer.boxes.edge.width = width
-        self._layer.whiskers.width = width
-        self._layer.medians.width = width
-        self.events.width.emit(width)
+        ndata = self._layer.boxes.ndata
+        widths = as_any_1d_array(width, ndata, dtype=np.float32)
+        self._layer.boxes.edge.width = widths
+        self._layer.whiskers.width = np.tile(widths, self._xndata())
+        self._layer.medians.width = widths
+        self.events.width.emit(widths)
 
     @property
     def style(self) -> EnumArray[LineStyle]:
@@ -342,10 +349,16 @@ class BoxEdge(SinglePropertyEdgeBase):
 
     @style.setter
     def style(self, style: str | LineStyle):
-        style = LineStyle(style)
-        self._layer.boxes.edge.style = style
-        self._layer.whiskers.style = style
-        self._layer.medians.style = style
+        ndata = self._layer.boxes.ndata
+        if isinstance(style, (str, LineStyle)):
+            styles = np.full(ndata, LineStyle(style), dtype=object)
+        else:
+            styles = np.array(style, dtype=object)
+            if styles.shape != (ndata,):
+                raise ValueError("Invalid shape of the style array.")
+        self._layer.boxes.edge.style = styles
+        self._layer.whiskers.style = np.tile(styles, self._xndata())
+        self._layer.medians.style = styles
         self.events.style.emit(style)
 
     @property

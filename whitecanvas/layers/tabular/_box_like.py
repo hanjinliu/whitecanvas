@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generic, Sequence, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, Literal, Sequence, TypeVar
 
 import numpy as np
 from cmap import Color
@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.canvas.dataframe._base import CatIterator
-    from whitecanvas.layers.tabular import DFRugGroups
 
     _FE = _mixin.AbstractFaceEdgeMixin[_mixin.FaceNamespace, _mixin.EdgeNamespace]
 
@@ -246,7 +245,7 @@ class DFViolinPlot(
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
-        shape: str = "both",
+        shape: Literal["both", "left", "right"] = "both",
         backend: str | Backend | None = None,
     ):
         _splitby, dodge = _shared.norm_dodge(
@@ -261,8 +260,9 @@ class DFViolinPlot(
         )  # fmt: skip
         super().__init__(base, cat.df)
         _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
+        self._offsets = cat.offsets
         self._value = value
-        self._map = cat.prep_position_map(_splitby, dodge)
+        self._dodge = dodge
         self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
 
     @property
@@ -296,13 +296,24 @@ class DFViolinPlot(
         self,
         *,
         width: float = 1.0,
-        color="black",
+        color: ColorType | None = None,
     ):
-        """Overlay rug plot on the violins."""
+        """Overlay rug plot on the violins and return the violin layer."""
         from whitecanvas.layers.tabular import DFRugGroups
 
+        canvas = self._canvas_ref()
+        if canvas is None:
+            raise ValueError("No canvas to add the rug plot.")
         _extent = self.base.extent
-        jitter = _jitter.CategoricalJitter(self._splitby, self._map)
+        if color is not None:
+            colors = Color(color)
+        else:
+            # TODO: if the violin is edge only, use the edge color
+            colors = Color("#1F1F1F")
+        jitter = _jitter.CategoricalJitter(
+            self._splitby,
+            self._make_cat_iterator().prep_position_map(self._splitby, self._dodge),
+        )
         if self.base._shape == "both":
             align = "center"
         elif self.base._shape == "left":
@@ -310,15 +321,92 @@ class DFViolinPlot(
         else:
             align = "low"
         rug = DFRugGroups.from_table(
-            self._source, jitter, self._value, color=color, width=width, extent=_extent,
-            backend=self.base._backend_name,
+            self._source, jitter, self._value, color=colors, width=width,
+            extent=_extent, backend=self.base._backend_name,
         ).scale_by_density(align=align)  # fmt: skip
-        old_name = self.name
-        return _ViolinRugTuple([self, rug], name=old_name)
+        canvas.add_layer(rug)
+        return self
 
-    # def with_box(self):
+    def with_box(
+        self,
+        *,
+        color: ColorType | None = None,
+        median_color: ColorType = "white",
+        width: float = 2.0,
+        extent: float = 0.1,
+        capsize: float = 0.0,
+    ):
+        """
+        Overlay box plot on the violins and return the violin layer.
+
+        Following the convension of many statistical software, the box plot is colored
+        by black if the violin faces are colored, and colored by the edge color
+        otherwise. The median line is colored by the given median color.
+
+        Parameters
+        ----------
+        color : color-type, optional
+            Color of the box plot. If not given, it will be colored by "#1F1F1F" if
+            the violin faces are colored, and by the edge color of the violin plot
+            otherwise.
+        median_color : color-type, optional
+            Color of the median line of the box plot.
+        width : float, optional
+            Width of the whiskers of the boxplot.
+        extent : float, optional
+            Relative width of the boxes.
+        capsize : float, optional
+            Relative size of the caps of the whiskers.
+        """
+
+        canvas = self._canvas_ref()
+        if canvas is None:
+            raise ValueError("No canvas to add the box plot.")
+        if color is not None:
+            colors = Color(color)
+        else:
+            if np.all(self.base.edge.width > 0) and np.all(self.base.edge.alpha > 0):
+                colors = self.base.edge.color
+            else:
+                colors = Color("#1F1F1F")
+        box = DFBoxPlot(
+            self._make_cat_iterator(), self._value, name=f"boxplot-of-{self.name}",
+            color=None, hatch=Hatch.SOLID, dodge=self._dodge, width=width,
+            orient=self.orient, capsize=capsize, extent=extent,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        box.base.boxes.face.color = colors
+        box.base.edge.color = colors
+        box.base.medians.color = Color(median_color)
+        canvas.add_layer(box)
+        return self
+
+    def as_edge_only(
+        self,
+        width: float = 3.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Self:
+        """
+        Replace the violin edge color with the face color and delete the face color.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the edge.
+        style : str or LineStyle, optional
+            Style of the edge.
+        """
+        self.base.with_edge(color=self.base.face.color, width=width, style=style)
+        self.base.face.update(alpha=0.0)
+        return self
+
     def _as_legend_item(self) -> _legend.LegendItemCollection:
         return _BoxLikeMixin._as_legend_item(self)
+
+    def _make_cat_iterator(self) -> CatIterator[_DF]:
+        from whitecanvas.canvas.dataframe._base import CatIterator
+
+        return CatIterator(self._source, offsets=self._offsets)
 
 
 class DFBoxPlot(
@@ -330,6 +418,7 @@ class DFBoxPlot(
         value: str,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
+        width: float = 1.0,
         dodge: str | tuple[str, ...] | bool | None = None,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
@@ -348,6 +437,7 @@ class DFBoxPlot(
             x, arr, name=name, orient=orient, capsize=_capsize, extent=_extent,
             backend=backend,
         )  # fmt: skip
+        base.edge.width = width
         super().__init__(base, cat.df)
         _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
 
@@ -599,16 +689,3 @@ class DFBarPlot(
 
     def _as_legend_item(self) -> _legend.LegendItemCollection:
         return _BoxLikeMixin._as_legend_item(self)
-
-
-class _ViolinRugTuple(_lg.LayerTuple):
-    @property
-    def violin(self) -> DFViolinPlot:
-        return self._children[0]
-
-    @property
-    def rug(self) -> DFRugGroups:
-        return self._children[1]
-
-    def _as_legend_item(self) -> _legend.LegendItem:
-        return self.violin._as_legend_item()

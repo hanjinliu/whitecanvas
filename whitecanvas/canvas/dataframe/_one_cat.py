@@ -104,6 +104,14 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
                     "Category column(s) must be specified by a string or a sequence "
                     f"of strings, got {offset!r}."
                 )
+        # check dtype
+        for col in offset:
+            arr = self._df[col]
+            if arr.dtype.kind in "fc":
+                raise ValueError(
+                    f"Column {col!r} cannot be interpreted as a categorical column "
+                    f"(dtype={arr.dtype!r})."
+                )
         self._offset: tuple[str, ...] = offset
         self._cat_iter = CatIterator(self._df, offset)
         self._value = value

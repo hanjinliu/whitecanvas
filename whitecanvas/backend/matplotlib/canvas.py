@@ -57,8 +57,9 @@ class Canvas:
         self._yticks = YTicks(self)
         ax.set_axisbelow(True)  # grid lines below other layers
         self._annot = ax.annotate(
-            text="", xy=(0, 0), xytext=(20, -20), textcoords="offset points",
-            bbox={"fc": "w"}, fontproperties={"size": 14, "family": "Arial"},
+            text="", xy=(0, 0), xytext=(20, -20), textcoords="data",
+            bbox={"fc": np.array([1.0, 1.0, 1.0, 0.4])},
+            fontproperties={"size": 14, "family": "Arial"},
             clip_on=False, zorder=10000,
         )  # fmt: skip
         self._annot.set_visible(False)
@@ -95,8 +96,10 @@ class Canvas:
         y0, y1 = self._axes.get_ylim()
         xc = (x0 + x1) / 2
         yc = (y0 + y1) / 2
-        xtext = x - 20 if x > xc else x + 20
-        ytext = y - 20 if y > yc else y + 20
+        dx = (x1 - x0) * 0.05
+        dy = (y1 - y0) * 0.05
+        xtext = x - dx if x > xc else x + dx
+        ytext = y - dy if y > yc else y + dy
         ha = "right" if x > xc else "left"
         va = "top" if y > yc else "bottom"
 

@@ -215,12 +215,12 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         self,
         *,
         name: str | None = None,
-        color: str | None = None,
+        color: str | Sequence[str] | None = None,
         bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         rangex: tuple[float, float] | None = None,
         rangey: tuple[float, float] | None = None,
         cmap=None,  # deprecated
-    ) -> _lt.DFHeatmap[_DF]:
+    ) -> _lt.DFMultiHeatmap[_DF]:
         """
         Add 2-D histogram of given x/y columns.
 
@@ -229,10 +229,10 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
 
         Parameters
         ----------
-        cmap : colormap-like, default "inferno"
-            Colormap to use for the heatmap.
         name : str, optional
             Name of the layer.
+        color : str, optional
+            Column name(s) for coloring the histogram.
         bins : int, array, str or tuple of them, default "auto"
             If int, the number of bins for both x and y. If tuple, the number of bins
             for x and y respectively.
@@ -243,7 +243,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
 
         Returns
         -------
-        DFHeatmap
+        DFMultiHeatmap
             Dataframe bound heatmap layer.
         """
         canvas = self._canvas()
@@ -260,7 +260,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         name: str | None = None,
         color: str | None = None,
         band_width: KdeBandWidthType = "scott",
-    ) -> _lt.DFHeatmap[_DF]:
+    ) -> _lt.DFMultiHeatmap[_DF]:
         """
         Add 2-D kernel density estimation of given x/y columns.
 
@@ -269,16 +269,16 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
 
         Parameters
         ----------
-        cmap : colormap-like, default "inferno"
-            Colormap to use for the heatmap.
         name : str, optional
             Name of the layer.
+        color : str, optional
+            Column name(s) for coloring the densities.
         band_width : float, default None
             Bandwidth of the kernel density estimation. If None, use Scott's rule.
 
         Returns
         -------
-        DFHeatmap
+        DFMultiHeatmap
             Dataframe bound heatmap layer.
         """
         canvas = self._canvas()

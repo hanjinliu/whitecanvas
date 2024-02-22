@@ -266,44 +266,6 @@ class BoxFace(MultiPropertyFaceBase):
         self._layer.boxes.face.hatch = hatches
         self.events.hatch.emit(hatches)
 
-    @property
-    def alpha(self) -> float:
-        """Alpha value of the face."""
-        return self.color[:, 3]
-
-    @alpha.setter
-    def alpha(self, value):
-        color = self.color.copy()
-        color[:, 3] = value
-        self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> BoxPlot:
-        """
-        Update the face properties.
-
-        Parameters
-        ----------
-        color : ColorType, optional
-            Color of the face.
-        hatch : FacePattern, optional
-            Fill hatch of the face.
-        alpha : float, optional
-            Alpha value of the face.
-        """
-        if color is not _void:
-            self.color = color
-        if hatch is not _void:
-            self.hatch = hatch
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
 
 class BoxEdge(MultiPropertyEdgeBase):
     _layer: BoxPlot
@@ -324,7 +286,7 @@ class BoxEdge(MultiPropertyEdgeBase):
         ndata = self._layer.boxes.ndata
         col = as_color_array(color, ndata)
         self._layer.boxes.edge.color = col
-        self._layer.whiskers.color = np.tile(col, [self._xndata(), 1])
+        self._layer.whiskers.color = np.concatenate([col] * self._xndata(), axis=0)
         self._layer.medians.color = col
         self.events.color.emit(col)
 
@@ -360,31 +322,3 @@ class BoxEdge(MultiPropertyEdgeBase):
         self._layer.whiskers.style = np.tile(styles, self._xndata())
         self._layer.medians.style = styles
         self.events.style.emit(style)
-
-    @property
-    def alpha(self) -> float:
-        return self.color[3]
-
-    @alpha.setter
-    def alpha(self, value):
-        color = self.color.copy()
-        color[3] = value
-        self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> BoxPlot:
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer

@@ -322,7 +322,14 @@ canvas = new_canvas("matplotlib")
 canvas.show()
 ```
 
-Rug plot can also be overlaid with violin plot with `with_rug` method.
+## Overlaying Plots
+
+Some types of plots are implemented with methods to efficiently overlay them with other
+plots. All of them use method chaining so that the arguments can be auto-completed.
+
+### Rug plot over violin plot
+
+Violin plot can be overlaid with rug plot using `with_rug` method.
 
 ``` python
 #!name: categorical_axis_violin_with_rug
@@ -331,7 +338,24 @@ canvas = new_canvas("matplotlib")
     canvas
     .cat_x(df, x="category", y="observation")
     .add_violinplot(color="replicate")
-    .with_rug()
+    .with_rug(color="#purple")
+)
+canvas.show()
+```
+
+### Box plot over violin plot
+
+Violin plot can be overlaid with box plot using `with_box` method. Color of the box plot
+follows the convention of other plotting softwares by default.
+
+``` python
+#!name: categorical_axis_violin_with_box
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_box(width=2.0, extent=0.05)
 )
 canvas.show()
 ```

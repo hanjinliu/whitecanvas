@@ -13,13 +13,14 @@ from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
-from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
+from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 from whitecanvas.types import (
     ColormapType,
     ColorType,
     Hatch,
     LineStyle,
     Orientation,
+    Symbol,
     _Void,
 )
 from whitecanvas.utils.type_check import is_real_number
@@ -440,6 +441,9 @@ class DFBoxPlot(
         base.edge.width = width
         super().__init__(base, cat.df)
         _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
+        self._offsets = cat.offsets
+        self._value = value
+        self._dodge = dodge
 
     @property
     def orient(self) -> Orientation:
@@ -462,6 +466,63 @@ class DFBoxPlot(
         for i, key in enumerate(self._splitby):
             extra[key] = [row[i] for row in self._categories]
         self.base.boxes.with_hover_template(template, extra=extra)
+        return self
+
+    def with_outliers(
+        self,
+        *,
+        color: ColorType | None = None,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: float | None = None,
+        ratio: float = 1.5,
+        extent: float = 0.1,
+        seed: int | None = 0,
+    ):
+        """Overlay outliers on the box plot and return the box plot layer."""
+        from whitecanvas.canvas.dataframe._base import CatIterator
+        from whitecanvas.layers.tabular import DFMarkerGroups
+
+        canvas = self._canvas_ref()
+        size = theme._default("markers.size", size)
+        if canvas is None:
+            raise ValueError("No canvas to add the outliers.")
+        if color is not None:
+            colors = Color(color)
+        else:
+            colors = Color("#1F1F1F")
+        df_outliers = {c: [] for c in self._splitby}
+        df_outliers[self._value] = []
+        for sl, sub in self._source.group_by(self._splitby):
+            arr = sub[self._value]
+            q1, q3 = np.quantile(arr, [0.25, 0.75])
+            iqr = q3 - q1
+            low = q1 - ratio * iqr
+            high = q3 + ratio * iqr
+            outliers = arr[(arr < low) | (arr > high)]
+            for _cat, _s in zip(sl, self._splitby):
+                df_outliers[_s].extend([_cat] * outliers.size)
+            df_outliers[self._value].extend(outliers)
+
+        df_outliers = parse(df_outliers)
+        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _map = _cat_self.prep_position_map(self._splitby, self._dodge)
+        _extent = _cat_self.zoom_factor(self._dodge) * extent
+        xj = _jitter.UniformJitter(self._splitby, _map, extent=_extent, seed=seed)
+        yj = _jitter.IdentityJitter(self._value).check(df_outliers)
+        new = DFMarkerGroups(
+            df_outliers, xj, yj, name=f"outliers-of-{self.name}", color=colors,
+            orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
+        )  # fmt: skip
+        canvas.add_layer(new)
+        return self
+
+    def as_edge_only(
+        self,
+        width: float = 3.0,
+        style: str | LineStyle = LineStyle.SOLID,
+    ) -> Self:
+        self.base.with_edge(color=self.base.face.color, width=width, style=style)
+        self.base.face.update(alpha=0.0)
         return self
 
     def _as_legend_item(self) -> _legend.LegendItemCollection:

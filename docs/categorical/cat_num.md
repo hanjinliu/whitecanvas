@@ -359,3 +359,74 @@ canvas = new_canvas("matplotlib")
 )
 canvas.show()
 ```
+
+If the violins are edge only, the box plot will be filled with the same color.
+
+``` python
+#!name: categorical_axis_violin_with_box_edge_only
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .as_edge_only()
+    .with_box(width=2.0, extent=0.05)
+)
+canvas.show()
+```
+
+### Markers over violin plot
+
+Violin plot has `with_strip` and `with_swarm` methods to overlay markers.
+
+``` python
+#!name: categorical_axis_violin_with_strip
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_strip(symbol="D", size=8, color="black")
+)
+```
+
+``` python
+#!name: categorical_axis_violin_with_swarm
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_swarm(size=8, color="black")
+)
+```
+
+### Add outliers to box plot
+
+Box plot is usually combined with outlier markers. `with_outliers` method will add
+outliers and optionally change the whisker lengths.
+
+``` python
+#!name: categorical_axis_box_with_outliers
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_boxplot(color="replicate")
+    .with_outliers()
+)
+```
+
+If the box plot is edge only, the outliers will be the same.
+
+``` python
+#!name: categorical_axis_box_with_outliers
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_boxplot(color="replicate")
+    .as_edge_only()
+    .with_outliers()
+)
+```

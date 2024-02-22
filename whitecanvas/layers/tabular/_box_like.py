@@ -382,6 +382,126 @@ class DFViolinPlot(
         canvas.add_layer(box)
         return self
 
+    def with_strip(
+        self,
+        *,
+        color: ColorType | None = None,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: str | None = None,
+        extent: float = 0.2,
+        seed: int | None = 0,
+    ) -> Self:
+        """
+        Overlay strip plot on the violins and return the violin layer.
+
+        Parameters
+        ----------
+        color : color-type, optional
+            Color of the strip plot. If not given, it will be colored by the violin
+            face color.
+        symbol : str or Symbol, optional
+            Symbol of the strip plot markers.
+        size : float, optional
+            Size of the strip plot markers. If not given, it will be set to the theme
+            default.
+        extent : float, optional
+            Relative width of the jitter range.
+        seed : int, optional
+            Random seed for the jitter.
+        """
+        from whitecanvas.canvas.dataframe._base import CatIterator
+        from whitecanvas.layers.tabular import DFMarkerGroups
+
+        canvas = self._canvas_ref()
+        size = theme._default("markers.size", size)
+        if canvas is None:
+            raise ValueError("No canvas to add the outliers.")
+
+        if color is None:
+            color = self._color_by.by
+        else:
+            color = Color(color)
+
+        # category iterator is used to calculate positions and indices
+        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
+        _extent = _cat_self.zoom_factor(self._dodge) * extent
+        df = self._source
+        xj = _jitter.UniformJitter(self._splitby, _pos_map, extent=_extent, seed=seed)
+        yj = _jitter.IdentityJitter(self._value).check(df)
+        new = DFMarkerGroups(
+            df, xj, yj, name=f"outliers-of-{self.name}", color=color,
+            orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if np.all(self.base.face.alpha < 1e-6):  # edge only
+            new.as_edge_only(width=self.base.edge.width.mean())
+
+        canvas.add_layer(new)
+        return self
+
+    def with_swarm(
+        self,
+        *,
+        color: ColorType | None = None,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: str | None = None,
+        extent: float = 0.8,
+        sort: bool = False,
+    ) -> Self:
+        """
+        Overlay swarm plot on the violins and return the violin layer.
+
+        Parameters
+        ----------
+        color : color-type, optional
+            Color of the strip plot. If not given, it will be colored by the violin
+            face color.
+        symbol : str or Symbol, optional
+            Symbol of the strip plot markers.
+        size : float, optional
+            Size of the strip plot markers. If not given, it will be set to the theme
+            default.
+        extent : float, optional
+            Relative width of the jitter range.
+        sort : bool, default False
+            If True, the markers will be sorted by the value.
+        """
+        from whitecanvas.canvas.dataframe._base import CatIterator
+        from whitecanvas.layers.tabular import DFMarkerGroups
+
+        canvas = self._canvas_ref()
+        size = theme._default("markers.size", size)
+        if canvas is None:
+            raise ValueError("No canvas to add the outliers.")
+
+        if color is None:
+            color = self._color_by.by
+        else:
+            color = Color(color)
+
+        # category iterator is used to calculate positions and indices
+        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
+        _extent = _cat_self.zoom_factor(self._dodge) * extent
+        df = self._source
+
+        if sort:
+            df = df.sort(self._value)
+        lims = df[self._value].min(), df[self._value].max()
+        xj = _jitter.SwarmJitter(
+            self._splitby, _pos_map, self._value, lims, extent=_extent
+        )
+        yj = _jitter.IdentityJitter(self._value).check(df)
+        new = DFMarkerGroups(
+            df, xj, yj, name=f"outliers-of-{self.name}", color=color,
+            orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if np.all(self.base.face.alpha < 1e-6):  # edge only
+            new.as_edge_only(width=self.base.edge.width.mean())
+
+        canvas.add_layer(new)
+        return self
+
     def as_edge_only(
         self,
         width: float = 3.0,
@@ -558,7 +678,7 @@ class DFBoxPlot(
         if color is None:
             if is_edge_only:  # edge only
                 new._apply_color(np.stack(colors, axis=0, dtype=np.float32))
-            new.as_edge_only()
+            new.as_edge_only(width=self.base.edge.width.mean())
 
         canvas.add_layer(new)
         if update_whiskers:
@@ -570,6 +690,16 @@ class DFBoxPlot(
         width: float = 3.0,
         style: str | LineStyle = LineStyle.SOLID,
     ) -> Self:
+        """
+        Replace the violin edge color with the face color and delete the face color.
+
+        Parameters
+        ----------
+        width : float, optional
+            Width of the edge.
+        style : str or LineStyle, optional
+            Style of the edge.
+        """
         self.base.with_edge(color=self.base.face.color, width=width, style=style)
         self.base.face.update(alpha=0.0)
         return self

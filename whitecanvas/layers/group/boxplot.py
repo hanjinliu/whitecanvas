@@ -61,10 +61,12 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         *,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
+        capsize: float = 0.15,
     ):
         super().__init__([boxes, whiskers, medians], name=name)
         AbstractFaceEdgeMixin.__init__(self, BoxFace(self), BoxEdge(self))
         self._orient = Orientation.parse(orient)
+        self._capsize = capsize
         self._init_events()
 
     @property
@@ -134,7 +136,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
             medsegs, name="medians", color="black", alpha=alpha, backend=backend,
         )  # fmt: skip
 
-        return cls(box, whiskers, medians, name=name, orient=ori)
+        return cls(box, whiskers, medians, name=name, orient=ori, capsize=capsize)
 
     @property
     def orient(self) -> Orientation:
@@ -166,12 +168,53 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
+    def _update_data(self, agg_arr: NDArray[np.number]):
+        x = self.boxes.data.x
+        extent = self.boxes.bar_width
+        self.boxes.set_data(ydata=agg_arr[3] - agg_arr[1], bottom=agg_arr[1])
+        if self.orient.is_vertical:
+            segs = _xyy_to_segments(
+                x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], self._capsize
+            )
+            medsegs = [
+                [(x0 - extent / 2, y0), (x0 + extent / 2, y0)]
+                for x0, y0 in zip(x, agg_arr[2])
+            ]
+        else:
+            segs = _yxx_to_segments(
+                x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], self._capsize
+            )
+            medsegs = [
+                [(x0, y0 - extent / 2), (x0, y0 + extent / 2)]
+                for x0, y0 in zip(x, agg_arr[2])
+            ]
+        self.whiskers.data = segs
+        self.medians.data = medsegs
+        return None
+
+    def _get_sep_values(self) -> NDArray[np.number]:
+        """(5, N) array of min, 25%, 50%, 75%, max."""
+        idx = 1 if self.orient.is_vertical else 0
+        stop = self.boxes.ndata * 2
+        _min = [seg[0, idx] for seg in self.whiskers.data[0:stop:2]]
+        _p25 = self.boxes.bottom
+        _median = [seg[0, idx] for seg in self.medians.data]
+        _p75 = self.boxes.top
+        _max = [seg[1, idx] for seg in self.whiskers.data[1:stop:2]]
+        return np.stack([_min, _p25, _median, _p75, _max], axis=0)
+
     def _make_sure_hatch_visible(self):
         _is_no_width = self.edge.width == 0
         if np.any(_is_no_width):
             ec = get_theme().foreground_color
             self.edge.width = np.where(_is_no_width, 1, self.edge.width)
             self.edge.color = np.where(_is_no_width, ec, self.edge.color)
+
+    def _xndata(self) -> int:
+        nboxes = self.boxes.ndata
+        nlines = self.whiskers.ndata
+        assert nboxes * 2 == nlines or nboxes * 4 == nlines, f"{nboxes=}, {nlines=}"
+        return nlines // nboxes
 
 
 def _xyy_to_segments(
@@ -271,10 +314,7 @@ class BoxEdge(MultiPropertyEdgeBase):
     _layer: BoxPlot
 
     def _xndata(self) -> int:
-        nboxes = self._layer.boxes.ndata
-        nlines = self._layer.whiskers.ndata
-        assert nboxes * 2 == nlines or nboxes * 4 == nlines, f"{nboxes=}, {nlines=}"
-        return nlines // nboxes
+        return self._layer._xndata()
 
     @property
     def color(self) -> NDArray[np.floating]:

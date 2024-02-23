@@ -46,7 +46,10 @@ class CategoricalLikeJitter(JitterBase):
         args = [src[b] for b in self._by]
         out = np.zeros(len(src), dtype=np.float32)
         for row, pos in self._mapping.items():
-            sl = np.all(np.column_stack([a == r for a, r in zip(args, row)]), axis=1)
+            arrs = [a == r for a, r in zip(args, row) if a.size > 0]
+            if len(arrs) == 0:
+                continue
+            sl = np.all(np.column_stack(arrs), axis=1)
             out[sl] = pos
         return out
 

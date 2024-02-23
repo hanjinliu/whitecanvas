@@ -72,6 +72,6 @@ class LayerList(EventedList[Layer]):
     def iter_primitives(self) -> Iterable[PrimitiveLayer]:
         for layer in self:
             if isinstance(layer, LayerGroup):
-                yield from layer.iter_children_recursive()
+                yield from layer.iter_primitive()
             else:
                 yield layer

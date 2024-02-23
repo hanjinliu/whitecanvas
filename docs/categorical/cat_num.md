@@ -6,10 +6,10 @@ In this section, following data will be used as an example:
 import numpy as np
 from whitecanvas import new_canvas
 
-rng = np.random.default_rng(12345)
+rng = np.random.default_rng(3)
 df = {
     "category": ["A"] * 40 + ["B"] * 50,
-    "observation": np.concatenate([rng.random(40), rng.random(50) + 1.3]),
+    "observation": np.concatenate([rng.normal(2.0, size=40), rng.normal(3.3, size=50)]),
     "replicate": [0] * 23 + [1] * 17 + [0] * 22 + [1] * 28,
     "temperature": rng.normal(scale=2.8, size=90) + 22.0,
 }
@@ -218,8 +218,8 @@ canvas.show()
 format string.
 
 ``` python
-#!skip
-canvas = new_canvas("matplotlib")
+#!html: categorical_axis_stripplot_hover
+canvas = new_canvas("plotly", size=(400, 300))
 (
     canvas
     .cat_x(df, x="category", y="observation")
@@ -247,7 +247,7 @@ canvas.show()
 Similarly, each marker color can represent a numerical value. `update_colormap` will map
 the value with an arbitrary colormap.
 
-``` python
+``` python hl_lines="6"
 #!name: categorical_axis_stripplot_by_color
 canvas = new_canvas("matplotlib")
 (
@@ -282,7 +282,7 @@ canvas.show()
 Although rug plot does not directly use markers, it also use a line to represent each
 data point.
 
-``` python
+``` python hl_lines="5"
 #!name: categorical_axis_rugplot
 canvas = new_canvas("matplotlib")
 (
@@ -293,9 +293,11 @@ canvas = new_canvas("matplotlib")
 canvas.show()
 ```
 
-Some methods defined for marker-type plots can also be used for rug plot.
+Some methods defined for marker-type plots can also be used for rug plot. For example,
+`update_colormap` will change the color of the rug lines based on the values of the
+specified column.
 
-``` python
+``` python hl_lines="6"
 #!name: categorical_axis_rugplot_colormap
 canvas = new_canvas("matplotlib")
 (
@@ -310,7 +312,7 @@ canvas.show()
 `scale_by_density` will change the length of the rugs to represent the density of the
 data points.
 
-``` python
+``` python hl_lines="6"
 #!name: categorical_axis_rugplot_density
 canvas = new_canvas("matplotlib")
 (
@@ -322,16 +324,150 @@ canvas = new_canvas("matplotlib")
 canvas.show()
 ```
 
-Rug plot can also be overlaid with violin plot with `with_rug` method.
+## Overlaying Plots
 
-``` python
+Different types of plots have their own strengths and weaknesses. To make the plot more
+informative, it is often necessary to overlay different types of plots.
+
+You can simply call different methds to overlay different types of plots, but in some
+cases it is not that easy. For example, to add rug plot to violin plot, you have to
+correctly set the lengths of the rug lines so that their edges exactly match the edges
+of the violins.
+
+Some types of plots are implemented with methods to efficiently overlay them with other
+plots. All of them use method chaining so that the API is very clean.
+
+### Rug plot over violin plot
+
+Violin plot can be overlaid with rug plot using `with_rug` method. Edges of the rug lines match exactly with the edges of the violins. Of cource, you can hover over the rug lines to see the details.
+
+``` python hl_lines="6"
 #!name: categorical_axis_violin_with_rug
 canvas = new_canvas("matplotlib")
 (
     canvas
     .cat_x(df, x="category", y="observation")
     .add_violinplot(color="replicate")
-    .with_rug()
+    .with_rug(color="purple")
 )
 canvas.show()
+```
+
+### Box plot over violin plot
+
+Violin plot can be overlaid with box plot using `with_box` method. Color of the box plot
+follows the convention of other plotting softwares by default.
+
+``` python hl_lines="6"
+#!name: categorical_axis_violin_with_box
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_box(width=2.0, extent=0.05)
+)
+canvas.show()
+```
+
+If the violins are edge only, the box plot will be filled with the same color.
+
+``` python hl_lines="6-7"
+#!name: categorical_axis_violin_with_box_edge_only
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .as_edge_only()
+    .with_box(width=2.0, extent=0.05)
+)
+canvas.show()
+```
+
+### Markers over violin plot
+
+Violin plot has `with_strip` and `with_swarm` methods to overlay markers.
+
+``` python hl_lines="6"
+#!name: categorical_axis_violin_with_strip
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_strip(symbol="D", size=8, color="black")
+)
+```
+
+``` python hl_lines="6"
+#!name: categorical_axis_violin_with_swarm
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_swarm(size=8, color="black")
+)
+```
+
+### Add outliers
+
+Box plot and violin plot are usually combined with outlier markers, as these plots are
+not good at showing the details of the sparse data points.
+For these plots, `with_outliers` method will add outliers, and optionally change the
+whisker lengths for the box plot.
+
+This is the example of adding outliers to the box plot. Because outliers are shown as a
+strip plot, arguments specific to strip plot (`symbol`, `size`, `extent` and `seed`) can be used.
+
+``` python hl_lines="6"
+#!name: categorical_axis_box_with_outliers
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_boxplot(color="replicate")
+    .with_outliers(size=8)
+)
+```
+
+If the box plot is edge only, the outliers will be the same.
+
+``` python hl_lines="6"
+#!name: categorical_axis_box_with_outliers_edge_only
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_boxplot(color="replicate")
+    .as_edge_only()
+    .with_outliers()
+)
+```
+
+Setting `update_whiskers` to `False` will not change the whisker lengths.
+
+``` python hl_lines="6"
+#!name: categorical_axis_box_with_outliers_no_updates
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_boxplot(color="replicate")
+    .with_outliers(update_whiskers=False)
+)
+```
+
+Violin plot also supports `with_outliers` method.
+
+``` python hl_lines="6"
+#!name: categorical_axis_violin_with_outliers
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .add_violinplot(color="replicate")
+    .with_outliers(size=8)
+)
 ```

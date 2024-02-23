@@ -1778,7 +1778,7 @@ class CanvasBase(ABC):
             if isinstance(layer, _l.PrimitiveLayer):
                 layer_backends.append(layer._backend)
             elif isinstance(layer, _l.LayerGroup):
-                for child in layer.iter_children_recursive():
+                for child in layer.iter_primitive():
                     layer_backends.append(child._backend)
             elif isinstance(layer, _l.LayerWrapper):
                 for child in _iter_layers(layer):
@@ -1871,7 +1871,7 @@ def _iter_layers(
     if isinstance(layer, _l.PrimitiveLayer):
         yield layer
     elif isinstance(layer, _l.LayerGroup):
-        yield from layer.iter_children_recursive()
+        yield from layer.iter_primitive()
     elif isinstance(layer, _l.LayerWrapper):
         yield from _iter_layers(layer._base_layer)
     else:

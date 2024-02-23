@@ -161,7 +161,7 @@ class XYCatAggPlotter(BaseCatPlotter[_C, _DF]):
         df_agg = self._aggregate(df, by_both, value)
         map_x = self._cat_iter_x.prep_position_map(self._x)
         map_y = self._cat_iter_y.prep_position_map(self._y)
-        dtype = df[value].dtype
+        dtype = df_agg[value].dtype
         if dtype.kind not in "fiub":
             raise ValueError(f"Column {value!r} is not numeric.")
         arr = np.full((len(map_y), len(map_x)), fill, dtype=dtype)

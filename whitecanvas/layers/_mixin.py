@@ -230,6 +230,16 @@ class MultiPropertyFaceBase(FaceNamespace):
         hatch = self.hatch[0]
         return _legend.FaceInfo(color, hatch)
 
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
+
 
 class MultiPropertyEdgeBase(EdgeNamespace):
     def update(
@@ -257,6 +267,16 @@ class MultiPropertyEdgeBase(EdgeNamespace):
         width = self.width[0]
         style = self.style[0]
         return _legend.EdgeInfo(color, width, style)
+
+    @property
+    def alpha(self) -> float:
+        return self.color[:, 3]
+
+    @alpha.setter
+    def alpha(self, value):
+        color = self.color.copy()
+        color[:, 3] = value
+        self.color = color
 
 
 class MonoFace(SinglePropertyFaceBase):
@@ -448,16 +468,6 @@ class MultiFace(MultiPropertyFaceBase):
         self._layer._backend._plt_set_face_hatch(hatch)
         self.events.hatch.emit(hatch)
 
-    @property
-    def alpha(self) -> float:
-        return self.color[:, 3]
-
-    @alpha.setter
-    def alpha(self, value):
-        color = self.color.copy()
-        color[:, 3] = value
-        self.color = color
-
 
 class MultiEdge(MultiPropertyEdgeBase):
     @property
@@ -505,16 +515,6 @@ class MultiEdge(MultiPropertyEdgeBase):
             style = [LineStyle(s) for s in style]
         self._layer._backend._plt_set_edge_style(style)
         self.events.style.emit(style)
-
-    @property
-    def alpha(self) -> float:
-        return self.color[:, 3]
-
-    @alpha.setter
-    def alpha(self, value):
-        color = self.color.copy()
-        color[:, 3] = value
-        self.color = color
 
 
 _NFace = TypeVar("_NFace", bound=FaceNamespace)

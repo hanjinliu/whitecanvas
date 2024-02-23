@@ -43,6 +43,7 @@ nav:
     - Overview: categorical/index.md
     - Numerical &times; Numerical Data: categorical/num_num.md
     - Categorical &times; Numerical Data: categorical/cat_num.md
+    - Categorical &times; Categorical Data: categorical/cat_cat.md
     - Aggregation: categorical/aggregation.md
   - Event Handling:
     - Overview: events/index.md

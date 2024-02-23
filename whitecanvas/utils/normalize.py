@@ -85,6 +85,8 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
         col = arr_color(color)
         return np.repeat(col[np.newaxis, :], size, axis=0)
     if isinstance(color, np.ndarray):
+        if color.size == 0 and size == 0:
+            return color
         if color.dtype.kind in "OU":
             if color.shape != (size,):
                 raise ValueError(

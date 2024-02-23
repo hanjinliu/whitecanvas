@@ -3,17 +3,16 @@ from __future__ import annotations
 from typing import Iterable
 
 import numpy as np
-from cmap import Color
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import (
     AbstractFaceEdgeMixin,
     EnumArray,
-    MonoEdge,
+    MultiEdge,
     MultiFace,
-    SinglePropertyEdgeBase,
-    SinglePropertyFaceBase,
+    MultiPropertyEdgeBase,
+    MultiPropertyFaceBase,
 )
 from whitecanvas.layers._primitive import Bars, MultiLine
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -56,21 +55,22 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
 
     def __init__(
         self,
-        boxes: Bars[MultiFace, MonoEdge],
+        boxes: Bars[MultiFace, MultiEdge],
         whiskers: MultiLine,
         medians: MultiLine,
-        # outliers: Markers | None = None,
         *,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
+        capsize: float = 0.15,
     ):
         super().__init__([boxes, whiskers, medians], name=name)
         AbstractFaceEdgeMixin.__init__(self, BoxFace(self), BoxEdge(self))
         self._orient = Orientation.parse(orient)
+        self._capsize = capsize
         self._init_events()
 
     @property
-    def boxes(self) -> Bars[MultiFace, MonoEdge]:
+    def boxes(self) -> Bars[MultiFace, MultiEdge]:
         """The boxes layer (Bars)."""
         return self._children[0]
 
@@ -111,7 +111,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
             extent=extent, backend=backend,
         ).with_face_multi(
             hatch=hatch, color=color, alpha=alpha,
-        ).with_edge(color="black")  # fmt: skip
+        ).with_edge_multi(color="black")  # fmt: skip
         if ori.is_vertical:
             segs = _xyy_to_segments(
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], capsize
@@ -136,7 +136,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
             medsegs, name="medians", color="black", alpha=alpha, backend=backend,
         )  # fmt: skip
 
-        return cls(box, whiskers, medians, name=name, orient=ori)
+        return cls(box, whiskers, medians, name=name, orient=ori, capsize=capsize)
 
     @property
     def orient(self) -> Orientation:
@@ -168,12 +168,53 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
+    def _update_data(self, agg_arr: NDArray[np.number]):
+        x = self.boxes.data.x
+        extent = self.boxes.bar_width
+        self.boxes.set_data(ydata=agg_arr[3] - agg_arr[1], bottom=agg_arr[1])
+        if self.orient.is_vertical:
+            segs = _xyy_to_segments(
+                x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], self._capsize
+            )
+            medsegs = [
+                [(x0 - extent / 2, y0), (x0 + extent / 2, y0)]
+                for x0, y0 in zip(x, agg_arr[2])
+            ]
+        else:
+            segs = _yxx_to_segments(
+                x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], self._capsize
+            )
+            medsegs = [
+                [(x0, y0 - extent / 2), (x0, y0 + extent / 2)]
+                for x0, y0 in zip(x, agg_arr[2])
+            ]
+        self.whiskers.data = segs
+        self.medians.data = medsegs
+        return None
+
+    def _get_sep_values(self) -> NDArray[np.number]:
+        """(5, N) array of min, 25%, 50%, 75%, max."""
+        idx = 1 if self.orient.is_vertical else 0
+        stop = self.boxes.ndata * 2
+        _min = [seg[0, idx] for seg in self.whiskers.data[0:stop:2]]
+        _p25 = self.boxes.bottom
+        _median = [seg[0, idx] for seg in self.medians.data]
+        _p75 = self.boxes.top
+        _max = [seg[1, idx] for seg in self.whiskers.data[1:stop:2]]
+        return np.stack([_min, _p25, _median, _p75, _max], axis=0)
+
     def _make_sure_hatch_visible(self):
         _is_no_width = self.edge.width == 0
         if np.any(_is_no_width):
             ec = get_theme().foreground_color
             self.edge.width = np.where(_is_no_width, 1, self.edge.width)
             self.edge.color = np.where(_is_no_width, ec, self.edge.color)
+
+    def _xndata(self) -> int:
+        nboxes = self.boxes.ndata
+        nlines = self.whiskers.ndata
+        assert nboxes * 2 == nlines or nboxes * 4 == nlines, f"{nboxes=}, {nlines=}"
+        return nlines // nboxes
 
 
 def _xyy_to_segments(
@@ -241,7 +282,7 @@ def _yxx_to_segments(
     return segments_0 + segments_1 + cap0 + cap1
 
 
-class BoxFace(SinglePropertyFaceBase):
+class BoxFace(MultiPropertyFaceBase):
     _layer: BoxPlot
 
     @property
@@ -268,47 +309,12 @@ class BoxFace(SinglePropertyFaceBase):
         self._layer.boxes.face.hatch = hatches
         self.events.hatch.emit(hatches)
 
-    @property
-    def alpha(self) -> float:
-        """Alpha value of the face."""
-        return self.color[:, 3]
 
-    @alpha.setter
-    def alpha(self, value):
-        color = self.color.copy()
-        color[:, 3] = value
-        self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> BoxPlot:
-        """
-        Update the face properties.
-
-        Parameters
-        ----------
-        color : ColorType, optional
-            Color of the face.
-        hatch : FacePattern, optional
-            Fill hatch of the face.
-        alpha : float, optional
-            Alpha value of the face.
-        """
-        if color is not _void:
-            self.color = color
-        if hatch is not _void:
-            self.hatch = hatch
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer
-
-
-class BoxEdge(SinglePropertyEdgeBase):
+class BoxEdge(MultiPropertyEdgeBase):
     _layer: BoxPlot
+
+    def _xndata(self) -> int:
+        return self._layer._xndata()
 
     @property
     def color(self) -> NDArray[np.floating]:
@@ -317,9 +323,10 @@ class BoxEdge(SinglePropertyEdgeBase):
 
     @color.setter
     def color(self, color: ColorType):
-        col = np.array(Color(color), dtype=np.float32)  # assert a single color
+        ndata = self._layer.boxes.ndata
+        col = as_color_array(color, ndata)
         self._layer.boxes.edge.color = col
-        self._layer.whiskers.color = col
+        self._layer.whiskers.color = np.concatenate([col] * self._xndata(), axis=0)
         self._layer.medians.color = col
         self.events.color.emit(col)
 
@@ -330,10 +337,12 @@ class BoxEdge(SinglePropertyEdgeBase):
 
     @width.setter
     def width(self, width: float):
-        self._layer.boxes.edge.width = width
-        self._layer.whiskers.width = width
-        self._layer.medians.width = width
-        self.events.width.emit(width)
+        ndata = self._layer.boxes.ndata
+        widths = as_any_1d_array(width, ndata, dtype=np.float32)
+        self._layer.boxes.edge.width = widths
+        self._layer.whiskers.width = np.tile(widths, self._xndata())
+        self._layer.medians.width = widths
+        self.events.width.emit(widths)
 
     @property
     def style(self) -> EnumArray[LineStyle]:
@@ -342,36 +351,14 @@ class BoxEdge(SinglePropertyEdgeBase):
 
     @style.setter
     def style(self, style: str | LineStyle):
-        style = LineStyle(style)
-        self._layer.boxes.edge.style = style
-        self._layer.whiskers.style = style
-        self._layer.medians.style = style
+        ndata = self._layer.boxes.ndata
+        if isinstance(style, (str, LineStyle)):
+            styles = np.full(ndata, LineStyle(style), dtype=object)
+        else:
+            styles = np.array(style, dtype=object)
+            if styles.shape != (ndata,):
+                raise ValueError("Invalid shape of the style array.")
+        self._layer.boxes.edge.style = styles
+        self._layer.whiskers.style = np.tile(styles, self._xndata())
+        self._layer.medians.style = styles
         self.events.style.emit(style)
-
-    @property
-    def alpha(self) -> float:
-        return self.color[3]
-
-    @alpha.setter
-    def alpha(self, value):
-        color = self.color.copy()
-        color[3] = value
-        self.color = color
-
-    def update(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        style: LineStyle | str | _Void = _void,
-        width: float | _Void = _void,
-        alpha: float | _Void = _void,
-    ) -> BoxPlot:
-        if color is not _void:
-            self.color = color
-        if style is not _void:
-            self.style = style
-        if width is not _void:
-            self.width = width
-        if alpha is not _void:
-            self.alpha = alpha
-        return self._layer

@@ -42,7 +42,7 @@ class Layer(ABC):
             self.events = self.__class__._events_class()
         self._name = name if name is not None else self.__class__.__name__
         self._x_hint = self._y_hint = None
-        self._is_grouped = False
+        self._group_layer_ref: weakref.ReferenceType[LayerGroup] | None = None
         self._canvas_ref = lambda: None
         _set_deprecated_aliases(self)
 
@@ -208,13 +208,13 @@ class LayerGroup(Layer):
     def iter_children(self) -> Iterator[Layer]:
         """Iterate over all children."""
 
-    def iter_children_recursive(self) -> Iterator[PrimitiveLayer[BaseProtocol]]:
+    def iter_primitive(self) -> Iterator[PrimitiveLayer[BaseProtocol]]:
         for child in self.iter_children():
             if isinstance(child, LayerGroup):
-                yield from child.iter_children_recursive()
+                yield from child.iter_primitive()
             elif isinstance(child, LayerWrapper):
                 if isinstance(child._base_layer, LayerGroup):
-                    yield from child._base_layer.iter_children_recursive()
+                    yield from child._base_layer.iter_primitive()
                 else:
                     yield child._base_layer
             else:

@@ -1,6 +1,17 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable, Iterator, MutableSequence, Sequence, TypeVar
+import weakref
+from typing import (
+    TYPE_CHECKING,
+    Generic,
+    Iterable,
+    Iterator,
+    Literal,
+    MutableSequence,
+    Sequence,
+    TypeVar,
+    overload,
+)
 
 from psygnal import Signal
 
@@ -30,7 +41,7 @@ class LayerContainer(LayerGroup):
 
     def __init__(self, children: Iterable[Layer], name: str | None = None):
         super().__init__(name=name)
-        self._children = [_check_layer(c) for c in children]
+        self._children = [_process_grouping(c, self) for c in children]
         self._ordering_indices = self._default_ordering(len(self._children))
         self._emit_layer_grouped()
 
@@ -97,7 +108,7 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
     _children: list[_L]
 
     def __getitem__(self, n: int) -> _L:
-        """The n-th markers layer."""
+        """The n-th layer."""
         if not hasattr(n, "__index__"):
             raise TypeError(f"Index must be an integer, not {type(n)}")
         return self._children[n]
@@ -125,11 +136,13 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
         if _canvas := self._canvas_ref():
             _canvas._canvas()._plt_add_layer(layer._backend)
             layer._connect_canvas(_canvas)
+        _process_grouping(layer, self)
         self._children.insert(n, layer)
         self._ordering_indices.insert(n, len(self._ordering_indices))
         return None
 
     def _as_legend_item(self):
+        """Use the first layer as the main legend item."""
         if len(self) == 0:
             return _legend.EmptyLegendItem()
         return self[0]._as_legend_item()
@@ -140,10 +153,54 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
             ...
 
 
-def _check_layer(l) -> Layer:
+_L0 = TypeVar("_L0", bound=Layer)
+_L1 = TypeVar("_L1", bound=Layer)
+
+
+class MainAndOtherLayers(LayerTuple, Generic[_L0, _L1]):
+    @overload
+    def __getitem__(self, n: Literal[0]) -> _L0:
+        ...
+
+    @overload
+    def __getitem__(self, n: Literal[0]) -> _L1:
+        ...
+
+    @overload
+    def __getitem__(self, n: int) -> Layer:
+        ...
+
+    def __getitem__(self, n):
+        """The n-th layer."""
+        return super().__getitem__(n)
+
+    def _insert(self, layer: Layer):
+        if layer._canvas_ref() is not None:
+            raise ValueError(f"{layer!r} is already added to a canvas")
+        if _canvas := self._canvas_ref():
+            if isinstance(layer, PrimitiveLayer):
+                _canvas._canvas()._plt_add_layer(layer._backend)
+            elif isinstance(layer, LayerGroup):
+                for l in layer.iter_primitive():
+                    _canvas._canvas()._plt_add_layer(l._backend)
+            layer._connect_canvas(_canvas)
+        _process_grouping(layer, self)
+        self._children.insert(1, layer)
+        self._ordering_indices.insert(1, len(self._ordering_indices))
+        return None
+
+    def _as_legend_item(self):
+        """Use the first layer as the main legend item."""
+        if len(self) == 0:
+            # this should never happen, but just in case
+            return _legend.EmptyLegendItem()
+        return self[0]._as_legend_item()
+
+
+def _process_grouping(l, parent: Layer) -> Layer:
     if not isinstance(l, Layer):
         raise TypeError(f"{l!r} is not a Layer")
-    if l._is_grouped:
+    if l._group_layer_ref is not None:
         raise ValueError(f"{l!r} is already grouped")
-    l._is_grouped = True
+    l._group_layer_ref = weakref.ref(parent)
     return l

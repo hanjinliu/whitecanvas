@@ -10,10 +10,14 @@ any external plotting libraries or DataFrames, and are more flexible in some cas
 
 Methods starting with "cat" return categorical plotters. Methods include:
 
-- `cat` ... plotter for numerical data in x/y-axis categorized by such as color.
-- `cat_x` ... plotter for categorical data in x-axis.
-- `cat_y` ... plotter for categorical data in y-axis.
-- `cat_xy` ... plotter for categorical data in both x- and y-axis.
+- `cat` ... plotter for numerical data in x/y-axis categorized by such as color &rarr;
+  [Numerical &times; Numerical Data](num_num.md).
+- `cat_x` ... plotter for categorical data in x-axis &rarr;
+  [Categorical &times; Numerical Data](cat_num.md).
+- `cat_y` ... plotter for categorical data in y-axis &rarr;
+  [Categorical &times; Numerical Data](cat_num.md).
+- `cat_xy` ... plotter for categorical data in both x- and y-axis &rarr;
+  [Categorical &times; Categorical Data](cat_cat.md).
 
 These methods need a tabular data and the names of the columns that will be used as the
 x and y values.

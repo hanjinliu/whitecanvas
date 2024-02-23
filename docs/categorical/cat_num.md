@@ -218,8 +218,8 @@ canvas.show()
 format string.
 
 ``` python
-#!name: categorical_axis_stripplot_hover
-canvas = new_canvas("plotly")
+#!html: categorical_axis_stripplot_hover
+canvas = new_canvas("plotly", size=(400, 300))
 (
     canvas
     .cat_x(df, x="category", y="observation")

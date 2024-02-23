@@ -1,4 +1,8 @@
-from whitecanvas.layers.group._collections import LayerCollectionBase, LayerTuple
+from whitecanvas.layers.group._collections import (
+    LayerCollectionBase,
+    LayerTuple,
+    MainAndOtherLayers,
+)
 from whitecanvas.layers.group.band_collection import BandCollection, ViolinPlot
 from whitecanvas.layers.group.boxplot import BoxPlot
 from whitecanvas.layers.group.graph import Graph
@@ -22,6 +26,7 @@ __all__ = [
     "BandCollection",
     "BracketText",
     "Panel",
+    "MainAndOtherLayers",
     "LabeledLine",
     "LabeledMarkers",
     "LabeledBars",

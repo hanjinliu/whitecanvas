@@ -118,6 +118,38 @@ class CatIterator(Generic[_DF]):
                 res = tuple(sl[i] for i in inv_indices)
                 yield sl, dd[_res_map[res]] + _map[key], group
 
+    def category_map_with_dodge(
+        self,
+        by: tuple[str, ...],
+        dodge: tuple[str, ...] | None = None,
+    ) -> dict[tuple, int]:
+        """Category mapping considering dodge."""
+        if dodge is None:
+            dodge = ()
+        if set(self._offsets) > set(by):
+            raise ValueError(
+                f"offsets must be a subset of by, got offsets={self._offsets!r} and "
+                f"by={by!r}"
+            )
+        indices = [by.index(d) for d in self._offsets]
+        _map = self.category_map(self._offsets)
+        if not dodge:
+            return _map
+        out = {}
+        if set(self._offsets) & set(dodge):
+            raise ValueError(
+                f"offsets and dodge must be disjoint, got offsets={self._offsets!r}"
+                f" and dodge={dodge!r}"
+            )
+        inv_indices = [by.index(d) for d in dodge]
+        _res_map = self.category_map(dodge)
+        _nres = len(_res_map)
+        for sl, _ in self._df.group_by(by):
+            key = tuple(sl[i] for i in indices)
+            res = tuple(sl[i] for i in inv_indices)
+            out[sl] = _res_map[res] + _map[key] * _nres
+        return out
+
     def prep_arrays(
         self,
         by: tuple[str, ...],

@@ -9,7 +9,7 @@ from cmap import Color
 
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _legend, _mixin
+from whitecanvas.layers import Layer, _legend, _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
@@ -29,10 +29,12 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.canvas.dataframe._base import CatIterator
+    from whitecanvas.layers.tabular import DFMarkerGroups, DFRugGroups
 
     _FE = _mixin.AbstractFaceEdgeMixin[_mixin.FaceNamespace, _mixin.EdgeNamespace]
 
 _DF = TypeVar("_DF")
+_L = TypeVar("_L", bound=Layer)
 _void = _Void()
 
 
@@ -298,7 +300,7 @@ class DFViolinPlot(
         *,
         width: float = 1.0,
         color: ColorType | None = None,
-    ):
+    ) -> _lg.MainAndOtherLayers[Self, DFRugGroups[_DF]]:
         """Overlay rug plot on the violins and return the violin layer."""
         from whitecanvas.layers.tabular import DFRugGroups
 
@@ -326,18 +328,17 @@ class DFViolinPlot(
             self._source, jitter, self._value, color=colors, width=width,
             extent=_extent, backend=self.base._backend_name,
         ).scale_by_density(align=align)  # fmt: skip
-        canvas.add_layer(rug)
-        return self
+        return _combine_main_and_others(self, rug)
 
     def with_box(
         self,
         *,
         color: ColorType | None = None,
         median_color: ColorType = "white",
-        width: float = 2.0,
+        width: float | None = None,
         extent: float = 0.1,
         capsize: float = 0.0,
-    ):
+    ) -> _lg.MainAndOtherLayers[Self, DFBoxPlot[_DF]]:
         """
         Overlay box plot on the violins and return the violin layer.
 
@@ -354,7 +355,7 @@ class DFViolinPlot(
         median_color : color-type, optional
             Color of the median line of the box plot.
         width : float, optional
-            Width of the whiskers of the boxplot.
+            Width of the whiskers of the boxplot. Use violin edge width if not given.
         extent : float, optional
             Relative width of the boxes.
         capsize : float, optional
@@ -371,6 +372,8 @@ class DFViolinPlot(
                 colors = self.base.edge.color
             else:
                 colors = Color("#1F1F1F")
+        if width is None:
+            width = self.base.edge.width.mean()
         box = DFBoxPlot(
             self._make_cat_iterator(), self._value, name=f"boxplot-of-{self.name}",
             color=None, hatch=Hatch.SOLID, dodge=self._dodge, width=width,
@@ -380,8 +383,7 @@ class DFViolinPlot(
         box.base.boxes.face.color = colors
         box.base.edge.color = colors
         box.base.medians.color = Color(median_color)
-        canvas.add_layer(box)
-        return self
+        return _combine_main_and_others(self, box)
 
     def with_outliers(
         self,
@@ -392,7 +394,7 @@ class DFViolinPlot(
         ratio: float = 1.5,
         extent: float = 0.1,
         seed: int | None = 0,
-    ):
+    ) -> _lg.MainAndOtherLayers[Self, DFMarkerGroups[_DF]]:
         """
         Overlay outliers on the box plot and return the box plot layer.
 
@@ -433,7 +435,7 @@ class DFViolinPlot(
         _cat_self = CatIterator(self._source, offsets=self._offsets)
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
-        _cat_map = _cat_self.category_map(self._splitby)
+        _cat_map = _cat_self.category_map_with_dodge(self._splitby, self._dodge)
 
         # calculate outliers and update the separators
         df_outliers = {c: [] for c in (*self._splitby, self._value)}
@@ -466,9 +468,7 @@ class DFViolinPlot(
             if is_edge_only:  # edge only
                 new._apply_color(np.stack(colors, axis=0, dtype=np.float32))
             new.as_edge_only(width=self.base.edge.width.mean())
-
-        canvas.add_layer(new)
-        return self
+        return _combine_main_and_others(self, new)
 
     def with_strip(
         self,
@@ -478,9 +478,9 @@ class DFViolinPlot(
         size: str | None = None,
         extent: float = 0.2,
         seed: int | None = 0,
-    ) -> Self:
+    ) -> _lg.MainAndOtherLayers[Self, DFMarkerGroups[_DF]]:
         """
-        Overlay strip plot on the violins and return the violin layer.
+        Overlay strip plot on the violins.
 
         Parameters
         ----------
@@ -523,9 +523,7 @@ class DFViolinPlot(
         )  # fmt: skip
         if self._is_edge_only():
             new.as_edge_only(width=self.base.edge.width.mean())
-
-        canvas.add_layer(new)
-        return self
+        return _combine_main_and_others(self, new)
 
     def with_swarm(
         self,
@@ -535,9 +533,9 @@ class DFViolinPlot(
         size: str | None = None,
         extent: float = 0.8,
         sort: bool = False,
-    ) -> Self:
+    ) -> _lg.MainAndOtherLayers[Self, DFMarkerGroups[_DF]]:
         """
-        Overlay swarm plot on the violins and return the violin layer.
+        Overlay swarm plot on the violins.
 
         Parameters
         ----------
@@ -586,9 +584,7 @@ class DFViolinPlot(
         )  # fmt: skip
         if self._is_edge_only():
             new.as_edge_only(width=self.base.edge.width.mean())
-
-        canvas.add_layer(new)
-        return self
+        return _combine_main_and_others(self, new)
 
     def as_edge_only(
         self,
@@ -689,9 +685,9 @@ class DFBoxPlot(
         extent: float = 0.1,
         seed: int | None = 0,
         update_whiskers: bool = True,
-    ):
+    ) -> _lg.MainAndOtherLayers[Self, DFMarkerGroups[_DF]]:
         """
-        Overlay outliers on the box plot and return the box plot layer.
+        Overlay outliers on the box plot.
 
         Parameters
         ----------
@@ -733,7 +729,7 @@ class DFBoxPlot(
         _cat_self = CatIterator(self._source, offsets=self._offsets)
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
-        _cat_map = _cat_self.category_map(self._splitby)
+        _cat_map = _cat_self.category_map_with_dodge(self._splitby, self._dodge)
 
         # calculate outliers and update the separators
         df_outliers = {c: [] for c in (*self._splitby, self._value)}
@@ -770,11 +766,9 @@ class DFBoxPlot(
             if is_edge_only:  # edge only
                 new._apply_color(np.stack(colors, axis=0, dtype=np.float32))
             new.as_edge_only(width=self.base.edge.width.mean())
-
-        canvas.add_layer(new)
         if update_whiskers:
             self.base._update_data(agg_values)
-        return self
+        return _combine_main_and_others(self, new)
 
     def as_edge_only(
         self,
@@ -1020,3 +1014,22 @@ class DFBarPlot(
 
     def _as_legend_item(self) -> _legend.LegendItemCollection:
         return _BoxLikeMixin._as_legend_item(self)
+
+
+_L0 = TypeVar("_L0", bound=Layer)
+_L1 = TypeVar("_L1", bound=Layer)
+
+
+def _combine_main_and_others(
+    layer: _L0,
+    incoming: _L1,
+) -> _lg.MainAndOtherLayers[_L0, _L1]:
+    if layer._group_layer_ref is None:
+        return _lg.MainAndOtherLayers([layer, incoming], name=layer.name)
+    group_layer = layer._group_layer_ref()
+    if group_layer is None:
+        raise ValueError("Parent layer group is deleted.")
+    elif not isinstance(group_layer, _lg.MainAndOtherLayers):
+        raise ValueError(f"Parent layer group is incorrect type {type(group_layer)}.")
+    group_layer._insert(incoming)
+    return group_layer

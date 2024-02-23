@@ -308,8 +308,9 @@ class DFViolinPlot(
         _extent = self.base.extent
         if color is not None:
             colors = Color(color)
+        elif self._is_edge_only():
+            colors = self._color_by.by
         else:
-            # TODO: if the violin is edge only, use the edge color
             colors = Color("#1F1F1F")
         jitter = _jitter.CategoricalJitter(
             self._splitby,
@@ -382,6 +383,93 @@ class DFViolinPlot(
         canvas.add_layer(box)
         return self
 
+    def with_outliers(
+        self,
+        *,
+        color: ColorType | None = None,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: float | None = None,
+        ratio: float = 1.5,
+        extent: float = 0.1,
+        seed: int | None = 0,
+    ):
+        """
+        Overlay outliers on the box plot and return the box plot layer.
+
+        Parameters
+        ----------
+        color : color-type, optional
+            Color of the outliers. To make sure the outliers are easily visible, face
+            color will always be transparent. If a constant color is given, all the
+            edges will be colored by the same color. By default, the edge colors are
+            the same as the edge colors of the box plot.
+        symbol : str or Symbol, optional
+            Symbol of the outlier markers.
+        size : float, optional
+            Size of the outlier markers. If not given, it will be set to the theme
+            default.
+        ratio : float, optional
+            Ratio of the interquartile range (IQR) to determine the outliers. Data
+            points outside of the range [Q1 - ratio * IQR, Q3 + ratio * IQR] will be
+            considered as outliers.
+        extent : float, optional
+            Relative width of the jitter range (same effect as the `extent` argument of
+            the `add_stripplot` method).
+        seed : int, optional
+            Random seed for the jitter (same effect as the `seed` argument of the
+            `add_stripplot` method).
+        """
+        from whitecanvas.canvas.dataframe._base import CatIterator
+        from whitecanvas.layers.tabular import DFMarkerGroups
+
+        canvas = self._canvas_ref()
+        size = theme._default("markers.size", size)
+        if canvas is None:
+            raise ValueError("No canvas to add the outliers.")
+
+        is_edge_only = self._is_edge_only()
+
+        # category iterator is used to calculate positions and indices
+        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
+        _extent = _cat_self.zoom_factor(self._dodge) * extent
+        _cat_map = _cat_self.category_map(self._splitby)
+
+        # calculate outliers and update the separators
+        df_outliers = {c: [] for c in (*self._splitby, self._value)}
+        colors = []
+        for sl, sub in self._source.group_by(self._splitby):
+            arr = sub[self._value]
+            q1, q3 = np.quantile(arr, [0.25, 0.75])
+            iqr = q3 - q1  # interquartile range
+            low = q1 - ratio * iqr  # lower bound of inliers
+            high = q3 + ratio * iqr  # upper bound of inliers
+            idx_cat = _cat_map[sl]
+            outliers = arr[(arr < low) | (arr > high)]
+            for _cat, _s in zip(sl, self._splitby):
+                df_outliers[_s].extend([_cat] * outliers.size)
+            df_outliers[self._value].extend(outliers)
+            if is_edge_only:
+                _this_color = self.base.edge.color[idx_cat]
+            else:
+                _this_color = self.base.face.color[idx_cat]
+            colors.extend([_this_color] * outliers.size)
+
+        df_outliers = parse(df_outliers)
+        xj = _jitter.UniformJitter(self._splitby, _pos_map, extent=_extent, seed=seed)
+        yj = _jitter.IdentityJitter(self._value).check(df_outliers)
+        new = DFMarkerGroups(
+            df_outliers, xj, yj, name=f"outliers-of-{self.name}", color=Color("black"),
+            orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
+        )  # fmt: skip
+        if color is None:
+            if is_edge_only:  # edge only
+                new._apply_color(np.stack(colors, axis=0, dtype=np.float32))
+            new.as_edge_only(width=self.base.edge.width.mean())
+
+        canvas.add_layer(new)
+        return self
+
     def with_strip(
         self,
         *,
@@ -433,7 +521,7 @@ class DFViolinPlot(
             df, xj, yj, name=f"outliers-of-{self.name}", color=color,
             orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
-        if np.all(self.base.face.alpha < 1e-6):  # edge only
+        if self._is_edge_only():
             new.as_edge_only(width=self.base.edge.width.mean())
 
         canvas.add_layer(new)
@@ -496,7 +584,7 @@ class DFViolinPlot(
             df, xj, yj, name=f"outliers-of-{self.name}", color=color,
             orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
-        if np.all(self.base.face.alpha < 1e-6):  # edge only
+        if self._is_edge_only():
             new.as_edge_only(width=self.base.edge.width.mean())
 
         canvas.add_layer(new)
@@ -528,6 +616,9 @@ class DFViolinPlot(
         from whitecanvas.canvas.dataframe._base import CatIterator
 
         return CatIterator(self._source, offsets=self._offsets)
+
+    def _is_edge_only(self) -> bool:
+        return np.all(self.base.face.alpha < 1e-6)
 
 
 class DFBoxPlot(

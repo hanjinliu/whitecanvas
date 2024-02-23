@@ -701,6 +701,8 @@
       
         
       
+        
+      
     
     
     
@@ -777,6 +779,27 @@
   
   <span class="md-ellipsis">
     Categorical &times; Numerical Data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../categorical/cat_cat/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Categorical &times; Categorical Data
   </span>
   
 
@@ -6117,7 +6140,7 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">PrimitiveLayer</span><span class="p">):</span>
                 <span class="n">layer_backends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">_backend</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">LayerGroup</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">iter_children_recursive</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">iter_primitive</span><span class="p">():</span>
                     <span class="n">layer_backends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">_backend</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">LayerWrapper</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">_iter_layers</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>

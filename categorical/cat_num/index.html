@@ -14,7 +14,7 @@
         <link rel="prev" href="../num_num/">
       
       
-        <link rel="next" href="../aggregation/">
+        <link rel="next" href="../cat_cat/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -705,6 +705,8 @@
       
         
       
+        
+      
     
     
     
@@ -872,10 +874,82 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#overlaying-plots" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overlaying Plots
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overlaying Plots">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rug-plot-over-violin-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rug plot over violin plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#box-plot-over-violin-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Box plot over violin plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markers-over-violin-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers over violin plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-outliers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add outliers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cat_cat/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Categorical &times; Categorical Data
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1213,6 +1287,57 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#overlaying-plots" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overlaying Plots
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overlaying Plots">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rug-plot-over-violin-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rug plot over violin plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#box-plot-over-violin-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Box plot over violin plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markers-over-violin-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markers over violin plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-outliers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add outliers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1236,10 +1361,10 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
-<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">df</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">40</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">50</span><span class="p">,</span>
-    <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">40</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.3</span><span class="p">]),</span>
+    <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">40</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">3.3</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">50</span><span class="p">)]),</span>
     <span class="s2">&quot;replicate&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">23</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">17</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">22</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">28</span><span class="p">,</span>
     <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">2.8</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span> <span class="o">+</span> <span class="mf">22.0</span><span class="p">,</span>
 <span class="p">}</span>
@@ -1400,7 +1525,7 @@ after the layer is added, use <code>update_color_palette</code> method.</p>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_stripplot_dodge_edge_only.png" width="360px" /></p>
 <p><code>with_hover_template</code> is also defined. All the column names can be used in the template
 format string.</p>
-<div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;plotly&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
@@ -1409,6 +1534,8 @@ format string.</p>
 <span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
+<iframe src=../../_images/categorical_axis_stripplot_hover.html frameborder="0" width="400px" height="300px" scrolling="no"></iframe>
+
 <p>Each marker size can represent a numerical value. <code>with_size</code> will map the numerical
 values of a column to the size of the markers.</p>
 <p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
@@ -1428,8 +1555,8 @@ the value with an arbitrary colormap.</p>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">add_stripplot</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">update_colormap</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;coolwarm&quot;</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">update_colormap</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;coolwarm&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_stripplot_by_color.png" width="360px" /></p>
@@ -1454,19 +1581,21 @@ data point.</p>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">add_rugplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">,</span> <span class="n">dodge</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">add_rugplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">,</span> <span class="n">dodge</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_rugplot.png" width="360px" /></p>
-<p>Some methods defined for marker-type plots can also be used for rug plot.</p>
+<p>Some methods defined for marker-type plots can also be used for rug plot. For example,
+<code>update_colormap</code> will change the color of the rug lines based on the values of the
+specified column.</p>
 <p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">add_rugplot</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">update_colormap</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;coolwarm&quot;</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">update_colormap</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;coolwarm&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_rugplot_colormap.png" width="360px" /></p>
@@ -1477,22 +1606,124 @@ data points.</p>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">add_rugplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">,</span> <span class="n">dodge</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">scale_by_density</span><span class="p">()</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">scale_by_density</span><span class="p">()</span>
+</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_rugplot_density.png" width="360px" /></p>
-<p>Rug plot can also be overlaid with violin plot with <code>with_rug</code> method.</p>
+<h2 id="overlaying-plots">Overlaying Plots</h2>
+<p>Different types of plots have their own strengths and weaknesses. To make the plot more
+informative, it is often necessary to overlay different types of plots.</p>
+<p>You can simply call different methds to overlay different types of plots, but in some
+cases it is not that easy. For example, to add rug plot to violin plot, you have to
+correctly set the lengths of the rug lines so that their edges exactly match the edges
+of the violins.</p>
+<p>Some types of plots are implemented with methods to efficiently overlay them with other
+plots. All of them use method chaining so that the API is very clean.</p>
+<h3 id="rug-plot-over-violin-plot">Rug plot over violin plot</h3>
+<p>Violin plot can be overlaid with rug plot using <code>with_rug</code> method. Edges of the rug lines match exactly with the edges of the violins. Of cource, you can hover over the rug lines to see the details.</p>
 <p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_rug</span><span class="p">()</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_rug</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_violin_with_rug.png" width="360px" /></p>
+<h3 id="box-plot-over-violin-plot">Box plot over violin plot</h3>
+<p>Violin plot can be overlaid with box plot using <code>with_box</code> method. Color of the box plot
+follows the convention of other plotting softwares by default.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_box</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_violin_with_box.png" width="360px" /></p>
+<p>If the violins are edge only, the box plot will be filled with the same color.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">as_edge_only</span><span class="p">()</span>
+</span><span class="hll">    <span class="o">.</span><span class="n">with_box</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_violin_with_box_edge_only.png" width="360px" /></p>
+<h3 id="markers-over-violin-plot">Markers over violin plot</h3>
+<p>Violin plot has <code>with_strip</code> and <code>with_swarm</code> methods to overlay markers.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_strip</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_violin_with_strip.png" width="360px" /></p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_swarm</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_violin_with_swarm.png" width="360px" /></p>
+<h3 id="add-outliers">Add outliers</h3>
+<p>Box plot and violin plot are usually combined with outlier markers, as these plots are
+not good at showing the details of the sparse data points.
+For these plots, <code>with_outliers</code> method will add outliers, and optionally change the
+whisker lengths for the box plot.</p>
+<p>This is the example of adding outliers to the box plot. Because outliers are shown as a
+strip plot, arguments specific to strip plot (<code>symbol</code>, <code>size</code>, <code>extent</code> and <code>seed</code>) can be used.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_boxplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_outliers</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_box_with_outliers.png" width="360px" /></p>
+<p>If the box plot is edge only, the outliers will be the same.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_boxplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">as_edge_only</span><span class="p">()</span>
+</span>    <span class="o">.</span><span class="n">with_outliers</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_box_with_outliers_edge_only.png" width="360px" /></p>
+<p>Setting <code>update_whiskers</code> to <code>False</code> will not change the whisker lengths.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_boxplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_outliers</span><span class="p">(</span><span class="n">update_whiskers</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_box_with_outliers_no_updates.png" width="360px" /></p>
+<p>Violin plot also supports <code>with_outliers</code> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_outliers</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_violin_with_outliers.png" width="360px" /></p>
 
 
 
@@ -1539,13 +1770,13 @@ data points.</p>
         
         
           
-          <a href="../aggregation/" class="md-footer__link md-footer__link--next" aria-label="Next: Aggregation">
+          <a href="../cat_cat/" class="md-footer__link md-footer__link--next" aria-label="Next: Categorical &amp;times; Categorical Data">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Aggregation
+                Categorical &times; Categorical Data
               </div>
             </div>
             <div class="md-footer__button md-icon">

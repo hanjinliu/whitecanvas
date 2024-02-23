@@ -13,7 +13,8 @@ from whitecanvas.canvas import CanvasGrid, SingleCanvas
 from whitecanvas.theme import update_default
 
 DOCS: Path = Path(__file__).parent.parent
-CODE_BLOCK = re.compile("``` ?python\n([^`]*)```", re.DOTALL)
+# CODE_BLOCK = re.compile("``` ?python\n([^`]*)```", re.DOTALL)
+CODE_BLOCK = re.compile("``` ?python.*?\n([^`]*)```")
 
 def _exec_code(src: str, ns: dict, dest: str) -> dict[str, Any]:
     try:
@@ -104,6 +105,8 @@ def main() -> None:
                     raise RuntimeError(
                         f"Error evaluating code\n\n{code}\n\nfor {dest!r}"
                     ) from e
-        plt.close("all")
+            # close all if there's more than 10 figures
+            if len(plt.get_fignums()) > 10:
+                plt.close("all")
 
 main()

@@ -705,6 +705,8 @@
       
         
       
+        
+      
     
     
     
@@ -781,6 +783,27 @@
   
   <span class="md-ellipsis">
     Categorical &times; Numerical Data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="cat_cat/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Categorical &times; Categorical Data
   </span>
   
 
@@ -1106,10 +1129,14 @@ any external plotting libraries or DataFrames, and are more flexible in some cas
 <h2 id="the-categorical-plotters">The Categorical Plotters</h2>
 <p>Methods starting with "cat" return categorical plotters. Methods include:</p>
 <ul>
-<li><code>cat</code> ... plotter for numerical data in x/y-axis categorized by such as color.</li>
-<li><code>cat_x</code> ... plotter for categorical data in x-axis.</li>
-<li><code>cat_y</code> ... plotter for categorical data in y-axis.</li>
-<li><code>cat_xy</code> ... plotter for categorical data in both x- and y-axis.</li>
+<li><code>cat</code> ... plotter for numerical data in x/y-axis categorized by such as color &rarr;
+  <a href="num_num/">Numerical &times; Numerical Data</a>.</li>
+<li><code>cat_x</code> ... plotter for categorical data in x-axis &rarr;
+  <a href="cat_num/">Categorical &times; Numerical Data</a>.</li>
+<li><code>cat_y</code> ... plotter for categorical data in y-axis &rarr;
+  <a href="cat_num/">Categorical &times; Numerical Data</a>.</li>
+<li><code>cat_xy</code> ... plotter for categorical data in both x- and y-axis &rarr;
+  <a href="cat_cat/">Categorical &times; Categorical Data</a>.</li>
 </ul>
 <p>These methods need a tabular data and the names of the columns that will be used as the
 x and y values.

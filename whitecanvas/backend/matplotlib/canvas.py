@@ -58,19 +58,19 @@ class Canvas:
         ax.set_axisbelow(True)  # grid lines below other layers
         self._annot = ax.annotate(
             text="", xy=(0, 0), xytext=(20, -20), textcoords="data",
-            bbox={"fc": np.array([1.0, 1.0, 1.0, 0.4])},
+            bbox={"fc": np.array([1.0, 1.0, 1.0, 0.67])},
             fontproperties={"size": 14, "family": "Arial"},
             clip_on=False, zorder=10000,
         )  # fmt: skip
         self._annot.set_visible(False)
+        self._hoverable_artists: list[MplMouseEventsMixin] = []
+        self._last_hover = -1.0
 
         fig = self._axes.figure
         if fig is None:
             return
         fig.canvas.mpl_connect("motion_notify_event", self._on_hover)
         fig.canvas.mpl_connect("figure_leave_event", self._hide_tooltip)
-        self._hoverable_artists: list[MplMouseEventsMixin] = []
-        self._last_hover = -1.0
 
     def _on_hover(self, event: mplMouseEvent):
         if default_timer() - self._last_hover < 0.1:
@@ -307,6 +307,8 @@ class Canvas:
         if artists:
             loc, bbox_to_anchor = _LEGEND_LOC_MAP[anchor]
             self._axes.legend(artists, names, loc=loc, bbox_to_anchor=bbox_to_anchor)
+            if anchor.is_side:
+                self._axes.figure.tight_layout()
 
 
 _MOUSE_BUTTON_MAP = {

@@ -195,12 +195,12 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
     def _get_sep_values(self) -> NDArray[np.number]:
         """(5, N) array of min, 25%, 50%, 75%, max."""
         idx = 1 if self.orient.is_vertical else 0
-        stop = self.boxes.ndata * 2
-        _min = [seg[0, idx] for seg in self.whiskers.data[0:stop:2]]
+        stop = self.boxes.ndata
+        _min = [seg[0, idx] for seg in self.whiskers.data[:stop]]
         _p25 = self.boxes.bottom
         _median = [seg[0, idx] for seg in self.medians.data]
         _p75 = self.boxes.top
-        _max = [seg[1, idx] for seg in self.whiskers.data[1:stop:2]]
+        _max = [seg[1, idx] for seg in self.whiskers.data[stop : stop * 2]]
         return np.stack([_min, _p25, _median, _p75, _max], axis=0)
 
     def _make_sure_hatch_visible(self):

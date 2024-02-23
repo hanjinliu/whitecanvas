@@ -435,18 +435,16 @@ class DFViolinPlot(
         _cat_self = CatIterator(self._source, offsets=self._offsets)
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
-        _cat_map = _cat_self.category_map_with_dodge(self._splitby, self._dodge)
 
         # calculate outliers and update the separators
         df_outliers = {c: [] for c in (*self._splitby, self._value)}
         colors = []
-        for sl, sub in self._source.group_by(self._splitby):
+        for idx_cat, (sl, sub) in enumerate(self._source.group_by(self._splitby)):
             arr = sub[self._value]
             q1, q3 = np.quantile(arr, [0.25, 0.75])
             iqr = q3 - q1  # interquartile range
             low = q1 - ratio * iqr  # lower bound of inliers
             high = q3 + ratio * iqr  # upper bound of inliers
-            idx_cat = _cat_map[sl]
             outliers = arr[(arr < low) | (arr > high)]
             for _cat, _s in zip(sl, self._splitby):
                 df_outliers[_s].extend([_cat] * outliers.size)
@@ -729,23 +727,22 @@ class DFBoxPlot(
         _cat_self = CatIterator(self._source, offsets=self._offsets)
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
-        _cat_map = _cat_self.category_map_with_dodge(self._splitby, self._dodge)
 
         # calculate outliers and update the separators
         df_outliers = {c: [] for c in (*self._splitby, self._value)}
         agg_values = self.base._get_sep_values()  # for updating whiskers
         colors = []
-        for sl, sub in self._source.group_by(self._splitby):
+        for idx_cat, (sl, sub) in enumerate(self._source.group_by(self._splitby)):
             arr = sub[self._value]
             q1, q3 = np.quantile(arr, [0.25, 0.75])
             iqr = q3 - q1  # interquartile range
             low = q1 - ratio * iqr  # lower bound of inliers
             high = q3 + ratio * iqr  # upper bound of inliers
-            idx_cat = _cat_map[sl]
-            inliers = arr[(arr >= low) & (arr <= high)]
+            is_inlier = (low <= arr) & (arr <= high)
+            inliers = arr[is_inlier]
             agg_values[0, idx_cat] = inliers.min()
             agg_values[4, idx_cat] = inliers.max()
-            outliers = arr[(arr < low) | (arr > high)]
+            outliers = arr[~is_inlier]
             for _cat, _s in zip(sl, self._splitby):
                 df_outliers[_s].extend([_cat] * outliers.size)
             df_outliers[self._value].extend(outliers)

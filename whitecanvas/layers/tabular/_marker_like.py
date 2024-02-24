@@ -458,22 +458,26 @@ class DFBars(
         source: DataFrameWrapper[_DF],
         x,
         y,
+        bottom=None,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
+        stackby: tuple[str, ...] = (),
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         backend: str | Backend | None = None,
     ):
-        splitby = _shared.join_columns(color, hatch, source=source)
+        splitby = _shared.join_columns(color, hatch, stackby, source=source)
         self._color_by = _p.ColorPlan.default()
         self._hatch_by = _p.HatchPlan.default()
         self._style_by = _p.StylePlan.default()
         self._splitby = splitby
+        self._stackby = stackby
 
         base = _l.Bars(
-            x, y, name=name, orient=orient, extent=extent, backend=backend
-        ).with_face_multi()
+            x, y, bottom=bottom, name=name, orient=orient, extent=extent,
+            backend=backend
+        ).with_face_multi()  # fmt: skip
         super().__init__(base, source)
         if color is not None:
             self.update_color(color)
@@ -508,6 +512,59 @@ class DFBars(
         return DFBars(
             df, x0, y0, name=name, color=color, hatch=hatch, extent=extent,
             orient=orient, backend=backend,
+        )  # fmt: skip
+
+    @classmethod
+    def from_table_stacked(
+        cls,
+        df: DataFrameWrapper[_DF],
+        x: str | _jitter.JitterBase,
+        y: str | _jitter.JitterBase,
+        stackby: str | tuple[str, ...],
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        extent: float = 0.8,
+        orient: Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFBars[_DF]:
+        if isinstance(x, _jitter.JitterBase):
+            xj = x
+        else:
+            xj = _jitter.IdentityJitter(x)
+        if isinstance(y, _jitter.JitterBase):
+            yj = y
+        else:
+            yj = _jitter.IdentityJitter(y)
+        # pre-calculate all the possible xs
+        all_x = xj.map(df)
+
+        def _hash_rule(x: float) -> int:
+            return int(round(x * 1000))
+
+        ycumsum = {_hash_rule(_x): 0.0 for _x in all_x}
+        x0 = list[NDArray[np.number]]()
+        y0 = list[NDArray[np.number]]()
+        b0 = list[NDArray[np.number]]()
+        for _, sub in df.group_by(stackby):
+            this_x = xj.map(sub)
+            this_h = yj.map(sub)
+            bottom = []
+            for _x, _h in zip(this_x, this_h):
+                _x_hash = _hash_rule(_x)
+                dy = ycumsum[_x_hash]
+                bottom.append(dy)
+                ycumsum[_x_hash] += _h
+            x0.append(this_x)
+            y0.append(this_h)
+            b0.append(bottom)
+        x0 = np.concatenate(x0)
+        y0 = np.concatenate(y0)
+        b0 = np.concatenate(b0)
+        return DFBars(
+            df, x0, y0, b0, color=color, hatch=hatch, stackby=stackby, name=name,
+            extent=extent, orient=orient, backend=backend,
         )  # fmt: skip
 
     def _apply_color(self, color):

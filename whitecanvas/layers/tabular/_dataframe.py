@@ -47,7 +47,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         self,
         source: DataFrameWrapper[_DF],
         segs: list[np.ndarray],
-        labels: list[tuple[Any, ...]],
+        categories: list[tuple[Any, ...]],
         color: str | tuple[str, ...] | None = None,
         width: float = 1.0,
         style: str | tuple[str, ...] | None = None,
@@ -57,7 +57,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         splitby = _shared.join_columns(color, style, source=source)
         self._color_by = _p.ColorPlan.default()
         self._style_by = _p.StylePlan.default()
-        self._categories = labels
+        self._categories = categories
         self._splitby = splitby
         base = _lg.LineCollection(segs, name=name, backend=backend)
         super().__init__(base, source)
@@ -167,11 +167,11 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         size: float | None = None,
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
-    ) -> _LineMarkerTuple[_DF]:
+    ) -> _lg.MainAndOtherLayers[DFLines[_DF], _lg.MarkerCollection]:
         markers = self._base_layer._prep_markers(
             symbol=symbol, size=size, alpha=alpha, hatch=hatch,
         )  # fmt: skip
-        return _LineMarkerTuple([self, markers], name=self.name)
+        return _lg.MainAndOtherLayers([self, markers], name=self.name)
 
     def _simple_dataframe(self) -> DataFrameWrapper[dict]:
         return _shared.list_to_df(self._categories, self._splitby)
@@ -626,17 +626,3 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
             layers.append(each_layer)
         base = _lg.LayerCollectionBase(layers, name=name)
         return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
-
-
-class _LineMarkerTuple(_lg.LayerTuple, Generic[_DF]):
-    @property
-    def line(self) -> DFLines[_DF]:
-        return self._children[0]
-
-    @property
-    def markers(self) -> _lg.MarkerCollection:
-        return self._children[1]
-
-    def _as_legend_item(self) -> _legend.LegendItem:
-        # TODO: it's better to add markers to the legend, but it's not easy.
-        return self.line._as_legend_item()

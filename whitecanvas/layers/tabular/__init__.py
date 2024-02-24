@@ -20,8 +20,10 @@ from whitecanvas.layers.tabular._marker_like import (
     DFRug,
     DFRugGroups,
 )
+from whitecanvas.layers.tabular._stackable import DFArea
 
 __all__ = [
+    "DFArea",
     "DFBarPlot",
     "DFLines",
     "DFViolinPlot",

@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Generic, Iterable, TypeVar
 
+import numpy as np
+from numpy.typing import NDArray
+
 from whitecanvas.layers._base import Layer, LayerWrapper
+from whitecanvas.layers.tabular import _jitter
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
 
 _L = TypeVar("_L", bound="Layer")
@@ -141,3 +145,45 @@ def list_to_df(arr: list[tuple], columns: list[str]) -> DataFrameWrapper[dict]:
         for c, v in zip(columns, row):
             out[c].append(v)
     return parse(out)
+
+
+def resolve_stacking(
+    df: DataFrameWrapper[_DF],
+    x: str | _jitter.JitterBase,
+    y: str | _jitter.JitterBase,
+    stackby: tuple[str, ...],
+) -> tuple[NDArray[np.number], NDArray[np.number], NDArray[np.number]]:
+    if isinstance(x, _jitter.JitterBase):
+        xj = x
+    else:
+        xj = _jitter.IdentityJitter(x)
+    if isinstance(y, _jitter.JitterBase):
+        yj = y
+    else:
+        yj = _jitter.IdentityJitter(y)
+    # pre-calculate all the possible xs
+    all_x = xj.map(df)
+
+    def _hash_rule(x: float) -> int:
+        return int(round(x * 1000))
+
+    ycumsum = {_hash_rule(_x): 0.0 for _x in all_x}
+    x0 = list[NDArray[np.number]]()
+    y0 = list[NDArray[np.number]]()
+    b0 = list[NDArray[np.number]]()
+    for _, sub in df.group_by(stackby):
+        this_x = xj.map(sub)
+        this_h = yj.map(sub)
+        bottom = []
+        for _x, _h in zip(this_x, this_h):
+            _x_hash = _hash_rule(_x)
+            dy = ycumsum[_x_hash]
+            bottom.append(dy)
+            ycumsum[_x_hash] += _h
+        x0.append(this_x)
+        y0.append(this_h)
+        b0.append(bottom)
+    x0 = np.concatenate(x0)
+    y0 = np.concatenate(y0)
+    b0 = np.concatenate(b0)
+    return x0, y0, b0

@@ -18,6 +18,7 @@ from whitecanvas.types import (
     KdeBandWidthType,
     LineStyle,
     Orientation,
+    XYData,
 )
 from whitecanvas.utils.hist import get_hist_edges, histograms
 from whitecanvas.utils.normalize import as_array_1d
@@ -398,3 +399,32 @@ class Kde(LineFillBase):
         x = np.linspace(data.min() - pad, data.max() + pad, 100)
         y1 = kde(x) * scale + bottom
         return x, y1, kde.factor
+
+
+class Area(LineFillBase):
+    def __init__(
+        self,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        bottom: ArrayLike1D | float = 0.0,
+        orient: str | Orientation = Orientation.VERTICAL,
+        name: str | None = None,
+        backend: Backend | str | None = None,
+    ):
+        if name is None:
+            name = "kde"
+        ori = Orientation.parse(orient)
+        line = Line(x, y + bottom, name="line", backend=backend)
+        fill = Band(x, bottom, y + bottom, name="fill", orient=ori, backend=backend)
+        super().__init__(line, fill, name=name)
+
+    @property
+    def data(self) -> XYData:
+        """The data used to plot the histogram."""
+        x, y0, y1 = self.fill.data
+        return XYData(x, y1 - y0)
+
+    @property
+    def orient(self) -> Orientation:
+        """Orientation of the line and fill layers."""
+        return self.fill.orient

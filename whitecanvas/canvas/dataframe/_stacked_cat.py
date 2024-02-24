@@ -23,13 +23,15 @@ class StackedCatPlotter(BaseCatPlotter[_C, _DF]):
         df: _DF,
         offset: str | tuple[str, ...] | None,
         value: str | None,
-        stackby: str | tuple[str, ...],
         orient: Orientation,
+        stackby: str | tuple[str, ...] | None = None,
         update_labels: bool = False,
     ):
         super().__init__(canvas, df)
         if isinstance(stackby, str):
             stackby = (stackby,)
+        elif stackby is None:
+            pass  # will be determined later
         else:
             if any(not isinstance(o, str) for o in stackby):
                 raise TypeError(
@@ -85,11 +87,29 @@ class StackedCatPlotter(BaseCatPlotter[_C, _DF]):
         self,
         *,
         color: NStr | None = None,
+        width: float = 2.0,
         hatch: NStr | None = None,
+        style: NStr | None = None,
         name: str | None = None,
-        extent: float = 0.8,
     ):
-        ...
+        canvas = self._canvas()
+        df = self._df
+        _splitby, _dodge = _shared.norm_dodge(
+            df, self._offset, color, hatch, dodge=False
+        )  # fmt: skip
+        _pos_map = self._cat_iter.prep_position_map(_splitby, dodge=_dodge)
+
+        xj = _jitter.CategoricalJitter(_splitby, _pos_map)
+        yj = _jitter.IdentityJitter(self._value).check(df)
+        layer = _lt.DFArea.from_table_stacked(
+            self._df, xj, yj, self._stackby, name=name, color=color, hatch=hatch,
+            style=style, width=width, orient=self._orient, backend=canvas._get_backend()
+        )  # fmt: skip
+        if color is not None and not layer._color_by.is_const():
+            layer.update_color(color, palette=canvas._color_palette)
+        elif color is None:
+            layer.update_color(canvas._color_palette.next())
+        return canvas.add_layer(layer)
 
     def add_stem(
         self,

@@ -158,7 +158,10 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         else:
             canvas.y.ticks.set_labels(pos, label)
 
-    def stack(self, by: str | tuple[str, ...]) -> StackedCatPlotter[_C, _DF]:
+    def stack(
+        self,
+        by: str | Sequence[str] | None = None,
+    ) -> StackedCatPlotter[_C, _DF]:
         """
         Return a stacked plotter for data stacked by the given column(s).
 
@@ -178,8 +181,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             df=self._df,
             offset=self._offset,
             value=self._value,
-            stackby=by,
             orient=self._orient,
+            stackby=by,
             update_labels=self._update_labels,
         )
 

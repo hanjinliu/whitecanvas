@@ -141,5 +141,29 @@ def test_catx_legend(backend: str):
     _c.add_barplot(color="label")
     canvas.add_legend()
 
-def test_numeric_axis(backend: str):
-    ...
+@pytest.mark.parametrize("orient", ["v", "h"])
+def test_numeric_axis(backend: str, orient: str):
+    canvas = new_canvas(backend=backend)
+    df = {
+        "y": np.arange(30),
+        "label": np.repeat([2, 5, 6], 10),
+        "c": ["P", "Q"] * 15,
+    }
+    if orient == "v":
+        cat_plt = canvas.cat_x(df, "label", "y", numeric_axis=True)
+    else:
+        cat_plt = canvas.cat_y(df, "y", "label", numeric_axis=True)
+    cat_plt.add_stripplot(color="c")
+    cat_plt.add_swarmplot(color="c")
+    cat_plt.add_boxplot(color="c").with_outliers(ratio=0.5)
+    with filter_warning(backend, "plotly"):
+        cat_plt.add_boxplot(color="c").as_edge_only()
+    cat_plt.add_violinplot(color="c").with_rug()
+    cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5)
+    cat_plt.add_violinplot(color="c").with_box()
+    cat_plt.add_violinplot(color="c").as_edge_only().with_strip()
+    cat_plt.add_violinplot(color="c").with_swarm()
+    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    with filter_warning(backend, "plotly"):
+        cat_plt.add_rugplot(color="c").scale_by_density()

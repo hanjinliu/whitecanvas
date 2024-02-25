@@ -113,11 +113,13 @@ class CatIterator(Generic[_DF]):
                     f" and dodge={dodge!r}"
                 )
             if self._numeric:
-                raise ValueError("dodge is not supported for numeric data.")
+                _pos = list(self.prep_position_map(self._offsets, dodge=False).values())
+                _width = np.diff(np.sort(_pos)).min() * 0.8
+            else:
+                _width = 0.8
             inv_indices = [by.index(d) for d in dodge]
             _res_map = self.category_map(dodge)
             _nres = len(_res_map)
-            _width = 0.8
             dmax = (_nres - 1) / 2 / _nres * _width
             dd = np.linspace(-dmax, dmax, _nres)
             for sl, group in self._df.group_by(by):

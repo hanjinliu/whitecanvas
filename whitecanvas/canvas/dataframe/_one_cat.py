@@ -259,7 +259,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         >>> canvas.cat_x(df, x="species", y="weight").add_violinplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> canvas.cat_x(df, "region", "weight").add_violinplot(dodge=True)
+        >>> canvas.cat_x(df, x="species", y="weight").add_violinplot(
+        ...     color="region", dodge=True,
+        ... )
 
         Parameters
         ----------
@@ -269,6 +271,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
         extent : float, default 0.8
             Width of the violins. Usually in range (0, 1].
         shape : str, default "both"
@@ -291,10 +296,10 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     def add_boxplot(
         self,
         *,
+        name: str | None = None,
         color: NStr | None = None,
         hatch: NStr | None = None,
         dodge: NStr | bool = True,
-        name: str | None = None,
         capsize: float = 0.1,
         extent: float = 0.8,
     ) -> _lt.DFBoxPlot[_DF]:
@@ -305,16 +310,21 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         >>> canvas.cat_x(df, x="species", y="weight").add_boxplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> canvas.cat_x(df, "region", "weight").add_boxplot(dodge=True)
+        >>> canvas.cat_x(df, x="species", y="weight").add_boxplot(
+        ...     color="region", dodge=True,
+        ... )
 
         Parameters
         ----------
+        name : str, optional
+            Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
-        name : str, optional
-            Name of the layer.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
         capsize : float, default 0.1
             Length of the caps as a fraction of the width of the box.
         extent : float, default 0.8
@@ -337,10 +347,10 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     def add_pointplot(
         self,
         *,
+        name: str | None = None,
         color: NStr | None = None,
         hatch: NStr | None = None,
         dodge: NStr | bool = True,
-        name: str | None = None,
         capsize: float = 0.1,
     ) -> _lt.DFPointPlot[_DF]:
         """
@@ -350,7 +360,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         >>> canvas.cat_x(df, x="species", y="weight").add_pointplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> canvas.cat_x(df, "region", "weight").add_pointplot(dodge=True)
+        >>> canvas.cat_x(df, x="species", y="weight").add_pointplot(
+        ...     color="region", dodge=True,
+        ... )
 
         The default estimator and errors are mean and standard deviation. To change
         them, use `est_by_*` and `err_by_*` methods.
@@ -360,12 +372,15 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
         Parameters
         ----------
+        name : str, optional
+            Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
-        name : str, optional
-            Name of the layer.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
         capsize : float, default 0.1
             Length of the caps as a fraction of the width of the box.
 
@@ -386,10 +401,10 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     def add_barplot(
         self,
         *,
+        name: str | None = None,
         color: NStr | None = None,
         hatch: NStr | None = None,
         dodge: NStr | bool = True,
-        name: str | None = None,
         capsize: float = 0.1,
         extent: float = 0.8,
     ) -> _lt.DFBarPlot[_DF]:
@@ -400,7 +415,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         >>> canvas.cat_x(df, x="species", y="weight").add_barplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> canvas.cat_x(df, "region", "weight").add_barplot(dodge=True)
+        >>> canvas.cat_x(df, x="species", y="weight").add_barplot(
+        ...     color="region", dodge=True
+        ... )
 
         The default estimator and errors are mean and standard deviation. To change
         them, use `est_by_*` and `err_by_*` methods.
@@ -410,12 +427,15 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
         Parameters
         ----------
+        name : str, optional
+            Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
-        name : str, optional
-            Name of the layer.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
         capsize : float, default 0.1
             Length of the caps as a fraction of the width of the box.
         extent : float, default 0.8
@@ -445,12 +465,12 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     def add_stripplot(
         self,
         *,
+        name: str | None = None,
         color: NStr | None = None,
         hatch: NStr | None = None,
         symbol: NStr | None = None,
         size: str | None = None,
         dodge: NStr | bool = False,
-        name: str | None = None,
         extent: float = 0.5,
         seed: int | None = 0,
     ) -> _lt.DFMarkerGroups[_DF]:
@@ -461,10 +481,14 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         >>> canvas.cat_x(df, x="species", y="weight").add_stripplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> canvas.cat_x(df, "region", "weight").add_stripplot(dodge=True)
+        >>> canvas.cat_x(df, x="species", y="weight").add_stripplot(
+        ...     color="region", dodge=True
+        ... )
 
         Parameters
         ----------
+        name : str, optional
+            Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
@@ -473,8 +497,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Column name(s) for symbols. Must be categorical.
         size : str, optional
             Column name for marker size. Must be numerical.
-        name : str, optional
-            Name of the layer.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
         extent : float, default 0.5
             Width of the violins. Usually in range (0, 1].
         seed : int, optional
@@ -528,12 +553,12 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     def add_swarmplot(
         self,
         *,
+        name: str | None = None,
         color: NStr | None = None,
         hatch: NStr | None = None,
         symbol: NStr | None = None,
         size: str | None = None,
         dodge: NStr | bool = False,
-        name: str | None = None,
         extent: float = 0.8,
         sort: bool = False,
     ) -> _lt.DFMarkerGroups[_DF]:
@@ -544,10 +569,14 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         >>> canvas.cat_x(df, x="species", y="weight").add_swarmplot()
 
         >>> ### Color by column "region" with dodging.
-        >>> canvas.cat_x(df, "region", "weight").add_swarmplot(dodge=True)
+        >>> canvas.cat_x(df, x="species", y="weight").add_swarmplot(
+        ...     color="region", dodge=True
+        ... )
 
         Parameters
         ----------
+        name : str, optional
+            Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
         hatch : str or sequence of str, optional
@@ -556,8 +585,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Column name(s) for symbols. Must be categorical.
         size : str, optional
             Column name for marker size. Must be numerical.
-        name : str, optional
-            Name of the layer.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
         extent : float, default 0.8
             Width of the violins. Usually in range (0, 1].
         sort : bool, default False
@@ -606,6 +636,42 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         dodge: NStr | bool = True,
         extent: float = 0.8,
     ) -> _lt.DFRugGroups[_DF]:
+        """
+        Add a categorical rug plot.
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat_x(df, x="species", y="weight").add_rugplot()
+
+        >>> ### Color by column "region" with dodging.
+        >>> canvas.cat_x(df, x="species", y="weight").add_rugplot(
+        ...     color="region", dodge=True
+        ... )
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        hatch : str or sequence of str, optional
+            Column name(s) for hatches. Must be categorical.
+        symbol : str or sequence of str, optional
+            Column name(s) for symbols. Must be categorical.
+        size : str, optional
+            Column name for marker size. Must be numerical.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
+        extent : float, default 0.8
+            Width of the violins. Usually in range (0, 1].
+        sort : bool, default False
+            Whether to sort the data by value.
+
+        Returns
+        -------
+        DFMarkerGroups
+            Marker collection layer.
+        """
         canvas = self._canvas()
         width = theme._default("line.width", width)
 

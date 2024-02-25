@@ -58,6 +58,7 @@ testing = [
   "pytest",
   "pytest-qt",
   "pytest-cov",
+  "imageio",
   "qtpy>=2.4.1",
   "pyqt5>=5.15.4",
   "ipywidgets>=8.0.0",

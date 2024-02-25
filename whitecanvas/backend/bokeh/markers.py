@@ -48,8 +48,24 @@ class Markers(HeteroLayer[bk_models.Scatter], SupportsMouseEvents):
     def _plt_get_data(self):
         return self._data.data["x"], self._data.data["y"]
 
-    def _plt_set_data(self, xdata, ydata):
-        self._data.data = {"x": xdata, "y": ydata}
+    def _plt_set_data(self, xdata: NDArray[np.number], ydata: NDArray[np.number]):
+        ndata = self._data.data["x"].size
+        cur_data = self._data.data.copy()
+        cur_data["x"] = xdata
+        cur_data["y"] = ydata
+        cols_to_update = [
+            "sizes", "face_color", "edge_color", "width", "pattern", "style",
+            "hovertexts"
+        ]  # fmt: skip
+        if xdata.size < ndata:
+            for key in cols_to_update:
+                cur_data[key] = cur_data[key][: xdata.size]
+        elif xdata.size > ndata:
+            for key in cols_to_update:
+                cur_data[key] = np.concatenate(
+                    [cur_data[key], np.full(xdata.size - ndata, cur_data[key][-1])]
+                )
+        self._data.data = cur_data
 
     def _plt_get_symbol(self) -> Symbol:
         sym = self._model.marker

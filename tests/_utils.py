@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+import warnings
 from cmap import Color
 
 def assert_color_equal(a, b):
@@ -18,3 +20,14 @@ def assert_color_array_equal(arr, b):
             ok = all([a == b for a, b in zip(cols, other)])
     if not ok:
         raise AssertionError(f"Color {arr} != {b}")
+
+@contextmanager
+def filter_warning(backend: str, choices: "str | list[str]"):
+    if isinstance(choices, str):
+        choices = [choices]
+    if backend in choices:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            yield
+    else:
+        yield

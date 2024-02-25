@@ -274,7 +274,6 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         shape : str, default "both"
             Shape of the violins. Can be "both", "left", or "right".
 
-
         Returns
         -------
         DFViolinPlot

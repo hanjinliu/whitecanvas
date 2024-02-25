@@ -703,6 +703,8 @@
       
         
       
+        
+      
     
     
     
@@ -821,6 +823,27 @@
   
   <span class="md-ellipsis">
     Aggregation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../categorical/stacking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Stacking
   </span>
   
 
@@ -4611,7 +4634,7 @@
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Backend </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">()</span><span class="si">}</span><span class="s2"> does not support `install_second_y`.&quot;</span>
-            <span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
         <span class="n">canvas</span> <span class="o">=</span> <span class="n">Canvas</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">())</span>
         <span class="n">canvas</span><span class="o">.</span><span class="n">_init_canvas</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">canvas</span>
@@ -4629,7 +4652,7 @@
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Backend </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">()</span><span class="si">}</span><span class="s2"> does not support `install_inset`&quot;</span>
-            <span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
         <span class="n">canvas</span> <span class="o">=</span> <span class="n">Canvas</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">())</span>
         <span class="n">canvas</span><span class="o">.</span><span class="n">_init_canvas</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">canvas</span>
@@ -4883,7 +4906,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Bars</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">Band</span><span class="p">,</span> <span class="n">_lg</span><span class="o">.</span><span class="n">StemPlot</span><span class="p">,</span> <span class="n">_lg</span><span class="o">.</span><span class="n">LabeledBars</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Only Bars and Band are supported as an input, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Only Bars, StemPlot and Band are supported as an input, &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="si">!r}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">StackOverPlotter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
@@ -12645,7 +12668,7 @@ polars.DataFrame are supported.</p>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Backend </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">()</span><span class="si">}</span><span class="s2"> does not support `install_second_y`.&quot;</span>
-        <span class="p">)</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
     <span class="n">canvas</span> <span class="o">=</span> <span class="n">Canvas</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">())</span>
     <span class="n">canvas</span><span class="o">.</span><span class="n">_init_canvas</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">canvas</span>
@@ -12737,7 +12760,7 @@ bars_2 = canvas.stack_over(bars_1).add(y2)</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Bars</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">Band</span><span class="p">,</span> <span class="n">_lg</span><span class="o">.</span><span class="n">StemPlot</span><span class="p">,</span> <span class="n">_lg</span><span class="o">.</span><span class="n">LabeledBars</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Only Bars and Band are supported as an input, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Only Bars, StemPlot and Band are supported as an input, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="si">!r}</span><span class="s2">.&quot;</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">StackOverPlotter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>

@@ -87,8 +87,11 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
         return brushes
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
+        brushes = self._get_brush()
+        if len(brushes) == 0:
+            return np.zeros((0, 4), dtype=np.float32)
         return np.array(
-            [brush.color().getRgbF() for brush in self._get_brush()], dtype=np.float32
+            [brush.color().getRgbF() for brush in brushes], dtype=np.float32
         )
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
@@ -118,9 +121,10 @@ class Markers(pg.ScatterPlotItem, PyQtLayer):
         return pens
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.array(
-            [pen.color().getRgbF() for pen in self._get_pen()], dtype=np.float32
-        )
+        pens = self._get_pen()
+        if len(pens) == 0:
+            return np.zeros((0, 4), dtype=np.float32)
+        return np.array([pen.color().getRgbF() for pen in pens], dtype=np.float32)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         color = as_color_array(color, len(self.data["x"]))

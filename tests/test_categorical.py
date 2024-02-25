@@ -45,8 +45,10 @@ def test_cat_plots(backend: str, orient: str):
         cat_plt = canvas.cat_y(df, "y", "label")
     cat_plt.add_stripplot(color="c")
     cat_plt.add_swarmplot(color="c")
-    cat_plt.add_boxplot(color="c")
+    cat_plt.add_boxplot(color="c").with_outliers(ratio=0.5)
     cat_plt.add_violinplot(color="c").with_rug()
+    cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5)
+    cat_plt.add_violinplot(color="c").with_box()
     cat_plt.add_pointplot(color="c").err_by_se()
     cat_plt.add_barplot(color="c")
     if backend == "plotly":

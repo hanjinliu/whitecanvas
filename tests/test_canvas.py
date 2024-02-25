@@ -1,3 +1,5 @@
+from pathlib import Path
+import tempfile
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -77,9 +79,7 @@ def test_grid(backend: str):
 
 
 def test_grid_nonuniform(backend: str):
-    cgrid = wc.new_grid(
-        [2, 1], [2, 1], backend=backend
-    ).link_x().link_y()
+    cgrid = wc.new_grid([2, 1], [2, 1], backend=backend, size=(100, 100)).link_x().link_y()
     c00 = cgrid.add_canvas(0, 0)
     c01 = cgrid.add_canvas(0, 1)
     c10 = cgrid.add_canvas(1, 0)
@@ -103,7 +103,7 @@ def test_grid_nonuniform(backend: str):
     assert len(c11.layers) == 1
 
 def test_vgrid_hgrid(backend: str):
-    cgrid = wc.new_col(2, backend=backend).link_x().link_y()
+    cgrid = wc.new_col(2, backend=backend, size=(100, 100)).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
 
@@ -116,7 +116,7 @@ def test_vgrid_hgrid(backend: str):
     assert len(c0.layers) == 1
     assert len(c1.layers) == 1
 
-    cgrid = wc.new_row(2, backend=backend).link_x().link_y()
+    cgrid = wc.new_row(2, backend=backend, size=(100, 100)).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
 
@@ -142,7 +142,7 @@ def test_unlink(backend: str):
 
 def test_jointgrid(backend: str):
     rng = np.random.default_rng(0)
-    joint = wc.new_jointgrid(backend=backend).with_hist().with_kde().with_rug()
+    joint = wc.new_jointgrid(backend=backend, size=(100, 100)).with_hist().with_kde().with_rug()
     joint.add_markers(rng.random(100), rng.random(100), color="red")
 
 def test_legend(backend: str):
@@ -158,3 +158,24 @@ def test_legend(backend: str):
     canvas.add_line([3, 4, 5], [4, 5, 4], name="plot+err").with_markers().with_xerr([1, 1, 1])
     canvas.add_markers([3, 4, 5], [5, 6, 5], name="markers+err+err").with_stem()
     canvas.add_legend(location="bottom_right")
+
+def test_animation():
+    from whitecanvas.animation import Animation
+
+    canvas = new_canvas(backend="matplotlib")
+    anim = Animation(canvas)
+    x = np.linspace(0, 2 * np.pi, 100)
+    line = canvas.add_line(x, np.sin(x + 0), name="line")
+    for i in anim.iter_range(3):
+        line.set_data(x, np.sin(x + i * np.pi / 3))
+    with tempfile.TemporaryDirectory() as tmpdir:
+        anim.save(Path(tmpdir) / "test.gif")
+    assert anim.asarray().ndim == 4
+
+def test_multidim():
+    canvas = new_canvas(backend="matplotlib")
+    x = np.arange(5)
+    ys = [x, x ** 2, x ** 3]
+    canvas.dims.add_line(x, ys)
+    img = np.zeros((3, 5, 5))
+    canvas.dims.add_image(img)

@@ -177,7 +177,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], self._capsize
             )
             medsegs = [
-                [(x0 - extent / 2, y0), (x0 + extent / 2, y0)]
+                np.array([(x0 - extent / 2, y0), (x0 + extent / 2, y0)])
                 for x0, y0 in zip(x, agg_arr[2])
             ]
         else:
@@ -185,7 +185,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
                 x, agg_arr[0], agg_arr[1], agg_arr[3], agg_arr[4], self._capsize
             )
             medsegs = [
-                [(x0, y0 - extent / 2), (x0, y0 + extent / 2)]
+                np.array([(x0, y0 - extent / 2), (x0, y0 + extent / 2)])
                 for x0, y0 in zip(x, agg_arr[2])
             ]
         self.whiskers.data = segs
@@ -238,12 +238,12 @@ def _xyy_to_segments(
     v1 = np.stack([x, y1], axis=1)
     v2 = np.stack([x, y2], axis=1)
     v3 = np.stack([x, y3], axis=1)
-    segments_0 = [[s0, s1] for s0, s1 in zip(v0, v1)]
-    segments_1 = [[s2, s3] for s2, s3 in zip(v2, v3)]
+    segments_0 = [np.stack([s0, s1]) for s0, s1 in zip(v0, v1)]
+    segments_1 = [np.stack([s2, s3]) for s2, s3 in zip(v2, v3)]
     if capsize > 0:
         _c = np.array([capsize / 2, 0])
-        cap0 = [[s0 - _c, s0 + _c] for s0 in v0]
-        cap1 = [[s3 - _c, s3 + _c] for s3 in v3]
+        cap0 = [np.stack([s0 - _c, s0 + _c]) for s0 in v0]
+        cap1 = [np.stack([s3 - _c, s3 + _c]) for s3 in v3]
     else:
         cap0 = []
         cap1 = []
@@ -269,13 +269,13 @@ def _yxx_to_segments(
     v1 = np.stack([x1, y], axis=1)
     v2 = np.stack([x2, y], axis=1)
     v3 = np.stack([x3, y], axis=1)
-    segments_0 = [[s0, s1] for s0, s1 in zip(v0, v1)]
-    segments_1 = [[s2, s3] for s2, s3 in zip(v2, v3)]
+    segments_0 = [np.stack([s0, s1]) for s0, s1 in zip(v0, v1)]
+    segments_1 = [np.stack([s2, s3]) for s2, s3 in zip(v2, v3)]
 
     if capsize > 0:
         _c = np.array([0, capsize / 2])
-        cap0 = [[s0 - _c, s0 + _c] for s0 in v0]
-        cap1 = [[s3 - _c, s3 + _c] for s3 in v3]
+        cap0 = [np.stack([s0 - _c, s0 + _c]) for s0 in v0]
+        cap1 = [np.stack([s3 - _c, s3 + _c]) for s3 in v3]
     else:
         cap0 = []
         cap1 = []

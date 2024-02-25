@@ -396,7 +396,10 @@ class ConstEdge(SinglePropertyEdgeBase):
 
     @property
     def color(self) -> NDArray[np.floating]:
-        return self._layer._backend._plt_get_edge_color()[0]
+        colors = self._layer._backend._plt_get_edge_color()
+        if len(colors) > 0:
+            return colors[0]
+        return np.array([0, 0, 0, 0], dtype=np.float32)
 
     @color.setter
     def color(self, value: ColorType):
@@ -407,7 +410,10 @@ class ConstEdge(SinglePropertyEdgeBase):
     @property
     def style(self) -> LineStyle:
         """Edge style."""
-        return self._layer._backend._plt_get_edge_style()[0]
+        styles = self._layer._backend._plt_get_edge_style()
+        if len(styles) > 0:
+            return styles[0]
+        return LineStyle.SOLID
 
     @style.setter
     def style(self, value: str | LineStyle):
@@ -418,7 +424,10 @@ class ConstEdge(SinglePropertyEdgeBase):
     @property
     def width(self) -> float:
         """Edge width."""
-        return self._layer._backend._plt_get_edge_width()[0]
+        widths = self._layer._backend._plt_get_edge_width()
+        if len(widths) > 0:
+            return widths[0]
+        return 0.0
 
     @width.setter
     def width(self, value: float):
@@ -449,7 +458,8 @@ class MultiFace(MultiPropertyFaceBase):
     @color.setter
     def color(self, color):
         col = as_color_array(color, self._layer.ndata)
-        self._layer._backend._plt_set_face_color(col)
+        if self._layer.ndata > 0:
+            self._layer._backend._plt_set_face_color(col)
         self.events.color.emit(col)
 
     @property
@@ -465,7 +475,8 @@ class MultiFace(MultiPropertyFaceBase):
             pass
         else:
             hatch = [Hatch(p) for p in hatch]
-        self._layer._backend._plt_set_face_hatch(hatch)
+        if self._layer.ndata > 0:
+            self._layer._backend._plt_set_face_hatch(hatch)
         self.events.hatch.emit(hatch)
 
 
@@ -478,7 +489,8 @@ class MultiEdge(MultiPropertyEdgeBase):
     @color.setter
     def color(self, color):
         col = as_color_array(color, self._layer.ndata)
-        self._layer._backend._plt_set_edge_color(col)
+        if self._layer.ndata > 0:
+            self._layer._backend._plt_set_edge_color(col)
         self.events.color.emit(col)
 
     @property
@@ -497,7 +509,8 @@ class MultiEdge(MultiPropertyEdgeBase):
                 )
         else:
             width = float(width)
-        self._layer._backend._plt_set_edge_width(width)
+        if self._layer.ndata > 0:
+            self._layer._backend._plt_set_edge_width(width)
         self.events.width.emit(width)
 
     @property
@@ -513,7 +526,8 @@ class MultiEdge(MultiPropertyEdgeBase):
             pass
         else:
             style = [LineStyle(s) for s in style]
-        self._layer._backend._plt_set_edge_style(style)
+        if self._layer.ndata > 0:
+            self._layer._backend._plt_set_edge_style(style)
         self.events.style.emit(style)
 
 

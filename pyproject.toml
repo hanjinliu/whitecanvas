@@ -208,7 +208,7 @@ omit = [
 ]
 
 [tool.coverage.paths]
-whitecanvas = ["whitecanvas", "*/whitecanvas/whitecanvas"]
+whitecanvas = ["*/whitecanvas/whitecanvas"]
 tests = ["tests", "*/whitecanvas/tests"]
 
 [tool.coverage.report]

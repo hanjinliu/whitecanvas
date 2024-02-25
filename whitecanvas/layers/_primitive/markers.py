@@ -171,7 +171,8 @@ class Markers(
     @symbol.setter
     def symbol(self, symbol: str | Symbol):
         sym = Symbol(symbol)
-        self._backend._plt_set_symbol(sym)
+        if self.ndata > 0:
+            self._backend._plt_set_symbol(sym)
         self.events.symbol.emit(sym)
 
     @property
@@ -188,6 +189,7 @@ class Markers(
     @size.setter
     def size(self, size: _Size):
         """Set marker size"""
+        ndata = self.ndata
         if not isinstance(size, (float, int, np.number)):
             if not self._size_is_array:
                 raise ValueError(
@@ -195,12 +197,13 @@ class Markers(
                     "set multiple sizes."
                 )
             size = as_array_1d(size)
-            if size.size != self.ndata:
+            if size.size != ndata:
                 raise ValueError(
                     f"Expected `size` to have the same size as the layer data size "
                     f"({self.ndata}), got {size.size}."
                 )
-        self._backend._plt_set_symbol_size(size)
+        if ndata > 0:
+            self._backend._plt_set_symbol_size(size)
         self.events.size.emit(size)
 
     def update(

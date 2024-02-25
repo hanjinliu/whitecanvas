@@ -36,7 +36,10 @@ class HeteroLayer(BokehLayer[_M]):
     ##### HasFace protocol #####
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return np.stack([arr_color(c) for c in self._data.data["face_color"]], axis=0)
+        colors = [arr_color(c) for c in self._data.data["face_color"]]
+        if len(colors) == 0:
+            return np.zeros((0, 4), dtype=np.float32)
+        return np.stack(colors, axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:
@@ -75,7 +78,10 @@ class HeteroLayer(BokehLayer[_M]):
         self._data.data["style"] = val
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.stack([arr_color(c) for c in self._data.data["edge_color"]], axis=0)
+        colors = [arr_color(c) for c in self._data.data["edge_color"]]
+        if len(colors) == 0:
+            return np.zeros((0, 4), dtype=np.float32)
+        return np.stack(colors, axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         if color.ndim == 1:

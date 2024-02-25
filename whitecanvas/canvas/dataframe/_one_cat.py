@@ -93,6 +93,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         offset: str | tuple[str, ...] | None,
         value: str | None,
         update_labels: bool = False,
+        numeric: bool = False,
     ):
         super().__init__(canvas, df)
         if isinstance(offset, str):
@@ -105,28 +106,40 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
                     "Category column(s) must be specified by a string or a sequence "
                     f"of strings, got {offset!r}."
                 )
-        # check dtype
-        for col in offset:
-            arr = self._df[col]
-            if arr.dtype.kind in "fc":
+        if numeric and offset is not None:
+            if len(offset) != 1:
                 raise ValueError(
-                    f"Column {col!r} cannot be interpreted as a categorical column "
+                    "Numerical axis with multiple categories is not supported."
+                )
+            arr = self._df[offset[0]]
+            if arr.dtype.kind not in "iuf":
+                raise ValueError(
+                    f"Column {offset[0]!r} cannot be interpreted as a numerical axis "
                     f"(dtype={arr.dtype!r})."
                 )
+        # check dtype?
+        # for col in offset:
+        #     arr = self._df[col]
+        #     if arr.dtype.kind in "fc":
+        #         raise ValueError(
+        #             f"Column {col!r} cannot be interpreted as a categorical column "
+        #             f"(dtype={arr.dtype!r})."
+        #         )
         self._offset: tuple[str, ...] = offset
-        self._cat_iter = CatIterator(self._df, offset)
+        self._cat_iter = CatIterator(self._df, offset, numeric=numeric)
         self._value = value
         self._update_labels = update_labels
         if update_labels:
             if value is not None:
                 self._update_axis_labels(value)
-            pos, label = self._cat_iter.axis_ticks()
-            if self._orient.is_vertical:
-                canvas.x.ticks.set_labels(pos, label)
-                canvas.x.lim = (np.min(pos) - 0.5, np.max(pos) + 0.5)
-            else:
-                canvas.y.ticks.set_labels(pos, label)
-                canvas.y.lim = (np.min(pos) - 0.5, np.max(pos) + 0.5)
+            if not numeric:
+                pos, label = self._cat_iter.axis_ticks()
+                if self._orient.is_vertical:
+                    canvas.x.ticks.set_labels(pos, label)
+                    canvas.x.lim = (np.min(pos) - 0.5, np.max(pos) + 0.5)
+                else:
+                    canvas.y.ticks.set_labels(pos, label)
+                    canvas.y.lim = (np.min(pos) - 0.5, np.max(pos) + 0.5)
 
     def __repr__(self) -> str:
         return (
@@ -184,6 +197,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             orient=self._orient,
             stackby=by,
             update_labels=self._update_labels,
+            numeric=self._cat_iter._numeric,
         )
 
     def melt(

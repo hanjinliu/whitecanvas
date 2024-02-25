@@ -55,10 +55,12 @@ class CatIterator(Generic[_DF]):
         self,
         df: DataFrameWrapper[_DF],
         offsets: tuple[str, ...],
+        numeric: bool = False,
     ):
         self._df = df
         self._offsets = offsets
         self._cat_map_cache = {}
+        self._numeric = numeric
 
     @property
     def df(self) -> DataFrameWrapper[_DF]:
@@ -96,7 +98,10 @@ class CatIterator(Generic[_DF]):
                 f"by={by!r}"
             )
         indices = [by.index(d) for d in self._offsets]
-        _map = self.category_map(self._offsets)
+        if self._numeric:
+            _map = NumericMap()
+        else:
+            _map = self.category_map(self._offsets)
         if not dodge:
             for sl, group in self._df.group_by(by):
                 key = tuple(sl[i] for i in indices)
@@ -107,6 +112,8 @@ class CatIterator(Generic[_DF]):
                     f"offsets and dodge must be disjoint, got offsets={self._offsets!r}"
                     f" and dodge={dodge!r}"
                 )
+            if self._numeric:
+                raise ValueError("dodge is not supported for numeric data.")
             inv_indices = [by.index(d) for d in dodge]
             _res_map = self.category_map(dodge)
             _nres = len(_res_map)
@@ -169,3 +176,8 @@ class CatIterator(Generic[_DF]):
 
     def categories(self) -> list[tuple]:
         return list(self.category_map(self._offsets).keys())
+
+
+class NumericMap:
+    def __getitem__(self, key: tuple[float]) -> float:
+        return key[0]

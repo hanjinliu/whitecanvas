@@ -2,6 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/whitecanvas.svg)](https://pypi.org/project/whitecanvas)
 [![Python package index download statistics](https://img.shields.io/pypi/dm/whitecanvas.svg)](https://pypistats.org/packages/whitecanvas)
+[![codecov](https://codecov.io/gh/hanjinliu/whitecanvas/graph/badge.svg?token=MYLNFOpEnA)](https://codecov.io/gh/hanjinliu/whitecanvas)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/whitecanvas.svg)](https://pypi.org/project/whitecanvas)
 
 A type safe and backend independent plotting library for Python, aiming at not the simplest, but the tidiest API.

@@ -19,6 +19,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -56,6 +57,7 @@ bokeh = [
 testing = [
   "pytest",
   "pytest-qt",
+  "pytest-cov",
   "qtpy>=2.4.1",
   "pyqt5>=5.15.4",
   "ipywidgets>=8.0.0",
@@ -134,7 +136,7 @@ all = [
 features = ["testing"]
 
 [tool.hatch.envs.test.scripts]
-run = "pytest -v"
+run = "pytest -v --cov=./whitecanvas --cov-report=xml"
 
 [tool.black]
 target-version = ["py37"]

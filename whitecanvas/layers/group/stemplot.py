@@ -1,22 +1,29 @@
 from __future__ import annotations
 
+from typing import Generic, TypeVar
+
 import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
+from whitecanvas.layers._mixin import EdgeNamespace, FaceNamespace, MonoEdge, MonoFace
 from whitecanvas.layers._primitive import Markers, MultiLine
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import ArrayLike1D, Orientation, XYData
 from whitecanvas.utils.normalize import normalize_xy
 
+_Face = TypeVar("_Face", bound=FaceNamespace)
+_Edge = TypeVar("_Edge", bound=EdgeNamespace)
+_Size = TypeVar("_Size", float, NDArray[np.floating])
 
-class StemPlot(LayerContainer):
+
+class StemPlot(LayerContainer, Generic[_Face, _Edge, _Size]):
     _ATTACH_TO_AXIS = True
 
     def __init__(
         self,
-        markers: Markers,
+        markers: Markers[_Face, _Edge, _Size],
         lines: MultiLine,
         *,
         name: str | None = None,
@@ -45,10 +52,8 @@ class StemPlot(LayerContainer):
     def bottom(self) -> NDArray[np.floating]:
         """Bottom of the stem."""
         if self.orient.is_vertical:
-            # return np.array([d.y[0] for d in self.lines.data])
             return np.array([d[0, 1] for d in self.lines.data])
         else:
-            # return np.array([d.x[0] for d in self.lines.data])
             return np.array([d[0, 0] for d in self.lines.data])
 
     @property
@@ -60,7 +65,7 @@ class StemPlot(LayerContainer):
             return self.markers.data.x
 
     @property
-    def markers(self) -> Markers:
+    def markers(self) -> Markers[_Face, _Edge, _Size]:
         """Markers layer."""
         return self._children[0]
 
@@ -94,7 +99,7 @@ class StemPlot(LayerContainer):
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         backend: str | Backend | None = None,
-    ) -> StemPlot:
+    ) -> StemPlot[MonoFace, MonoEdge, float]:
         xdata, ydata = normalize_xy(xdata, ydata)
         top = ydata + bottom
         return Markers(xdata, top, name=name, backend=backend).with_stem(

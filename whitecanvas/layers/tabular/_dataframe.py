@@ -538,6 +538,12 @@ class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
         if hatch is not None:
             self.update_hatch(hatch)
 
+    @property
+    def orient(self) -> Orientation:
+        if len(self.base) > 0:
+            return self.base[0].orient
+        return Orientation.VERTICAL
+
     @classmethod
     def from_table(
         cls,
@@ -596,6 +602,12 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
             self.update_style(style)
         if hatch is not None:
             self.update_hatch(hatch)
+
+    @property
+    def orient(self) -> Orientation:
+        if len(self.base) > 0:
+            return self.base[0].orient
+        return Orientation.VERTICAL
 
     @classmethod
     def from_table(

@@ -49,7 +49,7 @@ def _(item: _leg.BarLegendItem):
     rect = patches.Rectangle(
         (0, 0), 1, 1, facecolor=item.face.color, edgecolor=item.edge.color,
         linewidth=item.edge.width, linestyle=item.edge.style.value,
-        hatch=item.face.hatch.value
+        hatch=item.face.hatch.value * 4
     )  # fmt: skip
     return BarContainer([rect])
 

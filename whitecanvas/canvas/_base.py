@@ -249,7 +249,7 @@ class CanvasBase(ABC):
         except AttributeError:
             raise NotImplementedError(
                 f"Backend {self._get_backend()} does not support `install_second_y`."
-            )
+            ) from None
         canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
         canvas._init_canvas()
         return canvas
@@ -267,7 +267,7 @@ class CanvasBase(ABC):
         except AttributeError:
             raise NotImplementedError(
                 f"Backend {self._get_backend()} does not support `install_inset`"
-            )
+            ) from None
         canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
         canvas._init_canvas()
         return canvas
@@ -521,7 +521,7 @@ class CanvasBase(ABC):
         """
         if not isinstance(layer, (_l.Bars, _l.Band, _lg.StemPlot, _lg.LabeledBars)):
             raise TypeError(
-                f"Only Bars and Band are supported as an input, "
+                f"Only Bars, StemPlot and Band are supported as an input, "
                 f"got {type(layer)!r}."
             )
         return StackOverPlotter(self, layer)

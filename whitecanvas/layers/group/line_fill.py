@@ -55,7 +55,7 @@ class LineFillBase(LayerContainer):
     def color(self, color: ColorType):
         self.line.color = color
         self.fill.face.update(color=color, alpha=self._fill_alpha)
-        self.fill.edge.update(color=color, alpha=self._fill_alpha)
+        self.fill.edge.update(color=color, alpha=1.0)
 
     @property
     def fill_alpha(self) -> float:

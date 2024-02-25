@@ -14,7 +14,9 @@ import numpy as np
 from cmap import Color
 from numpy.typing import NDArray
 
+from whitecanvas import theme
 from whitecanvas.backend import Backend
+from whitecanvas.layers import _legend
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
@@ -22,6 +24,7 @@ from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
 from whitecanvas.types import (
     ColormapType,
     ColorType,
+    Hatch,
     LineStyle,
     Orientation,
     XYYData,
@@ -40,19 +43,29 @@ _DF = TypeVar("_DF")
 class AreaCollection(_lg.LayerCollectionBase[_lg.Area]):
     """Collection of lines."""
 
+    _ATTACH_TO_AXIS = True
+
     def __init__(
         self,
         data: list[XYYData],
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
+        fill_alpha: float = 0.2,
         backend: str | Backend | None = None,
     ):
         areas = list[_lg.Area]()
         ori = Orientation.parse(orient)
         for d in data:
             area = _lg.Area(d.x, d.ydiff, d.y0, orient=ori, backend=backend)
+            area.fill_alpha = fill_alpha
             areas.append(area)
         super().__init__(areas, name=name)
+        self._orient = ori
+        self._fill_alpha = fill_alpha
+
+    @property
+    def fill_alpha(self) -> float:
+        return self._fill_alpha
 
     @property
     def width(self) -> NDArray[np.float32]:
@@ -101,6 +114,11 @@ class AreaCollection(_lg.LayerCollectionBase[_lg.Area]):
         for area, h in zip(self, hatches):
             area.fill.face.hatch = h
 
+    @property
+    def orient(self) -> Orientation:
+        """Orientation of the filling areas."""
+        return self._orient
+
     def with_hover_texts(self, text: str | Iterable[Any]) -> Self:
         if isinstance(text, str):
             texts = [text] * len(self)
@@ -143,6 +161,7 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         style: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
         orient: Orientation = Orientation.VERTICAL,
+        fill_alpha: float = 0.2,
         stackby: str | tuple[str, ...] | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
@@ -153,7 +172,9 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         self._hatch_by = _p.HatchPlan.default()
         self._categories = categories
         self._splitby = splitby
-        base = AreaCollection(data, name=name, orient=orient, backend=backend)
+        base = AreaCollection(
+            data, name=name, orient=orient, fill_alpha=fill_alpha, backend=backend
+        )
         super().__init__(base, source)
         if color is not None:
             self.update_color(color)
@@ -164,6 +185,11 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
             self.update_hatch(hatch)
         self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
         self._stackby = stackby
+
+    @property
+    def orient(self) -> Orientation:
+        """Orientation of the filling areas."""
+        return self.base.orient
 
     @classmethod
     def from_table_stacked(
@@ -179,6 +205,7 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         hatch: str | tuple[str, ...] | None = None,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
+        fill_alpha: float = 0.2,
         backend: str | Backend | None = None,
     ) -> DFArea[_DF]:
         splitby = _shared.join_columns(stackby, color, style, hatch, source=df)
@@ -214,14 +241,15 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
             _stack_cat = sl[nstackcol:]
             for _x, _h in zip(all_x, this_h):
                 _x_hash = _hash_rule(_x)
-                dy = ycumsum[_x_hash, *_stack_cat]
+                dy = ycumsum[(_x_hash, *_stack_cat)]
                 bottom.append(dy)
-                ycumsum[_x_hash, *_stack_cat] += _h
+                ycumsum[(_x_hash, *_stack_cat)] += _h
             categories.append(sl)
             data.append(XYYData(all_x, bottom, this_h + bottom))
         return DFArea(
             df, data, categories=categories, color=color, hatch=hatch, width=width,
-            stackby=stackby, name=name, orient=orient, backend=backend,
+            stackby=stackby, name=name, orient=orient, fill_alpha=fill_alpha,
+            backend=backend,
         )  # fmt: skip
 
     @overload
@@ -278,6 +306,8 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
             hatch_by = _p.HatchPlan.from_const(cov.value)
         self._base_layer.hatch = hatch_by.generate(self._categories, self._splitby)
         self._hatch_by = hatch_by
+        for area in self.base:
+            area.fill.edge.width = 1.0
         return self
 
     def move(self, dx: float = 0.0, dy: float = 0.0, autoscale: bool = True) -> Self:
@@ -297,3 +327,66 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
             extra[key] = [row[i] for row in self._categories]
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def _prep_legend_info(
+        self,
+    ) -> tuple[
+        list[tuple[str, ColorType]],
+        list[tuple[str, LineStyle]],
+        list[tuple[str, Hatch]],
+    ]:
+        df = _shared.list_to_df(self._categories, self._splitby)
+        color_entries = self._color_by.to_entries(df)
+        style_entries = self._style_by.to_entries(df)
+        hatch_entries = self._hatch_by.to_entries(df)
+        return color_entries, style_entries, hatch_entries
+
+    def _as_legend_item(self) -> _legend.LegendItemCollection | _legend.LineLegendItem:
+        colors, styles, hatches = self._prep_legend_info()
+        ncolor = len(colors)
+        nstyle = len(styles)
+        nhatch = len(hatches)
+        widths = self._base_layer.width
+
+        color_default = theme.get_theme().foreground_color
+        hatch_default = Hatch.SOLID
+        style_default = LineStyle.SOLID
+        if ncolor == 1:
+            _, color_default = colors[0]
+        if nstyle == 1:
+            _, style_default = styles[0]
+        if nhatch == 1:
+            _, hatch_default = hatches[0]
+
+        face_color_default = Color([*color_default.rgba[:3], self.base.fill_alpha])
+        if ncolor == 1 and nstyle == 1 and nhatch == 1:
+            face = _legend.FaceInfo(face_color_default, hatch_default)
+            edge = _legend.EdgeInfo(color_default, widths[0], style_default)
+            return _legend.BarLegendItem(face, edge)
+        items = []
+        if ncolor > 1:
+            items.append((", ".join(self._color_by.by), _legend.TitleItem()))
+            for (label, color), w in zip(colors, widths):
+                fc = Color([*color.rgba[:3], self.base.fill_alpha])
+                face = _legend.FaceInfo(fc, hatch_default)
+                edge = _legend.EdgeInfo(color, w, style_default)
+                item = _legend.BarLegendItem(face, edge)
+                items.append((label, item))
+        if nstyle > 1:
+            items.append((", ".join(self._style_by.by), _legend.TitleItem()))
+            for (label, style), w in zip(styles, widths):
+                face = _legend.FaceInfo(face_color_default, hatch_default)
+                edge = _legend.EdgeInfo(color_default, w, style)
+                item = _legend.BarLegendItem(
+                    face,
+                    edge,
+                )
+                items.append((label, item))
+        if nhatch > 1:
+            items.append((", ".join(self._hatch_by.by), _legend.TitleItem()))
+            for (label, hatch), w in zip(hatches, widths):
+                face = _legend.FaceInfo(face_color_default, hatch)
+                edge = _legend.EdgeInfo(color_default, w, style_default)
+                item = _legend.BarLegendItem(face, edge)
+                items.append((label, item))
+        return _legend.LegendItemCollection(items)

@@ -45,6 +45,7 @@ nav:
     - Categorical &times; Numerical Data: categorical/cat_num.md
     - Categorical &times; Categorical Data: categorical/cat_cat.md
     - Aggregation: categorical/aggregation.md
+    - Stacking: categorical/stacking.md
   - Event Handling:
     - Overview: events/index.md
     - Canvas Events: events/canvas_events.md

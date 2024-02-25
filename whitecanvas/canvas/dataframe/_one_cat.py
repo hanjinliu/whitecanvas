@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.canvas._base import CanvasBase
+    from whitecanvas.canvas.dataframe._stacked_cat import StackedCatPlotter
     from whitecanvas.layers.tabular._box_like import _BoxLikeMixin
     from whitecanvas.layers.tabular._dataframe import DataFrameWrapper
 
@@ -156,6 +157,34 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             canvas.x.ticks.set_labels(pos, label)
         else:
             canvas.y.ticks.set_labels(pos, label)
+
+    def stack(
+        self,
+        by: str | Sequence[str] | None = None,
+    ) -> StackedCatPlotter[_C, _DF]:
+        """
+        Return a stacked plotter for data stacked by the given column(s).
+
+        >>> canvas.cat_x(df, "time", "value").stack("region").add_bars()
+        >>> canvas.cat_x(df, "time", "value").stack("region").add_bars(color="region")
+        >>> canvas.cat_x(df, "time", "value").stack("region").add_bars(hatch="region")
+
+        Parameters
+        ----------
+        by : str or sequence of str
+            Column name(s) for stacking the data.
+        """
+        from whitecanvas.canvas.dataframe._stacked_cat import StackedCatPlotter
+
+        return StackedCatPlotter(
+            self._canvas(),
+            df=self._df,
+            offset=self._offset,
+            value=self._value,
+            orient=self._orient,
+            stackby=by,
+            update_labels=self._update_labels,
+        )
 
     def melt(
         self,

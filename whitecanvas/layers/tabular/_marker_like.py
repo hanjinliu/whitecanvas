@@ -206,10 +206,10 @@ class DFMarkers(
         self.base.face.color = color
 
     def _apply_width(self, width):
-        self._base_layer.with_edge(color=_void, width=width, style=_void)
+        self.base.with_edge(color=_void, width=width, style=_void)
 
     def _apply_style(self, style):
-        self._base_layer.with_edge(color=_void, width=_void, style=style)
+        self.base.with_edge(color=_void, width=_void, style=style)
 
     def update_edge_color(self, by: str | Iterable[str], palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
@@ -218,7 +218,7 @@ class DFMarkers(
         else:
             color_by = _p.ColorPlan.from_const(Color(cov.value))
         colors = color_by.map(self._source)
-        self._base_layer.edge.color = colors
+        self.base.edge.color = colors
         self._edge_color_by = color_by
         return self
 
@@ -236,7 +236,7 @@ class DFMarkers(
             cmap = Colormap(cmap)
         color_by = _p.ColormapPlan.from_colormap(by, cmap=cmap, clim=clim)
         colors = color_by.map(self._source)
-        self._base_layer.edge.color = colors
+        self.base.edge.color = colors
         self._edge_color_by = color_by
         return self
 
@@ -247,7 +247,7 @@ class DFMarkers(
         else:
             hatch_by = _p.HatchPlan.from_const(Hatch(cov.value))
         hatches = hatch_by.map(self._source)
-        self._base_layer.face.hatch = hatches
+        self.base.face.hatch = hatches
         self._hatch_by = hatch_by
         return self
 
@@ -270,7 +270,7 @@ class DFMarkers(
             size_by = _p.SizePlan.from_range(by, range=map_to, domain=map_from)
         else:
             size_by = _p.SizePlan.from_const(float(by))
-        self._base_layer.size = size_by.map(self._source)
+        self.base.size = size_by.map(self._source)
         self._size_by = size_by
         return self
 
@@ -290,7 +290,7 @@ class DFMarkers(
             symbol_by = _p.SymbolPlan.new(cov.columns, values=symbols)
         else:
             symbol_by = _p.SymbolPlan.from_const(Symbol(by))
-        self._base_layer.symbol = symbol_by.map(self._source)
+        self.base.symbol = symbol_by.map(self._source)
         self._symbol_by = symbol_by
         return self
 
@@ -305,13 +305,13 @@ class DFMarkers(
         if color is not None:
             self.update_edge_color(color)
         self.update_width(width)
-        self._base_layer.edge.style = LineStyle(style)
+        self.base.edge.style = LineStyle(style)
         return self
 
     def move(self, dx: float = 0.0, dy: float = 0.0, autoscale: bool = True) -> Self:
         """Add a constant shift to the layer."""
-        _old_data = self._base_layer.data
-        self._base_layer.set_data(xdata=_old_data.x + dx, ydata=_old_data.y + dy)
+        _old_data = self.base.data
+        self.base.set_data(xdata=_old_data.x + dx, ydata=_old_data.y + dy)
         if autoscale and (canvas := self._canvas_ref()):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
@@ -458,28 +458,37 @@ class DFBars(
         source: DataFrameWrapper[_DF],
         x,
         y,
+        bottom=None,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
+        stackby: tuple[str, ...] = (),
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         backend: str | Backend | None = None,
     ):
-        splitby = _shared.join_columns(color, hatch, source=source)
+        splitby = _shared.join_columns(color, hatch, stackby, source=source)
         self._color_by = _p.ColorPlan.default()
         self._hatch_by = _p.HatchPlan.default()
         self._style_by = _p.StylePlan.default()
         self._splitby = splitby
+        self._stackby = stackby
 
         base = _l.Bars(
-            x, y, name=name, orient=orient, extent=extent, backend=backend
-        ).with_face_multi()
+            x, y, bottom=bottom, name=name, orient=orient, extent=extent,
+            backend=backend
+        ).with_face_multi()  # fmt: skip
         super().__init__(base, source)
         if color is not None:
             self.update_color(color)
         if hatch is not None:
             self.update_hatch(hatch)
         self.with_hover_template(default_template(source.iter_items()))
+
+    @property
+    def orient(self) -> Orientation:
+        """Orientation of the plot."""
+        return self.base.orient
 
     @classmethod
     def from_table(
@@ -508,6 +517,29 @@ class DFBars(
         return DFBars(
             df, x0, y0, name=name, color=color, hatch=hatch, extent=extent,
             orient=orient, backend=backend,
+        )  # fmt: skip
+
+    @classmethod
+    def from_table_stacked(
+        cls,
+        df: DataFrameWrapper[_DF],
+        x: str | _jitter.JitterBase,
+        y: str | _jitter.JitterBase,
+        stackby: str | tuple[str, ...] | None,
+        *,
+        color: str | tuple[str, ...] | None = None,
+        hatch: str | tuple[str, ...] | None = None,
+        name: str | None = None,
+        extent: float = 0.8,
+        orient: Orientation = Orientation.VERTICAL,
+        backend: str | Backend | None = None,
+    ) -> DFBars[_DF]:
+        if stackby is None:
+            stackby = _shared.join_columns(color, hatch, source=df)
+        x0, y0, b0 = _shared.resolve_stacking(df, x, y, stackby)
+        return DFBars(
+            df, x0, y0, b0, color=color, hatch=hatch, stackby=stackby, name=name,
+            extent=extent, orient=orient, backend=backend,
         )  # fmt: skip
 
     def _apply_color(self, color):

@@ -1,4 +1,4 @@
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 
 from whitecanvas import theme
 from whitecanvas.canvas import link_axes
@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str):  # pragma: no cover
     import warnings
 
     if name in ("grid", "grid_nonuniform"):

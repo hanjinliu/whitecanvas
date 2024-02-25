@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Sequence, TypeVar
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter, _shared
-from whitecanvas.types import ColorType, Hatch, Orientation, Symbol
+from whitecanvas.types import ColorType, Hatch, Orientation
 
 if TYPE_CHECKING:
     from whitecanvas.canvas._base import CanvasBase
@@ -26,6 +26,7 @@ class StackedCatPlotter(BaseCatPlotter[_C, _DF]):
         orient: Orientation,
         stackby: str | tuple[str, ...] | None = None,
         update_labels: bool = False,
+        numeric: bool = False,
     ):
         super().__init__(canvas, df)
         if isinstance(stackby, str):
@@ -40,7 +41,7 @@ class StackedCatPlotter(BaseCatPlotter[_C, _DF]):
                 )
             stackby = tuple(stackby)
         self._offset: tuple[str, ...] = offset
-        self._cat_iter = CatIterator(self._df, offset)
+        self._cat_iter = CatIterator(self._df, offset, numeric=numeric)
         self._value = value
         self._stackby = stackby
         self._orient = orient
@@ -111,14 +112,14 @@ class StackedCatPlotter(BaseCatPlotter[_C, _DF]):
             layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
-    def add_stem(
-        self,
-        *,
-        color: NStr | None = None,
-        symbol: Symbol = Symbol.CIRCLE,
-        size: float | None = None,
-        width: float | None = None,
-        style: NStr | None = None,
-        name: str | None = None,
-    ):
-        ...
+    # def add_stem(
+    #     self,
+    #     *,
+    #     color: NStr | None = None,
+    #     symbol: Symbol = Symbol.CIRCLE,
+    #     size: float | None = None,
+    #     width: float | None = None,
+    #     style: NStr | None = None,
+    #     name: str | None = None,
+    # ):
+    #     ...

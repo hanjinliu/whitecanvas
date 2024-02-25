@@ -50,6 +50,8 @@ class Markers(visuals.Markers):
 
     ##### HasSymbol protocol #####
     def _plt_get_symbol(self) -> Symbol:
+        if self._data["a_position"].shape[0] == 0:
+            return Symbol.CIRCLE
         sym = self.symbol[0]
         if sym == "clobber":
             return Symbol.TRIANGLE_LEFT
@@ -76,6 +78,8 @@ class Markers(visuals.Markers):
     def _plt_set_symbol_size(self, size: float | NDArray[np.floating]):
         if is_real_number(size):
             size = np.full(self._plt_get_ndata(), size)
+        if size.shape[0] == 0:
+            return
         self.set_data(
             pos=self._data["a_position"],
             size=size,
@@ -91,6 +95,8 @@ class Markers(visuals.Markers):
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         color = as_color_array(color, self._plt_get_ndata())
+        if color.shape[0] == 0:
+            return
         self.set_data(
             pos=self._data["a_position"],
             size=self._plt_get_symbol_size(),
@@ -108,6 +114,8 @@ class Markers(visuals.Markers):
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         color = as_color_array(color, self._plt_get_ndata())
+        if color.shape[0] == 0:
+            return
         self.set_data(
             pos=self._data["a_position"],
             size=self._plt_get_symbol_size(),
@@ -123,6 +131,8 @@ class Markers(visuals.Markers):
     def _plt_set_edge_width(self, width: float):
         if isinstance(width, float):
             width = np.full(self._plt_get_ndata(), width)
+        if width.shape[0] == 0:
+            return
         self.set_data(
             pos=self._data["a_position"],
             size=self._plt_get_symbol_size(),

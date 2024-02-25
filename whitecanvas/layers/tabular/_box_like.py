@@ -266,6 +266,7 @@ class DFViolinPlot(
         self._offsets = cat.offsets
         self._value = value
         self._dodge = dodge
+        self._numeric = cat._numeric
         self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
 
     @property
@@ -421,7 +422,6 @@ class DFViolinPlot(
             Random seed for the jitter (same effect as the `seed` argument of the
             `add_stripplot` method).
         """
-        from whitecanvas.canvas.dataframe._base import CatIterator
         from whitecanvas.layers.tabular import DFMarkerGroups
 
         canvas = self._canvas_ref()
@@ -432,7 +432,7 @@ class DFViolinPlot(
         is_edge_only = self._is_edge_only()
 
         # category iterator is used to calculate positions and indices
-        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _cat_self = self._make_cat_iterator()
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
 
@@ -495,7 +495,6 @@ class DFViolinPlot(
         seed : int, optional
             Random seed for the jitter.
         """
-        from whitecanvas.canvas.dataframe._base import CatIterator
         from whitecanvas.layers.tabular import DFMarkerGroups
 
         canvas = self._canvas_ref()
@@ -509,7 +508,7 @@ class DFViolinPlot(
             color = Color(color)
 
         # category iterator is used to calculate positions and indices
-        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _cat_self = self._make_cat_iterator()
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
         df = self._source
@@ -550,7 +549,6 @@ class DFViolinPlot(
         sort : bool, default False
             If True, the markers will be sorted by the value.
         """
-        from whitecanvas.canvas.dataframe._base import CatIterator
         from whitecanvas.layers.tabular import DFMarkerGroups
 
         canvas = self._canvas_ref()
@@ -564,7 +562,7 @@ class DFViolinPlot(
             color = Color(color)
 
         # category iterator is used to calculate positions and indices
-        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _cat_self = self._make_cat_iterator()
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
         df = self._source
@@ -609,7 +607,7 @@ class DFViolinPlot(
     def _make_cat_iterator(self) -> CatIterator[_DF]:
         from whitecanvas.canvas.dataframe._base import CatIterator
 
-        return CatIterator(self._source, offsets=self._offsets)
+        return CatIterator(self._source, offsets=self._offsets, numeric=self._numeric)
 
     def _is_edge_only(self) -> bool:
         return np.all(self.base.face.alpha < 1e-6)
@@ -649,6 +647,7 @@ class DFBoxPlot(
         self._offsets = cat.offsets
         self._value = value
         self._dodge = dodge
+        self._numeric = cat._numeric
 
     @property
     def orient(self) -> Orientation:
@@ -724,7 +723,7 @@ class DFBoxPlot(
         is_edge_only = np.all(self.base.boxes.face.alpha < 1e-6)
 
         # category iterator is used to calculate positions and indices
-        _cat_self = CatIterator(self._source, offsets=self._offsets)
+        _cat_self = CatIterator(self._source, self._offsets, self._numeric)
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
 
@@ -894,6 +893,7 @@ class DFPointPlot(
         _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
         base.with_edge(color=theme.get_theme().foreground_color)
         self._orient = orient
+        self._numeric = cat._numeric
 
     @property
     def orient(self) -> Orientation:
@@ -975,6 +975,7 @@ class DFBarPlot(
         _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
         base.with_edge(color=theme.get_theme().foreground_color)
         self._orient = orient
+        self._numeric = cat._numeric
 
     @property
     def orient(self) -> Orientation:

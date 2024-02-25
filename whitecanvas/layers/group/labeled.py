@@ -329,6 +329,7 @@ class LabeledBars(
     _mixin.AbstractFaceEdgeMixin["PlotFace", "PlotEdge"],
     Generic[_NFace, _NEdge],
 ):
+    _ATTACH_TO_AXIS = True
     events: RichContainerEvents
     _events_class = RichContainerEvents
 
@@ -349,6 +350,11 @@ class LabeledBars(
     def bars(self) -> Bars[_NFace, _NEdge]:
         """The bars layer."""
         return self._children[0]
+
+    @property
+    def orient(self) -> Orientation:
+        """The orientation of the bars."""
+        return self.bars.orient
 
     def _main_object_layer(self):
         return self.bars

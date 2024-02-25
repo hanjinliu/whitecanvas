@@ -356,23 +356,14 @@ class CanvasBase(ABC):
             New font family.
         """
         if size is not _void:
-            self.title.size = size
-            self.x.label.size = size
-            self.y.label.size = size
-            self.x.ticks.size = size
-            self.y.ticks.size = size
+            self.title.size = self.x.label.size = self.y.label.size = size
+            self.x.ticks.size = self.y.ticks.size = size
         if family is not _void:
-            self.title.family = family
-            self.x.label.family = family
-            self.y.label.family = family
-            self.x.ticks.family = family
-            self.y.ticks.family = family
+            self.title.family = self.x.label.family = self.y.label.family = family
+            self.x.ticks.family = self.y.ticks.family = family
         if color is not _void:
-            self.title.color = color
-            self.x.label.color = color
-            self.y.label.color = color
-            self.x.ticks.color = color
-            self.y.ticks.color = color
+            self.title.color = self.x.label.color = self.y.label.color = color
+            self.x.ticks.color = self.y.ticks.color = color
         return self
 
     def cat(
@@ -416,6 +407,7 @@ class CanvasBase(ABC):
         y: str | None = None,
         *,
         update_labels: bool = True,
+        numeric_axis: bool = False,
     ) -> _df.XCatPlotter[Self, _DF]:
         """
         Categorize input data for plotting with x-axis as a categorical axis.
@@ -431,13 +423,17 @@ class CanvasBase(ABC):
             Name of the column that will be used for the y-axis. Must be numerical.
         update_labels : bool, default True
             If True, update the x/y labels to the corresponding names.
+        numeric_axis : bool, default False
+            If True, the x-axis will be treated as a numerical axis. For example, if
+            categories are [2, 4, 8], the x coordinates will be mapped to [0, 1, 2] by
+            default, but if this option is True, the x coordinates will be [2, 4, 8].
 
         Returns
         -------
         XCatPlotter
             Plotter object.
         """
-        return _df.XCatPlotter(self, data, x, y, update_labels)
+        return _df.XCatPlotter(self, data, x, y, update_labels, numeric=numeric_axis)
 
     def cat_y(
         self,
@@ -446,6 +442,7 @@ class CanvasBase(ABC):
         y: str | Sequence[str] | None = None,
         *,
         update_labels: bool = True,
+        numeric_axis: bool = False,
     ) -> _df.YCatPlotter[Self, _DF]:
         """
         Categorize input data for plotting with y-axis as a categorical axis.
@@ -461,13 +458,17 @@ class CanvasBase(ABC):
             Name of the column(s) that will be used for the y-axis. Must be categorical.
         update_labels : bool, default True
             If True, update the x/y labels to the corresponding names.
+        numeric_axis : bool, default False
+            If True, the x-axis will be treated as a numerical axis. For example, if
+            categories are [2, 4, 8], the y coordinates will be mapped to [0, 1, 2] by
+            default, but if this option is True, the y coordinates will be [2, 4, 8].
 
         Returns
         -------
         YCatPlotter
             Plotter object
         """
-        return _df.YCatPlotter(self, data, y, x, update_labels)
+        return _df.YCatPlotter(self, data, y, x, update_labels, numeric=numeric_axis)
 
     def cat_xy(
         self,

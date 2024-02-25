@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from timeit import default_timer
 from typing import Callable
 
@@ -408,7 +409,10 @@ class CanvasGrid:
     def _plt_set_figsize(self, width: int, height: int):
         dpi = self._fig.get_dpi()
         self._fig.set_size_inches(width / dpi, height / dpi)
-        self._fig.tight_layout()
+        with warnings.catch_warnings():
+            # if the size is small, tight_layout may raise a warning
+            warnings.simplefilter("ignore")
+            self._fig.tight_layout()
 
     def _plt_set_spacings(self, wspace: float, hspace: float):
         dpi = self._fig.get_dpi()

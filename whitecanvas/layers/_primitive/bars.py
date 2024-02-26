@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _legend
+from whitecanvas.layers import _legend, _text_utils
 from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import (
     ConstEdge,
@@ -254,14 +254,14 @@ class Bars(
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group import LabeledBars
 
+        old_name = self.name
         xerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient=Orientation.HORIZONTAL,
         )  # fmt: skip
-        yerr = Errorbars(
-            [], [], [], orient=Orientation.HORIZONTAL, backend=self._backend_name
-        )
-        return LabeledBars(self, xerr, yerr, name=self.name)
+        yerr = Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
+        self.name = old_name
+        return LabeledBars(self, xerr, yerr, name=old_name)
 
     def with_yerr(
         self,
@@ -277,12 +277,14 @@ class Bars(
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group import LabeledBars
 
+        old_name = self.name
         yerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient=Orientation.VERTICAL,
         )  # fmt: skip
-        xerr = Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name)
-        return LabeledBars(self, xerr, yerr, name=self.name)
+        xerr = Errorbars.empty_v(name=f"yerr-of-{old_name}", backend=self._backend_name)
+        self.name = old_name
+        return LabeledBars(self, xerr, yerr, name=old_name)
 
     def with_text(
         self,
@@ -297,22 +299,15 @@ class Bars(
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import LabeledBars
 
-        if isinstance(strings, str):
-            strings = [strings] * self.data.x.size
+        strings = _text_utils.norm_label_text(strings, self.data)
         texts = Texts(
-            *self.data,
-            strings,
-            color=color,
-            size=size,
-            rotation=rotation,
-            anchor=anchor,
-            family=fontfamily,
-            backend=self._backend_name,
-        )
+            *self.data, strings, color=color, size=size, rotation=rotation,
+            anchor=anchor, family=fontfamily, backend=self._backend_name,
+        )  # fmt: skip
         return LabeledBars(
             self,
-            Errorbars.empty(Orientation.HORIZONTAL, backend=self._backend_name),
-            Errorbars.empty(Orientation.VERTICAL, backend=self._backend_name),
+            Errorbars.empty_h(name=f"xerr-of-{self.name}", backend=self._backend_name),
+            Errorbars.empty_v(name=f"xerr-of-{self.name}", backend=self._backend_name),
             texts=texts,
             name=self.name,
         )
@@ -343,10 +338,14 @@ class Bars(
         y = y + self.bottom
         if orient is not self.orient:
             x, y = y, x
+        if orient.is_vertical:
+            name = f"yerr-of-{self.name}"
+        else:
+            name = f"xerr-of-{self.name}"
         return Errorbars(
-            x, y - err, y + err_high, color=color, width=width,
-            style=style, antialias=antialias, capsize=capsize,
-            orient=orient, backend=self._backend_name
+            x, y - err, y + err_high, color=color, width=width, style=style,
+            antialias=antialias, capsize=capsize, orient=orient, name=name,
+            backend=self._backend_name
         )  # fmt: skip
 
     def with_face(

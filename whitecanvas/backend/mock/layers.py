@@ -37,10 +37,10 @@ class Band(MockHasData, MockHasFaces, MockHasEdges, MockHasMouseEvents):
         return self._plt_get_data()
 
     def _plt_set_vertical_data(self, t, ydata0, ydata1):
-        self._plt_set_data((t, ydata0, ydata1))
+        self._plt_set_data(t, ydata0, ydata1)
 
     def _plt_set_horizontal_data(self, t, ydata0, ydata1):
-        self._plt_set_data((t, ydata0, ydata1))
+        self._plt_set_data(t, ydata0, ydata1)
 
 
 @protocols.check_protocol(protocols.BarProtocol)

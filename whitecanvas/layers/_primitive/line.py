@@ -8,7 +8,7 @@ from psygnal import Signal
 
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _legend
+from whitecanvas.layers import _legend, _text_utils
 from whitecanvas.layers._base import (
     HoverableDataBoundLayer,
     LayerEvents,
@@ -435,15 +435,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import LabeledLine
 
-        if isinstance(strings, str):
-            strings = [strings] * self.data.x.size
-        else:
-            strings = list(strings)
-            if len(strings) != self.data.x.size:
-                raise ValueError(
-                    f"Number of strings ({len(strings)}) does not match the "
-                    f"number of data ({self.data.x.size})."
-                )
+        strings = _text_utils.norm_label_text(strings, self.data)
         texts = Texts(
             *self.data, strings, color=color, size=size, rotation=rotation,
             anchor=anchor, family=family, backend=self._backend_name,

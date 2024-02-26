@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from numpy.typing import ArrayLike
 
-from whitecanvas.layers import _legend
+from whitecanvas.layers import _legend, _text_utils
 from whitecanvas.layers._primitive import Errorbars, Line, Markers, Texts
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import Alignment, ColorType, LineStyle, Orientation, _Void
@@ -100,6 +100,7 @@ class Plot(LayerContainer):
         """
         from whitecanvas.layers.group.labeled import LabeledPlot
 
+        strings = _text_utils.norm_label_text(strings, self.line.data)
         texts = Texts(
             *self.line.data,
             strings,

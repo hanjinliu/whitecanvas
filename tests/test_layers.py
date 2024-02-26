@@ -213,3 +213,26 @@ def test_texts(backend: str):
     layer.edge.alpha
     layer.edge.alpha = 0.6
     _test_visibility(layer)
+
+def test_with_text(backend: str):
+    canvas = new_canvas(backend=backend)
+    x = np.arange(10)
+    y = np.sqrt(x)
+    canvas.add_line(x, y).with_text([f"{i}" for i in range(10)])
+    canvas.add_markers(x, y).with_text([f"{i}" for i in range(10)])
+    canvas.add_bars(x, y).with_text([f"{i}" for i in range(10)])
+    canvas.add_line(x, y).with_text("x={x:.2f}, y={y:.2f}")
+    canvas.add_markers(x, y).with_text("x={x:.2f}, y={y:.2f}")
+    canvas.add_bars(x, y).with_text("x={x:.2f}, y={y:.2f}")
+    canvas.add_line(x, y).with_markers().with_text([f"{i}" for i in range(10)])
+    canvas.add_line(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_line(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_line(x, y).with_markers().with_text("x={x:2f}, i={i}")
+    canvas.add_line(x, y).with_xerr(y/4).with_text("x={x:2f}, i={i}")
+    canvas.add_line(x, y).with_yerr(y/4).with_text("x={x:2f}, i={i}")
+    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text([f"{i}" for i in range(10)])
+    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text("state-{i}")
+    canvas.add_bars(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_bars(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_bars(x, y).with_xerr(y/4).with_text("{x:1f}, {y:1f},")
+    canvas.add_bars(x, y).with_yerr(y/4).with_text("{x:1f}, {y:1f}")

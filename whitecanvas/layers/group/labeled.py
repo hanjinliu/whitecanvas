@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _legend, _mixin
+from whitecanvas.layers import _legend, _mixin, _text_utils
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers._primitive import Bars, Errorbars, Line, Markers, Texts
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -192,7 +192,7 @@ class _LabeledLayerBase(LayerContainer):
 
     def with_text(
         self,
-        strings: list[str],
+        strings: str | list[str],
         *,
         color: ColorType = "black",
         size: float = 12,
@@ -208,7 +208,8 @@ class _LabeledLayerBase(LayerContainer):
         ----------
         strings : str or list of str
             The text strings. If a single string is given, it will be used for all
-            the data points.
+            the data points. You can also use format strings with "{x}", "{y}", and
+            "{i}" to format the text with the data point values and index.
         color : ColorType, default "black"
             Text color.
         size : float, default 12
@@ -221,14 +222,8 @@ class _LabeledLayerBase(LayerContainer):
             The font family of the text.
         offset : tuple, default None
             The offset of the text from the data point.
-
-        Returns
-        -------
-        Self
-            Same layer with texts added.
         """
-        if isinstance(strings, str):
-            strings = [strings] * self.data.x.size
+        strings = _text_utils.norm_label_text(strings, self.data)
         if offset is None:
             _offset = self._text_offset
         else:

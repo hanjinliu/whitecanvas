@@ -15,7 +15,7 @@ def test_cat(backend: str):
     }
     cplt = canvas.cat(df, "x", "y")
     cplt.add_line()
-    cplt.add_line(color="label")
+    cplt.add_line(color="label").with_markers()
     cplt.add_markers()
     cplt.add_markers(color="label")
     cplt.add_markers(hatch="label")
@@ -167,3 +167,13 @@ def test_numeric_axis(backend: str, orient: str):
     cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
     with filter_warning(backend, "plotly"):
         cat_plt.add_rugplot(color="c").scale_by_density()
+
+def test_stack(backend: str):
+    canvas = new_canvas(backend=backend)
+    df = {
+        "y": np.arange(30),
+        "label": np.repeat([2, 5, 6], 10),
+        "c": ["P", "Q"] * 15,
+    }
+    cat_plt = canvas.cat_x(df, "label", "y", numeric_axis=True)
+    cat_plt.stack("c").add_area()

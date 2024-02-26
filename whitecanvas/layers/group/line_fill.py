@@ -102,7 +102,7 @@ class Histogram(LineFillBase):
     @data.setter
     def data(self, data: NDArray[np.number]):
         data = as_array_1d(data)
-        xdata, ydata = self._calculate_xy(
+        xdata, ydata, _ = self._calculate_xy(
             data, self._edges, self._shape, self._kind, self._limits, clip=True
         )  # fmt: skip
         self._update_internal(xdata, ydata)

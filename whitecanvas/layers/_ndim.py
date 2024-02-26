@@ -81,7 +81,7 @@ class YLayerStack(LayerStack[NDArray[np.number]]):
         stack = _norm_one(x)
         sl = (0,) * stack.ndim
         data = stack.slice_at(sl)
-        return cls(constructor(*data, *args, **kwargs), stack)
+        return cls(constructor(data, *args, **kwargs), stack)
 
 
 class XYLayerStack(LayerStack[XYData]):

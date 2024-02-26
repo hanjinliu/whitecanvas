@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from whitecanvas import new_canvas
 from whitecanvas.layers import Layer
@@ -236,3 +237,22 @@ def test_with_text(backend: str):
     canvas.add_bars(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
     canvas.add_bars(x, y).with_xerr(y/4).with_text("{x:1f}, {y:1f},")
     canvas.add_bars(x, y).with_yerr(y/4).with_text("{x:1f}, {y:1f}")
+
+def test_rug(backend: str):
+    canvas = new_canvas(backend=backend)
+
+    layer = canvas.add_rug(np.arange(10))
+
+    layer.color = [1.0, 0.0, 0.0, 1.0]
+    layer.style = ":"
+    layer.width = 2
+    _test_visibility(layer)
+    assert np.all(layer.data == np.arange(10))
+    layer.data = np.arange(10, 20)
+    assert np.all(layer.data == np.arange(10, 20))
+    assert layer.low == 0
+    assert layer.high == 1
+    layer.low = 0.5
+    layer.high = 1.5
+    assert layer.low == pytest.approx(0.5)
+    assert layer.high == pytest.approx(1.5)

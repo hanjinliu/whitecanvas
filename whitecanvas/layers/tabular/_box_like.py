@@ -274,12 +274,12 @@ class DFViolinPlot(
         """Orientation of the violins."""
         return self._base_layer.orient
 
-    def move(self, shift: float = 0.0) -> Self:
+    def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Move the layer by the given shift."""
         for layer in self._base_layer:
             _old = layer.data
             layer.set_data(edge_low=_old.y0 + shift, edge_high=_old.y1 + shift)
-        if canvas := self._canvas_ref():
+        if autoscale and (canvas := self._canvas_ref()):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
@@ -654,9 +654,9 @@ class DFBoxPlot(
         """Orientation of the violins."""
         return self._base_layer.orient
 
-    def move(self, shift: float = 0.0) -> Self:
+    def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Move the layer by the given shift."""
-        self._base_layer.move(shift)
+        self._base_layer.move(shift, autoscale=autoscale)
         return self
 
     def with_hover_text(self, text: str | list[str]) -> Self:
@@ -900,7 +900,7 @@ class DFPointPlot(
         """Orientation of the violins."""
         return self._orient
 
-    def move(self, shift: float = 0.0) -> Self:
+    def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Move the layer by the given shift."""
         base = self._base_layer
         data = base.data
@@ -908,6 +908,8 @@ class DFPointPlot(
             base.set_data(data.x + shift, data.y)
         else:
             base.set_data(data.x, data.y + shift)
+        if autoscale and (canvas := self._canvas_ref()):
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
     def _get_arrays(self) -> list[np.ndarray]:
@@ -997,7 +999,7 @@ class DFBarPlot(
         else:
             self._base_layer.xerr.set_data(err_low, err_high, mdata.y)
 
-    def move(self, shift: float = 0.0) -> Self:
+    def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Move the layer by the given shift."""
         base = self._base_layer
         data = base.data
@@ -1005,6 +1007,8 @@ class DFBarPlot(
             base.set_data(data.x + shift, data.y)
         else:
             base.set_data(data.x, data.y + shift)
+        if autoscale and (canvas := self._canvas_ref()):
+            canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 
     def with_hover_text(self, text: str | list[str]) -> Self:

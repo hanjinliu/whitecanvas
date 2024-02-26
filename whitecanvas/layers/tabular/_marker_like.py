@@ -257,11 +257,9 @@ class DFMarkers(
 
     @overload
     def update_size(
-        self,
-        by: str,
-        map_from: tuple[float, float] | None = None,
+        self, by: str, /, map_from: tuple[float, float] | None = None,
         map_to: tuple[float, float] = (3, 15),
-    ) -> Self:
+    ) -> Self:  # fmt: skip
         ...
 
     def update_size(self, by, /, map_from=None, map_to=(3, 15)):

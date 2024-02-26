@@ -134,13 +134,28 @@ def test_catx_legend(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
     _c = canvas.cat_x(df, "x", "y")
-    _c.add_stripplot(color="label")
-    _c.add_swarmplot(color="label")
     _c.add_boxplot(color="label")
     _c.add_violinplot(color="label").with_rug()
     _c.add_pointplot(color="label").err_by_se()
     _c.add_barplot(color="label")
     canvas.add_legend()
+
+def test_marker_legend():
+    canvas = new_canvas("mock")
+    df = {
+        "x": ["P", "Q"] * 15,
+        "y": np.arange(30),
+        "z": np.sin(np.arange(30) / 10),
+        "label": np.repeat(["A", "B", "C"], 10),
+    }
+    canvas = new_canvas("mock")
+    canvas.cat_x(df, "x", "y").add_stripplot(color="label")
+    canvas.cat_x(df, "x", "y").add_stripplot().update_size("z")
+    canvas.cat_x(df, "x", "y").add_stripplot().update_colormap("z")
+    canvas.cat_x(df, "x", "y").add_stripplot(symbol="label")
+    canvas.cat_x(df, "x", "y").add_stripplot(hatch="label")
+    canvas.add_legend()
+
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_numeric_axis(backend: str, orient: str):
@@ -154,20 +169,20 @@ def test_numeric_axis(backend: str, orient: str):
         cat_plt = canvas.cat_x(df, "label", "y", numeric_axis=True)
     else:
         cat_plt = canvas.cat_y(df, "y", "label", numeric_axis=True)
-    cat_plt.add_stripplot(color="c")
-    cat_plt.add_swarmplot(color="c")
-    cat_plt.add_boxplot(color="c").with_outliers(ratio=0.5)
+    cat_plt.add_stripplot(color="c").move(0.1)
+    cat_plt.add_swarmplot(color="c").move(0.1)
+    cat_plt.add_boxplot(color="c").move(0.1).with_outliers(ratio=0.5)
     with filter_warning(backend, "plotly"):
         cat_plt.add_boxplot(color="c").as_edge_only()
-    cat_plt.add_violinplot(color="c").with_rug()
+    cat_plt.add_violinplot(color="c").move(0.1).with_rug()
     cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5)
     cat_plt.add_violinplot(color="c").with_box()
     cat_plt.add_violinplot(color="c").as_edge_only().with_strip()
     cat_plt.add_violinplot(color="c").with_swarm()
-    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
-    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    cat_plt.add_pointplot(color="c").move(0.1).err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    cat_plt.add_barplot(color="c").move(0.1).err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
     with filter_warning(backend, "plotly"):
-        cat_plt.add_rugplot(color="c").scale_by_density()
+        cat_plt.add_rugplot(color="c").move(0.1).scale_by_density()
 
 def test_stack(backend: str):
     canvas = new_canvas(backend=backend)

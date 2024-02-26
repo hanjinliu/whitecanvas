@@ -454,18 +454,20 @@ class Markers(
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import LabeledMarkers
 
+        old_name = self.name
         strings = _text_utils.norm_label_text(strings, self.data)
         texts = Texts(
             *self.data, strings, color=color, size=size, rotation=rotation,
-            anchor=anchor, family=fontfamily, backend=self._backend_name,
+            name=f"text-of-{old_name}", anchor=anchor, family=fontfamily,
+            backend=self._backend_name,
         )  # fmt: skip
-        old_name = self.name
+        self.name = f"markers-of-{old_name}"
         return LabeledMarkers(
             self,
             Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name),
             Errorbars.empty_v(f"yerr-of-{old_name}", backend=self._backend_name),
             texts=texts,
-            name=self.name,
+            name=old_name,
         )
 
     def with_network(

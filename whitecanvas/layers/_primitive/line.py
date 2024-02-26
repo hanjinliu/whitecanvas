@@ -664,7 +664,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         return _legend.LineLegendItem(self.color[0], self.width[0], self.style[0])
 
 
-def _norm_data(data: list[ArrayLike1D]) -> NDArray[np.number]:
+def _norm_data(data: list[NDArray[np.number]]) -> NDArray[np.number]:
     data_normed: list[NDArray[np.number]] = []
     xmins, xmaxs, ymins, ymaxs = [], [], [], []
     for each in data:

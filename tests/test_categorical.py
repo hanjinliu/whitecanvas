@@ -19,6 +19,7 @@ def test_cat(backend: str):
     cplt.add_markers()
     cplt.add_markers(color="label")
     cplt.add_markers(hatch="label")
+    cplt.add_pointplot(color="label")
     cplt.add_hist2d(bins=5)
     cplt.add_hist2d(bins=(5, 4))
     cplt.add_hist2d(bins="auto")
@@ -43,20 +44,20 @@ def test_cat_plots(backend: str, orient: str):
         cat_plt = canvas.cat_x(df, "label", "y")
     else:
         cat_plt = canvas.cat_y(df, "y", "label")
-    cat_plt.add_stripplot(color="c")
-    cat_plt.add_swarmplot(color="c")
+    cat_plt.add_stripplot(color="c").move(0.1)
+    cat_plt.add_swarmplot(color="c").move(0.1)
     cat_plt.add_boxplot(color="c").with_outliers(ratio=0.5)
     with filter_warning(backend, "plotly"):
-        cat_plt.add_boxplot(color="c").as_edge_only()
+        cat_plt.add_boxplot(color="c").as_edge_only().move(0.1)
     cat_plt.add_violinplot(color="c").with_rug()
     cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5)
     cat_plt.add_violinplot(color="c").with_box()
-    cat_plt.add_violinplot(color="c").as_edge_only().with_strip()
+    cat_plt.add_violinplot(color="c").as_edge_only().move(0.1).with_strip()
     cat_plt.add_violinplot(color="c").with_swarm()
-    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
-    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1)
+    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1)
     with filter_warning(backend, "plotly"):
-        cat_plt.add_rugplot(color="c").scale_by_density()
+        cat_plt.add_rugplot(color="c").scale_by_density().move(0.1)
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)

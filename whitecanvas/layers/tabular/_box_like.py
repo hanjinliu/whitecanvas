@@ -997,6 +997,16 @@ class DFBarPlot(
         else:
             self._base_layer.xerr.set_data(err_low, err_high, mdata.y)
 
+    def move(self, shift: float = 0.0) -> Self:
+        """Move the layer by the given shift."""
+        base = self._base_layer
+        data = base.data
+        if self._orient.is_vertical:
+            base.set_data(data.x + shift, data.y)
+        else:
+            base.set_data(data.x, data.y + shift)
+        return self
+
     def with_hover_text(self, text: str | list[str]) -> Self:
         """Set the hover tooltip text for the layer."""
         self.base.bars.with_hover_text(text)

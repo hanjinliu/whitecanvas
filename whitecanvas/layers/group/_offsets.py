@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
-
 from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.utils.type_check import is_real_number
 
 
 class TextOffset:
@@ -20,9 +19,9 @@ class NoOffset(TextOffset):
         return (0, 0)
 
     def _add(self, dx, dy) -> TextOffset:
-        if dx == 0 and dy == 0:
-            return self
-        if np.isscalar(dx) and np.isscalar(dy):
+        if is_real_number(dx) and is_real_number(dy):
+            if dx == 0 and dy == 0:
+                return self
             return ConstantOffset(dx, dy)
         else:
             return CustomOffset(as_array_1d(dx), as_array_1d(dy))
@@ -39,7 +38,7 @@ class ConstantOffset(TextOffset):
         return (self._x, self._y)
 
     def _add(self, dx, dy) -> TextOffset:
-        if np.isscalar(dx) and np.isscalar(dy):
+        if is_real_number(dx) and is_real_number(dy):
             return ConstantOffset(self._x + dx, self._y + dy)
         else:
             return CustomOffset(as_array_1d(dx) + self._x, as_array_1d(dy) + self._y)

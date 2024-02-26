@@ -57,7 +57,7 @@ print(canvas.layers)  # LayerList([Plot<'myplot'>])
 The `Plot` layer can be further converted into a `LabeledPlot` layer by adding error
 bars using `with_xerr` and/or `with_yerr` method.
 
-``` python
+``` python hl_lines="9 10"
 #!name: layer_groups_line_markers_yerr
 from whitecanvas import new_canvas
 
@@ -85,7 +85,7 @@ Both cases can be achieved using the `Line` methods.
 To fill the area that represents the errors, such as confidence interval and standard
 deviation, use the `with_xband` or `with_yband` method.
 
-``` python
+``` python hl_lines="9 15"
 #!name: layer_groups_line_yband
 from whitecanvas import new_canvas
 
@@ -110,7 +110,7 @@ canvas.show()
 To fill the area between the line and the axis, use the `with_xfill` or `with_yfill`
 respectively.
 
-``` python
+``` python hl_lines="8 13"
 #!name: layer_groups_line_xfill
 from whitecanvas import new_canvas
 
@@ -134,6 +134,62 @@ canvas.show()
     `with_xfill` fill the area between the line and the **y**-axis. This is because the
     orientation of the filling is in the direction of the y-axis, consistent with the
     methods such as `with_xband` and `with_xerr`.
+
+### Add texts
+
+Adding text at the data points can be done using the `with_text` method.
+
+``` python hl_lines="8"
+#!name: layer_groups_line_text
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+
+(
+    canvas
+    .add_line([0, 1, 2], [3, 2, 4], color="black")
+    .with_text(["i=0", "i=1", "i=2"], size=20, color="red")
+)
+canvas.show()
+```
+
+You can use text alignment and text offset to adjust the position of the text.
+
+``` python hl_lines="9 14"
+#!name: layer_groups_line_text_align
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+
+(
+    canvas
+    .add_line([0, 1, 2], [3, 2, 4], color="black")
+    .with_text(["i=0", "i=1", "i=2"], size=20, color="red")
+    .with_text_offset(0.2, 0.0)
+)
+(
+    canvas
+    .add_line([3, 4, 5], [3, 2, 4], color="black")
+    .with_text(["i=0", "i=1", "i=2"], size=20, color="green", anchor="top")
+)
+canvas.show()
+```
+
+You can use "x", "y" and "i" as the placeholders in the text to format the text using
+the x/y data and the indices.
+
+``` python hl_lines="8"
+#!name: layer_groups_line_text_format
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+
+(
+    canvas
+    .add_line([0, 1, 2], [3, 2, 4], color="black")
+    .with_text("x={x:.2f}, y={y:.2f}, i={i}", size=20, color="red")
+)
+```
 
 ## Layer Groups with Markers
 

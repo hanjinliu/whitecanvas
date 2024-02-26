@@ -52,6 +52,7 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
 
     events: ImageEvents
     _events_class = ImageEvents
+    _NO_PADDING_NEEDED = True
 
     def __init__(
         self,

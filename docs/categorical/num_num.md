@@ -84,10 +84,11 @@ import numpy as np
 rng = np.random.default_rng(12345)
 
 # sample data
+steps = np.array([0] * 60 + [3] * 30 + [6] * 40)
 df = {
     "label": ["A"] * 60 + ["B"] * 30 + ["C"] * 40,
-    "X": rng.normal(loc=0.0, size=130),
-    "Y": rng.normal(loc=1.0, size=130),
+    "X": rng.normal(loc=0.0, size=130) + steps,
+    "Y": rng.normal(loc=1.0, size=130) + steps / 2,
 }
 ```
 
@@ -145,7 +146,16 @@ canvas.show()
 ``` python
 #!name: cat_hist2d
 canvas = new_canvas("matplotlib")
-canvas.cat(df, x="X", y="Y").add_hist2d(cmap=["white", "blue"], bins=(8, 10))
+canvas.cat(df, x="X", y="Y").add_hist2d(bins=(8, 10), color="label")
+canvas.show()
+```
+
+and similarly, 2-dimensional KDE can be added by `add_kde2d`.
+
+``` python
+#!name: cat_kde2d
+canvas = new_canvas("matplotlib")
+canvas.cat(df, x="X", y="Y").add_kde2d(color="label")
 canvas.show()
 ```
 

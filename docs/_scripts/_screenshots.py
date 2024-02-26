@@ -13,7 +13,6 @@ from whitecanvas.canvas import CanvasGrid, SingleCanvas
 from whitecanvas.theme import update_default
 
 DOCS: Path = Path(__file__).parent.parent
-# CODE_BLOCK = re.compile("``` ?python\n([^`]*)```", re.DOTALL)
 CODE_BLOCK = re.compile("``` ?python.*?\n([^`]*)```")
 
 def _exec_code(src: str, ns: dict, dest: str) -> dict[str, Any]:
@@ -32,9 +31,9 @@ def _exec_code(src: str, ns: dict, dest: str) -> dict[str, Any]:
 
 def _write_image(src: str, ns: dict, dest: str) -> None:
     ns = _exec_code(src, ns, dest)
-    if isinstance(ns.get("grid", None), CanvasGrid):
+    if "grid" in src and isinstance(ns.get("grid", None), CanvasGrid):
         canvas = ns["grid"]
-    else:
+    elif "canvas" in src:
         canvas = ns["canvas"]
     assert isinstance(canvas, (CanvasGrid, SingleCanvas)), type(canvas)
     with mkdocs_gen_files.open(dest, "wb") as f:

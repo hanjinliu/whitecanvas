@@ -45,6 +45,7 @@ class Spans(
     """
 
     _backend_class_name = "Bars"
+    _NO_PADDING_NEEDED = True
 
     def __init__(
         self,

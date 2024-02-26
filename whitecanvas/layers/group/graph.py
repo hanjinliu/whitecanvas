@@ -57,7 +57,7 @@ class Graph(LayerContainer):
         """Return the text offset."""
         return self._text_offset
 
-    def add_text_offset(self, dx: Any, dy: Any):
+    def with_text_offset(self, dx: Any, dy: Any):
         """Add offset to text positions."""
         _offset = self._text_offset._add(dx, dy)
         if self.texts.ndata > 0:
@@ -65,6 +65,8 @@ class Graph(LayerContainer):
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(data.x + xoff, data.y + yoff)
         self._text_offset = _offset
+
+    add_text_offset = with_text_offset
 
     def set_graph(self, nodes: NDArray[np.floating], edges: NDArray[np.intp]):
         """Set the graph data."""

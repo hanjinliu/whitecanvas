@@ -161,11 +161,11 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
                 )
 
         if align == "low":
-            y0 = np.full_like(data_full.x, offset)
+            y0 = np.full((data_full.x.size,), offset)
             y1 = offset + lengths
         elif align == "high":
             y0 = offset - lengths
-            y1 = np.full_like(data_full.x, offset)
+            y1 = np.full((data_full.x.size,), offset)
         elif align == "center":
             y0 = offset - lengths / 2
             y1 = offset + lengths / 2

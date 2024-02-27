@@ -49,8 +49,8 @@ class Bars(visuals.Compound):
         center = np.stack([(xlow + xhigh) / 2, (ylow + yhigh) / 2], axis=1)
         for rect, c, w, h in zip(self._rectangles, center, xhigh - xlow, yhigh - ylow):
             rect.center = c
-            rect.width = w
-            rect.height = h
+            rect.width = max(abs(w), 1e-8)
+            rect.height = max(abs(h), 1e-8)
 
     def _plt_get_ndata(self):
         return len(self._rectangles)

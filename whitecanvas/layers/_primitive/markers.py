@@ -571,7 +571,7 @@ class Markers(
         if bottom is None:
             bottom = np.zeros_like(ydata)
         elif isinstance(bottom, (float, int, np.number)):
-            bottom = np.full_like(ydata, bottom)
+            bottom = np.full((ydata.size,), bottom)
         else:
             bottom = as_array_1d(bottom)
             if bottom.shape != ydata.shape:

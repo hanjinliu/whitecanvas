@@ -193,7 +193,7 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
         return self._plt_get_data()
 
     def _plt_set_text_position(self, position):
-        self._plt_set_data(position)
+        self._plt_set_data(*position)
 
     def _plt_get_text_anchor(self) -> list[Alignment]:
         return self._anchors

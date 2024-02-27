@@ -390,7 +390,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         if color is _void:
             color = self.color
         data = self.data
-        x0 = np.full_like(data.x, bottom)
+        x0 = np.full((data.x.size,), bottom)
         band = Band(
             data.y, x0, data.x, orient=Orientation.HORIZONTAL, color=color, alpha=alpha,
             hatch=hatch, name=f"xfill-of-{self.name}", backend=self._backend_name,
@@ -413,7 +413,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         if color is _void:
             color = self.color
         data = self.data
-        y0 = np.full_like(data.y, bottom)
+        y0 = np.full((data.y.size,), bottom)
         band = Band(
             data.x, y0, data.y, orient=Orientation.VERTICAL, color=color, alpha=alpha,
             hatch=hatch, name=f"yfill-of-{self.name}", backend=self._backend_name,

@@ -70,7 +70,7 @@ class Texts(visuals.Compound):
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
     ):
         for t, x0, y0 in zip(self.subvisuals, *position):
-            t.pos = x0, y0
+            t.pos = y0, x0
 
     def _plt_get_text_anchor(self) -> list[Alignment]:
         return [t._alignment for t in self.subvisuals]
@@ -84,7 +84,7 @@ class Texts(visuals.Compound):
             t._alignment = anc0
 
     def _plt_get_text_rotation(self) -> float:
-        return np.array([t.rotation[0] for t in self.subvisuals])
+        return np.array([t.rotation for t in self.subvisuals])
 
     def _plt_set_text_rotation(self, rotation: float | NDArray[np.floating]):
         if is_real_number(rotation):

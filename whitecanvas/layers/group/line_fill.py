@@ -271,7 +271,7 @@ class Histogram(LineFillBase):
 
 
 def _prep_bottom(ydata: NDArray[np.number]) -> NDArray[np.number]:
-    return np.full_like(ydata, 0)
+    return np.full(ydata.size, 0)
 
 
 class Kde(LineFillBase):
@@ -314,7 +314,7 @@ class Kde(LineFillBase):
             self.line.data = xdata, ydata
         else:
             self.line.data = ydata, xdata
-        self.fill.data = xdata, np.full_like(xdata, bottom), ydata
+        self.fill.data = xdata, np.full(xdata.size, bottom), ydata
 
     @property
     def band_width(self) -> float:
@@ -377,7 +377,7 @@ class Kde(LineFillBase):
         else:
             line = Line(y1, x, color=color, style=style, width=width, backend=backend)
         fill = Band(
-            x, np.full_like(x, bottom), y1, color=color, alpha=0.2, orient=orient,
+            x, np.full(x.size, bottom), y1, color=color, alpha=0.2, orient=orient,
             backend=backend,
         )  # fmt: skip
         return Kde(data, bw, line, fill, name=name, bottom=bottom, scale=scale)

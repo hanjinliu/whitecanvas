@@ -250,9 +250,9 @@ def test_rug(backend: str):
     assert np.all(layer.data == np.arange(10))
     layer.data = np.arange(10, 20)
     assert np.all(layer.data == np.arange(10, 20))
-    assert layer.low == 0
-    assert layer.high == 1
+    assert np.all(layer.low == 0)
+    assert np.all(layer.high == 1)
     layer.low = 0.5
     layer.high = 1.5
-    assert layer.low == pytest.approx(0.5)
-    assert layer.high == pytest.approx(1.5)
+    assert np.allclose(layer.low, 0.5)
+    assert np.allclose(layer.high, 1.5)

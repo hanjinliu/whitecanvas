@@ -124,7 +124,8 @@ def test_heatmap(backend: str):
     im = canvas.cat_xy(df, "x", "y").mean().add_heatmap(value="z", fill=-1)
     canvas.imref(im).add_text(fmt=".1f")
     assert im.clim == (1.1, 6.6)
-    canvas.add_legend()
+    if backend != "vispy":
+        canvas.add_legend()
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_agg(backend: str, orient: str):

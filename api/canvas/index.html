@@ -6072,7 +6072,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;This function will be called when a layer is inserted to the canvas.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">pad_rel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">pad_rel</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.025</span>
+            <span class="n">pad_rel</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">_NO_PADDING_NEEDED</span> <span class="k">else</span> <span class="mf">0.025</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_autoscale_enabled</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">bbox_hint</span><span class="p">()</span>

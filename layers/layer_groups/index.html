@@ -717,6 +717,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#add-texts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add texts
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1260,6 +1269,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#add-texts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add texts
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1376,9 +1394,9 @@ bars using <code>with_xerr</code> and/or <code>with_yerr</code> method.</p>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">with_markers</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_yerr</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
-    <span class="o">.</span><span class="n">with_xerr</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_yerr</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+</span><span class="hll">    <span class="o">.</span><span class="n">with_xerr</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/layer_groups_line_markers_yerr.png" width="360px" /></p>
@@ -1399,14 +1417,14 @@ deviation, use the <code>with_xband</code> or <code>with_yband</code> method.</p
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_yband</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_yband</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+</span><span class="p">)</span>
 <span class="c1"># two arrays for different sizes of lower and upper bounds</span>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_yband</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_yband</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
+</span><span class="p">)</span>
 
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
@@ -1420,13 +1438,13 @@ respectively.</p>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_xfill</span><span class="p">()</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_xfill</span><span class="p">()</span>
+</span><span class="p">)</span>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">with_yfill</span><span class="p">()</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_yfill</span><span class="p">()</span>
+</span><span class="p">)</span>
 
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
@@ -1437,6 +1455,52 @@ respectively.</p>
 orientation of the filling is in the direction of the y-axis, consistent with the
 methods such as <code>with_xband</code> and <code>with_xerr</code>.</p>
 </div>
+<h3 id="add-texts">Add texts</h3>
+<p>Adding text at the data points can be done using the <code>with_text</code> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_text</span><span class="p">([</span><span class="s2">&quot;i=0&quot;</span><span class="p">,</span> <span class="s2">&quot;i=1&quot;</span><span class="p">,</span> <span class="s2">&quot;i=2&quot;</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_line_text.png" width="360px" /></p>
+<p>You can use text alignment and text offset to adjust the position of the text.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_text</span><span class="p">([</span><span class="s2">&quot;i=0&quot;</span><span class="p">,</span> <span class="s2">&quot;i=1&quot;</span><span class="p">,</span> <span class="s2">&quot;i=2&quot;</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_text_offset</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_text</span><span class="p">([</span><span class="s2">&quot;i=0&quot;</span><span class="p">,</span> <span class="s2">&quot;i=1&quot;</span><span class="p">,</span> <span class="s2">&quot;i=2&quot;</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_line_text_align.png" width="360px" /></p>
+<p>You can use "x", "y" and "i" as the placeholders in the text to format the text using
+the x/y data and the indices.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">add_line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_text</span><span class="p">(</span><span class="s2">&quot;x=</span><span class="si">{x:.2f}</span><span class="s2">, y=</span><span class="si">{y:.2f}</span><span class="s2">, i=</span><span class="si">{i}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/layer_groups_line_text_format.png" width="360px" /></p>
 <h2 id="layer-groups-with-markers">Layer Groups with Markers</h2>
 <h3 id="markers-with-error-bars">Markers with error bars</h3>
 <p><a href="#add-markers-andor-error-bars">Similar to the <code>Line</code> layer</a>, the <code>Markers</code> layer can

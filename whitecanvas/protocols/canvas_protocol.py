@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from whitecanvas.layers._legend import LegendItem
-    from whitecanvas.types import LegendLocation, LineStyle, MouseEvent
+    from whitecanvas.types import AxisScale, LegendLocation, LineStyle, MouseEvent
 
 
 @runtime_checkable
@@ -180,6 +180,9 @@ class AxisProtocol(Protocol):
 
     def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
         """Set the grid line."""
+
+    def _plt_set_scale(self, scale: AxisScale) -> None:
+        """Set scale of axis"""
 
 
 @runtime_checkable

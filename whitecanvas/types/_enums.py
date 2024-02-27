@@ -239,3 +239,8 @@ class HistogramKind(_StrEnum):
     probability = "probability"
     frequency = "frequency"
     percent = "percent"
+
+
+class AxisScale(_StrEnum):
+    LINEAR = "linear"
+    LOG = "log"

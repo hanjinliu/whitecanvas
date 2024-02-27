@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from whitecanvas.types import LineStyle
+from whitecanvas.types import AxisScale, LineStyle
 from whitecanvas.utils.normalize import rgba_str_color
 
 if TYPE_CHECKING:
@@ -96,13 +96,27 @@ class Axis(_CanvasComponent):
         return getattr(self._canvas()._subplot_layout(), self._axis)
 
     def _plt_get_limits(self) -> tuple[float, float]:
-        lim = self._plt_get_axis().range
+        axis = self._plt_get_axis()
+        lim = axis.range
+        typ = axis.type
         if lim is None:
-            lim = (0, 1)  # TODO: how to get the limits?
-        return lim
+            # default value
+            if typ == "linear":
+                return (0, 1)
+            else:
+                return (0.1, 1)
+        else:
+            if typ == "linear":
+                return lim
+            else:
+                return 10 ** lim[0], 10 ** lim[1]
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        self._plt_get_axis().range = limits
+        axis = self._plt_get_axis()
+        if axis.type == "linear":
+            axis.range = limits
+        else:
+            axis.range = np.log10(limits)
 
     def _plt_get_color(self):
         # color of the axis itself
@@ -122,6 +136,14 @@ class Axis(_CanvasComponent):
         axis.showgrid = visible
         axis.gridcolor = rgba_str_color(color)
         axis.gridwidth = width
+
+    def _plt_set_scale(self, scale: AxisScale):
+        if scale is AxisScale.LINEAR:
+            self._plt_get_axis().type = "linear"
+        elif scale is AxisScale.LOG:
+            self._plt_get_axis().type = "log"
+        else:
+            raise ValueError(f"Invalid scale: {scale}")
 
 
 class Ticks(_CanvasComponent):

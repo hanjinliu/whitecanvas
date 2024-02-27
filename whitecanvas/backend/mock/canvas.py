@@ -216,6 +216,9 @@ class Axis:
     def _plt_set_limits(self, limits: tuple[float, float]):
         self._limits = limits
 
+    def _plt_set_scale(self, scale):
+        pass
+
 
 class Ticks(_SupportsText):
     def __init__(self):

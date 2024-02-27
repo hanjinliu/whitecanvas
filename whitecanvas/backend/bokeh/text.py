@@ -99,12 +99,14 @@ class Texts(BokehLayer[bk_models.Text]):
     def _plt_get_text_position(
         self,
     ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
-        return self._model.x, self._model.y
+        return self._data.data["x"], self._data.data["y"]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
     ):
-        self._data.data["x"], self._data.data["y"] = position
+        cur_data = self._data.data.copy()
+        cur_data["x"], cur_data["y"] = position
+        self._data.data = cur_data
 
     def _plt_get_text_anchor(self) -> list[Alignment]:
         return [Alignment(anc) for anc in self._data.data["text_align"]]

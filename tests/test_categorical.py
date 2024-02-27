@@ -15,10 +15,11 @@ def test_cat(backend: str):
     }
     cplt = canvas.cat(df, "x", "y")
     cplt.add_line()
-    cplt.add_line(color="label")
+    cplt.add_line(color="label").with_markers()
     cplt.add_markers()
     cplt.add_markers(color="label")
     cplt.add_markers(hatch="label")
+    cplt.add_pointplot(color="label")
     cplt.add_hist2d(bins=5)
     cplt.add_hist2d(bins=(5, 4))
     cplt.add_hist2d(bins="auto")
@@ -29,7 +30,19 @@ def test_cat(backend: str):
     cplt.along_x().add_hist(bins=5)
     cplt.along_x().add_hist(bins=5, color="label")
     cplt.along_y().add_hist(bins=6)
-    cplt.along_y().add_hist(bins=6, color="label")
+    hist = cplt.along_y().add_hist(bins=6, color="label")
+    cplt.along_x().add_kde()
+    kde = cplt.along_x().add_kde(color="label")
+    hist.update_color("black")
+    kde.update_color("black")
+    hist.update_width(1.5)
+    kde.update_width(1.5)
+    hist.update_style(":")
+    kde.update_style(":")
+    hist.update_hatch("/")
+    kde.update_hatch("/")
+    if backend != "vispy":
+        canvas.add_legend()
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_cat_plots(backend: str, orient: str):
@@ -43,20 +56,24 @@ def test_cat_plots(backend: str, orient: str):
         cat_plt = canvas.cat_x(df, "label", "y")
     else:
         cat_plt = canvas.cat_y(df, "y", "label")
-    cat_plt.add_stripplot(color="c")
-    cat_plt.add_swarmplot(color="c")
+    cat_plt.add_stripplot(color="c").move(0.1)
+    cat_plt.add_swarmplot(color="c").move(0.1)
     cat_plt.add_boxplot(color="c").with_outliers(ratio=0.5)
     with filter_warning(backend, "plotly"):
-        cat_plt.add_boxplot(color="c").as_edge_only()
+        box = cat_plt.add_boxplot(color="c").as_edge_only().move(0.1)
+        box.update_color_palette(["blue", "red"], alpha=0.9)
+        box = cat_plt.add_boxplot(hatch="c").as_edge_only().move(0.1)
+        box.update_hatch_palette(["/", "x"])
+        box.update_const(color="black", hatch="+")
     cat_plt.add_violinplot(color="c").with_rug()
     cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5)
     cat_plt.add_violinplot(color="c").with_box()
-    cat_plt.add_violinplot(color="c").as_edge_only().with_strip()
+    cat_plt.add_violinplot(color="c").as_edge_only().move(0.1).with_strip()
     cat_plt.add_violinplot(color="c").with_swarm()
-    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
-    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1)
+    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1)
     with filter_warning(backend, "plotly"):
-        cat_plt.add_rugplot(color="c").scale_by_density()
+        cat_plt.add_rugplot(color="c").scale_by_density().move(0.1)
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
@@ -107,6 +124,41 @@ def test_heatmap(backend: str):
     im = canvas.cat_xy(df, "x", "y").mean().add_heatmap(value="z", fill=-1)
     canvas.imref(im).add_text(fmt=".1f")
     assert im.clim == (1.1, 6.6)
+    if backend != "vispy":
+        canvas.add_legend()
+
+@pytest.mark.parametrize("orient", ["v", "h"])
+def test_agg(backend: str, orient: str):
+    canvas = new_canvas(backend=backend)
+    df = {
+        "y": np.arange(30),
+        "label": np.repeat(["A", "B", "C"], 10),
+        "c": ["P", "Q"] * 15,
+    }
+    if orient == "v":
+        cat_plt = canvas.cat_x(df, "label", "y")
+    else:
+        cat_plt = canvas.cat_y(df, "y", "label")
+    cat_plt.mean().add_line(color="c")
+    cat_plt.mean().add_markers(color="c")
+    cat_plt.mean().add_bars(color="c")
+    cat_plt.std().add_line(color="c")
+    cat_plt.sum().add_line(color="c")
+    cat_plt.median().add_line(color="c")
+    cat_plt.max().add_line(color="c")
+    cat_plt.min().add_line(color="c")
+    cat_plt.first().add_line(color="c")
+    if orient == "v":
+        canvas.cat_x(df, x="label").count().add_line(color="c")
+    else:
+        canvas.cat_y(df, y="label").count().add_line(color="c")
+
+    cat_plt.mean_for_each("c").add_stripplot()
+    cat_plt.median_for_each("c").add_stripplot()
+    cat_plt.std_for_each("c").add_stripplot()
+    cat_plt.sum_for_each("c").add_stripplot()
+    cat_plt.min_for_each("c").add_stripplot()
+    cat_plt.max_for_each("c").add_stripplot()
 
 def test_cat_legend(backend: str):
     if backend == "vispy":
@@ -119,8 +171,8 @@ def test_cat_legend(backend: str):
     }
 
     _c = canvas.cat(df, "x", "y")
-    _c.add_line(color="label")
-    _c.add_markers(color="label")
+    _c.add_line(color="label").move(0.1, 0.1)
+    _c.add_markers(color="label").move(0.1, 0.1)
     canvas.add_legend()
 
 def test_catx_legend(backend: str):
@@ -133,13 +185,28 @@ def test_catx_legend(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
     _c = canvas.cat_x(df, "x", "y")
-    _c.add_stripplot(color="label")
-    _c.add_swarmplot(color="label")
     _c.add_boxplot(color="label")
     _c.add_violinplot(color="label").with_rug()
     _c.add_pointplot(color="label").err_by_se()
     _c.add_barplot(color="label")
     canvas.add_legend()
+
+def test_marker_legend():
+    canvas = new_canvas("mock")
+    df = {
+        "x": ["P", "Q"] * 15,
+        "y": np.arange(30),
+        "z": np.sin(np.arange(30) / 10),
+        "label": np.repeat(["A", "B", "C"], 10),
+    }
+    canvas = new_canvas("mock")
+    canvas.cat_x(df, "x", "y").add_stripplot(color="label")
+    canvas.cat_x(df, "x", "y").add_stripplot().update_size("z")
+    canvas.cat_x(df, "x", "y").add_stripplot().update_colormap("z")
+    canvas.cat_x(df, "x", "y").add_stripplot(symbol="label")
+    canvas.cat_x(df, "x", "y").add_stripplot(hatch="label")
+    canvas.add_legend()
+
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_numeric_axis(backend: str, orient: str):
@@ -153,17 +220,28 @@ def test_numeric_axis(backend: str, orient: str):
         cat_plt = canvas.cat_x(df, "label", "y", numeric_axis=True)
     else:
         cat_plt = canvas.cat_y(df, "y", "label", numeric_axis=True)
-    cat_plt.add_stripplot(color="c")
-    cat_plt.add_swarmplot(color="c")
-    cat_plt.add_boxplot(color="c").with_outliers(ratio=0.5)
+    cat_plt.add_stripplot(color="c", dodge=True).move(0.1)
+    cat_plt.add_swarmplot(color="c").move(0.1)
+    cat_plt.add_boxplot(color="c").move(0.1).with_outliers(ratio=0.5)
     with filter_warning(backend, "plotly"):
         cat_plt.add_boxplot(color="c").as_edge_only()
-    cat_plt.add_violinplot(color="c").with_rug()
+    cat_plt.add_violinplot(color="c").move(0.1).with_rug()
     cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5)
     cat_plt.add_violinplot(color="c").with_box()
     cat_plt.add_violinplot(color="c").as_edge_only().with_strip()
     cat_plt.add_violinplot(color="c").with_swarm()
-    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
-    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    cat_plt.add_pointplot(color="c").move(0.1).err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
+    cat_plt.add_barplot(color="c").move(0.1).err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median()
     with filter_warning(backend, "plotly"):
-        cat_plt.add_rugplot(color="c").scale_by_density()
+        cat_plt.add_rugplot(color="c").move(0.1).scale_by_density()
+
+def test_stack(backend: str):
+    canvas = new_canvas(backend=backend)
+    df = {
+        "y": np.arange(30),
+        "label": np.repeat([2, 5, 6], 10),
+        "c": ["P", "Q"] * 15,
+    }
+    cat_plt = canvas.cat_x(df, "label", "y", numeric_axis=True)
+    cat_plt.stack("c").add_bars(color="c")
+    cat_plt.stack("c").add_area(hatch="c")

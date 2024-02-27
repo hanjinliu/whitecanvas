@@ -112,6 +112,10 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
         """Position of the text."""
         return XYData(*self._backend._plt_get_text_position())
 
+    @pos.setter
+    def pos(self, pos: tuple[ArrayLike1D, ArrayLike1D]):
+        return self.set_pos(*pos)
+
     def set_pos(self, xpos: ArrayLike1D, ypos: ArrayLike1D):
         """Set the position of the text."""
         if xpos is None or ypos is None:

@@ -152,3 +152,13 @@ class Markers(visuals.Markers):
     def _plt_set_hover_text(self, text: list[str]):
         # TODO: not used yet
         self._hover_texts = text
+
+    def _compute_bounds(self, axis, view):
+        # override to fix the bounds computation
+        pos = self._data["a_position"]
+        if pos is None or pos.size == 0:
+            return None
+        if pos.shape[1] > axis:
+            return (pos[:, axis].min(), pos[:, axis].max())
+        else:
+            return (0, 0)

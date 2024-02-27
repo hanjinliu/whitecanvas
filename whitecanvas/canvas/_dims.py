@@ -16,6 +16,7 @@ from whitecanvas.types import (
     Hatch,
     LineStyle,
     Orientation,
+    Symbol,
 )
 
 if TYPE_CHECKING:
@@ -193,6 +194,22 @@ class Dims:
             style=style, alpha=alpha, antialias=antialias,
         )  # fmt: skip
 
+    def add_markers(
+        self,
+        xdata: Any,
+        ydata: Any,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        hatch: str | Hatch = Hatch.SOLID,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: float = 5.0,
+    ):
+        return InAxes(self).add_markers(
+            xdata, ydata, name=name, color=color, hatch=hatch,
+            symbol=symbol, size=size,
+        )  # fmt: skip
+
     def add_band(
         self,
         xdata: Any,
@@ -336,6 +353,26 @@ class InAxes:
         stack = _ndl.XYLayerStack.from_layer_class(
             _l.Line, xdata, ydata, name=name, color=color, width=width, style=style,
             alpha=alpha, antialias=antialias, backend=canvas._get_backend(),
+        )  # fmt: skip
+        return self._add_layer(stack)
+
+    def add_markers(
+        self,
+        xdata: Any,
+        ydata: Any,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        hatch: str | Hatch = Hatch.SOLID,
+        symbol: str | Symbol = Symbol.CIRCLE,
+        size: float = 5.0,
+    ) -> _ndl.XYLayerStack:
+        canvas = self._get_canvas()
+        name = canvas._coerce_name(_l.Markers, name)
+        color = canvas._generate_colors(color)
+        stack = _ndl.XYLayerStack.from_layer_class(
+            _l.Markers, xdata, ydata, name=name, color=color, hatch=hatch,
+            symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
         return self._add_layer(stack)
 

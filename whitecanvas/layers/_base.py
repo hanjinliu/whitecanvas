@@ -34,6 +34,7 @@ class Layer(ABC):
     events: LayerEvents
     _events_class: type[LayerEvents]
     _ATTACH_TO_AXIS = False
+    _NO_PADDING_NEEDED = False
 
     def __init__(self, name: str | None = None):
         if not hasattr(self.__class__, "_events_class"):
@@ -312,6 +313,10 @@ class LayerWrapper(Layer, Generic[_L]):
     @property
     def _ATTACH_TO_AXIS(self) -> bool:
         return self._base_layer._ATTACH_TO_AXIS
+
+    @property
+    def _NO_PADDING_NEEDED(self) -> bool:
+        return self._base_layer._NO_PADDING_NEEDED
 
     def _as_legend_item(self) -> LegendItem:
         """Return the legend item for this layer."""

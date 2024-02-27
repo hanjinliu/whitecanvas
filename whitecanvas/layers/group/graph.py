@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from whitecanvas.layers import _legend
+from whitecanvas.layers import _legend, _text_utils
 from whitecanvas.layers._primitive import Markers, MultiLine, Texts
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.layers.group._offsets import NoOffset, TextOffset
@@ -57,7 +57,7 @@ class Graph(LayerContainer):
         """Return the text offset."""
         return self._text_offset
 
-    def add_text_offset(self, dx: Any, dy: Any):
+    def with_text_offset(self, dx: Any, dy: Any):
         """Add offset to text positions."""
         _offset = self._text_offset._add(dx, dy)
         if self.texts.ndata > 0:
@@ -65,6 +65,8 @@ class Graph(LayerContainer):
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(data.x + xoff, data.y + yoff)
         self._text_offset = _offset
+
+    add_text_offset = with_text_offset
 
     def set_graph(self, nodes: NDArray[np.floating], edges: NDArray[np.intp]):
         """Set the graph data."""
@@ -89,6 +91,7 @@ class Graph(LayerContainer):
         else:
             _offset = NoOffset()._add(*offset)
 
+        strings = _text_utils.norm_label_text(strings, self.nodes.data)
         xdata, ydata = self.nodes.data
         dx, dy = _offset._asarray()
         self.texts.string = strings

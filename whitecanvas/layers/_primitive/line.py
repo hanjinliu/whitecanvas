@@ -8,7 +8,7 @@ from psygnal import Signal
 
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _legend
+from whitecanvas.layers import _legend, _text_utils
 from whitecanvas.layers._base import (
     HoverableDataBoundLayer,
     LayerEvents,
@@ -390,7 +390,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         if color is _void:
             color = self.color
         data = self.data
-        x0 = np.full_like(data.x, bottom)
+        x0 = np.full((data.x.size,), bottom)
         band = Band(
             data.y, x0, data.x, orient=Orientation.HORIZONTAL, color=color, alpha=alpha,
             hatch=hatch, name=f"xfill-of-{self.name}", backend=self._backend_name,
@@ -413,7 +413,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         if color is _void:
             color = self.color
         data = self.data
-        y0 = np.full_like(data.y, bottom)
+        y0 = np.full((data.y.size,), bottom)
         band = Band(
             data.x, y0, data.y, orient=Orientation.VERTICAL, color=color, alpha=alpha,
             hatch=hatch, name=f"yfill-of-{self.name}", backend=self._backend_name,
@@ -435,15 +435,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import LabeledLine
 
-        if isinstance(strings, str):
-            strings = [strings] * self.data.x.size
-        else:
-            strings = list(strings)
-            if len(strings) != self.data.x.size:
-                raise ValueError(
-                    f"Number of strings ({len(strings)}) does not match the "
-                    f"number of data ({self.data.x.size})."
-                )
+        strings = _text_utils.norm_label_text(strings, self.data)
         texts = Texts(
             *self.data, strings, color=color, size=size, rotation=rotation,
             anchor=anchor, family=family, backend=self._backend_name,
@@ -672,7 +664,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         return _legend.LineLegendItem(self.color[0], self.width[0], self.style[0])
 
 
-def _norm_data(data: list[ArrayLike1D]) -> NDArray[np.number]:
+def _norm_data(data: list[NDArray[np.number]]) -> NDArray[np.number]:
     data_normed: list[NDArray[np.number]] = []
     xmins, xmaxs, ymins, ymaxs = [], [], [], []
     for each in data:

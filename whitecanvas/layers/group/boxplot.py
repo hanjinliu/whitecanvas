@@ -143,28 +143,28 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         """Orientation of the boxplot."""
         return self._orient
 
-    def move(self, shift: float) -> BoxPlot:
+    def move(self, shift: float, autoscale: bool = True) -> BoxPlot:
         """Move the layer by the given shift."""
         self.boxes.set_data(xdata=self.boxes.data.x + shift)
         if self.orient.is_vertical:
             _wdata = []
             for seg in self.whiskers.data:
-                _wdata.append([seg[:, 0] + shift, seg[:, 1]])
+                _wdata.append(np.stack([seg[:, 0] + shift, seg[:, 1]], axis=0))
             self.whiskers.data = _wdata
             _mdata = []
             for seg in self.medians.data:
-                _mdata.append([seg[:, 0] + shift, seg[:, 1]])
+                _mdata.append(np.stack([seg[:, 0] + shift, seg[:, 1]], axis=0))
             self.medians.data = _mdata
         else:
             _wdata = []
             for seg in self.whiskers.data:
-                _wdata.append([seg[:, 0], seg[:, 1] + shift])
+                _wdata.append(np.stack([seg[:, 0], seg[:, 1] + shift], axis=0))
             self.whiskers.data = _wdata
             _mdata = []
             for seg in self.medians.data:
-                _mdata.append([seg[:, 0], seg[:, 1] + shift])
+                _mdata.append(np.stack([seg[:, 0], seg[:, 1] + shift], axis=0))
             self.medians.data = _mdata
-        if canvas := self._canvas_ref():
+        if autoscale and (canvas := self._canvas_ref()):
             canvas._autoscale_for_layer(self, pad_rel=0.025)
         return self
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import bokeh.models as bk_models
 import numpy as np
-from bokeh import events as bk_events
 from numpy.typing import NDArray
 
 from whitecanvas.backend.bokeh._base import (

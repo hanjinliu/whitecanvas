@@ -249,6 +249,8 @@ class DFMultiHeatmap(
     _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_l.Image], _DF],
     Generic[_DF],
 ):
+    _NO_PADDING_NEEDED = True
+
     def __init__(
         self,
         base: _lg.LayerCollectionBase[_l.Image],

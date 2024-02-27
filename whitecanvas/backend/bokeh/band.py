@@ -59,7 +59,9 @@ class Band(BokehLayer["bk_models.VArea | bk_models.HArea"], SupportsMouseEvents)
     _plt_get_horizontal_data = _plt_get_vertical_data
 
     def _plt_set_vertical_data(self, t, ydata0, ydata1):
-        self._data.data = {"t": t, "y0": ydata0, "y1": ydata1}
+        cur_data = self._data.data.copy()
+        cur_data.update({"t": t, "y0": ydata0, "y1": ydata1})
+        self._data.data = cur_data
 
     _plt_set_horizontal_data = _plt_set_vertical_data
 

@@ -169,6 +169,9 @@ class CyclicPlan(CategoricalPlan[_V]):
         return out
 
     def to_entries(self, df: DataFrameWrapper[_DF]) -> list[tuple[str, _V]]:
+        """Prepare legend item entries."""
+        if len(df) == 0:
+            return []
         values = self.map(df)
         if self.by:
             entries = [

@@ -87,7 +87,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
         self.events.data.emit(segs)
 
     @property
-    def high(self) -> float:
+    def high(self) -> NDArray[np.number]:
         """Coordinate of the higher bound."""
         return self.data_full.y1
 
@@ -99,7 +99,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
 
     @property
     def data_full(self) -> XYYData:
-        segs = super()._get_layer_data()
+        segs = MultiLine._get_layer_data(self)
         seg_stack = np.stack(segs, axis=2)
         idx = 1 if self.orient.is_vertical else 0
         low = seg_stack[0, idx, :]
@@ -161,11 +161,11 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
                 )
 
         if align == "low":
-            y0 = np.full_like(data_full.x, offset)
+            y0 = np.full((data_full.x.size,), offset)
             y1 = offset + lengths
         elif align == "high":
             y0 = offset - lengths
-            y1 = np.full_like(data_full.x, offset)
+            y1 = np.full((data_full.x.size,), offset)
         elif align == "center":
             y0 = offset - lengths / 2
             y1 = offset + lengths / 2
@@ -245,7 +245,7 @@ def _norm_input(
 ) -> tuple[NDArray[np.number], NDArray[np.number], Orientation]:
     _t = as_array_1d(events)
     if is_real_number(low):
-        y0 = np.full_like(_t, low)
+        y0 = np.full(_t.shape, low)
     else:
         y0 = as_array_1d(low)
         if y0.size != _t.size:
@@ -254,7 +254,7 @@ def _norm_input(
                 f"got {y0.size} and {events.size} events."
             )
     if is_real_number(high):
-        y1 = np.full_like(_t, high)
+        y1 = np.full(_t.shape, high)
     else:
         y1 = as_array_1d(high)
         if y1.size != _t.size:

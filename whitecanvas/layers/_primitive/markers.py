@@ -9,7 +9,7 @@ from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _legend
+from whitecanvas.layers import _legend, _text_utils
 from whitecanvas.layers._base import HoverableDataBoundLayer
 from whitecanvas.layers._mixin import (
     EdgeNamespace,
@@ -454,26 +454,20 @@ class Markers(
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import LabeledMarkers
 
-        if isinstance(strings, str):
-            strings = [strings] * self.data.x.size
-        else:
-            strings = list(strings)
-            if len(strings) != self.data.x.size:
-                raise ValueError(
-                    f"Number of strings ({len(strings)}) does not match the "
-                    f"number of data ({self.data.x.size})."
-                )
+        old_name = self.name
+        strings = _text_utils.norm_label_text(strings, self.data)
         texts = Texts(
             *self.data, strings, color=color, size=size, rotation=rotation,
-            anchor=anchor, family=fontfamily, backend=self._backend_name,
+            name=f"text-of-{old_name}", anchor=anchor, family=fontfamily,
+            backend=self._backend_name,
         )  # fmt: skip
-        old_name = self.name
+        self.name = f"markers-of-{old_name}"
         return LabeledMarkers(
             self,
             Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name),
             Errorbars.empty_v(f"yerr-of-{old_name}", backend=self._backend_name),
             texts=texts,
-            name=self.name,
+            name=old_name,
         )
 
     def with_network(
@@ -577,7 +571,7 @@ class Markers(
         if bottom is None:
             bottom = np.zeros_like(ydata)
         elif isinstance(bottom, (float, int, np.number)):
-            bottom = np.full_like(ydata, bottom)
+            bottom = np.full((ydata.size,), bottom)
         else:
             bottom = as_array_1d(bottom)
             if bottom.shape != ydata.shape:

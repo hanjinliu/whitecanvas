@@ -81,7 +81,7 @@ class BandCollection(
             pad = sigma * 2.5
             x = np.linspace(_each.min() - pad, _each.max() + pad, 100)
             y1 = kde(x)
-            y0 = np.full_like(y1, bottom)
+            y0 = np.full(y1.size, bottom)
             input_.append(XYYData(x, y0, y1))
         return cls(input_, name=name, orient=orient.transpose(), backend=backend)
 

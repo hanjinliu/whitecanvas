@@ -1686,7 +1686,7 @@ class CanvasBase(ABC):
     ):
         """This function will be called when a layer is inserted to the canvas."""
         if pad_rel is None:
-            pad_rel = 0 if isinstance(layer, _l.Image) else 0.025
+            pad_rel = 0 if layer._NO_PADDING_NEEDED else 0.025
         if not self._autoscale_enabled:
             return
         xmin, xmax, ymin, ymax = layer.bbox_hint()

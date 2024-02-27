@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from whitecanvas import new_canvas
 from whitecanvas.layers import Layer
@@ -27,6 +28,8 @@ def test_line(backend: str):
     layer.width = 2
     assert layer.width == 2
     _test_visibility(layer)
+    layer.with_hover_template("x={x:.2f}, y={y:.2f}")
+    canvas.add_cdf(np.sqrt(np.arange(20)))
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
@@ -111,6 +114,21 @@ def test_infcurve(backend: str):
     layer.width = 2
     assert layer.width == 2
     _test_visibility(layer)
+    layer.with_hover_text("y=sin(x/5)")
+
+    layer = canvas.add_infcurve(
+        lambda arr, a: np.sin(arr / a)
+    ).update_params(a=5)
+    canvas.x.lim = (-5, 5)
+
+    layer = canvas.add_infline((3, 3), angle=50)
+    layer.pos = (2, 2)
+    assert layer.pos == (2, 2)
+    layer.angle = 45
+    assert layer.angle == pytest.approx(45)
+    canvas.x.lim = (-4, 4)
+    layer.angle = 90
+    canvas.x.lim = (-4, 4)
 
 def test_band(backend: str):
     canvas = new_canvas(backend=backend)
@@ -148,6 +166,13 @@ def test_image(backend: str):
     layer.clim = (0.5, 1.5)
     assert layer.clim == (0.5, 1.5)
     _test_visibility(layer)
+    assert layer.data.shape == (10, 10)
+    layer.data = np.random.random((10, 10))
+    layer.origin = "center"
+    layer.shift = (1, 1)
+    layer.origin = "edge"
+    layer.shift = (-1, -1)
+    layer.fit_to(2, 2, 5, 5)
 
 def test_errorbars(backend: str):
     canvas = new_canvas(backend=backend)
@@ -213,3 +238,73 @@ def test_texts(backend: str):
     layer.edge.alpha
     layer.edge.alpha = 0.6
     _test_visibility(layer)
+
+    layer.pos = np.arange(10) * 2, np.zeros(10)
+    assert np.all(layer.pos.x == np.arange(10) * 2)
+    assert np.all(layer.pos.y == np.zeros(10))
+    layer.rotation = 10
+    assert layer.rotation == 10
+    layer.color = "red"
+    layer.family = "Arial"
+
+
+def test_with_text(backend: str):
+    canvas = new_canvas(backend=backend)
+    x = np.arange(10)
+    y = np.sqrt(x)
+    canvas.add_line(x, y).with_text([f"{i}" for i in range(10)]).add_text_offset(0.1 ,0.1)
+    canvas.add_markers(x, y).with_text([f"{i}" for i in range(10)]).add_text_offset(0.1 ,0.1)
+    canvas.add_bars(x, y).with_text([f"{i}" for i in range(10)]).add_text_offset(0.1 ,0.1)
+    canvas.add_line(x, y).with_text("x={x:.2f}, y={y:.2f}")
+    canvas.add_markers(x, y).with_text("x={x:.2f}, y={y:.2f}")
+    canvas.add_bars(x, y).with_text("x={x:.2f}, y={y:.2f}")
+    canvas.add_line(x, y).with_markers().with_text([f"{i}" for i in range(10)])
+    canvas.add_line(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_line(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_line(x, y).with_markers().with_text("x={x:2f}, i={i}")
+    canvas.add_line(x, y).with_xerr(y/4).with_text("x={x:2f}, i={i}")
+    canvas.add_line(x, y).with_yerr(y/4).with_text("x={x:2f}, i={i}")
+    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text([f"{i}" for i in range(10)])
+    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text("state-{i}")
+    canvas.add_bars(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_bars(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
+    canvas.add_bars(x, y).with_xerr(y/4).with_text("{x:1f}, {y:1f},")
+    canvas.add_bars(x, y).with_yerr(y/4).with_text("{x:1f}, {y:1f}")
+
+def test_rug(backend: str):
+    canvas = new_canvas(backend=backend)
+
+    layer = canvas.add_rug(np.arange(10))
+
+    layer.color = [1.0, 0.0, 0.0, 1.0]
+    layer.style = ":"
+    layer.width = 2
+    _test_visibility(layer)
+    assert np.all(layer.data == np.arange(10))
+    layer.data = np.arange(10, 20)
+    assert np.all(layer.data == np.arange(10, 20))
+    assert np.all(layer.low == 0)
+    assert np.all(layer.high == 1)
+    layer.low = 0.5
+    layer.high = 1.5
+    assert np.allclose(layer.low, 0.5)
+    assert np.allclose(layer.high, 1.5)
+
+
+def test_spans(backend: str):
+    canvas = new_canvas(backend=backend)
+
+    layer = canvas.add_spans([[5, 10], [18, 30]], orient="vertical")
+    canvas.x.lim = (-2, 26)
+    layer.data
+    layer.data = [[6, 11], [18, 25]]
+
+    layer = canvas.add_spans([[5, 10], [18, 30]], orient="horizontal")
+    canvas.y.lim = (-2, 26)
+    layer.data
+    layer.data = [[6, 11], [18, 25]]
+
+    layer.with_edge("black")
+
+    if backend != "vispy":
+        canvas.add_legend()

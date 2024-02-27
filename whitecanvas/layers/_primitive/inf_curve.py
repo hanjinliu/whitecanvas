@@ -23,6 +23,7 @@ _P = ParamSpec("_P")
 
 class InfCurve(LineMixin[LineProtocol], Generic[_P]):
     _backend_class_name = "MonoLine"
+    _NO_PADDING_NEEDED = True
 
     def __init__(
         self,
@@ -126,6 +127,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
 
 class InfLine(LineMixin[LineProtocol]):
     _backend_class_name = "MonoLine"
+    _NO_PADDING_NEEDED = True
 
     def __init__(
         self,

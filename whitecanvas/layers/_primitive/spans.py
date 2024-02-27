@@ -45,6 +45,7 @@ class Spans(
     """
 
     _backend_class_name = "Bars"
+    _NO_PADDING_NEEDED = True
 
     def __init__(
         self,
@@ -101,8 +102,8 @@ class Spans(
         return _spans
 
     def _set_layer_data(self, data: NDArray[np.number]):
-        _low = np.full_like(data[:, 0], self._low_lim)
-        _high = np.full_like(data[:, 0], self._high_lim)
+        _low = np.full((data.shape[0],), self._low_lim)
+        _high = np.full((data.shape[0],), self._high_lim)
         if self.orient.is_vertical:
             xxyy = data[:, 0], data[:, 1], _low, _high
             self._x_hint = data.min(), data.max()
@@ -144,8 +145,8 @@ class Spans(
 
     def _force_update_spans(self):
         x0, x1, y0, y1 = self._backend._plt_get_data()
-        _min_arr = np.full_like(x0, self._low_lim)
-        _max_arr = np.full_like(x0, self._high_lim)
+        _min_arr = np.full(x0.shape, self._low_lim)
+        _max_arr = np.full(x0.shape, self._high_lim)
         if self.orient.is_vertical:
             spans = x0, x1, _min_arr, _max_arr
         else:

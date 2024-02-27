@@ -159,7 +159,8 @@ class Texts(BokehLayer[bk_models.Text]):
         return np.stack([arr_color(c) for c in self._data.data["border_line_color"]])
 
     def _plt_set_edge_color(self, color):
-        self._model.border_line_color = hex_color(color)
+        color = as_color_array(color, len(self._data.data["text"]))
+        self._data.data["border_line_color"] = [hex_color(c) for c in color]
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
         return np.array(self._data.data["border_line_width"], dtype=np.float32)

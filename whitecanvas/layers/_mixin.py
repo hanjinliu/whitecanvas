@@ -76,14 +76,6 @@ class LayerNamespace(ABC, Generic[_L]):
         attrs = ",\n    ".join(f"{p}={getattr(self, p)!r}" for p in self._properties)
         p.text(f"{type(self).__name__}(\n    layer={self._layer!r}, {attrs}\n)")
 
-    def __get__(self, obj, owner) -> Self:
-        if obj is None:
-            return self
-        _id = id(obj)
-        if (ns := self._instances.get(_id, None)) is None:
-            ns = self._instances[_id] = self.__class__(obj)
-        return ns
-
     def _setattr(self, name: str, value: Any) -> None:
         raise AttributeError(f"Cannot set attribute {name!r} on {self!r}")
 

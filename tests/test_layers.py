@@ -3,8 +3,8 @@ import pytest
 
 from whitecanvas import new_canvas
 from whitecanvas.layers import Layer
-
-from ._utils import assert_color_equal, assert_color_array_equal
+from numpy.testing import assert_allclose
+from ._utils import assert_color_equal, assert_color_array_equal, filter_warning
 
 
 def _test_visibility(layer: Layer):
@@ -104,6 +104,12 @@ def test_bars(backend: str):
     assert layer.bar_width == 0.5
     _test_visibility(layer)
     canvas.autoscale()
+    assert_allclose(layer.data.x, np.arange(10), rtol=1e-6, atol=1e-6)
+    assert_allclose(layer.data.y, np.zeros(10), rtol=1e-6, atol=1e-6)
+    layer.data = np.arange(10), np.ones(10)
+    layer.bottom = np.arange(10) / 10
+    layer.top = np.arange(10) / 10 + 4
+    layer.as_edge_only()
 
 def test_infcurve(backend: str):
     canvas = new_canvas(backend=backend)
@@ -255,11 +261,18 @@ def test_texts(backend: str):
     assert np.all(layer.pos.y == np.zeros(10))
     layer.rotation = 10
     assert layer.rotation == 10
+    layer.color
     layer.color = "red"
+    layer.family
     layer.family = "Arial"
     canvas.autoscale()
     canvas.add_text(0, 0, "Hello, World!")
-
+    with filter_warning(backend, ["plotly", "vispy"]):
+        layer.with_face(color="red").with_edge(color="blue")
+        colors = ["red", "#00FF24"] * 5
+        layer.with_face_multi(color=colors).with_edge_multi(width=np.arange(10) / 4)
+    layer.data
+    layer.data = np.arange(10), np.zeros(10), list("abcdefghij")
 
 def test_with_text(backend: str):
     canvas = new_canvas(backend=backend)

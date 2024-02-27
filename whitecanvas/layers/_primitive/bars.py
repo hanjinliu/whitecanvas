@@ -127,10 +127,11 @@ class Bars(
 
     def _set_layer_data(self, data: XYData):
         x, height = data
+        w = self.bar_width / 2
         if self._orient.is_vertical:
-            self._backend._plt_set_data(x, height / 2, -height / 2)
+            self._backend._plt_set_data(x - w, x + w, height / 2, -height / 2)
         else:
-            self._backend._plt_set_data(-height / 2, height / 2, x)
+            self._backend._plt_set_data(-height / 2, height / 2, x - w, x + w)
         self._x_hint, self._y_hint = xyy_size_hint(x, height, height, self.orient)
 
     def set_data(

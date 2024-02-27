@@ -19,8 +19,6 @@ class Canvas:
         self._xaxis = Axis()
         self._yaxis = Axis()
         self._title = Title()
-        self._xlabel = Label()
-        self._ylabel = Label()
         self._xticks = Ticks()
         self._yticks = Ticks()
         self._aspect_ratio = None
@@ -40,10 +38,10 @@ class Canvas:
         return self._yaxis
 
     def _plt_get_xlabel(self):
-        return self._xlabel
+        return self._xaxis._label
 
     def _plt_get_ylabel(self):
-        return self._ylabel
+        return self._yaxis._label
 
     def _plt_get_xticks(self):
         return self._xticks
@@ -191,6 +189,7 @@ class Axis:
         self._limits = (0, 1)
         self._flipped = False
         self._color = np.array([0, 0, 0, 1], dtype=np.float32)
+        self._label = Label()
 
     def _plt_get_visible(self) -> bool:
         return self._visible
@@ -215,6 +214,9 @@ class Axis:
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         self._limits = limits
+
+    def _plt_set_grid_state(self, *args, **kwargs):
+        pass
 
 
 class Ticks(_SupportsText):

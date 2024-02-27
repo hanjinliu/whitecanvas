@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from whitecanvas.canvas import Canvas
 import pytest
 
 ALL_BACKENDS = ["mock", "matplotlib", "pyqtgraph", "plotly", "bokeh", "vispy"]
@@ -19,3 +20,6 @@ def backend(request: pytest.FixtureRequest):
     # TODO: how to skip tests if failed in mock backend?
     if request.param == "matplotlib":
         plt.close("all")
+    elif request.param == "pyqtgraph":
+        if Canvas._CURRENT_INSTANCE is not None:
+            Canvas._CURRENT_INSTANCE.native.update()

@@ -59,6 +59,8 @@ class Markers(visuals.Markers):
             return Symbol.DIAMOND
         elif sym == "-":
             return Symbol.HBAR
+        elif sym is None:
+            return Symbol.CIRCLE
         return Symbol(sym)
 
     def _plt_set_symbol(self, symbol: Symbol):

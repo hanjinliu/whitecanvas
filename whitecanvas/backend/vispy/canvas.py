@@ -91,7 +91,7 @@ class Canvas:
         self._viewbox.freeze()
 
     def _plt_get_native(self):
-        return self._viewbox.scene
+        return self._outer_viewbox
 
     def _plt_get_title(self):
         return self._title

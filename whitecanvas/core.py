@@ -175,13 +175,13 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
         if not isinstance(obj, Figure):
             raise TypeError(f"Expected plotly Figure, got {typ}")
         backend = "plotly"
-    elif _is_in_module(typ, "bokeh", "Plot"):
-        from bokeh.models import Plot
+    elif _is_in_module(typ, "bokeh", "figure"):
+        from bokeh.plotting import figure
 
         from whitecanvas.backend.bokeh import Canvas as BackendCanvas
 
-        if not isinstance(obj, Plot):
-            raise TypeError(f"Expected bokeh Plot, got {typ}")
+        if not isinstance(obj, figure):
+            raise TypeError(f"Expected bokeh figure, got {typ}")
         backend = "bokeh"
     elif _is_in_module(typ, "vispy", "ViewBox"):
         from vispy.scene import ViewBox
@@ -191,13 +191,13 @@ def wrap_canvas(obj: Any, palette=None) -> Canvas:
         if not isinstance(obj, ViewBox):
             raise TypeError(f"Expected vispy ViewBox, got {typ}")
         backend = "vispy"
-    elif _is_in_module(typ, "pyqtgraph", "ViewBox"):
-        from pyqtgraph import ViewBox
+    elif _is_in_module(typ, "pyqtgraph", "PlotItem"):
+        from pyqtgraph import PlotItem
 
         from whitecanvas.backend.pyqtgraph import Canvas as BackendCanvas
 
-        if not isinstance(obj, ViewBox):
-            raise TypeError(f"Expected pyqtgraph ViewBox, got {typ}")
+        if not isinstance(obj, PlotItem):
+            raise TypeError(f"Expected pyqtgraph PlotItem, got {typ}")
         backend = "pyqtgraph"
     else:
         raise TypeError(f"Cannot convert {typ} to Canvas")

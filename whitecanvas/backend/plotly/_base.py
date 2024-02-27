@@ -93,6 +93,15 @@ class Location:
             out["secondary_y"] = True
         return out
 
+    def asdictn(self):
+        out = {}
+        if self.row > 1 or self.col > 1:
+            out["rows"] = self.row
+            out["cols"] = self.col
+        if self.secondary_y:
+            out["secondary_y"] = True
+        return out
+
 
 _LINE_STYLES = {
     "solid": LineStyle.SOLID,

@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 
 import pytest
 import whitecanvas as wc
-from whitecanvas import new_canvas
+from whitecanvas import new_canvas, wrap_canvas
 
 from ._utils import assert_color_equal
 
@@ -20,6 +20,10 @@ def test_namespaces(backend: str):
     assert canvas.title.size == 20
     canvas.title.family = "Arial"
     assert canvas.title.family == "Arial"
+    canvas.title.visible = False
+    assert not canvas.title.visible
+    canvas.title.visible = True
+    assert canvas.title.visible
 
     canvas.x.label.text = "X-Label-0"
     assert canvas.x.label.text == "X-Label-0"
@@ -29,6 +33,10 @@ def test_namespaces(backend: str):
     assert canvas.x.label.size == 20
     canvas.x.label.family = "Arial"
     assert canvas.x.label.family == "Arial"
+    canvas.x.label.visible = False
+    assert not canvas.x.label.visible
+    canvas.x.label.visible = True
+    assert canvas.x.label.visible
 
     canvas.y.label.text = "Y-Label-0"
     assert canvas.y.label.text == "Y-Label-0"
@@ -38,6 +46,24 @@ def test_namespaces(backend: str):
     assert canvas.y.label.size == 20
     canvas.y.label.family = "Arial"
     assert canvas.y.label.family == "Arial"
+
+    if backend != "pyqtgraph":  # not implemented in pyqtgraph
+        canvas.x.ticks.rotation = 45
+        assert canvas.x.ticks.rotation == pytest.approx(45)
+
+    canvas.x.ticks.visible = False
+    assert not canvas.x.ticks.visible
+    canvas.x.ticks.visible = True
+    assert canvas.x.ticks.visible
+    canvas.x.ticks.set_labels([0, 1, 2], ["a", "b", "c"])
+
+    # get tick positions and labels are still hard to implement
+    if backend in ("mock", "pyqtgraph", "plotly"):
+        assert_allclose(canvas.x.ticks.pos, [0, 1, 2])
+        assert canvas.x.ticks.labels == ["a", "b", "c"]
+    canvas.x.ticks.reset_labels()
+
+    canvas.x.set_gridlines()
 
 def test_namespace_pointing_at_different_objects():
     c0 = new_canvas(backend="matplotlib")
@@ -53,12 +79,29 @@ def test_namespace_pointing_at_different_objects():
     assert_color_equal(c0.x.color, "red")
     assert_color_equal(c1.x.color, "blue")
 
+def test_update_methods():
+    canvas = new_canvas(backend="mock")
+    canvas.update_axes(visible=False)
+    canvas.update_labels(title="Title", x="X", y="Y")
+    canvas.update_font(size=24, color="red", family="Arial")
+
+def test_native_and_wrapping(backend: str):
+    canvas = new_canvas(backend=backend)
+    assert canvas.native is not None
+    if backend == "mock":
+        return
+    new = wrap_canvas(canvas.native)
+    repr(new._get_backend())
+    assert new._get_backend() == canvas._get_backend()
+
 def test_grid(backend: str):
     cgrid = wc.new_grid(2, 2, backend=backend).link_x().link_y()
     c00 = cgrid.add_canvas(0, 0)
     c01 = cgrid.add_canvas(0, 1)
     c10 = cgrid.add_canvas(1, 0)
     c11 = cgrid.add_canvas(1, 1)
+    assert cgrid[0, 0] is not cgrid[1, 0]
+    assert cgrid[0, 1] is not cgrid[1, 1]
 
     c00.add_line([0, 1, 2], [0, 1, 2])
     c01.add_hist([0, 1, 2, 3, 4, 3, 2, 1])
@@ -106,6 +149,7 @@ def test_vgrid_hgrid(backend: str):
     cgrid = wc.new_col(2, backend=backend, size=(100, 100)).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
+    assert cgrid[0] is not cgrid[1]
 
     c0.add_line([0, 1, 2], [0, 1, 2])
     c1.add_hist([0, 1, 2, 3, 4, 3, 2, 1])
@@ -119,6 +163,7 @@ def test_vgrid_hgrid(backend: str):
     cgrid = wc.new_row(2, backend=backend, size=(100, 100)).link_x().link_y()
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
+    assert cgrid[0] is not cgrid[1]
 
     c0.add_line([0, 1, 2], [0, 1, 2])
     c1.add_hist([0, 1, 2, 3, 4, 3, 2, 1])
@@ -144,6 +189,8 @@ def test_jointgrid(backend: str):
     rng = np.random.default_rng(0)
     joint = wc.new_jointgrid(backend=backend, size=(100, 100)).with_hist().with_kde().with_rug()
     joint.add_markers(rng.random(100), rng.random(100), color="red")
+    if backend != "vispy":
+        joint.add_legend()
 
 def test_legend(backend: str):
     if backend == "vispy":

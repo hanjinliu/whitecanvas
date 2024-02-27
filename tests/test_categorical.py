@@ -1,7 +1,7 @@
-import warnings
 import numpy as np
 
 from whitecanvas import new_canvas
+from whitecanvas.core import new_jointgrid
 from ._utils import assert_color_array_equal, filter_warning
 import pytest
 
@@ -33,6 +33,9 @@ def test_cat(backend: str):
     hist = cplt.along_y().add_hist(bins=6, color="label")
     cplt.along_x().add_kde()
     kde = cplt.along_x().add_kde(color="label")
+    cplt.along_x().add_rug()
+    with filter_warning(backend, "plotly"):
+        cplt.along_x().add_rug(color="label")
     hist.update_color("black")
     kde.update_color("black")
     hist.update_width(1.5)
@@ -105,6 +108,7 @@ def test_markers(backend: str):
     assert_color_array_equal(out._base_layer.face.color, "black")
 
     out = _c.add_markers(color="transparent").update_edge_colormap("size")
+    _c.mean_for_each("label0").add_markers(symbol="D")
 
 def test_heatmap(backend: str):
     canvas = new_canvas(backend=backend)
@@ -245,3 +249,36 @@ def test_stack(backend: str):
     cat_plt = canvas.cat_x(df, "label", "y", numeric_axis=True)
     cat_plt.stack("c").add_bars(color="c")
     cat_plt.stack("c").add_area(hatch="c")
+
+def test_joint_cat(backend: str):
+    joint = new_jointgrid(backend=backend, loc=(0, 0), size=(180, 180))
+    df = {
+        "x": np.arange(30),
+        "y": np.arange(30),
+        "c": np.repeat(["A", "B", "C"], 10),
+    }
+    joint.cat(df, "x", "y").add_hist2d()
+    joint.cat(df, "x", "y").add_markers(color="c")
+
+def test_pandas_and_polars():
+    import pandas as pd
+    import polars as pl
+
+    canvas = new_canvas(backend="mock")
+    _dict = {
+        "y": np.arange(30),
+        "label": np.repeat(["A", "B", "C"], 10),
+        "c": ["P", "Q"] * 15,
+    }
+    df_pd = pd.DataFrame(_dict)
+    df_pl = pl.DataFrame(_dict)
+
+    cat_pd = canvas.cat_x(df_pd, "label", "y")
+    cat_pl = canvas.cat_x(df_pl, "label", "y")
+    cat_pd.add_swarmplot(color="c")
+    cat_pd.mean().add_markers(color="c")
+    cat_pd.first().add_markers(color="c")
+
+    cat_pl.add_swarmplot(color="c")
+    cat_pl.mean().add_markers(color="c")
+    cat_pl.first().add_markers(color="c")

@@ -30,6 +30,7 @@ def test_line(backend: str):
     _test_visibility(layer)
     layer.with_hover_template("x={x:.2f}, y={y:.2f}")
     canvas.add_cdf(np.sqrt(np.arange(20)))
+    canvas.autoscale()
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
@@ -70,6 +71,7 @@ def test_markers(backend: str):
         layer.symbol = sym
         assert layer.symbol == sym
     _test_visibility(layer)
+    canvas.autoscale()
 
 def test_bars(backend: str):
     canvas = new_canvas(backend=backend)
@@ -101,6 +103,7 @@ def test_bars(backend: str):
     layer.bar_width = 0.5
     assert layer.bar_width == 0.5
     _test_visibility(layer)
+    canvas.autoscale()
 
 def test_infcurve(backend: str):
     canvas = new_canvas(backend=backend)
@@ -129,6 +132,9 @@ def test_infcurve(backend: str):
     canvas.x.lim = (-4, 4)
     layer.angle = 90
     canvas.x.lim = (-4, 4)
+    canvas.autoscale()
+    canvas.add_hline(1)
+    canvas.add_vline(1)
 
 def test_band(backend: str):
     canvas = new_canvas(backend=backend)
@@ -155,11 +161,13 @@ def test_band(backend: str):
     layer.edge.width = 2
     assert layer.edge.width == 2
     _test_visibility(layer)
+    canvas.autoscale()
 
 def test_image(backend: str):
     canvas = new_canvas(backend=backend)
 
-    layer = canvas.add_image(np.random.random((10, 10)) * 2)
+    rng = np.random.default_rng(0)
+    layer = canvas.add_image(rng.random((10, 10)) * 2)
 
     layer.cmap = "viridis"
     assert layer.cmap == "viridis"
@@ -173,6 +181,8 @@ def test_image(backend: str):
     layer.origin = "edge"
     layer.shift = (-1, -1)
     layer.fit_to(2, 2, 5, 5)
+    canvas.autoscale()
+    canvas.add_heatmap(rng.random((10, 10)))
 
 def test_errorbars(backend: str):
     canvas = new_canvas(backend=backend)
@@ -196,6 +206,7 @@ def test_errorbars(backend: str):
     layer.width = 3
     assert all(w == 3 for w in layer.width)
     _test_visibility(layer)
+    canvas.autoscale()
 
 def test_texts(backend: str):
     canvas = new_canvas(backend=backend)
@@ -246,6 +257,8 @@ def test_texts(backend: str):
     assert layer.rotation == 10
     layer.color = "red"
     layer.family = "Arial"
+    canvas.autoscale()
+    canvas.add_text(0, 0, "Hello, World!")
 
 
 def test_with_text(backend: str):
@@ -270,6 +283,7 @@ def test_with_text(backend: str):
     canvas.add_bars(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
     canvas.add_bars(x, y).with_xerr(y/4).with_text("{x:1f}, {y:1f},")
     canvas.add_bars(x, y).with_yerr(y/4).with_text("{x:1f}, {y:1f}")
+    canvas.autoscale()
 
 def test_rug(backend: str):
     canvas = new_canvas(backend=backend)
@@ -289,6 +303,7 @@ def test_rug(backend: str):
     layer.high = 1.5
     assert np.allclose(layer.low, 0.5)
     assert np.allclose(layer.high, 1.5)
+    canvas.autoscale(xpad=(0.01, 0.02), ypad=(0.01, 0.02))
 
 
 def test_spans(backend: str):
@@ -308,3 +323,4 @@ def test_spans(backend: str):
 
     if backend != "vispy":
         canvas.add_legend()
+    canvas.autoscale(xpad=0.01, ypad=0.01)

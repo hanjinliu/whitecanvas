@@ -211,7 +211,7 @@ class Canvas:
                     sample.name = label
                     plotly_traces.append(sample)
         legend_kwargs = _LEGEND_KWARGS[anchor]
-        self._fig.add_traces(plotly_traces, **self._loc.asdict())
+        self._fig.add_traces(plotly_traces, **self._loc.asdictn())
         self._fig.update_layout(showlegend=True, legend=legend_kwargs, overwrite=True)
 
     def _repr_mimebundle_(self, *args, **kwargs):

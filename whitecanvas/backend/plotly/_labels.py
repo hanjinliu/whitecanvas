@@ -137,7 +137,7 @@ class Ticks(_CanvasComponent):
     def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
         return (
             self._plt_get_axis().tickvals,
-            self._plt_get_axis().ticktext,
+            list(self._plt_get_axis().ticktext),
         )
 
     def _plt_override_labels(self, pos: list[float], labels: list[str]):

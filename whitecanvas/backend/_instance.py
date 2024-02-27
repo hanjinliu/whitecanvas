@@ -46,6 +46,11 @@ class Backend:
     def __repr__(self) -> str:
         return f"<Backend {self._name!r} (app: {self._app!r})>"
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Backend):
+            return False
+        return self._name == other._name and self._app == other._app
+
     @property
     def name(self) -> str:
         """Name of the backend."""

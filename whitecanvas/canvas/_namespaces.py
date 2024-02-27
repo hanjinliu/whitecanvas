@@ -9,7 +9,7 @@ from psygnal import Signal, SignalGroup
 
 from whitecanvas import protocols
 from whitecanvas._exceptions import ReferenceDeletedError
-from whitecanvas.types import AxisScale, ColorType, LineStyle
+from whitecanvas.types import ColorType, LineStyle
 from whitecanvas.utils.normalize import arr_color
 
 if TYPE_CHECKING:
@@ -269,7 +269,6 @@ class AxisNamespace(Namespace):
         super().__init__(canvas)
         self.events = AxisSignals()
         self._flipped = False
-        self._scale = AxisScale.LINEAR
 
     def _get_object(self) -> protocols.AxisProtocol:
         raise NotImplementedError
@@ -319,49 +318,16 @@ class AxisNamespace(Namespace):
 
     def set_gridlines(
         self,
-        *,
         visible: bool = True,
         color: ColorType = "gray",
         width: float = 1.0,
         style: str | LineStyle = LineStyle.SOLID,
     ):
-        """
-        Update the properties of grid lines for the axis.
-
-        Parameters
-        ----------
-        visible : bool, default True
-            Whether to show the grid lines.
-        color : color, default "gray"
-            The color of the grid lines.
-        width : float, default 1.0
-            The width of the grid lines.
-        style : str or LineStyle, default "solid"
-            The style of the grid lines.
-        """
         color = arr_color(color)
         style = LineStyle(style)
         if width < 0:
             raise ValueError("width must be non-negative.")
         self._get_object()._plt_set_grid_state(visible, color, width, style)
-
-    @property
-    def scale(self) -> AxisScale:
-        """Scale (linear or log) of the axis."""
-        return self._scale
-
-    @scale.setter
-    def scale(self, scale):
-        scale = AxisScale(scale)
-        if scale is AxisScale.LOG:
-            _min, _max = self.lim
-            if _min <= 0:
-                if _max <= 0:
-                    self.lim = (0.01, 1)  # default limits
-                else:
-                    self.lim = (_max / 100, _max)
-        self._get_object()._plt_set_scale(scale)
-        self._scale = scale
 
 
 class XAxisNamespace(AxisNamespace):

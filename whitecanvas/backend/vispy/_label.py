@@ -7,7 +7,7 @@ import numpy as np
 from vispy import scene
 from vispy.visuals.axis import AxisVisual, Ticker
 
-from whitecanvas.types import AxisScale, LineStyle
+from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
     from vispy.visuals import LineVisual, TextVisual
@@ -107,15 +107,6 @@ class Axis(scene.AxisWidget):
         # else:
         #     self._canvas()._gridlines.visible = False
         pass  # TODO: implement this
-
-    def _plt_set_scale(self, scale: AxisScale):
-        if scale is AxisScale.LINEAR:
-            self.axis.scale_type = "linear"
-        elif scale is AxisScale.LOG:
-            # NOTE: not implemented on vispy side yet
-            self.axis.scale_type = "logarithmic"
-        else:
-            raise ValueError(f"Invalid scale: {scale}")
 
 
 class Ticks:

@@ -8,7 +8,7 @@ from bokeh.models import FactorRange
 from cmap import Color
 
 from whitecanvas.backend.bokeh._base import to_bokeh_line_style
-from whitecanvas.types import AxisScale, LineStyle
+from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
     from bokeh.models import Axis as BokehAxis
@@ -93,9 +93,6 @@ class Axis(_CanvasComponent):
 
     def _plt_set_color(self, color):
         self._plt_get_axis().axis_label_text_color = Color(color).hex
-
-    def _plt_set_scale(self, scale: AxisScale) -> None:
-        raise NotImplementedError("Bokeh does not support dynamically changing scale.")
 
 
 class Label(_CanvasComponent):

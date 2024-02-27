@@ -8,7 +8,6 @@ from whitecanvas.types._alias import (
 )
 from whitecanvas.types._enums import (
     Alignment,
-    AxisScale,
     Hatch,
     HistogramKind,
     HistogramShape,
@@ -45,7 +44,6 @@ __all__ = [
     "MouseEvent",
     "MouseEventType",
     "Alignment",
-    "AxisScale",
     "XYData",
     "XYYData",
     "XYTextData",

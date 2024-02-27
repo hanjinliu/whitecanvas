@@ -4,8 +4,9 @@ import weakref
 from typing import TYPE_CHECKING
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import AutoLocator, AutoMinorLocator
 
-from whitecanvas.types import AxisScale, LineStyle
+from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
     from whitecanvas.backend.matplotlib.canvas import Canvas
@@ -286,15 +287,6 @@ class XAxis(AxisBase):
             linewidth=width,
         )
 
-    def _plt_set_scale(self, scale: AxisScale):
-        if scale is AxisScale.LINEAR:
-            self._canvas()._axes.set_xscale("linear")
-        elif scale is AxisScale.LOG:
-            self._canvas()._axes.set_xscale("log")
-        else:
-            raise ValueError(f"Invalid scale: {scale}")
-        self._canvas()._plt_draw()
-
 
 class YAxis(AxisBase):
     def __init__(self, canvas: Canvas):
@@ -334,12 +326,3 @@ class YAxis(AxisBase):
             linestyle=style.value,
             linewidth=width,
         )
-
-    def _plt_set_scale(self, scale: AxisScale):
-        if scale is AxisScale.LINEAR:
-            self._canvas()._axes.set_yscale("linear")
-        elif scale is AxisScale.LOG:
-            self._canvas()._axes.set_yscale("log")
-        else:
-            raise ValueError(f"Invalid scale: {scale}")
-        self._canvas()._plt_draw()

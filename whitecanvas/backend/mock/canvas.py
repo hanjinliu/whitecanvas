@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
+from psygnal import Signal
 
 from whitecanvas import protocols
 from whitecanvas.types import MouseEvent, Rect
@@ -71,10 +72,34 @@ class Canvas:
         self._visible = visible
 
     def _plt_twinx(self) -> Canvas:
-        return Canvas()
+        new = Canvas()
+
+        @new._xaxis.lim_changed.connect
+        def _(lims):
+            with self._xaxis.lim_changed.blocked():
+                self._xaxis._plt_set_limits(lims)
+
+        @self._xaxis.lim_changed.connect
+        def _(lims):
+            with new._xaxis.lim_changed.blocked():
+                new._xaxis._plt_set_limits(lims)
+
+        return new
 
     def _plt_twiny(self) -> Canvas:
-        return Canvas()
+        new = Canvas()
+
+        @new._yaxis.lim_changed.connect
+        def _(lims):
+            with self._yaxis.lim_changed.blocked():
+                self._yaxis._plt_set_limits(lims)
+
+        @self._yaxis.lim_changed.connect
+        def _(lims):
+            with new._yaxis.lim_changed.blocked():
+                new._yaxis._plt_set_limits(lims)
+
+        return new
 
     def _plt_inset(self, rect: Rect) -> Canvas:
         return Canvas()
@@ -97,12 +122,12 @@ class Canvas:
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        pass
+        self._xaxis.lim_changed.connect(callback)
 
     def _plt_connect_ylim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        pass
+        self._yaxis.lim_changed.connect(callback)
 
     def _plt_make_legend(self, *args, **kwargs):
         pass
@@ -184,6 +209,8 @@ class Label(_SupportsText):
 
 
 class Axis:
+    lim_changed = Signal(tuple)
+
     def __init__(self):
         self._visible = True
         self._limits = (0, 1)
@@ -214,6 +241,7 @@ class Axis:
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         self._limits = limits
+        self.lim_changed.emit(limits)
 
     def _plt_set_grid_state(self, *args, **kwargs):
         pass

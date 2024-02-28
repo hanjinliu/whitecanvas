@@ -7,11 +7,14 @@ import pytest
 import whitecanvas as wc
 from whitecanvas import new_canvas, wrap_canvas
 
-from ._utils import assert_color_equal
+from ._utils import assert_color_equal, filter_warning
 
 
 def test_namespaces(backend: str):
     canvas = new_canvas(backend=backend)
+    canvas.aspect_ratio = 1
+    assert canvas.aspect_ratio == 1
+
     canvas.title.text = "Title-0"
     assert canvas.title.text == "Title-0"
     canvas.title.color = "red"
@@ -102,6 +105,9 @@ def test_grid(backend: str):
     c11 = cgrid.add_canvas(1, 1)
     assert cgrid[0, 0] is not cgrid[1, 0]
     assert cgrid[0, 1] is not cgrid[1, 1]
+    assert cgrid[0, 1].visible
+    with filter_warning(backend, "plotly"):
+        cgrid[0, 1].visible = False
 
     c00.add_line([0, 1, 2], [0, 1, 2])
     c01.add_hist([0, 1, 2, 3, 4, 3, 2, 1])
@@ -221,6 +227,17 @@ def test_animation():
         anim.save(Path(tmpdir) / "test.gif")
     assert anim.asarray().ndim == 4
 
+def test_layer_handling(backend: str):
+    canvas = new_canvas(backend=backend)
+    canvas.add_line([0, 1, 2], name="l_0")
+    canvas.add_markers([0, 1, 2], name="l_1").with_xerr([0.1, 0.1, 0.1])
+    repr(canvas.layers)
+    assert canvas.layers[0].name == "l_0"
+    assert canvas.layers[0] is canvas.layers["l_0"]
+    canvas.layers.move(1, 0)
+    canvas.layers.pop()
+    canvas.layers.pop()
+
 def test_multidim():
     canvas = new_canvas(backend="matplotlib")
     x = np.arange(5)
@@ -233,3 +250,42 @@ def test_multidim():
     canvas.dims.add_text(x, ys, ["a", "b", "c", "d", "e"])
     img = np.zeros((2, 5, 5))
     canvas.dims.add_image(img)
+
+def test_multidim_slider():
+    # TODO: how to test other app backends?
+    canvas = new_canvas(backend="matplotlib:qt")
+    x = np.arange(5)
+    ys = [x, x ** 2, x ** 3]
+    canvas.dims.add_line(x, ys)
+    slider = canvas.dims.create_widget()
+    slider._emit_changed()
+
+def test_second_x(backend: str):
+    if backend in ("vispy", "plotly", "bokeh"):
+        pytest.skip(f"{backend} does not support second_x")
+    canvas = new_canvas(backend=backend)
+    other = canvas.install_second_x()
+    canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
+    other.add_line([0, 1, 2], [0, 1, 2], name="line")
+    canvas.y.lim = (0, 2)
+    assert canvas.y.lim == pytest.approx((0, 2))
+    assert other.y.lim == pytest.approx((0, 2))
+
+def test_second_y(backend: str):
+    if backend in ("vispy",):
+        pytest.skip(f"{backend} does not support second_y")
+    canvas = new_canvas(backend=backend)
+    other = canvas.install_second_y()
+    canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
+    other.add_line([0, 1, 2], [0, 1, 2], name="line")
+    canvas.x.lim = (0, 2)
+    assert canvas.x.lim == pytest.approx((0, 2))
+    assert other.x.lim == pytest.approx((0, 2))
+
+def test_inset(backend: str):
+    if backend not in ("matplotlib",):
+        pytest.skip("inset is only supported in matplotlib")
+    canvas = new_canvas(backend=backend)
+    inset = canvas.install_inset((0.5, 0.96, 0.6, 0.96))
+    canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
+    inset.add_line([0, 1, 2], [0, 1, 2], name="line")

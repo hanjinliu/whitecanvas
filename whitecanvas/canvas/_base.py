@@ -238,12 +238,28 @@ class CanvasBase(ABC):
         self.y.lim = ymin, ymax
         return xmin, xmax, ymin, ymax
 
+    def install_second_x(
+        self,
+        *,
+        palette: ColormapType | None = None,
+    ) -> Canvas:
+        """Create a twin canvas that has a secondary x-axis and shared y-axis."""
+        try:
+            new = self._canvas()._plt_twiny()
+        except AttributeError:
+            raise NotImplementedError(
+                f"Backend {self._get_backend()} does not support `install_second_x`."
+            ) from None
+        canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
+        canvas._init_canvas()
+        return canvas
+
     def install_second_y(
         self,
         *,
         palette: ColormapType | None = None,
     ) -> Canvas:
-        """Create a twin canvas that share one of the axis."""
+        """Create a twin canvas that has a secondary y-axis and shared x-axis."""
         try:
             new = self._canvas()._plt_twinx()
         except AttributeError:

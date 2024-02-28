@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import warnings
 import weakref
 from typing import TYPE_CHECKING, Callable
 
@@ -119,18 +120,26 @@ class Canvas:
 
     def _plt_remove_layer(self, layer: PlotlyLayer):
         """Remove layer from the canvas"""
-        self._fig._data.remove(layer._props)
+        # self._fig._data.remove(layer._props)
+        for i, trace in enumerate(self._fig.data):
+            if trace["uid"] == layer._props.uid:
+                self._fig.data = [*self._fig.data[:i], *self._fig.data[i + 1 :]]
+                break
+        else:
+            raise ValueError(f"Layer {layer._props} not found")
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""
-        return self._fig.layout.visibility == "visible"
+        return True
 
     def _plt_set_visible(self, visible: bool):
         """Set visibility of canvas"""
-        if visible:
-            self._fig.layout.visibility = "visible"
-        else:
-            self._fig.layout.visibility = "hidden"
+        if not visible:
+            warnings.warn(
+                "Plotly backend does not support hiding canvas",
+                UserWarning,
+                stacklevel=2,
+            )
 
     def _plt_connect_xlim_changed(self, callback):
         propname = f"{self._xaxis.name}.range"

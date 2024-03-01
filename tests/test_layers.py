@@ -27,9 +27,20 @@ def test_line(backend: str):
     layer.width
     layer.width = 2
     assert layer.width == 2
+    with pytest.raises(ValueError):
+        layer.width = -1
+    with pytest.raises(TypeError):
+        layer.width = [0, 1]
+    with pytest.raises(ValueError):
+        layer.data = np.zeros((2, 2, 5))  # 3D data
+    with pytest.raises(ValueError):
+        layer.data = np.arange(5), np.arange(6)  # shape mismatch
     _test_visibility(layer)
     layer.with_hover_template("x={x:.2f}, y={y:.2f}")
+    layer.alpha = 0.5
+    layer.alpha
     canvas.add_cdf(np.sqrt(np.arange(20)))
+    canvas.add_cdf(np.sqrt(np.arange(20)), orient="horizontal")
     canvas.autoscale()
 
 def test_markers(backend: str):
@@ -71,6 +82,7 @@ def test_markers(backend: str):
         layer.symbol = sym
         assert layer.symbol == sym
     _test_visibility(layer)
+    layer.data = np.array([[0, 0], [1, 1], [2, 2]])
     canvas.autoscale()
 
 def test_bars(backend: str):
@@ -124,6 +136,9 @@ def test_infcurve(backend: str):
     assert layer.width == 2
     _test_visibility(layer)
     layer.with_hover_text("y=sin(x/5)")
+    with pytest.raises(TypeError):
+        layer.with_hover_text(["x", "y"])
+    canvas.layers.remove(layer)  # test disconnection
 
     layer = canvas.add_infcurve(
         lambda arr, a: np.sin(arr / a)
@@ -135,10 +150,14 @@ def test_infcurve(backend: str):
     assert layer.pos == (2, 2)
     layer.angle = 45
     assert layer.angle == pytest.approx(45)
+    
+    layer.with_hover_text("y=sin(x/5)")
     canvas.x.lim = (-4, 4)
     layer.angle = 90
+    assert layer.angle == 90
     canvas.x.lim = (-4, 4)
     canvas.autoscale()
+    canvas.layers.remove(layer)  # test disconnection
     canvas.add_hline(1)
     canvas.add_vline(1)
 
@@ -201,6 +220,8 @@ def test_errorbars(backend: str):
     assert all(s == ":" for s in layer.style)
     layer.width = 2
     assert all(w == 2 for w in layer.width)
+    layer.alpha = 0.5
+    layer.alpha
     _test_visibility(layer)
 
     layer = canvas.add_errorbars(np.arange(10), np.zeros(10), np.ones(10), capsize=0.2)
@@ -237,6 +258,7 @@ def test_texts(backend: str):
 
     assert layer.ndata == 10
     assert layer.string == list("abcdefghij")
+    layer.string = "input-const-text"
     layer.string = list("ABCDEFGHIJ")
     assert layer.string == list("ABCDEFGHIJ")
     layer.face.color
@@ -273,6 +295,7 @@ def test_texts(backend: str):
         layer.with_face_multi(color=colors).with_edge_multi(width=np.arange(10) / 4)
     layer.data
     layer.data = np.arange(10), np.zeros(10), list("abcdefghij")
+    layer.set_pos(x=np.arange(10) * 2)
 
 def test_with_text(backend: str):
     canvas = new_canvas(backend=backend)
@@ -316,6 +339,12 @@ def test_rug(backend: str):
     layer.high = 1.5
     assert np.allclose(layer.low, 0.5)
     assert np.allclose(layer.high, 1.5)
+    layer.update_length(2.0, align="low")
+    layer.update_length(np.arange(10) / 5 + 1, align="high")
+    layer.update_length(2.0, align="center")
+    layer.data = np.random.default_rng(0).normal(size=10)
+    layer.color_by_density()
+    layer.scale_by_density()
     canvas.autoscale(xpad=(0.01, 0.02), ypad=(0.01, 0.02))
 
 

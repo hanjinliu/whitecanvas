@@ -47,23 +47,25 @@ def test_bar_err_text(backend: str):
 
 def test_stem(backend: str):
     canvas = new_canvas(backend=backend)
-    layer = canvas.add_markers(
-        np.arange(10), np.arange(10) * 2
-    ).with_stem()
+    x, y = np.arange(10), np.arange(10) * 2
+    layer = canvas.add_markers(x, y).with_stem(bottom=0.1)
+    layer = canvas.add_markers(x, y).with_stem(orient="horizontal")
     assert_array_equal(layer.data.x, np.arange(10))
     assert_allclose(layer.data.y, np.arange(10) * 2, atol=1e-6)
-    assert len(canvas.layers) == 1
+    assert len(canvas.layers) == 2
 
 def test_network(backend: str):
     canvas = new_canvas(backend=backend)
-    layer = canvas.add_markers(
-        np.arange(10), np.arange(10) * 2
-    ).with_network([[0, 1], [0, 2], [1, 3]])
+    layer = (
+        canvas.add_markers(np.arange(10), np.arange(10) * 2)
+        .with_network([[0, 1], [0, 2], [1, 3]])
+        .with_text_offset(0.1, 0.1)
+    )
     assert_array_equal(layer.nodes.data.x, np.arange(10))
     assert_array_equal(layer.nodes.data.y, np.arange(10) * 2)
     assert len(canvas.layers) == 1
 
 def test_line_fill(backend: str):
     canvas = new_canvas(backend=backend)
-    layer = canvas.add_line([-1.5, -1, 0, 1, 1.5]).with_yfill()
-    layer = canvas.add_line([-1.5, -1, 0, 1, 1.5], [0, 0, 0, 0, 0]).with_yfill()
+    canvas.add_line([-1.5, -1, 0, 1, 1.5]).with_yfill()
+    canvas.add_line([-1.5, -1, 0, 1, 1.5], [0, 0, 0, 0, 0]).with_xfill()

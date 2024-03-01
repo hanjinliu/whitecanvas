@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 
 import warnings
 import weakref
@@ -202,6 +203,15 @@ class Canvas:
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
     def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
+        if app == "qt":  # pragma: no cover
+            if "PyQt5" in sys.modules:
+                app = "qt5"
+            elif "PyQt6" in sys.modules:
+                app = "qt6"
+            elif "PyQt4" in sys.modules:
+                app = "qt4"
+            else:
+                raise ValueError("No Qt bindings found.")
         if app != "default":
             vispy_use(_APP_NAMES.get(app, app))
         self._scene = SceneCanvasExt(keys="interactive")
@@ -243,7 +253,6 @@ _APP_NAMES = {
     "qt4": "pyqt4",
     "qt5": "pyqt5",
     "qt6": "pyqt6",
-    "qt": "pyqt5",
     "tk": "tkinter",
     "notebook": "jupyter_rfb",
 }

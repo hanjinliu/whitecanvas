@@ -116,15 +116,15 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     def pos(self, pos: tuple[ArrayLike1D, ArrayLike1D]):
         return self.set_pos(*pos)
 
-    def set_pos(self, xpos: ArrayLike1D, ypos: ArrayLike1D):
+    def set_pos(self, x: ArrayLike1D | None = None, y: ArrayLike1D | None = None):
         """Set the position of the text."""
-        if xpos is None or ypos is None:
+        if x is None or y is None:
             x0, y0 = self.pos
-            if xpos is None:
-                xpos = x0
-            if ypos is None:
-                ypos = y0
-        xdata, ydata = normalize_xy(xpos, ypos)
+            if x is None:
+                x = x0
+            if y is None:
+                y = y0
+        xdata, ydata = normalize_xy(x, y)
         if xdata.size != self.ndata:
             raise ValueError(
                 f"Length of x ({xdata.size}) and y ({ydata.size}) must be equal "

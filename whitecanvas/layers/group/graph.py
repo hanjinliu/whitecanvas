@@ -65,6 +65,7 @@ class Graph(LayerContainer):
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(data.x + xoff, data.y + yoff)
         self._text_offset = _offset
+        return self
 
     add_text_offset = with_text_offset
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Any, Generic, Sequence, TypeVar
 
 import numpy as np
@@ -56,17 +55,6 @@ class MarkersLayerEvents(FaceEdgeMixinEvents):
     symbol = Signal(Symbol)
     size = Signal(float)
 
-    @property
-    def picked(self):
-        """Deprecated. Use `clicked` instead."""
-        warnings.warn(
-            "The `picked` event is deprecated and will be removed in the future. "
-            "Use `clicked` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.clicked
-
 
 class Markers(
     HoverableDataBoundLayer[MarkersProtocol, XYData],
@@ -108,13 +96,6 @@ class Markers(
 
         self._backend._plt_connect_pick_event(self.events.clicked.emit)
         self._init_events()
-
-    @classmethod
-    def empty(
-        cls, backend: Backend | str | None = None
-    ) -> Markers[ConstFace, ConstEdge, float]:
-        """Return an empty markers layer."""
-        return cls([], [], backend=backend)
 
     @property
     def ndata(self) -> int:

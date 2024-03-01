@@ -39,12 +39,33 @@ class Markers(visuals.Markers):
         return data[:, 0], data[:, 1]
 
     def _plt_set_data(self, xdata, ydata):
+        ndata = self._plt_get_ndata()
+        size = self._plt_get_symbol_size()
+        edge_width = self._plt_get_edge_width()
+        face_color = self._plt_get_face_color()
+        edge_color = self._plt_get_edge_color()
+        if xdata.size > ndata:
+            size = np.concatenate([size, np.full(xdata.size - ndata, size[-1])])
+            edge_width = np.concatenate(
+                [edge_width, np.full(xdata.size - ndata, edge_width[-1])]
+            )
+            face_color = np.concatenate(
+                [face_color, np.full((xdata.size - ndata, 4), face_color[-1])]
+            )
+            edge_color = np.concatenate(
+                [edge_color, np.full((xdata.size - ndata, 4), edge_color[-1])]
+            )
+        elif xdata.size < ndata:
+            size = size[: xdata.size]
+            edge_width = edge_width[: xdata.size]
+            face_color = face_color[: xdata.size]
+            edge_color = edge_color[: xdata.size]
         self.set_data(
             pos=np.stack([xdata, ydata], axis=1),
-            size=self._plt_get_symbol_size(),
-            edge_width=self._plt_get_edge_width(),
-            face_color=self._plt_get_face_color(),
-            edge_color=self._plt_get_edge_color(),
+            size=size,
+            edge_width=edge_width,
+            face_color=face_color,
+            edge_color=edge_color,
             symbol=self._plt_get_symbol(),
         )
 

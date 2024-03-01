@@ -1173,13 +1173,21 @@
     <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">130</span><span class="p">),</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>To use categorical columns for both x- and y-axis, aggregation is required.</p>
+<p>To use categorical columns for both x- and y-axis, aggregation is required. The most
+basic way to visualize the data is to use a heatmap.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">cat_xy</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">add_heatmap</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/cat_cat_heatmap.png" width="360px" /></p>
+<p>You can also visualize the data using marker sizes.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">cat_xy</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/cat_cat_markers.png" width="360px" /></p>
 
 
 

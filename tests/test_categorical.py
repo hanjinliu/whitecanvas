@@ -110,7 +110,7 @@ def test_markers(backend: str):
     out = _c.add_markers(color="transparent").update_edge_colormap("size")
     _c.mean_for_each("label0").add_markers(symbol="D")
 
-def test_heatmap(backend: str):
+def test_cat_xy(backend: str):
     canvas = new_canvas(backend=backend)
     df = {
         "x": ["A", "B", "A", "B", "A", "B"],
@@ -128,8 +128,12 @@ def test_heatmap(backend: str):
     im = canvas.cat_xy(df, "x", "y").mean().add_heatmap(value="z", fill=-1)
     canvas.imref(im).add_text(fmt=".1f")
     assert im.clim == (1.1, 6.6)
+
+    canvas.cat_xy(df, "x", "y").first().add_markers(value="z")
+
     if backend != "vispy":
         canvas.add_legend()
+
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_agg(backend: str, orient: str):

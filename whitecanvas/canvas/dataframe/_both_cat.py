@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-from typing import (
-    TYPE_CHECKING,
-    Generic,
-    Sequence,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
 
 import numpy as np
 
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
+from whitecanvas.layers.tabular import _jitter
 from whitecanvas.types import ColormapType
 
 if TYPE_CHECKING:
@@ -155,10 +151,9 @@ class XYCatAggPlotter(BaseCatPlotter[_C, _DF]):
             Dataframe bound heatmap layer.
         """
         canvas = self._canvas()
-        df = self._df
         by_both = (*self._x, *self._y)
         nx = len(self._x)
-        df_agg = self._aggregate(df, by_both, value)
+        df_agg = self._aggregate(self._df, by_both, value)
         map_x = self._cat_iter_x.prep_position_map(self._x)
         map_y = self._cat_iter_y.prep_position_map(self._y)
         dtype = df_agg[value].dtype
@@ -179,6 +174,50 @@ class XYCatAggPlotter(BaseCatPlotter[_C, _DF]):
             df_agg, arr, name=name, cmap=cmap, clim=clim, backend=canvas._get_backend(),
         )  # fmt: skip
         return canvas.add_layer(layer)
+
+    def add_markers(
+        self,
+        value: str,
+        *,
+        color: NStr | None = None,
+        name: str | None = None,
+        map_from: tuple[float, float] | None = None,
+        map_to: tuple[float, float] = (3, 18),
+    ) -> _lt.DFMarkerGroups[_DF]:
+        """
+        Add markers at the grid positions with the size representing the value.
+
+        >>> canvas.cat_xy(df, "x", "y").count().add_markers("value")
+
+        Parameters
+        ----------
+        value : str
+            Column name to use as the value.
+        color : str or sequence of str, optional
+            Column name(s) to use as the color of the markers.
+        name : str, optional
+            Name of the layer.
+        map_from : tuple of float, optional
+            Limits of values that will be linearly mapped to the marker size. Data
+            points outside this range will be clipped. If not specified, the min/max
+            of the data will be used.
+        map_to : tuple of float, optional
+            Minimum and maximum size of the markers.
+
+        Returns
+        -------
+        _lt.DFMarkerGroups[_DF]
+            _description_
+        """
+        canvas = self._canvas()
+        x, y = self._x, self._y
+        xj = _jitter.CategoricalJitter(x, self._cat_iter_x.prep_position_map(x))
+        yj = _jitter.CategoricalJitter(y, self._cat_iter_y.prep_position_map(y))
+        return canvas.add_layer(
+            _lt.DFMarkers(self._df, xj, yj, color=color, name=name).update_size(
+                value, map_from=map_from, map_to=map_to
+            )
+        )
 
     def _aggregate(
         self,

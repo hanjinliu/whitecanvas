@@ -15,7 +15,8 @@ df = {
 }
 ```
 
-To use categorical columns for both x- and y-axis, aggregation is required.
+To use categorical columns for both x- and y-axis, aggregation is required. The most
+basic way to visualize the data is to use a heatmap.
 
 ``` python
 #!name: cat_cat_heatmap
@@ -23,4 +24,14 @@ from whitecanvas import new_canvas
 
 canvas = new_canvas("matplotlib")
 canvas.cat_xy(df, x="x", y="y").mean().add_heatmap("value")
+```
+
+You can also visualize the data using marker sizes.
+
+``` python
+#!name: cat_cat_markers
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+canvas.cat_xy(df, x="x", y="y").mean().add_markers("value")
 ```

@@ -29,6 +29,7 @@ nav:
     - Canvas Grid: canvas/grid.md
     - Joint Grid: canvas/joint_grid.md
     - Legend for the Layers: canvas/legend.md
+    - Inset and Secondary Axis: canvas/inset_second.md
     - Working with the Backend Objects: canvas/native_objects.md
   - Layers:
     - Overview: layers/index.md

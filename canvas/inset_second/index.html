@@ -11,22 +11,22 @@
       
       
       
-        <link rel="prev" href="../categorical/stacking/">
+        <link rel="prev" href="../legend/">
       
       
-        <link rel="next" href="canvas_events/">
+        <link rel="next" href="../native_objects/">
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.2">
     
     
       
-        <title>Overview - whitecanvas</title>
+        <title>Inset and Secondary Axis - whitecanvas</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.50c56a3b.min.css">
       
       
 
@@ -45,9 +45,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#event-handling" class="md-skip">
+        <a href="#inset-and-secondary-axis" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="whitecanvas" class="md-header__button md-logo" aria-label="whitecanvas" data-md-component="logo">
+    <a href="../.." title="whitecanvas" class="md-header__button md-logo" aria-label="whitecanvas" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Inset and Secondary Axis
             
           </span>
         </div>
@@ -196,7 +196,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="whitecanvas" class="md-nav__button md-logo" aria-label="whitecanvas" data-md-component="logo">
+    <a href="../.." title="whitecanvas" class="md-nav__button md-logo" aria-label="whitecanvas" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -226,7 +226,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -246,7 +246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../quick_start/" class="md-nav__link">
+      <a href="../../quick_start/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -263,6 +263,8 @@
       
   
   
+    
+  
   
   
     
@@ -293,17 +295,17 @@
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../canvas/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -320,7 +322,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Canvas
@@ -336,7 +338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas/basics/" class="md-nav__link">
+      <a href="../basics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -357,7 +359,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas/namespaces/" class="md-nav__link">
+      <a href="../namespaces/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -378,7 +380,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas/grid/" class="md-nav__link">
+      <a href="../grid/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -399,7 +401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas/joint_grid/" class="md-nav__link">
+      <a href="../joint_grid/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -420,7 +422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas/legend/" class="md-nav__link">
+      <a href="../legend/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -438,10 +440,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../canvas/inset_second/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Inset and Secondary Axis
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -450,6 +472,44 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inset-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inset Plot
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secondary-axis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Secondary Axis
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -462,7 +522,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas/native_objects/" class="md-nav__link">
+      <a href="../native_objects/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -527,7 +587,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../layers/" class="md-nav__link ">
+            <a href="../../layers/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -560,7 +620,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../layers/lines/" class="md-nav__link">
+      <a href="../../layers/lines/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -581,7 +641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../layers/markers/" class="md-nav__link">
+      <a href="../../layers/markers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -602,7 +662,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../layers/distribution/" class="md-nav__link">
+      <a href="../../layers/distribution/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -623,7 +683,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../layers/texts/" class="md-nav__link">
+      <a href="../../layers/texts/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -644,7 +704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../layers/face_layers/" class="md-nav__link">
+      <a href="../../layers/face_layers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -665,7 +725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../layers/layer_groups/" class="md-nav__link">
+      <a href="../../layers/layer_groups/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -686,7 +746,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../layers/mouse/" class="md-nav__link">
+      <a href="../../layers/mouse/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -747,7 +807,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../categorical/" class="md-nav__link ">
+            <a href="../../categorical/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -780,7 +840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../categorical/num_num/" class="md-nav__link">
+      <a href="../../categorical/num_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -801,7 +861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../categorical/cat_num/" class="md-nav__link">
+      <a href="../../categorical/cat_num/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -822,7 +882,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../categorical/cat_cat/" class="md-nav__link">
+      <a href="../../categorical/cat_cat/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -843,7 +903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../categorical/aggregation/" class="md-nav__link">
+      <a href="../../categorical/aggregation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -864,7 +924,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../categorical/stacking/" class="md-nav__link">
+      <a href="../../categorical/stacking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -889,8 +949,6 @@
       
   
   
-    
-  
   
   
     
@@ -913,17 +971,17 @@
       
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="./" class="md-nav__link md-nav__link--active">
+            <a href="../../events/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -934,13 +992,13 @@
             </a>
             
               
-              <label class="md-nav__link md-nav__link--active" for="__nav_6" id="__nav_6_label" tabindex="">
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Event Handling
@@ -956,7 +1014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="canvas_events/" class="md-nav__link">
+      <a href="../../events/canvas_events/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -977,7 +1035,7 @@
   
   
     <li class="md-nav__item">
-      <a href="layer_events/" class="md-nav__link">
+      <a href="../../events/layer_events/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -998,7 +1056,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mouse_events/" class="md-nav__link">
+      <a href="../../events/mouse_events/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1072,7 +1130,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/" class="md-nav__link">
+      <a href="../../api/core/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1093,7 +1151,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/canvas/" class="md-nav__link">
+      <a href="../../api/canvas/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1134,6 +1192,32 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inset-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inset Plot
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secondary-axis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Secondary Axis
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1150,27 +1234,96 @@
   
 
 
-<h1 id="event-handling">Event Handling</h1>
-<p>Listening to the changes in the canvas or layer states is a common task in interactive
-plotting. Although different backend plotting libraries implement their own event
-handling systems, <code>whitecanvas</code> provides a unified system using the
-<a href="https://psygnal.readthedocs.io">psygnal</a> library.</p>
-<p>The common syntax is to use <code>connect</code> function to connect callback function to the
-event handler.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<h1 id="inset-and-secondary-axis">Inset and Secondary Axis</h1>
+<p>Adding inset plot and/or secondary axis to the main plot are useful ways to display
+different types of data in the same context. <code>whitecanvas</code> provides a very simple
+way to add these types of plot elements.</p>
+<p>Currently, this feature is implemented as follows:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Feature</th>
+<th style="text-align: center;"><code>matplotlib</code></th>
+<th style="text-align: center;"><code>plotly</code></th>
+<th style="text-align: center;"><code>bokeh</code></th>
+<th style="text-align: center;"><code>pyqtgraph</code></th>
+<th style="text-align: center;"><code>vispy</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">Inset</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&cross;</td>
+<td style="text-align: center;">&cross;</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&cross;</td>
+</tr>
+<tr>
+<td style="text-align: center;">Secondary X</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&cross;</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&cross;</td>
+</tr>
+<tr>
+<td style="text-align: center;">Secondary Y</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&check;</td>
+<td style="text-align: center;">&cross;</td>
+</tr>
+</tbody>
+</table>
+<h2 id="inset-plot">Inset Plot</h2>
+<p>Inset plot is a smaller plot that is embedded within the main plot. <code>install_inset</code>
+method installs an inset plot to the main plot. A new canvas pointing at the inset
+plot is returned.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">()</span>
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="hll"><span class="n">inset</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">install_inset</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+</span>
+<span class="c1"># data with small bump</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">y</span><span class="p">[</span><span class="mi">64</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.01</span>
 
-<span class="c1"># connect callback function</span>
-<span class="nd">@canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">lim</span><span class="o">.</span><span class="n">connect</span>
-<span class="k">def</span> <span class="nf">_xlim_changed</span><span class="p">(</span><span class="n">lim</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;canvas.x.lim changed to </span><span class="si">{</span><span class="n">lim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;All Data&quot;</span>
+
+<span class="n">inset</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">60</span><span class="p">:</span><span class="mi">70</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="mi">60</span><span class="p">:</span><span class="mi">70</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">inset</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Zoomed-in View&quot;</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<ul>
-<li><a href="canvas_events/">Canvas Events</a></li>
-<li><a href="layer_events/">Layer Events</a></li>
-<li><a href="mouse_events/">Mouse Events</a></li>
-</ul>
+<img alt="" loading="lazy," src="../../_images/inset_plot.png" width="360px" /></p>
+<h2 id="secondary-axis">Secondary Axis</h2>
+<p>Secondary axis is another axis that is added to the main plot. <code>install_second_x</code> and
+<code>install_second_y</code> methods install secondary x/y-axis, respectively.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="hll"><span class="n">other</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">install_second_y</span><span class="p">()</span>
+</span>
+<span class="n">temperature</span> <span class="o">=</span> <span class="p">[</span><span class="mi">26</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">25</span><span class="p">]</span>
+<span class="n">rainfall</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">with_markers</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;D&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">lim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Temperature ($^\circ$C)&quot;</span>
+
+<span class="n">other</span><span class="o">.</span><span class="n">add_bars</span><span class="p">(</span><span class="n">rainfall</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;skyblue&quot;</span><span class="p">)</span>
+<span class="n">other</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">lim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+<span class="n">other</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Rainfall (mm)&quot;</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/second_y.png" width="360px" /></p>
 
 
 
@@ -1200,7 +1353,7 @@ event handler.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../categorical/stacking/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Stacking">
+          <a href="../legend/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Legend for the Layers">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -1210,20 +1363,20 @@ event handler.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Stacking
+                Legend for the Layers
               </div>
             </div>
           </a>
         
         
           
-          <a href="canvas_events/" class="md-footer__link md-footer__link--next" aria-label="Next: Canvas Events">
+          <a href="../native_objects/" class="md-footer__link md-footer__link--next" aria-label="Next: Working with the Backend Objects">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Canvas Events
+                Working with the Backend Objects
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1261,10 +1414,10 @@ event handler.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "navigation.sections", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate", "navigation.sections", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
       
         <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
       

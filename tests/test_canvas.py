@@ -261,7 +261,7 @@ def test_multidim_slider():
     slider._emit_changed()
 
 def test_second_x(backend: str):
-    if backend in ("vispy", "plotly", "bokeh"):
+    if backend in ("vispy", "plotly"):
         pytest.skip(f"{backend} does not support second_x")
     canvas = new_canvas(backend=backend)
     other = canvas.install_second_x()
@@ -283,8 +283,8 @@ def test_second_y(backend: str):
     assert other.x.lim == pytest.approx((0, 2))
 
 def test_inset(backend: str):
-    if backend not in ("matplotlib",):
-        pytest.skip("inset is only supported in matplotlib")
+    if backend in ("vispy", "plotly", "bokeh"):
+        pytest.skip(f"{backend} does not support inset")
     canvas = new_canvas(backend=backend)
     inset = canvas.install_inset((0.5, 0.96, 0.6, 0.96))
     canvas.add_line([0, 1, 2], [0, 1, 2], name="line")

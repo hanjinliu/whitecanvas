@@ -42,6 +42,7 @@ def _prep_plot(width=400, height=300) -> bk_plotting.figure:
     return plot
 
 
+SECOND_X = "second-x"
 SECOND_Y = "second-y"
 
 
@@ -50,6 +51,7 @@ class Canvas:
     def __init__(
         self,
         plot: bk_models.Plot | None = None,
+        second_x: bool = False,
         second_y: bool = False,
     ):
         if plot is None:
@@ -64,13 +66,16 @@ class Canvas:
         self._xticks = XTicks(self)
         self._yticks = YTicks(self)
         self._mouse_button: MouseButton = MouseButton.NONE
+        self._second_x = second_x
         self._second_y = second_y
 
     def _set_mouse_down(self, event):
         self._mouse_button = event
 
     def _get_xaxis(self):
-        return self._plot.xaxis[0]
+        if not self._second_x:
+            return self._plot.xaxis[0]
+        return self._plot.xaxis[1]
 
     def _get_yaxis(self):
         if not self._second_y:
@@ -78,7 +83,9 @@ class Canvas:
         return self._plot.yaxis[1]
 
     def _get_xrange(self):
-        return self._plot.x_range
+        if not self._second_x:
+            return self._plot.x_range
+        return self._plot.extra_x_ranges[SECOND_X]
 
     def _get_yrange(self):
         if not self._second_y:
@@ -113,13 +120,19 @@ class Canvas:
         return self._plot.renderers
 
     def _plt_reorder_layers(self, layers: list[BokehLayer]):
+        # NOTE: if plot has second_x or second_y, renderers will have more than layers
         model_to_idx_map = {id(layer._model): i for i, layer in enumerate(layers)}
+        existing_glyphs = {id(layer._model) for layer in layers}
         renderers = self._bokeh_renderers()
+        idx_converter = []
+        for i, renderer in enumerate(renderers):
+            if id(renderer.glyph) in existing_glyphs:
+                idx_converter.append(i)
         renderers_sorted = []
         for r in renderers:
             idx = model_to_idx_map.get(id(r.glyph))
             if idx is not None:
-                renderers_sorted.append(renderers[idx])
+                renderers_sorted.append(renderers[idx_converter[idx]])
             else:
                 renderers_sorted.append(r)
         self._plot.renderers = renderers_sorted
@@ -133,6 +146,8 @@ class Canvas:
     def _plt_add_layer(self, layer: BokehLayer):
         if self._second_y:
             self._plot.add_glyph(layer._data, layer._model, y_range_name=SECOND_Y)
+        elif self._second_x:
+            self._plot.add_glyph(layer._data, layer._model, x_range_name=SECOND_X)
         else:
             self._plot.add_glyph(layer._data, layer._model)
 
@@ -142,8 +157,10 @@ class Canvas:
         for i, renderer in enumerate(self._bokeh_renderers()):
             if renderer.glyph == layer._model:
                 idx = i
+                del self._plot.renderers[idx]
                 break
-        del self._plot.renderers[idx]
+        else:
+            raise ValueError(f"Layer {layer} not found")
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""
@@ -236,12 +253,20 @@ class Canvas:
         pass
 
     def _plt_twinx(self):
+        self._plot.extra_y_ranges[SECOND_Y] = bk_models.DataRange1d()
         self._plot.add_layout(
             bk_models.LinearAxis(y_range_name=SECOND_Y),
             "right",
         )
-        self._plot.extra_y_ranges = {SECOND_Y: bk_models.DataRange1d()}
         return Canvas(self._plot, second_y=True)
+
+    def _plt_twiny(self):
+        self._plot.extra_x_ranges[SECOND_X] = bk_models.DataRange1d()
+        self._plot.add_layout(
+            bk_models.LinearAxis(x_range_name=SECOND_X),
+            "above",
+        )
+        return Canvas(self._plot, second_x=True)
 
     def _plt_make_legend(
         self,
@@ -320,6 +345,8 @@ class CanvasGrid:
             for w in widths:
                 p = _prep_plot(width=int(w / wsum * 600), height=int(h / hsum * 600))
                 p.visible = False
+                wheel_zoom = bk_models.WheelZoomTool()
+                p.add_tools(wheel_zoom)
                 row.append(p)
             children.append(row)
         self._grid_plot: bk_layouts.GridPlot = bk_layouts.gridplot(

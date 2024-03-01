@@ -25,3 +25,4 @@ def backend(request: pytest.FixtureRequest):
         canvas = Canvas._CURRENT_INSTANCE
         if canvas is not None and isinstance(canvas.native, pg.PlotItem):
             canvas.native.update()
+            canvas.native.resize(100, 150)

@@ -11,12 +11,18 @@ from qtpy import QtCore, QtGui
 from qtpy.QtCore import Signal
 
 from whitecanvas import protocols
-from whitecanvas.backend.pyqtgraph._base import PyQtLayer
+from whitecanvas.backend.pyqtgraph._base import InsetPlotItem, PyQtLayer
 from whitecanvas.backend.pyqtgraph._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.pyqtgraph._legend import QtItemSampleBase, make_sample_item
 from whitecanvas.backend.pyqtgraph._qt_utils import from_qt_button, from_qt_modifiers
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
-from whitecanvas.types import LegendLocation, MouseButton, MouseEvent, MouseEventType
+from whitecanvas.types import (
+    LegendLocation,
+    MouseButton,
+    MouseEvent,
+    MouseEventType,
+    Rect,
+)
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
@@ -145,8 +151,13 @@ class Canvas:
 
         return canvas
 
-    # def _plt_inset(self, rect: Rect) -> Canvas:
-    #     ...
+    def _plt_inset(self, rect: Rect) -> Canvas:
+        vb = pg.ViewBox()
+        item = pg.PlotItem(viewBox=vb)
+        canvas = Canvas(item)
+        inset_item = InsetPlotItem(item, rect)
+        inset_item.setParentItem(self._plot_item.vb)
+        return canvas
 
     def _get_scene(self) -> pg.GraphicsScene:
         return self._plot_item.scene()

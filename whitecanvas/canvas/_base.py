@@ -238,11 +238,7 @@ class CanvasBase(ABC):
         self.y.lim = ymin, ymax
         return xmin, xmax, ymin, ymax
 
-    def install_second_x(
-        self,
-        *,
-        palette: ColormapType | None = None,
-    ) -> Canvas:
+    def install_second_x(self, *, palette: ColormapType | None = None) -> Canvas:
         """Create a twin canvas that has a secondary x-axis and shared y-axis."""
         try:
             new = self._canvas()._plt_twiny()
@@ -254,11 +250,7 @@ class CanvasBase(ABC):
         canvas._init_canvas()
         return canvas
 
-    def install_second_y(
-        self,
-        *,
-        palette: ColormapType | None = None,
-    ) -> Canvas:
+    def install_second_y(self, *, palette: ColormapType | None = None) -> Canvas:
         """Create a twin canvas that has a secondary y-axis and shared x-axis."""
         try:
             new = self._canvas()._plt_twinx()
@@ -270,14 +262,34 @@ class CanvasBase(ABC):
         canvas._init_canvas()
         return canvas
 
+    @overload
     def install_inset(
-        self,
-        rect: Rect | tuple[float, float, float, float],
-        *,
-        palette: ColormapType | None = None,
-    ) -> Canvas:
-        if not isinstance(rect, Rect):
-            rect = Rect(*rect)
+        self, left: float, right: float, bottom: float, top: float, *,
+        palette: ColormapType | None = None
+    ) -> Canvas:  # fmt: skip
+        ...
+
+    @overload
+    def install_inset(
+        self, rect: Rect | tuple[float, float, float, float], /, *,
+        palette: ColormapType | None = None
+    ) -> Canvas:  # fmt: skip
+        ...
+
+    def install_inset(self, *args, palette=None, **kwargs) -> Canvas:
+        """
+        Install a new canvas pointing to an inset of the current canvas.
+
+        >>> canvas.install_inset(left=0.1, right=0.9, bottom=0.1, top=0.9)
+        >>> canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence
+        """
+        # normalize input
+        if len(args) == 1 and not kwargs:
+            rect = args[0]
+            if not isinstance(rect, Rect):
+                rect = Rect.with_check(*rect)
+        else:
+            rect = Rect.with_check(*args, **kwargs)
         try:
             new = self._canvas()._plt_inset(rect)
         except AttributeError:

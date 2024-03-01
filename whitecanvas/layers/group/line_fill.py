@@ -424,6 +424,13 @@ class Area(LineFillBase):
         x, y0, y1 = self.fill.data
         return XYData(x, y1 - y0)
 
+    @data.setter
+    def data(self, data: XYData):
+        x, y = data
+        bottom = self.fill.data.y0
+        self.line.data = x, y + bottom
+        self.fill.data = x, bottom, y + bottom
+
     @property
     def orient(self) -> Orientation:
         """Orientation of the line and fill layers."""

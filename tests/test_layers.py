@@ -150,7 +150,7 @@ def test_infcurve(backend: str):
     assert layer.pos == (2, 2)
     layer.angle = 45
     assert layer.angle == pytest.approx(45)
-    
+
     layer.with_hover_text("y=sin(x/5)")
     canvas.x.lim = (-4, 4)
     layer.angle = 90
@@ -343,7 +343,8 @@ def test_rug(backend: str):
     layer.update_length(np.arange(10) / 5 + 1, align="high")
     layer.update_length(2.0, align="center")
     layer.data = np.random.default_rng(0).normal(size=10)
-    layer.color_by_density()
+    with filter_warning(backend, "plotly"):
+        layer.color_by_density()
     layer.scale_by_density()
     canvas.autoscale(xpad=(0.01, 0.02), ypad=(0.01, 0.02))
 

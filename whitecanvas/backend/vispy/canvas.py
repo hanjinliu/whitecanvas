@@ -1,6 +1,6 @@
 from __future__ import annotations
-import sys
 
+import sys
 import warnings
 import weakref
 from typing import TYPE_CHECKING, Callable, cast

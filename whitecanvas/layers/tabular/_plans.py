@@ -334,10 +334,6 @@ class StylePlan(CyclicPlan[LineStyle]):
     def _norm_value(cls, v: Any) -> LineStyle:
         return LineStyle(v)
 
-    def with_choices(self, choices: Sequence[LineStyle]) -> ColorPlan:
-        choices = [LineStyle(s) for s in choices]
-        return ColorPlan(self._by, choices)
-
 
 class HatchPlan(CyclicPlan[Hatch]):
     @classmethod
@@ -515,23 +511,3 @@ def _check_min_max(val: tuple[float, float] | None = None):
     if mn > mx:
         raise ValueError(f"min must be less than or equal to max, got {mn} and {mx}.")
     return
-
-
-def plan_to_entries(
-    plan: CyclicPlan[_V],
-    df: DataFrameWrapper[_DF],
-) -> list[tuple[str, _V]]:
-    values = plan.map(df)
-    if plan.by:
-        columns_of_interest = list(zip(*[df[c] for c in plan.by]))
-        entries = []
-        cat_found = set()
-        for category, color in zip(columns_of_interest, values):
-            if category in cat_found:
-                continue
-            name = ", ".join(str(n) for n in category)
-            entries.append((name, color))
-            cat_found.add(category)
-    else:
-        entries = [("", values)]
-    return entries

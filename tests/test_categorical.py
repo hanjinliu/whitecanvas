@@ -14,8 +14,8 @@ def test_cat(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
     cplt = canvas.cat(df, "x", "y")
-    cplt.add_line()
-    cplt.add_line(color="label").with_markers()
+    cplt.add_line().update_style("--")
+    cplt.add_line(color="label").update_style("label").with_markers()
     cplt.add_markers()
     cplt.add_markers(color="label")
     cplt.add_markers(hatch="label")
@@ -37,14 +37,14 @@ def test_cat(backend: str):
     with filter_warning(backend, "plotly"):
         cplt.along_x().add_rug(color="label")
     hist.update_color("black")
-    kde.update_color("black")
+    kde.update_color("label")
     hist.update_width(1.5)
     kde.update_width(1.5)
     hist.update_style(":")
-    kde.update_style(":")
-    hist.update_hatch("/")
+    kde.update_style("label")
+    hist.update_hatch("label")
     kde.update_hatch("/")
-    if backend != "vispy":
+    with filter_warning(backend, "vispy"):
         canvas.add_legend()
 
 @pytest.mark.parametrize("orient", ["v", "h"])
@@ -61,10 +61,10 @@ def test_cat_plots(backend: str, orient: str):
         cat_plt = canvas.cat_y(df, "y", "label")
     cat_plt.add_stripplot(color="c").move(0.1)
     cat_plt.add_swarmplot(color="c").move(0.1)
-    cat_plt.add_boxplot(color="c").with_outliers(ratio=0.5)
+    cat_plt.add_boxplot(color="c").with_edge().with_outliers(ratio=0.5)
     with filter_warning(backend, "plotly"):
         box = cat_plt.add_boxplot(color="c").as_edge_only().move(0.1)
-        box.update_color_palette(["blue", "red"], alpha=0.9)
+        box.update_color_palette(["blue", "red"], alpha=0.9, cycle_by="c")
         box = cat_plt.add_boxplot(hatch="c").as_edge_only().move(0.1)
         box.update_hatch_palette(["/", "x"])
         box.update_const(color="black", hatch="+")
@@ -118,6 +118,10 @@ def test_cat_xy(backend: str):
         "z": [1, 2, 3, 4, 5, 6],
     }
     im = canvas.cat_xy(df, "x", "y").first().add_heatmap(value="z")
+    im.cmap
+    im.cmap = "jet"
+    im.clim
+    im.clim = (0, 1)
     canvas.imref(im).add_text()
 
     df = {
@@ -207,7 +211,6 @@ def test_marker_legend():
         "z": np.sin(np.arange(30) / 10),
         "label": np.repeat(["A", "B", "C"], 10),
     }
-    canvas = new_canvas("mock")
     canvas.cat_x(df, "x", "y").add_stripplot(color="label")
     canvas.cat_x(df, "x", "y").add_stripplot().update_size("z")
     canvas.cat_x(df, "x", "y").add_stripplot().update_colormap("z")
@@ -215,6 +218,18 @@ def test_marker_legend():
     canvas.cat_x(df, "x", "y").add_stripplot(hatch="label")
     canvas.add_legend()
 
+def test_single_value():
+    canvas = new_canvas("mock")
+    df = {
+        "x": ["P", "Q"] * 15,
+        "y": np.arange(30),
+        "z": np.ones(30),
+        "label": np.repeat(["A", "B", "C"], 10),
+    }
+    canvas.cat_x(df, "x", "y").add_stripplot(color="label")
+    canvas.cat_x(df, "x", "y").add_stripplot().update_size("z")
+    canvas.cat_x(df, "x", "y").add_stripplot().update_colormap("z")
+    canvas.add_legend()
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_numeric_axis(backend: str, orient: str):
@@ -252,7 +267,15 @@ def test_stack(backend: str):
     }
     cat_plt = canvas.cat_x(df, "label", "y", numeric_axis=True)
     cat_plt.stack("c").add_bars(color="c")
-    cat_plt.stack("c").add_area(hatch="c")
+    area = cat_plt.stack("c").add_area(hatch="c")
+    area.update_color("c")
+    area.update_color("black")
+    area.update_hatch("/")
+    area.update_style("--")
+    area.update_style("c")
+    area.move(0.1, 0.1)
+    with filter_warning(backend, "vispy"):
+        canvas.add_legend()
 
 def test_joint_cat(backend: str):
     joint = new_jointgrid(backend=backend, loc=(0, 0), size=(180, 180))

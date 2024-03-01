@@ -137,7 +137,7 @@ class Axis(_CanvasComponent):
             self._canvas()._viewbox().setYRange(*limits, padding=0)
 
     def _plt_get_color(self):
-        return np.array(self._pen.color().toRgbF())
+        return np.array(self._pen.color().getRgbF())
 
     def _plt_set_color(self, color):
         self._pen.setColor(array_to_qcolor(color))

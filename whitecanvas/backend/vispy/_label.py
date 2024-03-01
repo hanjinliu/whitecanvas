@@ -125,7 +125,10 @@ class Ticks:
         return self._axis().axis._text
 
     def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
-        return list(self._get_ticks().pos), self._text.text
+        pos = self._get_ticks().pos
+        if pos is None:
+            return [], []
+        return list(pos), self._text.text
 
     def _plt_override_labels(self, pos: list[float], labels: list[str]):
         self._get_ticker()._categorical_labels = (pos, labels)

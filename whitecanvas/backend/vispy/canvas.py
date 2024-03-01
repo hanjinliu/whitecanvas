@@ -221,7 +221,7 @@ class CanvasGrid:
         return canvas
 
     def _plt_get_background_color(self):
-        return self._scene.bgcolor
+        return self._scene.bgcolor.rgba
 
     def _plt_set_background_color(self, color):
         self._scene.bgcolor = color

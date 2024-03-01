@@ -23,19 +23,13 @@ if TYPE_CHECKING:
 class Canvas:
     def __init__(
         self,
-        fig: go.Figure | None = None,
+        fig: go.Figure,
         *,
         row: int = 0,
         col: int = 0,
         secondary_y: bool = False,
         app: str = "default",
     ):
-        # prepare widget
-        if fig is None:
-            if app == "notebook":
-                fig = go.FigureWidget()
-            else:
-                fig = go.Figure()
         self._fig = fig
         self._loc = Location(row + 1, col + 1, secondary_y)
         self._xaxis = Axis(self, axis="xaxis")

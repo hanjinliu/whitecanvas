@@ -12,8 +12,11 @@ from ._utils import assert_color_equal, filter_warning
 
 def test_namespaces(backend: str):
     canvas = new_canvas(backend=backend)
+    canvas.aspect_ratio
     canvas.aspect_ratio = 1
     assert canvas.aspect_ratio == 1
+
+    canvas.background_color
 
     canvas.title.text = "Title-0"
     assert canvas.title.text == "Title-0"
@@ -49,6 +52,16 @@ def test_namespaces(backend: str):
     assert canvas.y.label.size == 20
     canvas.y.label.family = "Arial"
     assert canvas.y.label.family == "Arial"
+
+    # test errors
+    with pytest.raises(ValueError):
+        canvas.x.lim = (1, 0)
+    with pytest.raises(TypeError):
+        canvas.x.label = 0
+
+    repr(canvas.x)
+    repr(canvas.title)
+    repr(canvas.x.ticks)
 
     if backend != "pyqtgraph":  # not implemented in pyqtgraph
         canvas.x.ticks.rotation = 45
@@ -129,6 +142,7 @@ def test_grid(backend: str):
 
 def test_grid_nonuniform(backend: str):
     cgrid = wc.new_grid([2, 1], [2, 1], backend=backend, size=(100, 100)).link_x().link_y()
+    repr(cgrid)
     c00 = cgrid.add_canvas(0, 0)
     c01 = cgrid.add_canvas(0, 1)
     c10 = cgrid.add_canvas(1, 0)
@@ -153,6 +167,7 @@ def test_grid_nonuniform(backend: str):
 
 def test_vgrid_hgrid(backend: str):
     cgrid = wc.new_col(2, backend=backend, size=(100, 100)).link_x().link_y()
+    repr(cgrid)
     c0 = cgrid.add_canvas(0)
     c1 = cgrid.add_canvas(1)
     assert cgrid[0] is not cgrid[1]
@@ -190,6 +205,8 @@ def test_unlink(backend: str):
     grid[0].x.lim = (20, 21)
     assert grid[0].x.lim == pytest.approx((20, 21))
     assert grid[1].x.lim == pytest.approx((10, 11))
+
+    grid = wc.new_row(2, backend=backend).fill().link_x().link_y()
 
 def test_jointgrid(backend: str):
     rng = np.random.default_rng(0)
@@ -234,6 +251,7 @@ def test_layer_handling(backend: str):
     repr(canvas.layers)
     assert canvas.layers[0].name == "l_0"
     assert canvas.layers[0] is canvas.layers["l_0"]
+    assert canvas.layers.get("l_0") is canvas.layers[0]
     canvas.layers.move(1, 0)
     canvas.layers.pop()
     canvas.layers.pop()
@@ -242,7 +260,7 @@ def test_multidim():
     canvas = new_canvas(backend="matplotlib")
     x = np.arange(5)
     ys = [x, x ** 2, x ** 3]
-    canvas.dims.add_line(x, ys)
+    canvas.dims.in_axes("T").add_line(x, ys)
     canvas.dims.add_markers(x, ys, color="red", symbol="+")
     canvas.dims.add_rug(ys)
     canvas.dims.add_band(x, ys, [y0 + 1 for y0 in ys])
@@ -250,6 +268,8 @@ def test_multidim():
     canvas.dims.add_text(x, ys, ["a", "b", "c", "d", "e"])
     img = np.zeros((2, 5, 5))
     canvas.dims.add_image(img)
+    canvas.dims.set_indices(1)
+    canvas.dims.set_indices({"T": 0})
 
 def test_multidim_slider():
     # TODO: how to test other app backends?

@@ -50,12 +50,10 @@ SECOND_Y = "second-y"
 class Canvas:
     def __init__(
         self,
-        plot: bk_models.Plot | None = None,
+        plot: bk_models.Plot,
         second_x: bool = False,
         second_y: bool = False,
     ):
-        if plot is None:
-            plot = _prep_plot()
         assert isinstance(plot, bk_models.Plot)
         self._plot = plot
         self._xaxis = XAxis(self)
@@ -375,7 +373,9 @@ class CanvasGrid:
                 bk_plotting.curdoc().add_root(self._grid_plot)
 
     def _plt_get_background_color(self):
-        return arr_color(self._grid_plot.background_fill_color)
+        for _, _, child in self._iter_bokeh_subplots():
+            return child.background_fill_color
+        return np.ones(4, dtype=np.float32)
 
     def _plt_set_background_color(self, color):
         color = hex_color(color)

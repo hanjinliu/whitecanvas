@@ -45,9 +45,7 @@ from whitecanvas.types import (
 
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
-    def __init__(self, ax: plt.Axes | None = None):
-        if ax is None:
-            ax = plt.gca()
+    def __init__(self, ax: plt.Axes):
         self._axes = ax
         self._xaxis = XAxis(self)
         self._yaxis = YAxis(self)

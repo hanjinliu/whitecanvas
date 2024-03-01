@@ -264,6 +264,7 @@ class YLabelNamespace(_TextLabelNamespace):
 
 class AxisNamespace(Namespace):
     events: AxisSignals
+    _attrs = ("lim", "color", "flipped")
 
     def __init__(self, canvas: CanvasBase | None = None):
         super().__init__(canvas)

@@ -29,15 +29,11 @@ from whitecanvas.types import (
 class Canvas:
     def __init__(
         self,
-        item: pg.PlotItem | None = None,
+        item: pg.PlotItem,
         *,
         xaxis: str = "bottom",
         yaxis: str = "left",
     ):
-        # prepare widget
-        if item is None:
-            viewbox = pg.ViewBox()
-            item = pg.PlotItem(viewBox=viewbox)
         item.vb.disableAutoRange()  # auto range is done in the whitecanvas side
         self._signals = SignalListener()
         item.vb.sigRangeChanged.connect(self._signals._set_rect)

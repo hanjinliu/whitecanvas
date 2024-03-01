@@ -59,3 +59,12 @@ def test_hover_template():
         layer.with_hover_template("c: {c}", extra={"a": [0, 1, 4], "b": [1, 2, 3]})
     with pytest.raises(ValueError):
         layer.with_hover_template("c: {c}", extra={"c": [0, 1, 4, 5]})
+
+def test_fit():
+    canvas = new_canvas(backend="mock")
+    rng = np.random.default_rng(1642)
+    x = rng.normal(size=50)
+    y = rng.normal(size=50) + 2 * x
+    layer = canvas.add_markers(x, y)
+    canvas.fit(layer).linear(color="red")
+    canvas.fit(layer).polynomial(2)

@@ -2596,7 +2596,8 @@
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1858</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1857</span>
+<span class="normal">1858</span>
 <span class="normal">1859</span>
 <span class="normal">1860</span>
 <span class="normal">1861</span>
@@ -2634,8 +2635,7 @@
 <span class="normal">1893</span>
 <span class="normal">1894</span>
 <span class="normal">1895</span>
-<span class="normal">1896</span>
-<span class="normal">1897</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
+<span class="normal">1896</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
     <span class="n">_CURRENT_INSTANCE</span><span class="p">:</span> <span class="n">Canvas</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -2712,7 +2712,8 @@
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1872</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1871</span>
+<span class="normal">1872</span>
 <span class="normal">1873</span>
 <span class="normal">1874</span>
 <span class="normal">1875</span>
@@ -2727,8 +2728,7 @@
 <span class="normal">1884</span>
 <span class="normal">1885</span>
 <span class="normal">1886</span>
-<span class="normal">1887</span>
-<span class="normal">1888</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">1887</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_backend</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">obj</span><span class="p">:</span> <span class="n">protocols</span><span class="o">.</span><span class="n">CanvasProtocol</span><span class="p">,</span>
@@ -4552,8 +4552,7 @@
 <span class="normal">1851</span>
 <span class="normal">1852</span>
 <span class="normal">1853</span>
-<span class="normal">1854</span>
-<span class="normal">1855</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="normal">1854</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for any canvas object.&quot;&quot;&quot;</span>
 
     <span class="n">title</span> <span class="o">=</span> <span class="n">_ns</span><span class="o">.</span><span class="n">TitleNamespace</span><span class="p">()</span>
@@ -6131,7 +6130,6 @@
                 <span class="n">idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">over</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">under</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">under</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
                 <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">under</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -9764,8 +9762,7 @@ rotation from the x axis.</p>
 <span class="normal">1660</span>
 <span class="normal">1661</span>
 <span class="normal">1662</span>
-<span class="normal">1663</span>
-<span class="normal">1664</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span>
+<span class="normal">1663</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">layer</span><span class="p">:</span> <span class="n">_L</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -9784,7 +9781,6 @@ rotation from the x axis.</p>
             <span class="n">idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">over</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">under</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">under</span><span class="p">,</span> <span class="n">_l</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">under</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -12716,7 +12712,8 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1678</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1677</span>
+<span class="normal">1678</span>
 <span class="normal">1679</span>
 <span class="normal">1680</span>
 <span class="normal">1681</span>
@@ -12733,8 +12730,7 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 <span class="normal">1692</span>
 <span class="normal">1693</span>
 <span class="normal">1694</span>
-<span class="normal">1695</span>
-<span class="normal">1696</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">group_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="o">*</span><span class="n">more_layers</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">1695</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">group_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="o">*</span><span class="n">more_layers</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Group layers.</span>
 

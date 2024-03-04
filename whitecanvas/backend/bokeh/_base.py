@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import tempfile
+import warnings
+from pathlib import Path
 from typing import Generic, TypeVar
 
 import bokeh.events as bk_events
@@ -174,10 +177,14 @@ _HATCH_MAP_INV[""] = Hatch.SOLID
 
 
 def to_html(canvas) -> str:
-    from io import StringIO
-
     from bokeh.plotting import save
 
-    with StringIO() as f:
-        save(canvas._grid_plot, f)
-        return f.getvalue()
+    with (
+        tempfile.TemporaryDirectory() as dirname,
+        warnings.catch_warnings(),
+    ):
+        warnings.filterwarnings("ignore", category=UserWarning)
+        filename = Path(dirname) / "whitecanvas.html"
+        save(canvas._grid_plot, filename, title="whitecanvas")
+        text = filename.read_text()
+    return text

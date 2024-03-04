@@ -83,3 +83,9 @@ def test_melt():
     rng = np.random.default_rng(1642)
     df = {"x": rng.normal(size=15), "y": rng.normal(size=15)}
     canvas.cat_x(df).melt().add_boxplot(color="variable")
+
+def test_matplotlib_tooltip():
+    canvas = new_canvas(backend="matplotlib")
+    canvas.add_markers([1, 2, 3], [4, 5, 6])
+    canvas._canvas()._set_tooltip((2, 5), "tooltip")
+    canvas._canvas()._hide_tooltip()

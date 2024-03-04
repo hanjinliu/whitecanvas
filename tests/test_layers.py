@@ -210,6 +210,7 @@ def test_image(backend: str):
     layer.shift = (-1, -1)
     canvas.autoscale()
     canvas.add_heatmap(rng.random((10, 10)))
+    canvas.aspect_ratio = None  # reset
 
 def test_errorbars(backend: str):
     canvas = new_canvas(backend=backend)

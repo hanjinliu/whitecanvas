@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, cast
+from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 import pyqtgraph as pg
@@ -24,6 +24,9 @@ from whitecanvas.types import (
     Rect,
 )
 
+if TYPE_CHECKING:
+    from whitecanvas.canvas import CanvasBase
+
 
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
@@ -46,7 +49,6 @@ class Canvas:
         self._title = Title(self)
         self._xlabel = AxisLabel(self, axis=xaxis)
         self._ylabel = AxisLabel(self, axis=yaxis)
-        self._last_event: MouseEvent = None
 
     def _plt_get_native(self):
         return self._plot_item
@@ -268,6 +270,10 @@ class Canvas:
                 type=typ,
             )
         return mev
+
+    def _plt_canvas_hook(self, canvas: CanvasBase):
+        self._plot_item.autoBtn.clicked.disconnect()
+        self._plot_item.autoBtn.clicked.connect(lambda: canvas.autoscale())
 
 
 _LEGEND_POS = {

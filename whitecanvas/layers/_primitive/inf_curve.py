@@ -46,17 +46,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         super().__init__(name=name)
 
         xdata = np.array([_lower, _upper])
-        _sig = inspect.signature(model)
-        try:
-            _sig.bind(xdata)
-        except TypeError:
-            ydata = np.zeros_like(xdata)
-            self._y_hint = None
-            self._params_ready = False
-        else:
-            ydata = model(xdata)
-            self._y_hint = ydata.min(), ydata.max()
-            self._params_ready = True
+        ydata, self._y_hint, self._params_ready = _try_init_ydata(model, xdata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.update(
             color=color, width=width, style=style, alpha=alpha,
@@ -123,6 +113,43 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
             else:
                 return
         self._backend._plt_set_data(xdata, ydata)
+
+
+def _try_init_ydata(
+    model: Callable[[Concatenate[np.ndarray, _P]], np.ndarray],
+    xdata: np.ndarray,
+):
+    try:
+        _sig = inspect.signature(model)
+    except ValueError:
+        return _try_init_ydata_for_ufunc(model, xdata)
+    try:
+        _sig.bind(xdata)
+    except TypeError:
+        ydata = np.zeros_like(xdata)
+        yhint = None
+        ready = False
+    else:
+        ydata = model(xdata)
+        yhint = ydata.min(), ydata.max()
+        ready = True
+    return ydata, yhint, ready
+
+
+def _try_init_ydata_for_ufunc(
+    model: Callable[[Concatenate[np.ndarray, _P]], np.ndarray],
+    xdata: np.ndarray,
+):
+    try:
+        ydata = model(xdata)
+    except TypeError:
+        ydata = np.zeros_like(xdata)
+        yhint = None
+        ready = False
+    else:
+        yhint = ydata.min(), ydata.max()
+        ready = True
+    return ydata, yhint, ready
 
 
 class InfLine(LineMixin[LineProtocol]):

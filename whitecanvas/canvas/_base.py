@@ -124,6 +124,9 @@ class CanvasBase(ABC):
         canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
         canvas._plt_connect_ylim_changed(self._emit_ylim_changed)
 
+        if hasattr(canvas, "_plt_canvas_hook"):
+            canvas._plt_canvas_hook(self)
+
     def _install_mouse_events(self):
         canvas = self._canvas()
         canvas._plt_connect_mouse_click(self.events.mouse_clicked.emit)

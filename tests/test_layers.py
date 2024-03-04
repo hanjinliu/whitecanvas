@@ -145,6 +145,9 @@ def test_infcurve(backend: str):
     ).update_params(a=5)
     canvas.x.lim = (-5, 5)
 
+    # test ufunc
+    canvas.add_infcurve(np.sin)
+
     layer = canvas.add_infline((3, 3), angle=50)
     layer.pos = (2, 2)
     assert layer.pos == (2, 2)

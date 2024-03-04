@@ -309,3 +309,10 @@ def test_inset(backend: str):
     inset = canvas.install_inset((0.5, 0.96, 0.6, 0.96))
     canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
     inset.add_line([0, 1, 2], [0, 1, 2], name="line")
+
+def test_to_html(backend: str):
+    if backend not in ("plotly", "bokeh"):
+        pytest.skip(f"{backend} does not support to_html")
+    canvas = new_canvas(backend=backend)
+    canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
+    canvas.to_html()

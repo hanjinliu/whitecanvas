@@ -169,14 +169,6 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             raise ValueError("Value column is not specified.")
         return self._value
 
-    def _update_xy_ticks(self, pos, label):
-        """Update the x or y ticks to categorical ticks"""
-        canvas = self._canvas()
-        if self._orient.is_vertical:
-            canvas.x.ticks.set_labels(pos, label)
-        else:
-            canvas.y.ticks.set_labels(pos, label)
-
     def stack(
         self,
         by: str | Sequence[str] | None = None,

@@ -1655,7 +1655,6 @@ class CanvasBase(ABC):
                 idx = max([self.layers.index(l) for l in over])
             self.layers.insert(idx + 1, layer)
         else:
-            idx = self.layers.index(under)
             if isinstance(under, _l.Layer):
                 idx = self.layers.index(under)
             else:

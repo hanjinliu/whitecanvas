@@ -68,3 +68,18 @@ def test_fit():
     layer = canvas.add_markers(x, y)
     canvas.fit(layer).linear(color="red")
     canvas.fit(layer).polynomial(2)
+
+def test_between():
+    canvas = new_canvas(backend="mock")
+    layer0 = canvas.add_markers([0] * 5, [0, 1, 2, 3, 4])
+    layer1 = canvas.add_markers([1] * 5, [5, 1, 4, 2, 4])
+    layer2 = canvas.add_markers([2] * 4, [0, 1, 2, 3])
+    canvas.between(layer0, layer1).connect_points()
+    with pytest.raises(ValueError):
+        canvas.between(layer0, layer2).connect_points()
+
+def test_melt():
+    canvas = new_canvas(backend="mock")
+    rng = np.random.default_rng(1642)
+    df = {"x": rng.normal(size=15), "y": rng.normal(size=15)}
+    canvas.cat_x(df).melt().add_boxplot(color="variable")

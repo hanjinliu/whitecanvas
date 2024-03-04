@@ -77,6 +77,8 @@ def test_cat_plots(backend: str, orient: str):
     cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1)
     with filter_warning(backend, "plotly"):
         cat_plt.add_rugplot(color="c").scale_by_density().move(0.1)
+    cat_plt.add_heatmap_hist(bins=4)
+    cat_plt.add_heatmap_hist(bins=4, color="c")
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)

@@ -16,6 +16,7 @@ from whitecanvas.types import (
     HistBinType,
     KdeBandWidthType,
     Origin,
+    Rect,
     _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d
@@ -185,9 +186,9 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         if dx <= 0 or dy <= 0:
             raise ValueError("Scale must be positive.")
         self._backend._plt_set_scale(scale)
-        img = self.data
+        shape = self.data.shape[:2]
         self._x_hint, self._y_hint = _hint_for(
-            (img.shape[1], img.shape[0]), shift=self.shift, scale=scale
+            (shape[1], shape[0]), shift=self.shift, scale=scale
         )
         self.events.scale.emit(scale)
 
@@ -227,24 +228,32 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         return self
 
     @overload
-    def fit_to(self, bbox: tuple[float, float, float, float], /) -> Image:
+    def fit_to(self, bbox: Rect | tuple[float, float, float, float], /) -> Image:
         ...
 
     @overload
-    def fit_to(self, x0, y0, x1, y1, /) -> Image:
+    def fit_to(self, left: float, right: float, bottom: float, top: float, /) -> Image:
         ...
 
     def fit_to(self, *args) -> Image:
         """Fit the image to the given bounding box."""
         if len(args) == 1:
-            x0, y0, x1, y1 = args[0]
+            rect = Rect(*args[0])
         elif len(args) == 4:
-            x0, y0, x1, y1 = args
+            rect = Rect(*args)
         else:
             raise TypeError("fit_to() takes 1 or 4 positional arguments.")
-        dx, dy = x1 - x0, y1 - y0
-        self.shift = (x0 + 0.5, y0 + 0.5)
-        self.scale = (dx / self.data.shape[0], dy / self.data.shape[1])
+        shape = self.data.shape[:2]
+        x0, y0 = rect.left, rect.bottom
+        sx, sy = rect.width / shape[1], rect.height / shape[0]
+        if self.origin is Origin.CORNER:
+            self.shift = (x0 + 0.5 * sx, y0 + 0.5 * sy)
+        elif self.origin is Origin.EDGE:
+            self.shift = x0, y0
+        else:
+            ny, nx = shape
+            self.shift = x0 + (nx + 1) / 2 * sx, y0 + (ny + 1) / 2 * sy
+        self.scale = sx, sy
         return self
 
     @property

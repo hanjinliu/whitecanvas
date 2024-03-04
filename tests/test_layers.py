@@ -205,7 +205,6 @@ def test_image(backend: str):
     layer.shift = (1, 1)
     layer.origin = "edge"
     layer.shift = (-1, -1)
-    layer.fit_to(2, 2, 5, 5)
     canvas.autoscale()
     canvas.add_heatmap(rng.random((10, 10)))
 

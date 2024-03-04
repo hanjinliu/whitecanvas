@@ -338,7 +338,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
     def add_hist(
         self,
         *,
-        bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
+        bins: HistBinType = "auto",
         limits: tuple[float, float] | None = None,
         kind: str = "count",
         shape: str = "bars",
@@ -347,6 +347,40 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         width: float | None = None,
         style: NStr | None = None,
     ) -> _lt.DFHistograms[_DF]:
+        """
+        Add histograms.
+
+        >>> ### Use "value" column as x-axis
+        >>> canvas.cat(df, x="value").add_hist()
+
+        >>> ### Multiple KDEs colored by column "group"
+        >>> canvas.cat(df, x="value).add_hist(color="group")
+
+        Parameters
+        ----------
+        bins : int, array-like or str, default "auto"
+            If int, the number of bins. If array, the bin edges. If str, the method to
+            calculate the number of bins.
+        limits : (float, float), optional
+            Lower and upper limits of the bins.
+        kind : {"count", "density", "probability", "frequency"}, default "count"
+            Kind of histogram to draw.
+        shape : {"bars", "steps", "lines"}, default "bars"
+            Shape of the histogram.
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the lines. Must be categorical.
+        width : str, optional
+            Column name for line width. Must be numerical.
+        style : str or sequence of str, optional
+            Column name(s) for styling the lines. Must be categorical.
+
+        Returns
+        -------
+        DFHistograms
+            Histogram layer.
+        """
         canvas = self._canvas()
         width = theme._default("line.width", width)
         x0, orient = self._column_and_orient()

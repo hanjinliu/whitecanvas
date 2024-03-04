@@ -38,6 +38,8 @@ from whitecanvas.utils.hist import histograms
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+    from whitecanvas.canvas.dataframe._base import CatIterator
+
 
 _DF = TypeVar("_DF")
 
@@ -275,7 +277,7 @@ class DFMultiHeatmap(
         palette: ColormapType = "tab10",
         backend: Backend | str | None = None,
     ) -> Self:
-        src, color = cls._norm_df_xy_color(df, x, y, color)
+        src, color = cls._norm_df_xy_color(df, [x, y], color)
         # normalize bins
         if isinstance(bins, tuple):
             xbins, ybins = bins
@@ -297,15 +299,13 @@ class DFMultiHeatmap(
         for sl, sub in src.group_by(color):
             categories.append(sl)
             xdata, ydata = sub[x], sub[y]
-            next_color = next(color_iter)
-            next_background = Color([*next_color.rgba[:3], 0.0])
-            cmap = [next_background, next_color]
+            cmap = _gen_cmap_from_color(next(color_iter))
             img = _l.Image.build_hist(
-                xdata, ydata, name=name, cmap=cmap, bins=_bins, density=True,
+                xdata, ydata, name=f"heatmap-{sl}", cmap=cmap, bins=_bins, density=True,
                 backend=backend,
             )  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers)
+        base = _lg.LayerCollectionBase(image_layers, name=name)
         return cls(base, src, color_by, categories)
 
     @classmethod
@@ -320,7 +320,7 @@ class DFMultiHeatmap(
         palette: ColormapType = "tab10",
         backend: Backend | str | None = None,
     ) -> Self:
-        src, color = cls._norm_df_xy_color(df, x, y, color)
+        src, color = cls._norm_df_xy_color(df, [x, y], color)
         color_by = _p.ColorPlan.from_palette(color, palette)
         image_layers: list[_l.Image] = []
         categories = []
@@ -330,30 +330,66 @@ class DFMultiHeatmap(
         for sl, sub in src.group_by(color):
             categories.append(sl)
             xdata, ydata = sub[x], sub[y]
-            next_color = next(color_iter)
-            next_background = Color([*next_color.rgba[:3], 0.0])
-            cmap = [next_background, next_color]
+            cmap = _gen_cmap_from_color(next(color_iter))
             img = _l.Image.build_kde(
-                xdata,
-                ydata,
-                name=name,
-                cmap=cmap,
-                band_width=band_width,
-                range=(xrange, yrange),
-                backend=backend,
-            )
+                xdata, ydata, name=f"heatmap-{sl}", cmap=cmap, band_width=band_width,
+                range=(xrange, yrange), backend=backend,
+            )  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers)
+        base = _lg.LayerCollectionBase(image_layers, name=name)
+        return cls(base, src, color_by, categories)
+
+    @classmethod
+    def build_hist_1d(
+        cls,
+        cat: CatIterator[_DF],
+        offsets: str | list[str],
+        value: str,
+        name: str | None = None,
+        color: str | list[str] | None = None,
+        dodge: str | list[str] | bool = False,
+        bins: HistBinType = "auto",
+        range=None,
+        palette: ColormapType = "tab10",
+        orient: str | Orientation = Orientation.VERTICAL,
+        backend: Backend | str | None = None,
+    ) -> DFMultiHeatmap[_DF]:
+        if not isinstance(bins, (int, np.integer, str)):
+            raise NotImplementedError("Only equal-width bins are supported.")
+        src, color = cls._norm_df_xy_color(cat.df, [value], color)
+        ori = Orientation.parse(orient)
+        splitby, dodge = _shared.norm_dodge(cat.df, offsets, color, dodge=dodge)
+        xs, arrays, categories = cat.prep_arrays(splitby, value, dodge=dodge, width=1.0)
+        extent = cat.zoom_factor(dodge, width=1.0)
+        hist = histograms(arrays, bins, range)
+        ymin, ymax = hist.edges[0], hist.edges[-1]
+        image_layers = list[_l.Image]()
+        densities = hist.density()
+        color_by = _p.ColorPlan.from_palette(color, palette)
+        clim = (0, max(dens.max() for dens in densities))
+        colors = color_by.generate(categories, splitby)
+        for i, dens in enumerate(densities):
+            cmap = _gen_cmap_from_color(colors[i])
+            x = xs[i]
+            if ori.is_vertical:
+                img = _l.Image(
+                    dens.reshape(-1, 1), cmap=cmap, clim=clim, backend=backend,
+                ).fit_to(x - extent / 2, x + extent / 2, ymin, ymax)  # fmt: skip
+            else:
+                img = _l.Image(
+                    dens.reshape(1, -1), cmap=cmap, clim=clim, backend=backend,
+                ).fit_to(ymin, ymax, x - extent / 2, x + extent / 2)  # fmt: skip
+            image_layers.append(img)
+        base = _lg.LayerCollectionBase(image_layers, name=name)
         return cls(base, src, color_by, categories)
 
     @staticmethod
-    def _norm_df_xy_color(df, x, y, color):
+    def _norm_df_xy_color(df, cols: list[str], color):
         src = parse(df)
         # dtype check
-        if src[x].dtype.kind not in "fiub":
-            raise ValueError(f"Column {x!r} is not numeric.")
-        if src[y].dtype.kind not in "fiub":
-            raise ValueError(f"Column {y!r} is not numeric.")
+        for x in cols:
+            if src[x].dtype.kind not in "fiub":
+                raise ValueError(f"Column {x!r} is not numeric.")
 
         if isinstance(color, str):
             color = (color,)
@@ -376,6 +412,11 @@ class DFMultiHeatmap(
             edge = _legend.EdgeInfo(color, width=0)
             items.append((label, _legend.BarLegendItem(face, edge)))
         return _legend.LegendItemCollection(items)
+
+
+def _gen_cmap_from_color(next_color: Color):
+    next_background = Color([*next_color.rgba[:3], 0.0])
+    return [next_background, next_color]
 
 
 class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):

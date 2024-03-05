@@ -124,15 +124,19 @@ def test_cat_xy(backend: str):
     im.cmap = "jet"
     im.clim
     im.clim = (0, 1)
-    canvas.imref(im).add_text()
+    im.with_text()
 
     df = {
         "x": ["A", "A", "A", "B", "A", "B"],
         "y": ["P", "Q", "Q", "Q", "P", "Q"],
         "z": [1.1, 2.1, 3.4, 6.4, 1.1, 6.8],
     }
-    im = canvas.cat_xy(df, "x", "y").mean().add_heatmap(value="z", fill=-1)
-    canvas.imref(im).add_text(fmt=".1f")
+    im = (
+        canvas.cat_xy(df, "x", "y")
+        .mean()
+        .add_heatmap(value="z", fill=-1)
+    )
+    im.with_text(fmt=".1f")
     assert im.clim == (1.1, 6.6)
 
     canvas.cat_xy(df, "x", "y").first().add_markers(value="z")

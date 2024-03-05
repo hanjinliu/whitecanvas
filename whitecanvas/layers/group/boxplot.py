@@ -24,6 +24,7 @@ from whitecanvas.types import (
     Hatch,
     LineStyle,
     Orientation,
+    OrientationLike,
     _Void,
 )
 from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
@@ -60,7 +61,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         medians: MultiLine,
         *,
         name: str | None = None,
-        orient: Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         capsize: float = 0.15,
     ):
         super().__init__([boxes, whiskers, medians], name=name)
@@ -91,7 +92,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
         data: list[ArrayLike1D],
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         extent: float = 0.3,
         capsize: float = 0.15,
         color: ColorType | list[ColorType] = "blue",

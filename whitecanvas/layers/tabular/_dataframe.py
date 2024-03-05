@@ -14,6 +14,7 @@ from typing import (
 
 import numpy as np
 from cmap import Color, Colormap
+from param import Callable
 
 from whitecanvas import layers as _l
 from whitecanvas import theme
@@ -31,6 +32,8 @@ from whitecanvas.types import (
     KdeBandWidthType,
     LineStyle,
     Orientation,
+    OrientationLike,
+    Rect,
     Symbol,
 )
 from whitecanvas.utils.hist import histograms
@@ -246,6 +249,29 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
     ) -> DFHeatmap[_DF]:
         return cls(_l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend), src)
 
+    def with_text(
+        self,
+        *,
+        size: int = 8,
+        color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
+        fmt: str = "",
+        text_invalid: str | None = None,
+    ) -> _lg.MainAndOtherLayers[DFHeatmap[_DF], _l.Texts]:
+        """Add text layer to the heatmap."""
+        text = self._base_layer._make_text_layer(
+            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid
+        )
+        return _lg.MainAndOtherLayers([self, text], name=self.name)
+
+    def with_colorbar(
+        self,
+        bbox: Rect | None = None,
+        orient: str | Orientation = Orientation.VERTICAL,
+    ) -> _lg.MainAndOtherLayers[DFHeatmap[_DF], _lg.Colorbar]:
+        """Add colorbar to the heatmap."""
+        cbar = self._base_layer._make_colorbar(bbox=bbox, orient=orient)
+        return _lg.MainAndOtherLayers([self, cbar], name=self.name)
+
 
 class DFMultiHeatmap(
     _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_l.Image], _DF],
@@ -351,7 +377,7 @@ class DFMultiHeatmap(
         bins: HistBinType = "auto",
         range=None,
         palette: ColormapType = "tab10",
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         backend: Backend | str | None = None,
     ) -> DFMultiHeatmap[_DF]:
         if not isinstance(bins, (int, np.integer, str)):
@@ -601,7 +627,7 @@ class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
         style: str | None = None,
         hatch: str | None = None,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         backend: str | Backend | None = None,
     ) -> DFHistograms[_DF]:
         splitby = _shared.join_columns(color, style, source=df)
@@ -663,7 +689,7 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
         style: str | None = None,
         hatch: str | None = None,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         backend: str | Backend | None = None,
     ) -> DFKde[_DF]:
         splitby = _shared.join_columns(color, style, source=df)

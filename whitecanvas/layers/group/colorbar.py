@@ -9,6 +9,8 @@ from whitecanvas.types import ColormapType, Orientation
 
 
 class Colorbar(LayerContainer):
+    _NO_PADDING_NEEDED = True
+
     def __init__(
         self,
         cmap: Colormap,
@@ -50,6 +52,10 @@ class Colorbar(LayerContainer):
     @scale.setter
     def scale(self, value):
         self.lut.scale = value
+        self._move_children()
+
+    def fit_to(self, bbox):
+        self.lut.fit_to(bbox)
         self._move_children()
 
     @property

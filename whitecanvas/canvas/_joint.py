@@ -25,9 +25,10 @@ from whitecanvas.types import (
     HistogramKind,
     HistogramShape,
     KdeBandWidthType,
-    LegendLocation,
-    LegendLocationStr,
+    Location,
+    LocationStr,
     Orientation,
+    OrientationLike,
     Symbol,
 )
 
@@ -163,7 +164,7 @@ class JointGrid(CanvasGrid):
     def add_legend(
         self,
         layers: Sequence[str | _l.Layer] | None = None,
-        location: LegendLocation | LegendLocationStr = "top_right",
+        location: Location | LocationStr = "top_right",
         *,
         title: str | None = None,
     ):
@@ -434,7 +435,7 @@ class JointGrid(CanvasGrid):
 
 
 class MarginalPlotter(ABC):
-    def __init__(self, orient: str | Orientation):
+    def __init__(self, orient: OrientationLike):
         self._orient = Orientation.parse(orient)
 
     @abstractmethod
@@ -474,7 +475,7 @@ class MarginalPlotter(ABC):
 class MarginalHistPlotter(MarginalPlotter):
     def __init__(
         self,
-        orient: str | Orientation,
+        orient: OrientationLike,
         bins: HistBinType = "auto",
         limits: tuple[float, float] | None = None,
         kind: str | HistogramKind = "density",
@@ -540,7 +541,7 @@ class MarginalHistPlotter(MarginalPlotter):
 class MarginalKdePlotter(MarginalPlotter):
     def __init__(
         self,
-        orient: str | Orientation,
+        orient: OrientationLike,
         width: float = 1.0,
         band_width: KdeBandWidthType = "scott",
         fill_alpha: float = 0.2,
@@ -601,7 +602,7 @@ class MarginalKdePlotter(MarginalPlotter):
 class MarginalRugPlotter(MarginalPlotter):
     def __init__(
         self,
-        orient: str | Orientation,
+        orient: OrientationLike,
         width: float = 1.0,
         length: float = 0.1,
     ):

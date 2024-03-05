@@ -23,7 +23,7 @@ from whitecanvas.backend.bokeh._labels import (
 from whitecanvas.backend.bokeh._legend import make_sample_item
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
 from whitecanvas.types import (
-    LegendLocation,
+    Location,
     Modifier,
     MouseButton,
     MouseEvent,
@@ -269,7 +269,7 @@ class Canvas:
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+        anchor: Location = Location.TOP_RIGHT,
     ):
         bk_items = []
         bk_samples = []
@@ -308,27 +308,27 @@ def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, 
 
 # location and side
 _LEGEND_LOCATIONS = {
-    LegendLocation.TOP_LEFT: ("top_left", "center"),
-    LegendLocation.TOP_CENTER: ("center_top", "center"),
-    LegendLocation.TOP_RIGHT: ("top_right", "center"),
-    LegendLocation.CENTER_LEFT: ("center_left", "center"),
-    LegendLocation.CENTER: ("center_center", "center"),
-    LegendLocation.CENTER_RIGHT: ("center_right", "center"),
-    LegendLocation.BOTTOM_LEFT: ("bottom_left", "center"),
-    LegendLocation.BOTTOM_CENTER: ("bottom_center", "center"),
-    LegendLocation.BOTTOM_RIGHT: ("bottom_right", "center"),
-    LegendLocation.LEFT_SIDE_TOP: ("top", "left"),
-    LegendLocation.LEFT_SIDE_CENTER: ("center", "left"),
-    LegendLocation.LEFT_SIDE_BOTTOM: ("bottom", "left"),
-    LegendLocation.RIGHT_SIDE_TOP: ("top", "right"),
-    LegendLocation.RIGHT_SIDE_CENTER: ("center", "right"),
-    LegendLocation.RIGHT_SIDE_BOTTOM: ("bottom", "right"),
-    LegendLocation.TOP_SIDE_LEFT: ("left", "above"),
-    LegendLocation.TOP_SIDE_CENTER: ("center", "above"),
-    LegendLocation.TOP_SIDE_RIGHT: ("right", "above"),
-    LegendLocation.BOTTOM_SIDE_LEFT: ("left", "below"),
-    LegendLocation.BOTTOM_SIDE_CENTER: ("center", "below"),
-    LegendLocation.BOTTOM_SIDE_RIGHT: ("right", "below"),
+    Location.TOP_LEFT: ("top_left", "center"),
+    Location.TOP_CENTER: ("center_top", "center"),
+    Location.TOP_RIGHT: ("top_right", "center"),
+    Location.CENTER_LEFT: ("center_left", "center"),
+    Location.CENTER: ("center_center", "center"),
+    Location.CENTER_RIGHT: ("center_right", "center"),
+    Location.BOTTOM_LEFT: ("bottom_left", "center"),
+    Location.BOTTOM_CENTER: ("bottom_center", "center"),
+    Location.BOTTOM_RIGHT: ("bottom_right", "center"),
+    Location.LEFT_SIDE_TOP: ("top", "left"),
+    Location.LEFT_SIDE_CENTER: ("center", "left"),
+    Location.LEFT_SIDE_BOTTOM: ("bottom", "left"),
+    Location.RIGHT_SIDE_TOP: ("top", "right"),
+    Location.RIGHT_SIDE_CENTER: ("center", "right"),
+    Location.RIGHT_SIDE_BOTTOM: ("bottom", "right"),
+    Location.TOP_SIDE_LEFT: ("left", "above"),
+    Location.TOP_SIDE_CENTER: ("center", "above"),
+    Location.TOP_SIDE_RIGHT: ("right", "above"),
+    Location.BOTTOM_SIDE_LEFT: ("left", "below"),
+    Location.BOTTOM_SIDE_CENTER: ("center", "below"),
+    Location.BOTTOM_SIDE_RIGHT: ("right", "below"),
 }
 
 

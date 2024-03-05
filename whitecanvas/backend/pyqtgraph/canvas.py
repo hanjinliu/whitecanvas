@@ -17,7 +17,7 @@ from whitecanvas.backend.pyqtgraph._legend import QtItemSampleBase, make_sample_
 from whitecanvas.backend.pyqtgraph._qt_utils import from_qt_button, from_qt_modifiers
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
 from whitecanvas.types import (
-    LegendLocation,
+    Location,
     MouseButton,
     MouseEvent,
     MouseEventType,
@@ -214,7 +214,7 @@ class Canvas:
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation,
+        anchor: Location,
     ):
         pos, offset = _LEGEND_POS[anchor]
         legend = self._plot_item.addLegend(sampleType=QtItemSampleBase)
@@ -277,28 +277,28 @@ class Canvas:
 
 
 _LEGEND_POS = {
-    LegendLocation.TOP_LEFT: ((0.0, 0.0), (10, 10)),
-    LegendLocation.TOP_CENTER: ((0.5, 0.0), (0, 10)),
-    LegendLocation.TOP_RIGHT: ((1.0, 0.0), (-10, 10)),
-    LegendLocation.CENTER_LEFT: ((0.0, 0.5), (10, 0)),
-    LegendLocation.CENTER: ((0.5, 0.5), (0, 0)),
-    LegendLocation.CENTER_RIGHT: ((1.0, 0.5), (-10, 0)),
-    LegendLocation.BOTTOM_LEFT: ((0.0, 1.0), (10, -10)),
-    LegendLocation.BOTTOM_CENTER: ((0.5, 1.0), (0, -10)),
-    LegendLocation.BOTTOM_RIGHT: ((1.0, 1.0), (-10, -10)),
+    Location.TOP_LEFT: ((0.0, 0.0), (10, 10)),
+    Location.TOP_CENTER: ((0.5, 0.0), (0, 10)),
+    Location.TOP_RIGHT: ((1.0, 0.0), (-10, 10)),
+    Location.CENTER_LEFT: ((0.0, 0.5), (10, 0)),
+    Location.CENTER: ((0.5, 0.5), (0, 0)),
+    Location.CENTER_RIGHT: ((1.0, 0.5), (-10, 0)),
+    Location.BOTTOM_LEFT: ((0.0, 1.0), (10, -10)),
+    Location.BOTTOM_CENTER: ((0.5, 1.0), (0, -10)),
+    Location.BOTTOM_RIGHT: ((1.0, 1.0), (-10, -10)),
     # These are not supported in pyqtgraph. Use the closest one.
-    LegendLocation.LEFT_SIDE_TOP: ((0.0, 0.0), (10, 10)),
-    LegendLocation.LEFT_SIDE_CENTER: ((0.0, 0.5), (10, 0)),
-    LegendLocation.LEFT_SIDE_BOTTOM: ((0.0, 1.0), (10, -10)),
-    LegendLocation.RIGHT_SIDE_TOP: ((1.0, 0.0), (-10, 10)),
-    LegendLocation.RIGHT_SIDE_CENTER: ((1.0, 0.5), (-10, 0)),
-    LegendLocation.RIGHT_SIDE_BOTTOM: ((1.0, 1.0), (-10, -10)),
-    LegendLocation.TOP_SIDE_LEFT: ((0.0, 0.0), (10, 10)),
-    LegendLocation.TOP_SIDE_CENTER: ((0.5, 0.0), (0, 10)),
-    LegendLocation.TOP_SIDE_RIGHT: ((1.0, 0.0), (-10, 10)),
-    LegendLocation.BOTTOM_SIDE_LEFT: ((0.0, 1.0), (10, -10)),
-    LegendLocation.BOTTOM_SIDE_CENTER: ((0.5, 1.0), (0, -10)),
-    LegendLocation.BOTTOM_SIDE_RIGHT: ((1.0, 1.0), (-10, -10)),
+    Location.LEFT_SIDE_TOP: ((0.0, 0.0), (10, 10)),
+    Location.LEFT_SIDE_CENTER: ((0.0, 0.5), (10, 0)),
+    Location.LEFT_SIDE_BOTTOM: ((0.0, 1.0), (10, -10)),
+    Location.RIGHT_SIDE_TOP: ((1.0, 0.0), (-10, 10)),
+    Location.RIGHT_SIDE_CENTER: ((1.0, 0.5), (-10, 0)),
+    Location.RIGHT_SIDE_BOTTOM: ((1.0, 1.0), (-10, -10)),
+    Location.TOP_SIDE_LEFT: ((0.0, 0.0), (10, 10)),
+    Location.TOP_SIDE_CENTER: ((0.5, 0.0), (0, 10)),
+    Location.TOP_SIDE_RIGHT: ((1.0, 0.0), (-10, 10)),
+    Location.BOTTOM_SIDE_LEFT: ((0.0, 1.0), (10, -10)),
+    Location.BOTTOM_SIDE_CENTER: ((0.5, 1.0), (0, -10)),
+    Location.BOTTOM_SIDE_RIGHT: ((1.0, 1.0), (-10, -10)),
 }
 
 

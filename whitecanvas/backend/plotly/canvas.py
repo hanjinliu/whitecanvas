@@ -9,11 +9,15 @@ import numpy as np
 from plotly import graph_objects as go
 
 from whitecanvas import protocols
-from whitecanvas.backend.plotly._base import Location, PlotlyHoverableLayer, PlotlyLayer
+from whitecanvas.backend.plotly._base import (
+    FigureLocation,
+    PlotlyHoverableLayer,
+    PlotlyLayer,
+)
 from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.plotly._legend import make_sample_item
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
-from whitecanvas.types import LegendLocation, MouseEvent
+from whitecanvas.types import Location, MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
 
 if TYPE_CHECKING:
@@ -31,7 +35,7 @@ class Canvas:
         app: str = "default",
     ):
         self._fig = fig
-        self._loc = Location(row + 1, col + 1, secondary_y)
+        self._loc = FigureLocation(row + 1, col + 1, secondary_y)
         self._xaxis = Axis(self, axis="xaxis")
         self._yaxis = Axis(self, axis="yaxis")
         self._xticks = Ticks(self, axis="xaxis")
@@ -196,7 +200,7 @@ class Canvas:
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+        anchor: Location = Location.TOP_RIGHT,
     ):
         plotly_traces = []
         for label, item in items:
@@ -222,127 +226,127 @@ class Canvas:
 
 
 _LEGEND_KWARGS = {
-    LegendLocation.TOP_LEFT: {
+    Location.TOP_LEFT: {
         "x": 0.01,
         "y": 0.99,
         "xanchor": "left",
         "yanchor": "top",
     },
-    LegendLocation.TOP_CENTER: {
+    Location.TOP_CENTER: {
         "x": 0.5,
         "y": 0.99,
         "xanchor": "center",
         "yanchor": "top",
     },
-    LegendLocation.TOP_RIGHT: {
+    Location.TOP_RIGHT: {
         "x": 0.99,
         "y": 0.99,
         "xanchor": "right",
         "yanchor": "top",
     },
-    LegendLocation.BOTTOM_LEFT: {
+    Location.BOTTOM_LEFT: {
         "x": 0.01,
         "y": 0.01,
         "xanchor": "left",
         "yanchor": "bottom",
     },
-    LegendLocation.BOTTOM_CENTER: {
+    Location.BOTTOM_CENTER: {
         "x": 0.5,
         "y": 0.01,
         "xanchor": "center",
         "yanchor": "bottom",
     },
-    LegendLocation.BOTTOM_RIGHT: {
+    Location.BOTTOM_RIGHT: {
         "x": 0.99,
         "y": 0.01,
         "xanchor": "right",
         "yanchor": "bottom",
     },
-    LegendLocation.CENTER_LEFT: {
+    Location.CENTER_LEFT: {
         "x": 0.01,
         "y": 0.5,
         "xanchor": "left",
         "yanchor": "middle",
     },
-    LegendLocation.CENTER_RIGHT: {
+    Location.CENTER_RIGHT: {
         "x": 0.99,
         "y": 0.5,
         "xanchor": "right",
         "yanchor": "middle",
     },
-    LegendLocation.CENTER: {
+    Location.CENTER: {
         "x": 0.5,
         "y": 0.5,
         "xanchor": "center",
         "yanchor": "middle",
     },
-    LegendLocation.TOP_SIDE_LEFT: {
+    Location.TOP_SIDE_LEFT: {
         "x": 0.01,
         "y": 1.03,
         "xanchor": "left",
         "yanchor": "bottom",
     },
-    LegendLocation.TOP_SIDE_CENTER: {
+    Location.TOP_SIDE_CENTER: {
         "x": 0.5,
         "y": 1.03,
         "xanchor": "center",
         "yanchor": "bottom",
     },
-    LegendLocation.TOP_SIDE_RIGHT: {
+    Location.TOP_SIDE_RIGHT: {
         "x": 0.99,
         "y": 1.03,
         "xanchor": "right",
         "yanchor": "bottom",
     },
-    LegendLocation.BOTTOM_SIDE_LEFT: {
+    Location.BOTTOM_SIDE_LEFT: {
         "x": 0.01,
         "y": -0.03,
         "xanchor": "left",
         "yanchor": "top",
     },
-    LegendLocation.BOTTOM_SIDE_CENTER: {
+    Location.BOTTOM_SIDE_CENTER: {
         "x": 0.5,
         "y": -0.03,
         "xanchor": "center",
         "yanchor": "top",
     },
-    LegendLocation.BOTTOM_SIDE_RIGHT: {
+    Location.BOTTOM_SIDE_RIGHT: {
         "x": 0.99,
         "y": -0.03,
         "xanchor": "right",
         "yanchor": "top",
     },
-    LegendLocation.LEFT_SIDE_TOP: {
+    Location.LEFT_SIDE_TOP: {
         "x": -0.03,
         "y": 0.99,
         "xanchor": "right",
         "yanchor": "top",
     },
-    LegendLocation.LEFT_SIDE_CENTER: {
+    Location.LEFT_SIDE_CENTER: {
         "x": -0.03,
         "y": 0.5,
         "xanchor": "right",
         "yanchor": "middle",
     },
-    LegendLocation.LEFT_SIDE_BOTTOM: {
+    Location.LEFT_SIDE_BOTTOM: {
         "x": -0.03,
         "y": 0.01,
         "xanchor": "right",
         "yanchor": "bottom",
     },
-    LegendLocation.RIGHT_SIDE_TOP: {
+    Location.RIGHT_SIDE_TOP: {
         "x": 1.03,
         "y": 0.99,
         "xanchor": "left",
         "yanchor": "top",
     },
-    LegendLocation.RIGHT_SIDE_CENTER: {
+    Location.RIGHT_SIDE_CENTER: {
         "x": 1.03,
         "y": 0.5,
         "xanchor": "left",
         "yanchor": "middle",
     },
-    LegendLocation.RIGHT_SIDE_BOTTOM: {
+    Location.RIGHT_SIDE_BOTTOM: {
         "x": 1.03,
         "y": 0.01,
         "xanchor": "left",

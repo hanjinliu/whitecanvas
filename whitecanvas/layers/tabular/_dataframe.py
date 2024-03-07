@@ -3,18 +3,10 @@
 from __future__ import annotations
 
 from itertools import cycle
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    Iterable,
-    TypeVar,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar, overload
 
 import numpy as np
 from cmap import Color, Colormap
-from param import Callable
 
 from whitecanvas import layers as _l
 from whitecanvas import theme

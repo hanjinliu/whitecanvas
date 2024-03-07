@@ -687,6 +687,15 @@ class LabeledImage(LayerContainer):
         return self.image.shape
 
     @property
+    def data(self) -> NDArray[np.number]:
+        """The colored image data (N, M, 4)."""
+        return self.image.data
+
+    @data.setter
+    def data(self, data: NDArray[np.number]):
+        self.image.data = data
+
+    @property
     def data_mapped(self) -> NDArray[np.number]:
         """The colored image data (N, M, 4) mapped by the colormap."""
         return self.image.data_mapped
@@ -742,6 +751,7 @@ class LabeledImage(LayerContainer):
         color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
         fmt: str = "",
         text_invalid: str | None = None,
+        mask: NDArray[np.bool_] | None = None,
     ) -> LabeledImage:
         """
         Add text annotation to each pixel of the image.
@@ -755,13 +765,13 @@ class LabeledImage(LayerContainer):
             intensity.
         fmt : str, optional
             Format string for the text.
+        mask : array-like, optional
+            Mask to specify the valid pixels for the text annotation.
         """
         texts = self.image._make_text_layer(
-            size=size,
-            color_rule=color_rule,
-            fmt=fmt,
-            text_invalid=text_invalid,
-        )
+            size=size, color_rule=color_rule, fmt=fmt,
+            text_invalid=text_invalid, mask=mask,
+        )  # fmt: skip
         self.texts.data = texts.data
         self.texts.update(color=texts.color, size=texts.size, anchor=texts.anchor)
         return self

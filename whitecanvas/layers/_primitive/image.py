@@ -273,9 +273,10 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
         fmt: str = "",
         text_invalid: str | None = None,
+        mask: NDArray[np.bool_] | None = None,
     ) -> LabeledImage:
         """
-        Add text annotation to each pixel of the image.
+        Add text layer that displays the pixel values of the image.
 
         Parameters
         ----------
@@ -286,11 +287,14 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             intensity.
         fmt : str, optional
             Format string for the text.
+        mask : array_like, optional
+            Mask to specify which pixel to add text if specified.
         """
         from whitecanvas.layers.group import LabeledImage
 
         text_layer = self._make_text_layer(
-            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid
+            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid,
+            mask=mask,
         )  # fmt: skip
         return LabeledImage(self, texts=text_layer, name=self.name)
 
@@ -329,6 +333,7 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
         fmt: str = "",
         text_invalid: str | None = None,
+        mask: NDArray[np.bool_] | None = None,
     ) -> MultiFontTexts:
         from whitecanvas.layers._primitive import Texts
 
@@ -356,6 +361,18 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             _col = _norm_color(color_rule)
             _color_rule = lambda _: _col  # noqa: E731
 
+        # normalize mask
+        if mask is None:
+            ij_iter = np.ndindex(self.data.shape[:2])
+        else:
+            mask = np.asarray(mask, dtype=bool)
+            if mask.shape != self.data.shape[:2]:
+                raise ValueError(
+                    f"Mask shape {mask.shape} must be the same as the image "
+                    f"shape {self.data.shape[:2]}."
+                )
+            ij_iter = np.argwhere(mask)
+
         img_data = self.data
         img_color = self.data_mapped
         ny, nx = self.shape
@@ -377,19 +394,21 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
                 fmt_style = "{:" + fmt + "}"
         else:
             fmt_style = "{}"
-        for iy, y in enumerate(ys):
-            for ix, x in enumerate(xs):
-                if np.isfinite(img_data[iy, ix]):
-                    text = fmt_style.format(img_data[iy, ix])
+
+        for iy, ix in ij_iter:
+            x = xs[ix]
+            y = ys[iy]
+            if np.isfinite(img_data[iy, ix]):
+                text = fmt_style.format(img_data[iy, ix])
+            else:
+                if text_invalid is None:
+                    text = repr(img_data[iy, ix])
                 else:
-                    if text_invalid is None:
-                        text = repr(img_data[iy, ix])
-                    else:
-                        text = text_invalid
-                texts.append(text)
-                xdata.append(x)
-                ydata.append(y)
-                colors.append(_color_rule(img_color[iy, ix]))
+                    text = text_invalid
+            texts.append(text)
+            xdata.append(x)
+            ydata.append(y)
+            colors.append(_color_rule(img_color[iy, ix]))
         return Texts(
             np.array(xdata), np.array(ydata), texts, size=size, anchor="center"
         ).with_font_multi(color=np.stack(colors, axis=0))

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar, ove
 
 import numpy as np
 from cmap import Color, Colormap
+from numpy.typing import NDArray
 
 from whitecanvas import layers as _l
 from whitecanvas import theme
@@ -254,11 +255,27 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_lg.LabeledImage, _DF], Generic[_D
         color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
         fmt: str = "",
         text_invalid: str | None = None,
+        mask: NDArray[np.bool_] | None = None,
     ) -> Self:
-        """Add text layer to the heatmap."""
+        """
+        Add text layer that displays the pixel values of the heatmap.
+
+        Parameters
+        ----------
+        size : int, default 8
+            Font size of the text.
+        color_rule : color-like, callable, optional
+            Rule to define the color for each text based on the color-mapped image
+            intensity.
+        fmt : str, optional
+            Format string for the text.
+        mask : array_like, optional
+            Mask to specify which pixel to add text if specified.
+        """
         self._base_layer.with_text(
-            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid
-        )
+            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid,
+            mask=mask,
+        )  # fmt: skip
         return self
 
     def with_colorbar(

@@ -96,6 +96,7 @@ class Texts(Artist, MplLayer):
         elif x.size < len(self._children):
             for c in self._children[x.size :]:
                 c.remove()
+            self._children = self._children[: x.size]
         for child, x0, y0 in zip(self.get_children(), x, y):
             child.set_position((x0, y0))
 

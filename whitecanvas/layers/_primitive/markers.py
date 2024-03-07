@@ -27,6 +27,7 @@ from whitecanvas.types import (
     Hatch,
     LineStyle,
     Orientation,
+    OrientationLike,
     Symbol,
     XYData,
     _Void,
@@ -510,7 +511,7 @@ class Markers(
 
     def with_stem(
         self,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         *,
         bottom: NDArray[np.floating] | float | None = None,
         color: ColorType | _Void = _void,
@@ -524,7 +525,7 @@ class Markers(
 
         Parameters
         ----------
-        orient : str or Orientation, default vertical
+        orient : str or Orientation, default "vertical"
             Orientation to grow stems.
         bottom : float or array-like, optional
             Bottom of the stems. If not specified, the bottom is set to 0.

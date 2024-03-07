@@ -10,7 +10,14 @@ from whitecanvas.layers._base import DataBoundLayer
 from whitecanvas.layers._mixin import FaceEdgeMixin, FaceEdgeMixinEvents
 from whitecanvas.layers._sizehint import xyy_size_hint
 from whitecanvas.protocols import BandProtocol
-from whitecanvas.types import ArrayLike1D, ColorType, Hatch, Orientation, XYYData
+from whitecanvas.types import (
+    ArrayLike1D,
+    ColorType,
+    Hatch,
+    Orientation,
+    OrientationLike,
+    XYYData,
+)
 from whitecanvas.utils.normalize import as_array_1d
 
 if TYPE_CHECKING:
@@ -30,7 +37,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         t: ArrayLike1D,
         edge_low: ArrayLike1D,
         edge_high: ArrayLike1D,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         *,
         name: str | None = None,
         color: ColorType = "blue",

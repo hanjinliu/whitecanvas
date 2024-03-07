@@ -1,26 +1,36 @@
 from __future__ import annotations
 
-from typing import Any, overload
+from typing import TYPE_CHECKING, Any, Callable, overload
 
 import numpy as np
-from cmap import Colormap
+from cmap import Color, Colormap
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
+from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers._base import DataBoundLayer, LayerEvents
 from whitecanvas.protocols import ImageProtocol
 from whitecanvas.types import (
     ArrayLike1D,
     ColormapType,
+    ColorType,
     HistBinType,
     KdeBandWidthType,
+    Orientation,
+    OrientationLike,
     Origin,
     Rect,
     _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d
 from whitecanvas.utils.type_check import is_real_number
+
+if TYPE_CHECKING:
+    from whitecanvas.layers import Texts, _mixin
+    from whitecanvas.layers.group import Colorbar, LabeledImage
+
+    MultiFontTexts = Texts[_mixin.MonoFace, _mixin.MonoEdge, _mixin.MultiFont]
 
 _void = _Void()
 
@@ -256,10 +266,198 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         self.scale = sx, sy
         return self
 
+    def with_text(
+        self,
+        *,
+        size: int = 8,
+        color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
+        fmt: str = "",
+        text_invalid: str | None = None,
+        mask: NDArray[np.bool_] | None = None,
+    ) -> LabeledImage:
+        """
+        Add text layer that displays the pixel values of the image.
+
+        Parameters
+        ----------
+        size : int, default 8
+            Font size of the text.
+        color_rule : color-like, callable, optional
+            Rule to define the color for each text based on the color-mapped image
+            intensity.
+        fmt : str, optional
+            Format string for the text.
+        mask : array_like, optional
+            Mask to specify which pixel to add text if specified.
+        """
+        from whitecanvas.layers.group import LabeledImage
+
+        text_layer = self._make_text_layer(
+            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid,
+            mask=mask,
+        )  # fmt: skip
+        return LabeledImage(self, texts=text_layer, name=self.name)
+
+    def with_colorbar(
+        self,
+        bbox: Rect | None = None,
+        *,
+        orient: OrientationLike = "vertical",
+    ) -> LabeledImage:
+        """
+        Add a colorbar to the image.
+
+        Parameters
+        ----------
+        bbox : four float, optional
+            Bounding box of the colorbar. If `None`, the colorbar will be placed at the
+            bottom-right corner of the image.
+        orient : str or Orientation, default "vertical"
+            Orientation of the colorbar.
+        """
+        from whitecanvas.layers.group import LabeledImage
+
+        ori = Orientation.parse(orient)
+        cbar = self._make_colorbar(bbox=bbox, orient=ori)
+        if canvas := self._canvas_ref():
+            if ori.is_vertical and canvas.y.flipped:
+                cbar.lut.data = cbar.lut.data[::-1]
+            elif ori.is_horizontal and canvas.x.flipped:
+                cbar.lut.data = cbar.lut.data[:, ::-1]
+        return LabeledImage(self, colorbar=cbar, name=self.name)
+
+    def _make_text_layer(
+        self,
+        *,
+        size: int = 8,
+        color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
+        fmt: str = "",
+        text_invalid: str | None = None,
+        mask: NDArray[np.bool_] | None = None,
+    ) -> MultiFontTexts:
+        from whitecanvas.layers._primitive import Texts
+
+        # normalize color_rule
+        _color_rule: Callable[[np.ndarray], np.ndarray]
+
+        def _norm_color(x) -> NDArray[np.float32]:
+            if isinstance(x, np.ndarray):
+                return x.astype(np.float32, copy=False)
+            return np.array(Color(x).rgba, dtype=np.float32)
+
+        if color_rule is None:
+            _b = _norm_color("black")
+            _w = _norm_color("white")
+            _bg = _norm_color(theme.get_theme().background_color)[:3]
+
+            def _color_rule(x: NDArray[np.number]) -> NDArray[np.float32]:
+                alpha = x[3]
+                _col = x[:3] * alpha + _bg * (1 - alpha)
+                return _b if _col.sum() > 1.5 else _w
+
+        elif callable(color_rule):
+            _color_rule = lambda x: _norm_color(color_rule(x))  # noqa: E731
+        else:
+            _col = _norm_color(color_rule)
+            _color_rule = lambda _: _col  # noqa: E731
+
+        # normalize mask
+        if mask is None:
+            ij_iter = np.ndindex(self.data.shape[:2])
+        else:
+            mask = np.asarray(mask, dtype=bool)
+            if mask.shape != self.data.shape[:2]:
+                raise ValueError(
+                    f"Mask shape {mask.shape} must be the same as the image "
+                    f"shape {self.data.shape[:2]}."
+                )
+            ij_iter = np.argwhere(mask)
+
+        img_data = self.data
+        img_color = self.data_mapped
+        ny, nx = self.shape
+        dx, dy = self.shift_raw
+        sx, sy = self.scale
+        ys = np.arange(ny) * sy + dy
+        xs = np.arange(nx) * sx + dx
+        texts: list[str] = []
+        xdata: list[float] = []
+        ydata: list[float] = []
+        colors: list[np.ndarray] = []
+        # normalize fmt
+        if fmt:
+            if fmt.startswith(":"):
+                fmt_style = "{" + fmt + "}"
+            elif fmt.startswith("{") and fmt.endswith("}"):
+                fmt_style = fmt
+            else:
+                fmt_style = "{:" + fmt + "}"
+        else:
+            fmt_style = "{}"
+
+        for iy, ix in ij_iter:
+            x = xs[ix]
+            y = ys[iy]
+            if np.isfinite(img_data[iy, ix]):
+                text = fmt_style.format(img_data[iy, ix])
+            else:
+                if text_invalid is None:
+                    text = repr(img_data[iy, ix])
+                else:
+                    text = text_invalid
+            texts.append(text)
+            xdata.append(x)
+            ydata.append(y)
+            colors.append(_color_rule(img_color[iy, ix]))
+        return Texts(
+            np.array(xdata), np.array(ydata), texts, size=size, anchor="center"
+        ).with_font_multi(color=np.stack(colors, axis=0))
+
+    def _make_colorbar(
+        self,
+        bbox: Rect | None = None,
+        orient: OrientationLike = "vertical",
+    ) -> Colorbar:
+        from whitecanvas.layers.group import Colorbar
+
+        orient = Orientation.parse(orient)
+        cbar = Colorbar(self.cmap, name=f"colorbar<{self.name}>", orient=orient)
+        if bbox is None:
+            img_bbox = self.bbox
+            if orient.is_vertical:
+                bbox = Rect(
+                    img_bbox.left + img_bbox.width * 0.92,
+                    img_bbox.left + img_bbox.width * 0.97,
+                    img_bbox.bottom + img_bbox.height * 0.03,
+                    img_bbox.bottom + img_bbox.height * 0.23,
+                )
+            else:
+                bbox = Rect(
+                    img_bbox.left + img_bbox.width * 0.77,
+                    img_bbox.left + img_bbox.width * 0.97,
+                    img_bbox.bottom + img_bbox.height * 0.03,
+                    img_bbox.bottom + img_bbox.height * 0.08,
+                )
+        cbar.fit_to(bbox)
+        return cbar
+
     @property
     def is_rgba(self) -> bool:
         """Whether the image is RGBA."""
         return self.data.ndim == 3
+
+    @property
+    def bbox(self) -> Rect:
+        """Bounding box of the image."""
+        ox, oy = self.shift_raw
+        sizey, sizex = self.data.shape[:2]
+        sx, sy = self.scale
+        return Rect(
+            left=ox - 0.5 * sx,
+            right=ox + (sizex - 0.5) * sx,
+            bottom=oy - 0.5 * sy,
+            top=oy + (sizey - 0.5) * sy,
+        )
 
     @classmethod
     def build_hist(

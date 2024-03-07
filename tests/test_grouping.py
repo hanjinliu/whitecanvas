@@ -69,3 +69,12 @@ def test_line_fill(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_line([-1.5, -1, 0, 1, 1.5]).with_yfill()
     canvas.add_line([-1.5, -1, 0, 1, 1.5], [0, 0, 0, 0, 0]).with_xfill()
+
+def test_image(backend: str):
+    canvas = new_canvas(backend=backend)
+    rng = np.random.default_rng(0)
+    img = canvas.add_image(rng.random((3, 3)))
+    img = img.with_text()
+    img = img.with_colorbar()
+    mask = img.data > 0.5
+    img.with_text(mask=mask)

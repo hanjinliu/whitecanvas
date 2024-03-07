@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from whitecanvas.layers._legend import LegendItem
-    from whitecanvas.types import LegendLocation, LineStyle, MouseEvent
+    from whitecanvas.types import LineStyle, Location, MouseEvent
 
 
 @runtime_checkable
@@ -93,7 +93,7 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation,
+        anchor: Location,
     ):
         """Make legend for the given legend items"""
 

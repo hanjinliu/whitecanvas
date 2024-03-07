@@ -17,6 +17,7 @@ import numpy as np
 from cmap import Color
 from numpy.typing import ArrayLike
 from psygnal import Signal, SignalGroup
+from typing_extensions import deprecated
 
 from whitecanvas import layers as _l
 from whitecanvas import protocols, theme
@@ -34,7 +35,6 @@ from whitecanvas.canvas import (
 from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._dims import Dims
 from whitecanvas.canvas._fit import FitPlotter
-from whitecanvas.canvas._imageref import ImageRef
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.layers import _legend, _mixin
@@ -47,10 +47,11 @@ from whitecanvas.types import (
     Hatch,
     HistBinType,
     KdeBandWidthType,
-    LegendLocation,
-    LegendLocationStr,
     LineStyle,
+    Location,
+    LocationStr,
     Orientation,
+    OrientationLike,
     Rect,
     Symbol,
     _Void,
@@ -565,8 +566,14 @@ class CanvasBase(ABC):
     def between(self, l0, l1) -> BetweenPlotter[Self]:
         return BetweenPlotter(self, l0, l1)
 
-    def imref(self, layer: _l.Image) -> ImageRef[Self]:
+    @deprecated(
+        "ImageRef is deprecated and will be removed in the future. "
+        "Please use the Image methods `with_text`, `with_colorbar` instead.",
+    )
+    def imref(self, layer: _l.Image):
         """The Image reference namespace."""
+        from whitecanvas.canvas._imageref import ImageRef
+
         while isinstance(layer, _l.LayerWrapper):
             layer = layer._base_layer
         if not isinstance(layer, _l.Image):
@@ -583,7 +590,7 @@ class CanvasBase(ABC):
         self,
         layers: Sequence[str | _l.Layer] | None = None,
         *,
-        location: LegendLocation | LegendLocationStr = "top_right",
+        location: Location | LocationStr = "top_right",
         title: str | None = None,
     ):
         """
@@ -626,7 +633,7 @@ class CanvasBase(ABC):
             layers = list(self.layers)
         if title is not None:
             layers = [title, *layers]
-        location = LegendLocation(location)
+        location = Location(location)
 
         items = list[tuple[str, _legend.LegendItem]]()
         for layer in layers:
@@ -782,7 +789,7 @@ class CanvasBase(ABC):
     def add_bars(
         self, center: ArrayLike1D, height: ArrayLike1D, *,
         bottom: ArrayLike1D | None = None, name=None,
-        orient: str | Orientation = Orientation.VERTICAL, extent: float | None = None,
+        orient: OrientationLike = "vertical", extent: float | None = None,
         color: ColorType | None = None, alpha: float = 1.0,
         hatch: str | Hatch | None = None,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
@@ -791,7 +798,7 @@ class CanvasBase(ABC):
     @overload
     def add_bars(
         self, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
-        name=None, orient: str | Orientation = Orientation.VERTICAL,
+        name=None, orient: OrientationLike = "vertical",
         extent: float | None = None, color: ColorType | None = None,
         alpha: float = 1.0, hatch: str | Hatch | None = None,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
@@ -802,7 +809,7 @@ class CanvasBase(ABC):
         *args,
         bottom=None,
         name=None,
-        orient=Orientation.VERTICAL,
+        orient="vertical",
         extent=None,
         color=None,
         alpha=1.0,
@@ -821,7 +828,7 @@ class CanvasBase(ABC):
             Bottom level of the bars.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         extent : float, default 0.8
             Bar width in the canvas coordinate
@@ -861,7 +868,7 @@ class CanvasBase(ABC):
         name: str | None = None,
         shape: Literal["step", "polygon", "bars"] = "bars",
         kind: Literal["count", "density", "frequency", "percent"] = "count",
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
@@ -888,7 +895,7 @@ class CanvasBase(ABC):
             the line nodes.
         kind : {"count", "density", "probability", "frequency", "percent"}, optional
             Kind of the histogram.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
@@ -968,7 +975,7 @@ class CanvasBase(ABC):
         data: ArrayLike1D,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
@@ -986,7 +993,7 @@ class CanvasBase(ABC):
             1D Array of data.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
@@ -1019,7 +1026,7 @@ class CanvasBase(ABC):
         spans: ArrayLike,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "blue",
         alpha: float = 0.4,
         hatch: str | Hatch = Hatch.SOLID,
@@ -1041,7 +1048,7 @@ class CanvasBase(ABC):
             Array that contains the start and end points of the spans.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
@@ -1260,7 +1267,7 @@ class CanvasBase(ABC):
         yhigh: ArrayLike1D,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
@@ -1278,7 +1285,7 @@ class CanvasBase(ABC):
             The other y coordinates of the band.
         name : str, optional
             Name of the layer, by default None
-        orient : str, Orientation, default Orientation.VERTICAL
+        orient : str, Orientation, default "vertical"
             Orientation of the band. If vertical, band will be filled between
             vertical orientation.,
         color : color-like, default None
@@ -1308,7 +1315,7 @@ class CanvasBase(ABC):
         yhigh: ArrayLike1D,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
@@ -1329,7 +1336,7 @@ class CanvasBase(ABC):
             Upper bound of the errorbars.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the errorbars. If vertical, errorbars will be parallel
             to the y axis.
         color : color-like, optional
@@ -1368,7 +1375,7 @@ class CanvasBase(ABC):
         low: float = 0.0,
         high: float = 1.0,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "black",
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -1396,7 +1403,7 @@ class CanvasBase(ABC):
             The upper bound of the rug lines.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the errorbars. If vertical, rug lines will be parallel
             to the y axis.
         color : color-like, optional
@@ -1430,7 +1437,7 @@ class CanvasBase(ABC):
         *,
         bottom: float = 0.0,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         band_width: KdeBandWidthType = "scott",
         color: ColorType | None = None,
         width: float | None = None,
@@ -1447,7 +1454,7 @@ class CanvasBase(ABC):
             Scalar value that define the height of the bottom line.
         name : str, optional
             Name of the layer, by default None
-        orient : str, Orientation, default Orientation.VERTICAL
+        orient : str, Orientation, default "vertical"
             Orientation of the KDE.
         band_width : float or str, default "scott"
             Method to calculate the estimator bandwidth.

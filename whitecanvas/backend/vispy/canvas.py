@@ -204,12 +204,16 @@ class Canvas:
 class CanvasGrid:
     def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
         if app == "qt":  # pragma: no cover
-            if "PyQt5" in sys.modules:
-                app = "qt5"
-            elif "PyQt6" in sys.modules:
-                app = "qt6"
-            elif "PyQt4" in sys.modules:
-                app = "qt4"
+            import importlib
+
+            for mod in ["PyQt5", "PyQt6", "PyQt4"]:
+                try:
+                    importlib.import_module(mod)
+                except ImportError:
+                    pass
+                else:
+                    app = mod.lower()
+                    break
             else:
                 raise ValueError("No Qt bindings found.")
         if app != "default":

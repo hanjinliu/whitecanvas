@@ -320,6 +320,8 @@ def test_to_html(backend: str):
 def test_screenshot(backend: str):
     if backend in ("plotly", "bokeh", "mock"):
         pytest.skip(f"{backend} does not support screenshot")
+    if backend == "vispy":
+        backend += ":qt"
     canvas = new_canvas(backend=backend)
     canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
     canvas._repr_png_()

@@ -1016,6 +1016,7 @@ class TextMixin(
 
     def with_face(
         self,
+        *,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
@@ -1030,6 +1031,7 @@ class TextMixin(
 
     def with_edge(
         self,
+        *,
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -1047,6 +1049,7 @@ class TextMixin(
 
     def with_face_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
@@ -1060,6 +1063,7 @@ class TextMixin(
 
     def with_edge_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
@@ -1077,6 +1081,7 @@ class TextMixin(
 
     def with_font(
         self,
+        *,
         color: ColorType | None = None,
         size: float | None = None,
         family: str | None = None,
@@ -1093,13 +1098,20 @@ class TextMixin(
 
     def with_font_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         size: float | Sequence[float] | None = None,
         family: str | Sequence[str] | None = None,
     ) -> Self:
         """Update the face properties."""
         if color is None:
-            color = self.font.color
+            if isinstance(self._font_namespace, MultiFont):
+                color = _void  # no need to update
+            else:
+                if self.ntexts == 0:
+                    color = _void
+                else:
+                    color = self.font.color
         if not isinstance(self._font_namespace, MultiFont):
             self._font_namespace.events.disconnect()
             self._font_namespace = MultiFont(self)  # type: ignore

@@ -16,7 +16,7 @@ from whitecanvas.types import (
     Hatch,
     HistBinType,
     LineStyle,
-    Orientation,
+    OrientationLike,
     Symbol,
 )
 
@@ -117,7 +117,7 @@ def markers(*args, **kwargs):
 @overload
 def bars(
     center: ArrayLike1D, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
-    name=None, orient: str | Orientation = Orientation.VERTICAL,
+    name=None, orient: OrientationLike = "vertical",
     extent: float = 0.8, color: ColorType | None = None,
     alpha: float = 1.0, hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
@@ -127,7 +127,7 @@ def bars(
 @overload
 def bars(
     height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
-    name=None, orient: str | Orientation = Orientation.VERTICAL,
+    name=None, orient: OrientationLike = "vertical",
     extent: float = 0.8, color: ColorType | None = None,
     alpha: float = 1.0, hatch: str | Hatch = Hatch.SOLID,
 ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
@@ -146,7 +146,7 @@ def band(
     yhigh: ArrayLike1D,
     *,
     name: str | None = None,
-    orient: str | Orientation = Orientation.VERTICAL,
+    orient: OrientationLike = "vertical",
     color: ColorType | None = None,
     alpha: float = 1.0,
     hatch: str | Hatch = Hatch.SOLID,
@@ -190,7 +190,7 @@ def errorbars(
     yhigh: ArrayLike1D,
     *,
     name: str | None = None,
-    orient: str | Orientation = Orientation.VERTICAL,
+    orient: OrientationLike = "vertical",
     color: ColorType = "blue",
     width: float = 1,
     style: LineStyle | str = LineStyle.SOLID,
@@ -208,7 +208,7 @@ def hist(
     range: tuple[float, float] | None = None,
     density: bool = False,
     name: str | None = None,
-    orient: str | Orientation = Orientation.VERTICAL,
+    orient: OrientationLike = "vertical",
     color: ColorType | None = None,
     alpha: float = 1.0,
     hatch: str | Hatch = Hatch.SOLID,
@@ -223,7 +223,7 @@ def rug(
     low: float = 0.0,
     high: float = 1.0,
     name: str | None = None,
-    orient: str | Orientation = Orientation.VERTICAL,
+    orient: OrientationLike = "vertical",
     color: ColorType = "black",
     width: float = 1.0,
     style: LineStyle | str = LineStyle.SOLID,
@@ -238,7 +238,7 @@ def spans(
     spans: ArrayLike,
     *,
     name: str | None = None,
-    orient: str | Orientation = Orientation.VERTICAL,
+    orient: OrientationLike = "vertical",
     color: ColorType = "blue",
     alpha: float = 0.2,
     hatch: str | Hatch = Hatch.SOLID,
@@ -279,7 +279,7 @@ def kde(
     *,
     bottom: float = 0.0,
     name: str | None = None,
-    orient: str | Orientation = Orientation.VERTICAL,
+    orient: OrientationLike = "vertical",
     band_width: float | Literal["scott", "silverman"] = "scott",
     color: ColorType | None = None,
     alpha: float = 1.0,
@@ -293,7 +293,7 @@ def cat(
     data: Any,
     by: str | None = None,
     *,
-    orient: str | Orientation = Orientation.VERTICAL,
+    orient: OrientationLike = "vertical",
     offsets: float | ArrayLike1D | None = None,
     palette: ColormapType | None = None,
     update_labels: bool = True,

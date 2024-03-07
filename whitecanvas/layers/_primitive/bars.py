@@ -29,6 +29,7 @@ from whitecanvas.types import (
     Hatch,
     LineStyle,
     Orientation,
+    OrientationLike,
     XYData,
     _Void,
 )
@@ -76,7 +77,7 @@ class Bars(
         height: ArrayLike1D,
         bottom: ArrayLike1D | None = None,
         *,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         extent: float = 0.8,
         name: str | None = None,
         color: ColorType = "blue",
@@ -202,7 +203,7 @@ class Bars(
         if w <= 0:
             raise ValueError(f"Expected width > 0, got {w}")
         x0, x1, y0, y1 = self._backend._plt_get_data()
-        if self._orient is Orientation.VERTICAL:
+        if self._orient.is_vertical:
             dx = (w - self._bar_width) / 2
             x0 = x0 - dx
             x1 = x1 + dx
@@ -230,7 +231,7 @@ class Bars(
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.LabeledBars:
-        if self.orient is Orientation.VERTICAL:
+        if self.orient.is_vertical:
             return self.with_yerr(
                 err, err_high, color=color, width=width,
                 style=style, antialias=antialias, capsize=capsize
@@ -281,7 +282,7 @@ class Bars(
         old_name = self.name
         yerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
-            antialias=antialias, capsize=capsize, orient=Orientation.VERTICAL,
+            antialias=antialias, capsize=capsize, orient="vertical",
         )  # fmt: skip
         xerr = Errorbars.empty_v(name=f"yerr-of-{old_name}", backend=self._backend_name)
         self.name = old_name
@@ -323,10 +324,11 @@ class Bars(
         style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
     ):
         from whitecanvas.layers._primitive import Errorbars
 
+        orient = Orientation.parse(orient)
         if err_high is None:
             err_high = err
         if color is _void:

@@ -79,7 +79,7 @@ class PlotlyHoverableLayer(PlotlyLayer[_O]):
 
 
 @dataclass
-class Location:
+class FigureLocation:
     row: int
     col: int
     secondary_y: bool = False

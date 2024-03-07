@@ -20,6 +20,7 @@ from whitecanvas.types import (
     KdeBandWidthType,
     LineStyle,
     Orientation,
+    OrientationLike,
     XYYData,
 )
 from whitecanvas.utils.normalize import as_array_1d
@@ -53,7 +54,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
         style: str | LineStyle = LineStyle.SOLID,
         alpha: float = 1.0,
         antialias: bool = True,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         backend: str | Backend | None = None,
     ):
         events, segs, orient = _norm_input(events, low, high, orient)
@@ -61,7 +62,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
             segs, name=name, color=color, alpha=alpha, width=width, style=style,
             antialias=antialias, backend=backend
         )  # fmt: skip
-        self._orient = orient
+        self._orient = Orientation.parse(orient)
 
     def _get_layer_data(self) -> NDArray[np.number]:
         segs = super()._get_layer_data()
@@ -241,7 +242,7 @@ def _norm_input(
     events: ArrayLike1D,
     low: ArrayLike1D | float,
     high: ArrayLike1D | float,
-    orient: str | Orientation,
+    orient: OrientationLike,
 ) -> tuple[NDArray[np.number], NDArray[np.number], Orientation]:
     _t = as_array_1d(events)
     if is_real_number(low):

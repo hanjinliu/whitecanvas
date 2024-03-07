@@ -18,7 +18,15 @@ from whitecanvas.layers._mixin import (
     MultiFaceEdgeMixin,
 )
 from whitecanvas.protocols import BarProtocol
-from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation, Rect, _Void
+from whitecanvas.types import (
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+    OrientationLike,
+    Rect,
+    _Void,
+)
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
@@ -52,7 +60,7 @@ class Spans(
         spans: ArrayLike,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "blue",
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,

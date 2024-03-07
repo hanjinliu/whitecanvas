@@ -44,7 +44,7 @@ class Texts(visuals.Compound):
         return len(self.subvisuals)
 
     def _plt_get_text_color(self):
-        return np.array([t.color for t in self.subvisuals])
+        return np.concatenate([t.color for t in self.subvisuals], axis=0)
 
     def _plt_set_text_color(self, color):
         color = as_color_array(color, self._plt_get_ndata())
@@ -63,13 +63,23 @@ class Texts(visuals.Compound):
     def _plt_get_text_position(
         self,
     ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
+        if len(self.subvisuals) == 0:
+            return np.array([]), np.array([])
         pos = np.stack([np.array(t.pos[0, 1:]) for t in self.subvisuals], axis=0)
         return pos[:, 0], pos[:, 1]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
     ):
-        for t, x0, y0 in zip(self.subvisuals, *position):
+        xs, ys = position
+        ntext = self._plt_get_ndata()
+        if ntext < xs.size:
+            for _ in range(xs.size - ntext):
+                self.add_subvisual(SingleText(0, 0, ""))
+        elif ntext > xs.size:
+            for _ in range(ntext - xs.size):
+                self.remove_subvisual(self.subvisuals[-1])
+        for t, x0, y0 in zip(self.subvisuals, xs, ys):
             t.pos = y0, x0
 
     def _plt_get_text_anchor(self) -> list[Alignment]:

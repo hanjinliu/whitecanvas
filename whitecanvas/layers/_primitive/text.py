@@ -20,7 +20,7 @@ from whitecanvas.types import (
     XYTextData,
     _Void,
 )
-from whitecanvas.utils.normalize import normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
@@ -44,6 +44,8 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
         backend: Backend | str | None = None,
     ):
         super().__init__(name=name)
+        x = as_array_1d(x)
+        y = as_array_1d(y)
         self._backend = self._create_backend(Backend(backend), x, y, text)
         self.update(
             color=color,

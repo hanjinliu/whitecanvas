@@ -1,7 +1,6 @@
 # pragma: no cover
 from __future__ import annotations
 
-import warnings
 import weakref
 from typing import TYPE_CHECKING, Callable, Generic, TypeVar
 
@@ -20,12 +19,6 @@ _C = TypeVar("_C", bound="CanvasBase")
 
 class ImageRef(Generic[_C]):
     def __init__(self, canvas: _C, image: Image):
-        warnings.warn(
-            "ImageRef is deprecated and will be removed in the future. "
-            "Please use the Image methods `with_text` `with_colorbar` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         self._canvas_ref = weakref.ref(canvas)
         self._image_ref = weakref.ref(image)
 

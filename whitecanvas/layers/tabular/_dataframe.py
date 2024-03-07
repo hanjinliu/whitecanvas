@@ -210,7 +210,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         return _legend.LegendItemCollection(items)
 
 
-class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
+class DFHeatmap(_shared.DataFrameLayerWrapper[_lg.LabeledImage, _DF], Generic[_DF]):
     @property
     def cmap(self) -> Colormap:
         """Colormap of the heatmap."""
@@ -239,7 +239,13 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
         clim: tuple[float | None, float | None] | None = None,
         backend: Backend | str | None = None,
     ) -> DFHeatmap[_DF]:
-        return cls(_l.Image(arr, name=name, cmap=cmap, clim=clim, backend=backend), src)
+        base = _lg.LabeledImage(
+            _l.Image(
+                arr, name=f"image-of-{name}", cmap=cmap, clim=clim, backend=backend
+            ),
+            name=name,
+        )
+        return cls(base, src)
 
     def with_text(
         self,
@@ -248,21 +254,21 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_l.Image, _DF], Generic[_DF]):
         color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
         fmt: str = "",
         text_invalid: str | None = None,
-    ) -> _lg.MainAndOtherLayers[DFHeatmap[_DF], _l.Texts]:
+    ) -> Self:
         """Add text layer to the heatmap."""
-        text = self._base_layer._make_text_layer(
+        self._base_layer.with_text(
             size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid
         )
-        return _lg.MainAndOtherLayers([self, text], name=self.name)
+        return self
 
     def with_colorbar(
         self,
         bbox: Rect | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
-    ) -> _lg.MainAndOtherLayers[DFHeatmap[_DF], _lg.Colorbar]:
+        orient: OrientationLike = "vertical",
+    ) -> Self:
         """Add colorbar to the heatmap."""
-        cbar = self._base_layer._make_colorbar(bbox=bbox, orient=orient)
-        return _lg.MainAndOtherLayers([self, cbar], name=self.name)
+        self._base_layer.with_colorbar(bbox=bbox, orient=orient)
+        return self
 
 
 class DFMultiHeatmap(

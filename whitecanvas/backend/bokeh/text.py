@@ -30,6 +30,7 @@ class Texts(BokehLayer[bk_models.Text]):
                 "text": text,
                 "text_font": ["Arial"] * ntexts,
                 "text_font_size": ["12pt"] * ntexts,
+                "text_align": ["left"] * ntexts,
                 "text_color": ["black"] * ntexts,
                 "angle": [0] * ntexts,
                 "background_fill_color": ["#00000000"] * ntexts,
@@ -46,6 +47,7 @@ class Texts(BokehLayer[bk_models.Text]):
             text_font="text_font",
             text_font_size="text_font_size",
             text_color="text_color",
+            text_align="text_align",
             angle="angle",
             background_fill_color="background_fill_color",
             background_hatch_pattern="background_hatch_pattern",
@@ -87,7 +89,7 @@ class Texts(BokehLayer[bk_models.Text]):
 
     def _plt_get_text_size(self) -> float:
         return np.array(
-            [int(s.rstrip("pt")) for s in self._data.data["text_font_size"]],
+            [float(s.rstrip("pt")) for s in self._data.data["text_font_size"]],
             dtype=np.float32,
         )
 
@@ -104,8 +106,57 @@ class Texts(BokehLayer[bk_models.Text]):
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
     ):
+        x, y = position
         cur_data = self._data.data.copy()
-        cur_data["x"], cur_data["y"] = position
+        cur_data["x"], cur_data["y"] = x, y
+        cur_size = len(cur_data["text"])
+        if x.size > cur_size:
+            _n = x.size - cur_size
+            cur_data["text"] = np.concatenate([cur_data["text"], [""] * _n])
+            cur_data["text_font"] = np.concatenate(
+                [cur_data["text_font"], ["Arial"] * _n]
+            )
+            cur_data["text_font_size"] = np.concatenate(
+                [cur_data["text_font_size"], ["12pt"] * _n]
+            )
+            cur_data["text_align"] = np.concatenate(
+                [cur_data["text_align"], ["left"] * _n]
+            )
+            cur_data["text_color"] = np.concatenate(
+                [cur_data["text_color"], ["black"] * _n]
+            )
+            cur_data["angle"] = np.concatenate([cur_data["angle"], [0] * _n])
+            cur_data["background_fill_color"] = np.concatenate(
+                [cur_data["background_fill_color"], ["#00000000"] * _n]
+            )
+            cur_data["background_hatch_pattern"] = np.concatenate(
+                [cur_data["background_hatch_pattern"], [""] * _n]
+            )
+            cur_data["border_line_color"] = np.concatenate(
+                [cur_data["border_line_color"], ["#00000000"] * _n]
+            )
+            cur_data["border_line_width"] = np.concatenate(
+                [cur_data["border_line_width"], [0] * _n]
+            )
+            cur_data["border_line_dash"] = np.concatenate(
+                [cur_data["border_line_dash"], ["solid"] * _n]
+            )
+        elif x.size < cur_size:
+            cur_data["text"] = cur_data["text"][: x.size]
+            cur_data["text_font"] = cur_data["text_font"][: x.size]
+            cur_data["text_font_size"] = cur_data["text_font_size"][: x.size]
+            cur_data["text_align"] = cur_data["text_align"][: x.size]
+            cur_data["text_color"] = cur_data["text_color"][: x.size]
+            cur_data["angle"] = cur_data["angle"][: x.size]
+            cur_data["background_fill_color"] = cur_data["background_fill_color"][
+                : x.size
+            ]
+            cur_data["background_hatch_pattern"] = cur_data["background_hatch_pattern"][
+                : x.size
+            ]
+            cur_data["border_line_color"] = cur_data["border_line_color"][: x.size]
+            cur_data["border_line_width"] = cur_data["border_line_width"][: x.size]
+            cur_data["border_line_dash"] = cur_data["border_line_dash"][: x.size]
         self._data.data = cur_data
 
     def _plt_get_text_anchor(self) -> list[Alignment]:

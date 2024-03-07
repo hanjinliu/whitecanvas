@@ -18,7 +18,7 @@ class Texts(Artist, MplLayer):
         self, x: NDArray[np.floating], y: NDArray[np.floating], text: list[str]
     ):
         super().__init__()
-        self._children = []
+        self._children: list[mplText] = []
         for x0, y0, text0 in zip(x, y, text):
             self._children.append(
                 mplText(
@@ -76,12 +76,26 @@ class Texts(Artist, MplLayer):
 
     def _plt_get_text_position(self) -> tuple[NDArray[np.float32], NDArray[np.float32]]:
         ar = np.array([child.get_position() for child in self.get_children()])
+        if ar.size == 0:
+            return np.array([]), np.array([])
         return ar[:, 0], ar[:, 1]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.float32], NDArray[np.float32]]
     ):
         x, y = position
+        if x.size > len(self._children):
+            for _ in range(x.size - len(self._children)):
+                self._children.append(
+                    mplText(
+                        0, 0, "", verticalalignment="baseline",
+                        horizontalalignment="left", clip_on=True,
+                        color=np.array([0, 0, 0, 1], dtype=np.float32),
+                    )  # fmt: skip
+                )
+        elif x.size < len(self._children):
+            for c in self._children[x.size :]:
+                c.remove()
         for child, x0, y0 in zip(self.get_children(), x, y):
             child.set_position((x0, y0))
 

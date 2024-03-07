@@ -28,7 +28,7 @@ from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from whitecanvas.layers import Texts, _mixin
-    from whitecanvas.layers.group import Colorbar, MainAndOtherLayers
+    from whitecanvas.layers.group import Colorbar, LabeledImage
 
     MultiFontTexts = Texts[_mixin.MonoFace, _mixin.MonoEdge, _mixin.MultiFont]
 
@@ -266,6 +266,62 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         self.scale = sx, sy
         return self
 
+    def with_text(
+        self,
+        *,
+        size: int = 8,
+        color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
+        fmt: str = "",
+        text_invalid: str | None = None,
+    ) -> LabeledImage:
+        """
+        Add text annotation to each pixel of the image.
+
+        Parameters
+        ----------
+        size : int, default 8
+            Font size of the text.
+        color_rule : color-like, callable, optional
+            Rule to define the color for each text based on the color-mapped image
+            intensity.
+        fmt : str, optional
+            Format string for the text.
+        """
+        from whitecanvas.layers.group import LabeledImage
+
+        text_layer = self._make_text_layer(
+            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid
+        )  # fmt: skip
+        return LabeledImage(self, texts=text_layer, name=self.name)
+
+    def with_colorbar(
+        self,
+        bbox: Rect | None = None,
+        *,
+        orient: OrientationLike = "vertical",
+    ) -> LabeledImage:
+        """
+        Add a colorbar to the image.
+
+        Parameters
+        ----------
+        bbox : four float, optional
+            Bounding box of the colorbar. If `None`, the colorbar will be placed at the
+            bottom-right corner of the image.
+        orient : str or Orientation, default "vertical"
+            Orientation of the colorbar.
+        """
+        from whitecanvas.layers.group import LabeledImage
+
+        ori = Orientation.parse(orient)
+        cbar = self._make_colorbar(bbox=bbox, orient=ori)
+        if canvas := self._canvas_ref():
+            if ori.is_vertical and canvas.y.flipped:
+                cbar.lut.data = cbar.lut.data[::-1]
+            elif ori.is_horizontal and canvas.x.flipped:
+                cbar.lut.data = cbar.lut.data[:, ::-1]
+        return LabeledImage(self, colorbar=cbar, name=self.name)
+
     def _make_text_layer(
         self,
         *,
@@ -338,34 +394,6 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             np.array(xdata), np.array(ydata), texts, size=size, anchor="center"
         ).with_font_multi(color=np.stack(colors, axis=0))
 
-    def with_text(
-        self,
-        *,
-        size: int = 8,
-        color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
-        fmt: str = "",
-        text_invalid: str | None = None,
-    ) -> MainAndOtherLayers[Image, MultiFontTexts]:
-        """
-        Add text annotation to each pixel of the image.
-
-        Parameters
-        ----------
-        size : int, default 8
-            Font size of the text.
-        color_rule : color-like, callable, optional
-            Rule to define the color for each text based on the color-mapped image
-            intensity.
-        fmt : str, optional
-            Format string for the text.
-        """
-        from whitecanvas.layers.group import MainAndOtherLayers
-
-        text_layer = self._make_text_layer(
-            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid
-        )  # fmt: skip
-        return MainAndOtherLayers([self, text_layer], name=self.name)
-
     def _make_colorbar(
         self,
         bbox: Rect | None = None,
@@ -375,7 +403,6 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
 
         orient = Orientation.parse(orient)
         cbar = Colorbar(self.cmap, name=f"colorbar<{self.name}>", orient=orient)
-        self.events.cmap.connect_setattr(cbar, "cmap")
         if bbox is None:
             img_bbox = self.bbox
             if orient.is_vertical:
@@ -394,34 +421,6 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
                 )
         cbar.fit_to(bbox)
         return cbar
-
-    def with_colorbar(
-        self,
-        bbox: Rect | None = None,
-        *,
-        orient: OrientationLike = "vertical",
-    ) -> MainAndOtherLayers[Image, Colorbar]:
-        """
-        Add a colorbar to the image.
-
-        Parameters
-        ----------
-        bbox : four float, optional
-            Bounding box of the colorbar. If `None`, the colorbar will be placed at the
-            bottom-right corner of the image.
-        orient : str or Orientation, default "vertical"
-            Orientation of the colorbar.
-        """
-        from whitecanvas.layers.group import MainAndOtherLayers
-
-        ori = Orientation.parse(orient)
-        cbar = self._make_colorbar(bbox=bbox, orient=ori)
-        if canvas := self._canvas_ref():
-            if ori.is_vertical and canvas.y.flipped:
-                cbar.lut.data = cbar.lut.data[::-1]
-            elif ori.is_horizontal and canvas.x.flipped:
-                cbar.lut.data = cbar.lut.data[:, ::-1]
-        return MainAndOtherLayers([self, cbar], name=self.name)
 
     @property
     def is_rgba(self) -> bool:

@@ -9,6 +9,7 @@ from whitecanvas.layers.group.colorbar import Colorbar
 from whitecanvas.layers.group.graph import Graph
 from whitecanvas.layers.group.labeled import (
     LabeledBars,
+    LabeledImage,
     LabeledLine,
     LabeledMarkers,
     LabeledPlot,
@@ -34,6 +35,7 @@ __all__ = [
     "LabeledMarkers",
     "LabeledBars",
     "LabeledPlot",
+    "LabeledImage",
     "LineFillBase",
     "ViolinPlot",
     "MarkerCollection",

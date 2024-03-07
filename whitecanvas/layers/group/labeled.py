@@ -1,26 +1,31 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar, overload
 
 import numpy as np
+from cmap import Colormap
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend, _mixin, _text_utils
 from whitecanvas.layers._base import PrimitiveLayer
-from whitecanvas.layers._primitive import Bars, Errorbars, Line, Markers, Texts
+from whitecanvas.layers._primitive import Bars, Errorbars, Image, Line, Markers, Texts
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import LayerContainer, RichContainerEvents
 from whitecanvas.layers.group._offsets import NoOffset, TextOffset
+from whitecanvas.layers.group.colorbar import Colorbar
 from whitecanvas.layers.group.line_markers import Plot
 from whitecanvas.types import (
     Alignment,
     ArrayLike1D,
+    ColormapType,
     ColorType,
     Hatch,
     LineStyle,
     Orientation,
     OrientationLike,
+    Origin,
+    Rect,
     XYData,
     _Void,
 )
@@ -619,3 +624,166 @@ class PlotEdge(_mixin.MultiPropertyEdgeBase):
         color = self.color.copy()
         color[:, 3] = value
         self.color = color
+
+
+class LabeledImage(LayerContainer):
+    """
+    Layer group for an image with texts and colorbar.
+    """
+
+    def __init__(
+        self,
+        layer: Image,
+        texts: Texts | None = None,
+        colorbar: Colorbar | None = None,
+        name: str | None = None,
+    ):
+        if texts is None:
+            texts = Texts(
+                [], [], [], name="texts", backend=layer._backend_name
+            ).with_font_multi()
+        if colorbar is None:
+            colorbar = Colorbar(layer.cmap)
+            colorbar.visible = False
+        layer.events.cmap.connect_setattr(colorbar, "cmap")
+        super().__init__([layer, texts, colorbar], name=name)
+
+    @property
+    def image(self) -> Image:
+        """The image layer."""
+        return self._children[0]
+
+    @property
+    def texts(self) -> Texts:
+        """The text layer for the overlay texts."""
+        return self._children[1]
+
+    @property
+    def colorbar(self) -> Colorbar:
+        """The colorbar layer."""
+        return self._children[2]
+
+    @property
+    def cmap(self) -> Colormap:
+        """Current colormap."""
+        return self.image.cmap
+
+    @cmap.setter
+    def cmap(self, cmap: ColormapType):
+        self.image.cmap = cmap
+
+    @property
+    def clim(self) -> tuple[float, float]:
+        """Current contrast limits."""
+        return self.image.clim
+
+    @clim.setter
+    def clim(self, clim: tuple[float | None, float | None] | None):
+        self.image.clim = clim
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        """The visual shape of the image (shape without the color axis)."""
+        return self.image.shape
+
+    @property
+    def data_mapped(self) -> NDArray[np.number]:
+        """The colored image data (N, M, 4) mapped by the colormap."""
+        return self.image.data_mapped
+
+    @property
+    def shift(self) -> tuple[float, float]:
+        """Current shift from the origin."""
+        return self.image.shift
+
+    @shift.setter
+    def shift(self, shift: tuple[float, float]):
+        self.image.shift = shift
+
+    @property
+    def shift_raw(self) -> tuple[float, float]:
+        """Current shift from the origin as a raw data."""
+        return self.image.shift
+
+    @property
+    def scale(self) -> tuple[float, float]:
+        """Current scale."""
+        return self.image.scale
+
+    @scale.setter
+    def scale(self, scale: float | tuple[float, float]):
+        self.image.scale = scale
+
+    @property
+    def origin(self) -> Origin:
+        """Current origin of the image."""
+        return self.image.origin
+
+    @origin.setter
+    def origin(self, origin: Origin | str):
+        self.image.origin = origin
+
+    @overload
+    def fit_to(self, bbox: Rect | tuple[float, float, float, float], /) -> Image:
+        ...
+
+    @overload
+    def fit_to(self, left: float, right: float, bottom: float, top: float, /) -> Image:
+        ...
+
+    def fit_to(self, *args) -> Image:
+        """Fit the image to the given bounding box."""
+        self.image.fit_to(*args)
+
+    def with_text(
+        self,
+        *,
+        size: int = 8,
+        color_rule: ColorType | Callable[[np.ndarray], ColorType] | None = None,
+        fmt: str = "",
+        text_invalid: str | None = None,
+    ) -> LabeledImage:
+        """
+        Add text annotation to each pixel of the image.
+
+        Parameters
+        ----------
+        size : int, default 8
+            Font size of the text.
+        color_rule : color-like, callable, optional
+            Rule to define the color for each text based on the color-mapped image
+            intensity.
+        fmt : str, optional
+            Format string for the text.
+        """
+        texts = self.image._make_text_layer(
+            size=size,
+            color_rule=color_rule,
+            fmt=fmt,
+            text_invalid=text_invalid,
+        )
+        self.texts.data = texts.data
+        self.texts.update(color=texts.color, size=texts.size, anchor=texts.anchor)
+        return self
+
+    def with_colorbar(
+        self,
+        bbox: Rect | None = None,
+        *,
+        orient: OrientationLike = "vertical",
+    ) -> LabeledImage:
+        """
+        Add a colorbar to the image.
+
+        Parameters
+        ----------
+        bbox : four float, optional
+            Bounding box of the colorbar. If `None`, the colorbar will be placed at the
+            bottom-right corner of the image.
+        orient : str or Orientation, default "vertical"
+            Orientation of the colorbar.
+        """
+        cbar = self.image._make_colorbar(bbox, orient=orient)
+        self.colorbar.visible = True
+        self.colorbar.fit_to(cbar.lut.bbox)
+        return self

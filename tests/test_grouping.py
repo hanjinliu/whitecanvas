@@ -69,3 +69,9 @@ def test_line_fill(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_line([-1.5, -1, 0, 1, 1.5]).with_yfill()
     canvas.add_line([-1.5, -1, 0, 1, 1.5], [0, 0, 0, 0, 0]).with_xfill()
+
+def test_image(backend: str):
+    canvas = new_canvas(backend=backend)
+    img = canvas.add_image(np.random.random((10, 10)))
+    img = img.with_text()
+    img = img.with_colorbar()

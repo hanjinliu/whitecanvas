@@ -125,6 +125,7 @@ def test_cat_xy(backend: str):
     im.clim
     im.clim = (0, 1)
     im.with_text()
+    im.with_colorbar(orient="horizontal")
 
     df = {
         "x": ["A", "A", "A", "B", "A", "B"],

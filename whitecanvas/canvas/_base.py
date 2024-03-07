@@ -17,6 +17,7 @@ import numpy as np
 from cmap import Color
 from numpy.typing import ArrayLike
 from psygnal import Signal, SignalGroup
+from typing_extensions import deprecated
 
 from whitecanvas import layers as _l
 from whitecanvas import protocols, theme
@@ -34,7 +35,6 @@ from whitecanvas.canvas import (
 from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._dims import Dims
 from whitecanvas.canvas._fit import FitPlotter
-from whitecanvas.canvas._imageref import ImageRef
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.layers import _legend, _mixin
@@ -566,8 +566,14 @@ class CanvasBase(ABC):
     def between(self, l0, l1) -> BetweenPlotter[Self]:
         return BetweenPlotter(self, l0, l1)
 
-    def imref(self, layer: _l.Image) -> ImageRef[Self]:
+    @deprecated(
+        "ImageRef is deprecated and will be removed in the future. "
+        "Please use the Image methods `with_text`, `with_colorbar` instead.",
+    )
+    def imref(self, layer: _l.Image):
         """The Image reference namespace."""
+        from whitecanvas.canvas._imageref import ImageRef
+
         while isinstance(layer, _l.LayerWrapper):
             layer = layer._base_layer
         if not isinstance(layer, _l.Image):

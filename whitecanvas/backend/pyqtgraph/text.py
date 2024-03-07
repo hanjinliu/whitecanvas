@@ -69,12 +69,20 @@ class Texts(pg.ItemGroup, PyQtLayer):
         self,
     ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
         pos = np.array([t.pos() for t in self.childItems()])
+        if pos.size == 0:
+            return np.zeros(0, dtype=np.float32), np.zeros(0, dtype=np.float32)
         return pos[:, 0], pos[:, 1]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
     ):
         x, y = position
+        if x.size > self._plt_get_ndata():
+            for _ in range(x.size - self._plt_get_ndata()):
+                self.addItem(SingleText(0, 0, ""))
+        elif x.size < self._plt_get_ndata():
+            for _ in range(self._plt_get_ndata() - x.size):
+                self.childItems()[-1].setParentItem(None)
         for t, x0, y0 in zip(self.childItems(), x, y):
             t.setPos(x0, y0)
 

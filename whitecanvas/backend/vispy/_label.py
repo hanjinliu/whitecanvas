@@ -53,6 +53,8 @@ class Axis(scene.AxisWidget):
     axis: AxisVisual
 
     def __init__(self, canvas: Canvas, dim: int, **kwargs):
+        kwargs.setdefault("axis_width", 2)
+        kwargs.setdefault("tick_width", 1)
         super().__init__(**kwargs)
         self.unfreeze()
         self._dim = dim
@@ -152,7 +154,7 @@ class Ticks:
     def _plt_get_size(self) -> float:
         return self._text.font_size
 
-    def _plt_set_size(self, size: str):
+    def _plt_set_size(self, size: float):
         self._text.font_size = size
 
     def _plt_get_fontfamily(self) -> str:

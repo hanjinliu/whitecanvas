@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
     from whitecanvas.backend.vispy.canvas import Camera, Canvas
 
+FONT_SIZE_FACTOR = 2.0
+
 
 class TextLabel(scene.Label):
     _text_visual: TextVisual
@@ -37,10 +39,10 @@ class TextLabel(scene.Label):
         self._text_visual.color = color
 
     def _plt_get_size(self) -> int:
-        return self._text_visual.font_size
+        return self._text_visual.font_size * FONT_SIZE_FACTOR
 
     def _plt_set_size(self, size: int):
-        self._text_visual.font_size = size
+        self._text_visual.font_size = size / FONT_SIZE_FACTOR
 
     def _plt_get_fontfamily(self) -> str:
         return self._text_visual.face
@@ -150,10 +152,10 @@ class Ticks:
         self._get_ticker().visible = visible
 
     def _plt_get_size(self) -> float:
-        return self._text.font_size
+        return self._text.font_size * FONT_SIZE_FACTOR
 
     def _plt_set_size(self, size: str):
-        self._text.font_size = size
+        self._text.font_size = size / FONT_SIZE_FACTOR
 
     def _plt_get_fontfamily(self) -> str:
         return self._text.face

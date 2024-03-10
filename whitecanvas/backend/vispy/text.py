@@ -12,6 +12,8 @@ from whitecanvas.types import Alignment, LineStyle
 from whitecanvas.utils.normalize import as_color_array
 from whitecanvas.utils.type_check import is_real_number
 
+FONT_SIZE_FACTOR = 2.0
+
 
 @check_protocol(TextProtocol)
 class Texts(visuals.Text):
@@ -63,15 +65,15 @@ class Texts(visuals.Text):
             self.color = col
 
     def _plt_get_text_size(self) -> NDArray[np.floating]:
-        return np.full(self._plt_get_ndata(), self.font_size)
+        return np.full(self._plt_get_ndata(), self.font_size * FONT_SIZE_FACTOR)
 
     def _plt_set_text_size(self, size: float | NDArray[np.floating]):
         if is_real_number(size):
-            self.font_size = size
+            self.font_size = size / FONT_SIZE_FACTOR
         else:
             candidates = np.unique(size)
             if candidates.size == 1:
-                self.font_size = candidates[0]
+                self.font_size = candidates[0] / FONT_SIZE_FACTOR
             elif candidates.size == 0:
                 pass
             else:
@@ -81,7 +83,7 @@ class Texts(visuals.Text):
                     UserWarning,
                     stacklevel=4,
                 )
-                self.font_size = np.mean(size)
+                self.font_size = np.mean(size) / FONT_SIZE_FACTOR
 
     def _plt_get_text_position(
         self,

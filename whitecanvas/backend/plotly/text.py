@@ -21,9 +21,9 @@ class Texts(PlotlyLayer[go.Scatter]):
             "y": y,
             "mode": "text",
             "text": text,
-            "textposition": ["bottom left"] * ntexts,
+            "textposition": "bottom left",
             "textfont": {
-                "family": ["Arial"] * ntexts,
+                "family": "Arial",
                 "size": np.full(ntexts, 10),
                 "color": ["rgba(0, 0, 0, 255)"] * ntexts,
             },
@@ -70,16 +70,11 @@ class Texts(PlotlyLayer[go.Scatter]):
     ):
         self._props["x"], self._props["y"] = position
 
-    def _plt_get_text_anchor(self) -> list[Alignment]:
-        return [_from_plotly_alignment(p) for p in self._props["textposition"]]
+    def _plt_get_text_anchor(self) -> Alignment:
+        return _from_plotly_alignment(self._props["textposition"])
 
-    def _plt_set_text_anchor(self, anc: Alignment | list[Alignment]):
-        if isinstance(anc, Alignment):
-            self._props["textposition"] = [_to_plotly_alignment(anc)] * len(
-                self._props["textposition"]
-            )
-        else:
-            self._props["textposition"] = [_to_plotly_alignment(a) for a in anc]
+    def _plt_set_text_anchor(self, anc: Alignment):
+        self._props["textposition"] = _to_plotly_alignment(anc)
 
     def _plt_get_text_rotation(self):
         return self._angle
@@ -89,12 +84,10 @@ class Texts(PlotlyLayer[go.Scatter]):
             rotation = np.full(len(self._props["text"]), rotation)
         self._angle = rotation
 
-    def _plt_get_text_fontfamily(self) -> list[str]:
+    def _plt_get_text_fontfamily(self) -> str:
         return self._props["textfont"]["family"]
 
-    def _plt_set_text_fontfamily(self, fontfamily: list[str]):
-        if isinstance(fontfamily, str):
-            fontfamily = [fontfamily] * len(self._props["textfont"]["family"])
+    def _plt_set_text_fontfamily(self, fontfamily: str):
         self._props["textfont"]["family"] = fontfamily
 
     ##### HasFaces #####

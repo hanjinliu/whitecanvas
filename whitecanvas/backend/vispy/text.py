@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from numpy.typing import NDArray
 from vispy.scene import visuals
@@ -10,20 +12,25 @@ from whitecanvas.types import Alignment, LineStyle
 from whitecanvas.utils.normalize import as_color_array
 from whitecanvas.utils.type_check import is_real_number
 
+FONT_SIZE_FACTOR = 2.0
+
 
 @check_protocol(TextProtocol)
-class Texts(visuals.Compound):
+class Texts(visuals.Text):
     def __init__(
         self, x: NDArray[np.floating], y: NDArray[np.floating], text: list[str]
     ):
-        super().__init__(
-            [SingleText(x0, y0, text0) for x0, y0, text0 in zip(x, y, text)]
-        )
+        if x.size > 0:
+            pos = np.stack([x, y, np.zeros(x.size)], axis=1)
+        else:
+            pos = np.array([[0, 0, 0]], dtype=np.float32)
+            text = [""]
+        super().__init__(text, pos=pos)
         self.unfreeze()
-
-    @property
-    def subvisuals(self) -> list[SingleText]:
-        return self._subvisuals
+        self._alignment = Alignment.BOTTOM_LEFT
+        # NOTE: vispy does not support empty text layer. Here we use "_is_empty" to
+        # specify whether the layer is empty, and pretend to be empty.
+        self._is_empty = x.size == 0
 
     def _plt_get_visible(self) -> bool:
         return self.visible
@@ -34,82 +41,95 @@ class Texts(visuals.Compound):
     ##### TextProtocol #####
 
     def _plt_get_text(self) -> list[str]:
-        return [t.text for t in self.subvisuals]
+        if self._is_empty:
+            return []
+        return self.text
 
     def _plt_set_text(self, text: list[str]):
-        for t, text0 in zip(self.subvisuals, text):
-            t.text = text0
+        if self._is_empty:
+            self.text = [""]
+        else:
+            self.text = text
 
     def _plt_get_ndata(self) -> int:
-        return len(self.subvisuals)
+        if self._is_empty:
+            return 0
+        return len(self.text)
 
     def _plt_get_text_color(self):
-        return np.concatenate([t.color for t in self.subvisuals], axis=0)
+        return self.color.rgba
 
     def _plt_set_text_color(self, color):
-        color = as_color_array(color, self._plt_get_ndata())
-        for t, color0 in zip(self.subvisuals, color):
-            t.color = color0
+        col = as_color_array(color, self._plt_get_ndata())
+        if not self._is_empty:
+            self.color = col
 
-    def _plt_get_text_size(self) -> float:
-        return [t.font_size for t in self.subvisuals]
+    def _plt_get_text_size(self) -> NDArray[np.floating]:
+        return np.full(self._plt_get_ndata(), self.font_size * FONT_SIZE_FACTOR)
 
     def _plt_set_text_size(self, size: float | NDArray[np.floating]):
         if is_real_number(size):
-            size = np.full(self._plt_get_ndata(), size)
-        for t, size0 in zip(self.subvisuals, size):
-            t.font_size = size0
+            self.font_size = size / FONT_SIZE_FACTOR
+        else:
+            candidates = np.unique(size)
+            if candidates.size == 1:
+                self.font_size = candidates[0] / FONT_SIZE_FACTOR
+            elif candidates.size == 0:
+                pass
+            else:
+                warnings.warn(
+                    "vispy Text layer does not support different font sizes. Set to "
+                    "the average size.",
+                    UserWarning,
+                    stacklevel=4,
+                )
+                self.font_size = np.mean(size) / FONT_SIZE_FACTOR
 
     def _plt_get_text_position(
         self,
     ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
-        if len(self.subvisuals) == 0:
-            return np.array([]), np.array([])
-        pos = np.stack([np.array(t.pos[0, 1:]) for t in self.subvisuals], axis=0)
-        return pos[:, 0], pos[:, 1]
+        if self._is_empty:
+            return np.array([], dtype=np.float32), np.array([], dtype=np.float32)
+        return self.pos[:, 0], self.pos[:, 1]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.floating], NDArray[np.floating]]
     ):
-        xs, ys = position
-        ntext = self._plt_get_ndata()
-        if ntext < xs.size:
-            for _ in range(xs.size - ntext):
-                self.add_subvisual(SingleText(0, 0, ""))
-        elif ntext > xs.size:
-            for _ in range(ntext - xs.size):
-                self.remove_subvisual(self.subvisuals[-1])
-        for t, x0, y0 in zip(self.subvisuals, xs, ys):
-            t.pos = y0, x0
+        x, y = position
+        if x.size == 0:
+            self.pos = np.array([[0, 0, 0]], dtype=np.float32)
+        else:
+            self.pos = np.stack([x, y, np.zeros(x.size)], axis=1)
+        self._is_empty = x.size == 0
 
-    def _plt_get_text_anchor(self) -> list[Alignment]:
-        return [t._alignment for t in self.subvisuals]
+    def _plt_get_text_anchor(self) -> Alignment:
+        return self._alignment
 
-    def _plt_set_text_anchor(self, anc: Alignment | list[Alignment]):
-        if isinstance(anc, Alignment):
-            anc = [anc] * self._plt_get_ndata()
-        for t, anc0 in zip(self.subvisuals, anc):
-            va, ha = anc0.split()
-            t.anchors = va.value, ha.value
-            t._alignment = anc0
+    def _plt_set_text_anchor(self, anc: Alignment):
+        va, ha = anc.split()
+        self.anchors = va.value, ha.value
+        self._alignment = anc
 
-    def _plt_get_text_rotation(self) -> float:
-        return np.array([t.rotation for t in self.subvisuals])
+    def _plt_get_text_rotation(self) -> NDArray[np.floating]:
+        return -self.rotation  # the +/- is reversed compared to other backends
 
     def _plt_set_text_rotation(self, rotation: float | NDArray[np.floating]):
-        if is_real_number(rotation):
-            rotation = np.full(self._plt_get_ndata(), rotation)
-        for t, rotation0 in zip(self.subvisuals, rotation):
-            t.rotation = rotation0
+        if self._is_empty:
+            if is_real_number(rotation):
+                self.rotation = np.array([-rotation])
+            else:
+                if rotation.size != 0:
+                    raise ValueError(f"zero text but got {rotation.size} inputs.")
+        else:
+            if is_real_number(rotation):
+                rotation = np.full(self._plt_get_ndata(), rotation)
+            self.rotation = -rotation
 
-    def _plt_get_text_fontfamily(self) -> list[str]:
-        return [t.face for t in self.subvisuals]
+    def _plt_get_text_fontfamily(self) -> str:
+        return self.face
 
-    def _plt_set_text_fontfamily(self, fontfamily: str | list[str]):
-        if isinstance(fontfamily, str):
-            fontfamily = [fontfamily] * self._plt_get_ndata()
-        for t, fontfamily0 in zip(self.subvisuals, fontfamily):
-            t.face = fontfamily0
+    def _plt_set_text_fontfamily(self, fontfamily: str):
+        self.face = fontfamily
 
     def _plt_get_face_color(self):
         return np.zeros((self._plt_get_ndata(), 4))
@@ -136,64 +156,3 @@ class Texts(visuals.Compound):
 
     def _plt_set_edge_style(self, style: LineStyle | list[LineStyle]):
         pass
-
-
-class SingleText(visuals.Text):
-    def __init__(self, x: float, y: float, text: str):
-        super().__init__(text=text, anchor_x="left", anchor_y="bottom")
-        self._plt_set_text_position([x, y])
-        self.unfreeze()
-        self._alignment = Alignment.BOTTOM_LEFT
-
-    ##### BaseProtocol #####
-    def _plt_get_visible(self) -> bool:
-        return self.visible
-
-    def _plt_set_visible(self, visible: bool):
-        self.visible = visible
-
-    ##### TextProtocol #####
-
-    def _plt_get_text(self) -> str:
-        return self.text
-
-    def _plt_set_text(self, text: str):
-        self.text = text
-
-    def _plt_get_text_color(self):
-        return self.color
-
-    def _plt_set_text_color(self, color):
-        self.color = color
-
-    def _plt_get_text_size(self) -> float:
-        return self.font_size
-
-    def _plt_set_text_size(self, size: float):
-        self.font_size = size
-
-    def _plt_get_text_position(self) -> tuple[float, float]:
-        return tuple(self.pos[0, 1:])
-
-    def _plt_set_text_position(self, position: tuple[float, float]):
-        self.pos = position
-
-    def _plt_get_text_anchor(self) -> Alignment:
-        return self._alignment
-
-    def _plt_set_text_anchor(self, anc: Alignment):
-        va, ha = anc.split()
-        self.anchors = va.value, ha.value
-        self._alignment = anc
-
-    def _plt_get_text_rotation(self) -> float:
-        return self.rotation[0]
-
-    def _plt_set_text_rotation(self, rotation: float):
-        self.rotation = rotation
-
-    def _plt_get_text_fontfamily(self) -> str:
-        return self.face
-
-    def _plt_set_text_fontfamily(self, fontfamily: str):
-        self.face = fontfamily

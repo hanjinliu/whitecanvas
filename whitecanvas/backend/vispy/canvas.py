@@ -138,7 +138,13 @@ class Canvas:
         self._camera.aspect = ratio
 
     def _plt_add_layer(self, layer: visuals.visuals.Visual):
-        layer.set_gl_state("opaque", depth_test=False)
+        layer.set_gl_state(
+            depth_test=False,
+            cull_face=False,
+            blend=True,
+            blend_func=("src_alpha", "one_minus_src_alpha", "one", "one"),
+            blend_equation="func_add",
+        )
         layer.parent = self._viewbox.scene
 
     def _plt_remove_layer(self, layer):

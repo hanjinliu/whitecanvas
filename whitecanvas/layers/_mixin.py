@@ -24,6 +24,7 @@ from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
 from whitecanvas.protocols import layer_protocols as _lp
 from whitecanvas.theme import get_theme
 from whitecanvas.types import (
+    Alignment,
     ColorType,
     Hatch,
     LineStyle,
@@ -834,7 +835,7 @@ class EnumArray(Generic[_E]):
 class FontEvents(SignalGroup):
     color = Signal(object)
     size = Signal(object)
-    family = Signal(object)
+    family = Signal(str)
 
 
 class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
@@ -850,9 +851,18 @@ class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
     def size(self):
         raise NotImplementedError
 
-    @abstractproperty
+    @property
     def family(self):
-        raise NotImplementedError
+        return self._layer._backend._plt_get_text_fontfamily()
+
+    @family.setter
+    def family(self, value):
+        if value is None:
+            value = get_theme().font.family
+        if not isinstance(value, str):
+            raise TypeError(f"fontfamily must be a string, got {type(value)}.")
+        self._layer._backend._plt_set_text_fontfamily(value)
+        self.events.family.emit(value)
 
     @abstractmethod
     def update(self, *, color=_void, size=_void, family=_void):
@@ -885,19 +895,6 @@ class ConstFont(FontNamespace):
             value = get_theme().font.size
         self._layer._backend._plt_set_text_size(value)
         self.events.size.emit(value)
-
-    @property
-    def family(self):
-        return self._layer._backend._plt_get_text_fontfamily()[0]
-
-    @family.setter
-    def family(self, value):
-        if value is None:
-            value = get_theme().font.family
-        if not isinstance(value, str):
-            raise TypeError(f"fontfamily must be a string, got {type(value)}.")
-        self._layer._backend._plt_set_text_fontfamily(value)
-        self.events.family.emit(value)
 
     def update(
         self,
@@ -940,18 +937,6 @@ class MultiFont(FontNamespace):
         self._layer._backend._plt_set_text_size(sizes)
         self.events.size.emit(sizes)
 
-    @property
-    def family(self):
-        return self._layer._backend._plt_get_text_fontfamily()
-
-    @family.setter
-    def family(self, value):
-        if value is None:
-            value = get_theme().font.family
-        family = as_any_1d_array(value, self._layer.ntexts, dtype=object)
-        self._layer._backend._plt_set_text_fontfamily(family)
-        self.events.family.emit(family)
-
     def update(
         self,
         *,
@@ -975,6 +960,8 @@ class TextMixinEvents(LayerEvents):
     face = Signal(object)
     edge = Signal(object)
     font = Signal(object)
+    anchor = Signal(Alignment)
+    rotation = Signal(object)
 
 
 class TextMixin(

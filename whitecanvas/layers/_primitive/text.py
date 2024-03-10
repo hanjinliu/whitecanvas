@@ -64,15 +64,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
 
     def _norm_layer_data(self, data: Any) -> XYTextData:
         xpos, ypos, t = data
-        if xpos is None or ypos is None:
-            x0, y0 = self.pos
-            if xpos is None:
-                xpos = x0
-            if ypos is None:
-                ypos = y0
-        if t is None:
-            t = self._backend._plt_get_text()
-        elif isinstance(t, str):
+        if isinstance(t, str):
             t = [t] * self.ndata
         else:
             t = [str(t0) for t0 in t]

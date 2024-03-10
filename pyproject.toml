@@ -221,4 +221,5 @@ exclude_lines = [
   "if TYPE_CHECKING:",
   "@overload",
   "@abstractmethod",
+  "@deprecated",
 ]

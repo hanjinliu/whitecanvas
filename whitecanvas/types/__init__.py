@@ -22,7 +22,7 @@ from whitecanvas.types._enums import (
     Origin,
     Symbol,
 )
-from whitecanvas.types._mouse import MouseEvent
+from whitecanvas.types._mouse import MouseEvent, Point
 from whitecanvas.types._tuples import Rect, XYData, XYTextData, XYYData
 
 __all__ = [
@@ -44,6 +44,7 @@ __all__ = [
     "Modifier",
     "MouseButton",
     "MouseEvent",
+    "Point",
     "MouseEventType",
     "Alignment",
     "XYData",

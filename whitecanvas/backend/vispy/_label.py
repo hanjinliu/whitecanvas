@@ -149,6 +149,11 @@ class Ticks:
 
     def _plt_set_visible(self, visible: bool):
         self._get_ticker().visible = visible
+        # axis = self._axis()
+        # if axis._dim == 0:  # y
+        #     axis.width_min = axis.width_max = 40 if visible else 0
+        # else:
+        #     axis.height_min = axis.height_max = 50 if visible else 0
 
     def _plt_get_size(self) -> float:
         return self._text.font_size

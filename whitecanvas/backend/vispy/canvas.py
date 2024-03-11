@@ -78,7 +78,6 @@ class Canvas:
         self._yaxis = y_axis
         self._xticks = Ticks(x_axis)
         self._yticks = Ticks(y_axis)
-        self._title = TextLabel("")
         self._xlabel = TextLabel("")
         self._ylabel = TextLabel("")
         self._grid = grid

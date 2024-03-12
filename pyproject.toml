@@ -201,6 +201,7 @@ ban-relative-imports = "all"
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 "whitecanvas/theme/_dataclasses.py" = ["RUF"]
 "whitecanvas/backend/**/*" = ["F401"]
+"whitecanvas/backend/pyqtgraph/**/*" = ["N803"]
 
 [tool.coverage.run]
 source_pkgs = ["whitecanvas", "tests"]

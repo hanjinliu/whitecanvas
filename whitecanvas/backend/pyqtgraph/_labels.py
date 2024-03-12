@@ -8,6 +8,7 @@ from cmap import Color
 from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
 
+from whitecanvas.backend.pyqtgraph._axis import PyQtAxis
 from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
 from whitecanvas.types import LineStyle
 
@@ -16,6 +17,8 @@ if TYPE_CHECKING:
     from qtpy import QtWidgets as QtW
 
     from whitecanvas.backend.pyqtgraph.canvas import Canvas
+
+_X_AXIS = ("bottom", "top")
 
 
 class _CanvasComponent:
@@ -70,7 +73,7 @@ class AxisLabel(_CanvasComponent):
         }
         self._axis = axis
 
-    def _get_axis(self) -> pg.AxisItem:
+    def _get_axis(self) -> PyQtAxis:
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _get_label(self) -> QtW.QGraphicsTextItem:
@@ -119,19 +122,20 @@ class AxisLabel(_CanvasComponent):
 class Axis(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
         super().__init__(canvas)
+        canvas._plot_item.setAxisItems({axis: PyQtAxis(orientation=axis)})
         self._axis = axis
         self._plt_get_axis().setZValue(-10)
         self._pen = QPen(array_to_qcolor(np.array([0.0, 0.0, 0.0, 1.0])))
         self._pen.setCosmetic(True)
 
-    def _plt_get_axis(self) -> pg.AxisItem:
+    def _plt_get_axis(self) -> PyQtAxis:
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _plt_get_limits(self) -> tuple[float, float]:
         return tuple(self._plt_get_axis().range)
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        if self._axis == "bottom":
+        if self._axis in _X_AXIS:
             self._canvas()._viewbox().setXRange(*limits, padding=0)
         else:
             self._canvas()._viewbox().setYRange(*limits, padding=0)
@@ -146,7 +150,7 @@ class Axis(_CanvasComponent):
 
     def _plt_flip(self) -> None:
         viewbox: pg.ViewBox = self._plt_get_axis().linkedView()
-        if self._axis == "bottom":
+        if self._axis in _X_AXIS:
             viewbox.invertX()
         elif self._axis == "left":
             viewbox.invertY()
@@ -169,7 +173,7 @@ class Ticks(_CanvasComponent):
         self._visible = True
         self._plt_get_axis().setTickFont(QFont("Arial"))  # avoid None
 
-    def _plt_get_axis(self) -> pg.AxisItem:
+    def _plt_get_axis(self) -> PyQtAxis:
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
@@ -206,7 +210,7 @@ class Ticks(_CanvasComponent):
         return self._visible
 
     def _plt_set_fixed_size(self, size: float | None):
-        if self._axis in ("bottom", "top"):
+        if self._axis in _X_AXIS:
             self._plt_get_axis().setHeight(size)
         else:
             self._plt_get_axis().setWidth(size)
@@ -252,7 +256,7 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().setTextPen(pen)
 
     def _plt_get_text_rotation(self) -> float:
-        return 0
+        return self._plt_get_axis().tickRotation()
 
     def _plt_set_text_rotation(self, rotation: float):
-        raise NotImplementedError
+        return self._plt_get_axis().setTickRotation(rotation)

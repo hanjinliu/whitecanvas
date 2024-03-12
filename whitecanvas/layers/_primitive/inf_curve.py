@@ -91,7 +91,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         return self
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.x.events.lim.connect(self._recalculate_line)
+        canvas.x.events.lim.connect(self._recalculate_line, max_args=1)
         self._recalculate_line(canvas.x.lim)
         super()._connect_canvas(canvas)
 
@@ -223,7 +223,7 @@ class InfLine(LineMixin[LineProtocol]):
         return self
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.events.lims.connect(self._recalculate_line)
+        canvas.events.lims.connect(self._recalculate_line, max_args=1)
         self._recalculate_line(canvas.lims)
         self._last_rect = canvas.lims
         super()._connect_canvas(canvas)

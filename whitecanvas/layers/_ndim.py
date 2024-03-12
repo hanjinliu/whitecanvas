@@ -51,7 +51,9 @@ class LayerStack(LayerWrapper["DataBoundLayer[_T]"], Generic[_T]):
         return self._base_layer._norm_layer_data(self._data_stack.slice_at(index))
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.dims.events.indices.connect(self._update_layer_data, unique=True)
+        canvas.dims.events.indices.connect(
+            self._update_layer_data, unique=True, max_args=1
+        )
         return super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):

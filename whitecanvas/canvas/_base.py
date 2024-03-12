@@ -112,14 +112,22 @@ class CanvasBase(ABC):
         self.y.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
 
         # connect layer events
-        self.layers.events.inserted.connect(self._cb_inserted, unique=True)
-        self.layers.events.removed.connect(self._cb_removed, unique=True)
-        self.layers.events.reordered.connect(self._cb_reordered, unique=True)
-        self.layers.events.connect(self._draw_canvas, unique=True)
+        self.layers.events.inserted.connect(
+            self._cb_inserted, unique=True, max_args=None
+        )
+        self.layers.events.removed.connect(self._cb_removed, unique=True, max_args=None)
+        self.layers.events.reordered.connect(
+            self._cb_reordered, unique=True, max_args=None
+        )
+        self.layers.events.connect(self._draw_canvas, unique=True, max_args=None)
 
-        self.overlays.events.inserted.connect(self._cb_overlay_inserted, unique=True)
-        self.overlays.events.removed.connect(self._cb_removed, unique=True)
-        self.overlays.events.connect(self._draw_canvas, unique=True)
+        self.overlays.events.inserted.connect(
+            self._cb_overlay_inserted, unique=True, max_args=None
+        )
+        self.overlays.events.removed.connect(
+            self._cb_removed, unique=True, max_args=None
+        )
+        self.overlays.events.connect(self._draw_canvas, unique=True, max_args=None)
 
         canvas = self._canvas()
         canvas._plt_connect_xlim_changed(self._emit_xlim_changed)

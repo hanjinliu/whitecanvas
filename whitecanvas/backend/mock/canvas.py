@@ -122,12 +122,12 @@ class Canvas:
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        self._xaxis.lim_changed.connect(callback)
+        self._xaxis.lim_changed.connect(callback, max_args=1)
 
     def _plt_connect_ylim_changed(
         self, callback: Callable[[tuple[float, float]], None]
     ):
-        self._yaxis.lim_changed.connect(callback)
+        self._yaxis.lim_changed.connect(callback, max_args=1)
 
     def _plt_make_legend(self, *args, **kwargs):
         pass

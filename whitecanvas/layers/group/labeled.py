@@ -648,7 +648,7 @@ class LabeledImage(LayerContainer):
         if colorbar is None:
             colorbar = Colorbar(layer.cmap)
             colorbar.visible = False
-        layer.events.cmap.connect_setattr(colorbar, "cmap")
+        layer.events.cmap.connect_setattr(colorbar, "cmap", maxargs=1)
         super().__init__([layer, texts, colorbar], name=name)
 
     @property

@@ -312,17 +312,21 @@ class CanvasGrid:
         else:
             raise ValueError(f"pyqtgraph does not support {app!r}")
         self._layoutwidget = GraphicsLayoutWidget()
-        self._heights = heights  # TODO: not used
+        self._heights = heights
         self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         vb = pg.ViewBox()
         item = pg.PlotItem(viewBox=vb)
-        self._layoutwidget.addItem(item, row, col)
-        if rowspan != 1:
-            self._layoutwidget.ci.layout.setRowStretchFactor(row, rowspan)
-        if colspan != 1:
-            self._layoutwidget.ci.layout.setColumnStretchFactor(col, colspan)
+        rspan = sum(self._heights[row : row + rowspan])
+        cspan = sum(self._widths[col : col + colspan])
+        r = sum(self._heights[:row])
+        c = sum(self._widths[:col])
+        self._layoutwidget.addItem(item, r, c)
+        if rspan != 1:
+            self._layoutwidget.ci.layout.setRowStretchFactor(row, rspan)
+        if cspan != 1:
+            self._layoutwidget.ci.layout.setColumnStretchFactor(col, cspan)
         canvas = Canvas(item)
         return canvas
 

@@ -205,12 +205,20 @@ class Ticks(_CanvasComponent):
     def _plt_get_visible(self) -> bool:
         return self._visible
 
+    def _plt_set_fixed_size(self, size: float | None):
+        if self._axis in ("bottom", "top"):
+            self._plt_get_axis().setHeight(size)
+        else:
+            self._plt_get_axis().setWidth(size)
+
     def _plt_set_visible(self, visible: bool):
         axis = self._plt_get_axis()
         if visible:
             pen = self._pen
+            self._plt_set_fixed_size(None)
         else:
             pen = QPen(array_to_qcolor(np.zeros(4)))
+            self._plt_set_fixed_size(0)
         axis.setTickPen(pen)
         axis.setTextPen(pen)
         self._visible = visible

@@ -169,7 +169,7 @@ class CanvasGrid:
             self._x_linker_ref.link(canvas.x)
         if self._y_linked:
             self._y_linker_ref.link(canvas.y)
-        canvas.events.drawn.connect(self.events.drawn.emit, unique=True)
+        canvas.events.drawn.connect(self.events.drawn.emit, unique=True, max_args=None)
         return canvas
 
     def _iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
@@ -410,4 +410,6 @@ class SingleCanvas(_CanvasWithGrid):
         # SingleCanvas instance. To avoid confusion, the first and the only canvas
         # should be replaces with the SingleCanvas instance.
         grid._canvas_array[0, 0] = self
-        self.events.drawn.connect(self._main_canvas.events.drawn.emit, unique=True)
+        self.events.drawn.connect(
+            self._main_canvas.events.drawn.emit, unique=True, max_args=None
+        )

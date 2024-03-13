@@ -8,7 +8,6 @@ from cmap import Color
 from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
 
-from whitecanvas.backend.pyqtgraph._axis import PyQtAxis
 from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
 from whitecanvas.types import LineStyle
 
@@ -73,7 +72,7 @@ class AxisLabel(_CanvasComponent):
         }
         self._axis = axis
 
-    def _get_axis(self) -> PyQtAxis:
+    def _get_axis(self) -> pg.AxisItem:
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _get_label(self) -> QtW.QGraphicsTextItem:
@@ -122,13 +121,12 @@ class AxisLabel(_CanvasComponent):
 class Axis(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
         super().__init__(canvas)
-        canvas._plot_item.setAxisItems({axis: PyQtAxis(orientation=axis)})
         self._axis = axis
         self._plt_get_axis().setZValue(-10)
         self._pen = QPen(array_to_qcolor(np.array([0.0, 0.0, 0.0, 1.0])))
         self._pen.setCosmetic(True)
 
-    def _plt_get_axis(self) -> PyQtAxis:
+    def _plt_get_axis(self) -> pg.AxisItem:
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _plt_get_limits(self) -> tuple[float, float]:
@@ -173,7 +171,7 @@ class Ticks(_CanvasComponent):
         self._visible = True
         self._plt_get_axis().setTickFont(QFont("Arial"))  # avoid None
 
-    def _plt_get_axis(self) -> PyQtAxis:
+    def _plt_get_axis(self) -> pg.AxisItem:
         return self._canvas()._plot_item.getAxis(self._axis)
 
     def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
@@ -256,7 +254,7 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().setTextPen(pen)
 
     def _plt_get_text_rotation(self) -> float:
-        return self._plt_get_axis().tickRotation()
+        return 0.0
 
     def _plt_set_text_rotation(self, rotation: float):
-        return self._plt_get_axis().setTickRotation(rotation)
+        pass

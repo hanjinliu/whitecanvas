@@ -174,7 +174,7 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().tickfont.color = rgba_str_color(color)
 
     def _plt_get_text_rotation(self) -> float:
-        return self._plt_get_axis().tickangle
+        return -self._plt_get_axis().tickangle
 
     def _plt_set_text_rotation(self, angle: float):
-        self._plt_get_axis().tickangle = angle
+        self._plt_get_axis().tickangle = -angle

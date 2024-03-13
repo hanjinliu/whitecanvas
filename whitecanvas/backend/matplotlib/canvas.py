@@ -305,7 +305,11 @@ class Canvas:
                     names.append(name)
         if artists:
             loc, bbox_to_anchor = _LEGEND_LOC_MAP[anchor]
-            self._axes.legend(artists, names, loc=loc, bbox_to_anchor=bbox_to_anchor)
+            font_size = self._plt_get_xticks()._plt_get_size()
+            self._axes.legend(
+                artists, names, loc=loc, bbox_to_anchor=bbox_to_anchor,
+                prop={"size": font_size},
+            )  # fmt: skip
             if anchor.is_side:
                 self._axes.figure.tight_layout()
 

@@ -8,7 +8,7 @@ from cmap import Color
 from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
 
-from whitecanvas.backend.pyqtgraph._axis import PyQtAxis
+from whitecanvas.backend.pyqtgraph._base import PyQtAxis
 from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
 from whitecanvas.types import LineStyle
 
@@ -122,7 +122,6 @@ class AxisLabel(_CanvasComponent):
 class Axis(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
         super().__init__(canvas)
-        canvas._plot_item.setAxisItems({axis: PyQtAxis(orientation=axis)})
         self._axis = axis
         self._plt_get_axis().setZValue(-10)
         self._pen = QPen(array_to_qcolor(np.array([0.0, 0.0, 0.0, 1.0])))

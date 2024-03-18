@@ -122,6 +122,7 @@ class Canvas:
 
         self._get_scene().addItem(vb2)
         self._plot_item.getAxis("right").linkToView(vb2)
+        self._plot_item.showAxis("right")
         vb2.setXLink(self._plot_item)
 
         def _update_views():
@@ -143,6 +144,7 @@ class Canvas:
 
         self._get_scene().addItem(vb2)
         self._plot_item.getAxis("bottom").linkToView(vb2)
+        self._plot_item.showAxis("top")
         vb2.setYLink(self._plot_item)
 
         def _update_views():

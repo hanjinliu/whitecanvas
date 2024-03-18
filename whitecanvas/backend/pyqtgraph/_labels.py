@@ -8,6 +8,7 @@ from cmap import Color
 from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
 
+from whitecanvas.backend.pyqtgraph._base import PyQtAxis
 from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
 from whitecanvas.types import LineStyle
 
@@ -254,7 +255,12 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().setTextPen(pen)
 
     def _plt_get_text_rotation(self) -> float:
+        axis = self._plt_get_axis()
+        if isinstance(axis, PyQtAxis):
+            return axis.style["tickRotation"]
         return 0.0
 
     def _plt_set_text_rotation(self, rotation: float):
-        pass
+        axis = self._plt_get_axis()
+        if isinstance(axis, PyQtAxis):
+            axis.setTickRotation(rotation)

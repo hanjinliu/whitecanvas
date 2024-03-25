@@ -8,7 +8,6 @@ import numpy as np
 from typing_extensions import Concatenate, ParamSpec
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import _wrap_deprecation
 from whitecanvas.layers._primitive.line import LineMixin
 from whitecanvas.protocols import LineProtocol
 from whitecanvas.types import ColorType, LineStyle, Rect
@@ -58,10 +57,6 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         self._args = ()
         self._kwargs = {}
         self._linspace_num = 256
-
-        setattr(  # noqa: B010
-            self, "with_params", _wrap_deprecation(self.update_params, "with_params")
-        )
 
     def update_params(self, *args: _P.args, **kwargs: _P.kwargs) -> Self:
         """Set the parameters of the model function."""

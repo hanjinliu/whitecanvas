@@ -16,6 +16,7 @@ from whitecanvas.layers._primitive import (
     Line,
     Markers,
     MultiLine,
+    Rects,
     Rug,
     Spans,
     Texts,
@@ -39,5 +40,6 @@ __all__ = [
     "InfLine",
     "InfCurve",
     "Texts",
+    "Rects",
     "Image",
 ]

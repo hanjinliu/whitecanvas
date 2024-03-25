@@ -13,6 +13,7 @@ from vispy.scene import PanZoomCamera, SceneCanvas, ViewBox, visuals
 from vispy.util import keys
 
 from whitecanvas import protocols
+from whitecanvas.backend.vispy._gridlines import GridLines
 from whitecanvas.backend.vispy._label import Axis, TextLabel, Ticks
 from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType
 
@@ -72,11 +73,11 @@ class Canvas:
         y_axis.stretch = (0.1, 1)
         grid.add_widget(y_axis, row=1, col=0)
         y_axis.link_view(self._viewbox)
+        self._grid_lines = GridLines(self)
         self._xaxis = x_axis
         self._yaxis = y_axis
         self._xticks = Ticks(x_axis)
         self._yticks = Ticks(y_axis)
-        self._title = TextLabel("")
         self._xlabel = TextLabel("")
         self._ylabel = TextLabel("")
         self._grid = grid

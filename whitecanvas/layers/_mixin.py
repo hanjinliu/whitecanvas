@@ -542,11 +542,11 @@ class AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
         self._edge_namespace = edge
 
     def _init_events(self):
-        self._face_namespace.events.connect(self.events.face.emit)
-        self._edge_namespace.events.connect(self.events.edge.emit)
+        self._face_namespace.events.connect(self.events.face.emit, max_args=None)
+        self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         # _face_namespace may change! _make_sure_hatch_visible should connected to
         # the layer event.
-        self.events.face.connect(self._make_sure_hatch_visible)
+        self.events.face.connect(self._make_sure_hatch_visible, max_args=0)
 
     @property
     def face(self) -> _NFace:
@@ -618,7 +618,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
@@ -635,7 +635,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._edge_namespace, ConstEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = ConstEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
@@ -648,7 +648,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
@@ -665,7 +665,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._edge_namespace, MultiEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
@@ -982,9 +982,9 @@ class TextMixin(
         self._edge_namespace = ConstEdge(self)
         self._font_namespace = ConstFont(self)
         super().__init__(name=name)
-        self._face_namespace.events.connect(self.events.face.emit)
-        self._edge_namespace.events.connect(self.events.edge.emit)
-        self._font_namespace.events.connect(self.events.font.emit)
+        self._face_namespace.events.connect(self.events.face.emit, max_args=None)
+        self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
+        self._font_namespace.events.connect(self.events.font.emit, max_args=None)
 
     @property
     def face(self) -> _NFace:
@@ -1012,7 +1012,7 @@ class TextMixin(
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
@@ -1030,7 +1030,7 @@ class TextMixin(
         if not isinstance(self._edge_namespace, ConstEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = ConstEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
@@ -1044,7 +1044,7 @@ class TextMixin(
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
@@ -1062,7 +1062,7 @@ class TextMixin(
         if not isinstance(self._edge_namespace, MultiEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
@@ -1079,7 +1079,7 @@ class TextMixin(
         if not isinstance(self._font_namespace, ConstFace):
             self._font_namespace.events.disconnect()
             self._font_namespace = ConstFace(self)  # type: ignore
-            self._font_namespace.events.connect(self.events.font.emit)
+            self._font_namespace.events.connect(self.events.font.emit, max_args=None)
         self.font.update(color=color, size=size, family=family)
         return self
 
@@ -1102,6 +1102,6 @@ class TextMixin(
         if not isinstance(self._font_namespace, MultiFont):
             self._font_namespace.events.disconnect()
             self._font_namespace = MultiFont(self)  # type: ignore
-            self._font_namespace.events.connect(self.events.font.emit)
+            self._font_namespace.events.connect(self.events.font.emit, max_args=None)
         self.font.update(color=color, size=size, family=family)
         return self

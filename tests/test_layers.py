@@ -371,3 +371,16 @@ def test_spans(backend: str):
     if backend != "vispy":
         canvas.add_legend()
     canvas.autoscale(xpad=0.01, ypad=0.01)
+
+
+def test_rects(backend: str):
+    canvas = new_canvas(backend=backend)
+
+    layer = canvas.add_rects([[5, 10, 18, 30], [15, 20, 18, 21]])
+    layer.data
+    assert layer.ndata == 2
+    layer.data = [5, 10, 18, 30]
+    layer.data = [[5, 10, 18, 30], [15, 20, 18, 21]]
+    layer.rects
+    layer.as_edge_only()
+    layer.with_hover_template("x={left:.2f}, y={bottom:.2f}")

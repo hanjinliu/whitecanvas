@@ -48,7 +48,7 @@ class XYTextData(NamedTuple):
 
 
 class Rect(NamedTuple):
-    """Rectangular range."""
+    """Rectangular range in left, right, bottom, top order."""
 
     left: float
     right: float

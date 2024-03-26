@@ -62,7 +62,7 @@ class QtMainWindow(QtW.QMainWindow):
         dock = QtW.QDockWidget("Dimensions", self)
         dock.setWidget(sl)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock)
-        canvas.events.drawn.connect(self._widget._update_widget_state)
+        canvas.events.drawn.connect(self._widget._update_widget_state, max_args=0)
         self.__class__._instance = self
 
 

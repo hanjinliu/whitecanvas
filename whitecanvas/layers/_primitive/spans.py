@@ -129,12 +129,12 @@ class Spans(
         return self._backend._plt_get_data()[0].size
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.events.lims.connect(self._recalculate_spans)
+        canvas.events.lims.connect(self._recalculate_spans, max_args=1)
         self._force_update_spans()
         return super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
-        canvas.events.lims.connect(self._recalculate_spans)
+        canvas.events.lims.connect(self._recalculate_spans, max_args=1)
         return super()._disconnect_canvas(canvas)
 
     def _recalculate_spans(self, rect: Rect):

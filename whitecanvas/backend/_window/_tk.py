@@ -46,7 +46,7 @@ class TkMainWindow(ttk.Frame):
         sl = TkDimSliders(self)
         sl.pack(fill="both", expand=True)
         self.__class__._instance = self
-        canvas.events.drawn.connect(tkcanvas._update_imagetk)
+        canvas.events.drawn.connect(tkcanvas._update_imagetk, max_args=0)
 
 
 class TkSlider(ttk.Scale):
@@ -98,7 +98,7 @@ class TkDimSliders(ttk.Frame):
             self._widgets[axis.name] = slider
 
     def connect_changed(self, callback: Callable[[dict[str, object]], None]):
-        self.changed.connect(callback)
+        self.changed.connect(callback, max_args=1)
 
     def _emit_changed(self):
         values = {}

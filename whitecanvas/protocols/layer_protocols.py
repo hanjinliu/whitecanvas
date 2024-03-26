@@ -177,10 +177,10 @@ class HasText(BaseProtocol, Protocol):
     ):
         """Set the text position."""
 
-    def _plt_get_text_anchor(self) -> list[Alignment]:
+    def _plt_get_text_anchor(self) -> Alignment:
         """Return the text position."""
 
-    def _plt_set_text_anchor(self, position: list[Alignment]):
+    def _plt_set_text_anchor(self, position: Alignment):
         """Set the text position."""
 
     def _plt_get_text_rotation(self) -> NDArray[np.floating]:
@@ -189,10 +189,10 @@ class HasText(BaseProtocol, Protocol):
     def _plt_set_text_rotation(self, rotation: NDArray[np.floating]):
         """Set the text rotation in degree."""
 
-    def _plt_get_text_fontfamily(self) -> list[str]:
+    def _plt_get_text_fontfamily(self) -> str:
         """Return the text font family."""
 
-    def _plt_set_text_fontfamily(self, family: list[str]):
+    def _plt_set_text_fontfamily(self, family: str):
         """Set the text font family."""
 
 

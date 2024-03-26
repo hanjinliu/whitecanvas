@@ -33,7 +33,6 @@ class VispyBand(visuals.Compound):
         self._mesh.set_gl_state(
             polygon_offset_fill=True,
             polygon_offset=(1, 1),
-            cull_face=False,
         )
         self.freeze()
 

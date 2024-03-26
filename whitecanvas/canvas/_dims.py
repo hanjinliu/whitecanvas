@@ -48,7 +48,7 @@ class Dims:
         self.events = DimsEvents()
         if canvas is not None:
             self._canvas_ref = weakref.ref(canvas)
-            self.events.indices.connect(canvas._draw_canvas, unique=True)
+            self.events.indices.connect(canvas._draw_canvas, unique=True, max_args=0)
         else:
             self._canvas_ref = lambda: None
 

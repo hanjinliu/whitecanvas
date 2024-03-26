@@ -53,6 +53,8 @@ class Axis(scene.AxisWidget):
     axis: AxisVisual
 
     def __init__(self, canvas: Canvas, dim: int, **kwargs):
+        kwargs.setdefault("axis_width", 2)
+        kwargs.setdefault("tick_width", 1)
         super().__init__(**kwargs)
         self.unfreeze()
         self._dim = dim
@@ -101,12 +103,11 @@ class Axis(scene.AxisWidget):
         camera.flip = tuple(flipped)
 
     def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
-        # if visible:
-        #     self._canvas()._gridlines.visible = True
-        #     self._canvas()._gridlines._grid_color_fn['color'] = color
-        # else:
-        #     self._canvas()._gridlines.visible = False
-        pass  # TODO: implement this
+        grid_lines = self._canvas_ref()._grid_lines
+        if self._dim == 0:  # y
+            grid_lines.set_y_grid_lines(visible, color, width, style)
+        else:
+            grid_lines.set_x_grid_lines(visible, color, width, style)
 
 
 class Ticks:
@@ -148,11 +149,16 @@ class Ticks:
 
     def _plt_set_visible(self, visible: bool):
         self._get_ticker().visible = visible
+        # axis = self._axis()
+        # if axis._dim == 0:  # y
+        #     axis.width_min = axis.width_max = 40 if visible else 0
+        # else:
+        #     axis.height_min = axis.height_max = 50 if visible else 0
 
     def _plt_get_size(self) -> float:
         return self._text.font_size
 
-    def _plt_set_size(self, size: str):
+    def _plt_set_size(self, size: float):
         self._text.font_size = size
 
     def _plt_get_fontfamily(self) -> str:
@@ -162,10 +168,10 @@ class Ticks:
         self._text.face = font
 
     def _plt_get_text_rotation(self) -> float:
-        return self._text.rotation
+        return -self._text.rotation
 
     def _plt_set_text_rotation(self, rotation: float):
-        self._text.rotation = rotation
+        self._text.rotation = -rotation
 
 
 class VispyTicker(Ticker):
@@ -181,17 +187,21 @@ class VispyTicker(Ticker):
 
     def _get_tick_frac_labels(self):
         if not self._visible:
-            return np.zeros(0), np.zeros(0), np.zeros(0)
-        if self._categorical_labels is None:
-            return super()._get_tick_frac_labels()
-        pos, labels = self._categorical_labels
-        domain = self.axis.domain
-        scale = domain[1] - domain[0]
-        major_tick_fractions = (np.asarray(pos) - domain[0]) / scale
-        minor_tick_fractions = np.zeros(0)
-        ok = (0 <= major_tick_fractions) & (major_tick_fractions <= 1)
-        tick_labels = np.asarray(labels)[ok]
-        return major_tick_fractions[ok], minor_tick_fractions, tick_labels
+            major, minor, labels = np.zeros(0), np.zeros(0), np.zeros(0)
+        elif self._categorical_labels is None:
+            major, minor, labels = super()._get_tick_frac_labels()
+        else:
+            pos, labels = self._categorical_labels
+            domain = self.axis.domain
+            scale = domain[1] - domain[0]
+            major_tick_fractions = (np.asarray(pos) - domain[0]) / scale
+            minor_tick_fractions = np.zeros(0)
+            ok = (0 <= major_tick_fractions) & (major_tick_fractions <= 1)
+            tick_labels = np.asarray(labels)[ok]
+            major = major_tick_fractions[ok]
+            minor = minor_tick_fractions
+            labels = tick_labels
+        return major, minor, labels
 
     @property
     def visible(self):

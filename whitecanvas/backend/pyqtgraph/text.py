@@ -30,6 +30,8 @@ class Texts(pg.ItemGroup, PyQtLayer):
         super().__init__()
         for x0, y0, text0 in zip(x, y, text):
             self.addItem(SingleText(x0, y0, text0))
+        self._font_family = "Arial"
+        self._align = Alignment.BOTTOM_LEFT
 
     if TYPE_CHECKING:
 
@@ -87,13 +89,12 @@ class Texts(pg.ItemGroup, PyQtLayer):
             t.setPos(x0, y0)
 
     def _plt_get_text_anchor(self) -> list[Alignment]:
-        return [t._plt_get_text_anchor() for t in self.childItems()]
+        return self._align
 
-    def _plt_set_text_anchor(self, anc: Alignment | list[Alignment]):
-        if isinstance(anc, Alignment):
-            anc = [anc] * self._plt_get_ndata()
-        for t, anc0 in zip(self.childItems(), anc):
-            t._plt_set_text_anchor(anc0)
+    def _plt_set_text_anchor(self, anc: Alignment):
+        for t in self.childItems():
+            t._plt_set_text_anchor(anc)
+        self._align = anc
 
     def _plt_get_text_rotation(self) -> float:
         return [t.angle for t in self.childItems()]
@@ -104,16 +105,15 @@ class Texts(pg.ItemGroup, PyQtLayer):
         for t, rotation0 in zip(self.childItems(), rotation):
             t.setAngle(rotation0)
 
-    def _plt_get_text_fontfamily(self) -> list[str]:
-        return [t._get_qfont().family() for t in self.childItems()]
+    def _plt_get_text_fontfamily(self) -> str:
+        return self._font_family
 
-    def _plt_set_text_fontfamily(self, fontfamily: str | list[str]):
-        if isinstance(fontfamily, str):
-            fontfamily = [fontfamily] * self._plt_get_ndata()
-        for t, fontfamily0 in zip(self.childItems(), fontfamily):
+    def _plt_set_text_fontfamily(self, fontfamily: str):
+        for t in self.childItems():
             font = t._get_qfont()
-            font.setFamily(fontfamily0)
+            font.setFamily(fontfamily)
             t.setFont(font)
+        self._font_family = fontfamily
 
     ##### HasFaces #####
 

@@ -298,15 +298,16 @@ def test_texts(backend: str):
         layer.with_face_multi(color=colors).with_edge_multi(width=np.arange(10) / 4)
     layer.data
     layer.data = np.arange(10), np.zeros(10), list("abcdefghij")
+    layer.data = np.arange(10) * 2, np.zeros(10), "single"
     layer.set_pos(x=np.arange(10) * 2)
 
 def test_with_text(backend: str):
     canvas = new_canvas(backend=backend)
     x = np.arange(10)
     y = np.sqrt(x)
-    canvas.add_line(x, y).with_text([f"{i}" for i in range(10)]).add_text_offset(0.1 ,0.1)
-    canvas.add_markers(x, y).with_text([f"{i}" for i in range(10)]).add_text_offset(0.1 ,0.1)
-    canvas.add_bars(x, y).with_text([f"{i}" for i in range(10)]).add_text_offset(0.1 ,0.1)
+    canvas.add_line(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1)
+    canvas.add_markers(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1)
+    canvas.add_bars(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1)
     canvas.add_line(x, y).with_text("x={x:.2f}, y={y:.2f}")
     canvas.add_markers(x, y).with_text("x={x:.2f}, y={y:.2f}")
     canvas.add_bars(x, y).with_text("x={x:.2f}, y={y:.2f}")

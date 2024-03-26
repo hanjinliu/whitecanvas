@@ -64,15 +64,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
 
     def _norm_layer_data(self, data: Any) -> XYTextData:
         xpos, ypos, t = data
-        if xpos is None or ypos is None:
-            x0, y0 = self.pos
-            if xpos is None:
-                xpos = x0
-            if ypos is None:
-                ypos = y0
-        if t is None:
-            t = self._backend._plt_get_text()
-        elif isinstance(t, str):
+        if isinstance(t, str):
             t = [t] * self.ndata
         else:
             t = [str(t0) for t0 in t]
@@ -155,7 +147,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     @property
     def anchor(self) -> Alignment:
         """Anchor of the text."""
-        return self._backend._plt_get_text_anchor()[0]
+        return self._backend._plt_get_text_anchor()
 
     @anchor.setter
     def anchor(self, anc: str | Alignment):
@@ -169,6 +161,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     @rotation.setter
     def rotation(self, rotation: float):
         self._backend._plt_set_text_rotation(np.full(self.ndata, float(rotation)))
+        self.events.rotation.emit(rotation)
 
     @property
     def family(self) -> str:

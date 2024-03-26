@@ -70,8 +70,10 @@ class Layer(ABC):
 
     def _connect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is added to a canvas."""
-        self.events._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
-        self.events.connect(canvas._draw_canvas, unique=True)
+        self.events._layer_grouped.connect(
+            canvas._cb_layer_grouped, unique=True, max_args=1
+        )
+        self.events.connect(canvas._draw_canvas, unique=True, max_args=0)
         self._canvas_ref = weakref.ref(canvas)
 
     def _disconnect_canvas(self, canvas: CanvasBase):

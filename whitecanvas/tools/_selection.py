@@ -9,7 +9,7 @@ from numpy.typing import NDArray
 from psygnal import Signal
 
 from whitecanvas.canvas import CanvasBase
-from whitecanvas.layers import Layer, Line, Spans
+from whitecanvas.layers import Layer, Line, Rects, Spans
 from whitecanvas.types import (
     ColorType,
     LineStyle,
@@ -53,26 +53,27 @@ class SelectionToolBase(ABC, Generic[_L]):
         return canvas
 
     @abstractmethod
-    def _create_layer(self) -> _L:
-        ...
+    def _create_layer(self) -> _L: ...
 
     @abstractmethod
     def _update_layer(
         self,
         start: tuple[float, float],
         now: tuple[float, float],
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     def selection(self):
         """This method returns the values that represents current selections."""
 
     def callback(self, e: MouseEvent):
+        """The callback function that is called when mouse is moved."""
         if e.button not in self._valid_buttons or set(e.modifiers) != self._modifiers:
             return
         canvas = self._canvas()
         pos_start = e.pos
+        if self._layer in self._canvas().layers:
+            self.clear_selection()
         canvas.add_layer(self._layer)
         dragged = False
         while e.type is not MouseEventType.RELEASE:
@@ -82,26 +83,31 @@ class SelectionToolBase(ABC, Generic[_L]):
                 self.changed.emit(self.selection())
             dragged = True
 
-        if not dragged:
-            self.clear_selection()
+        if dragged:
             self.changed.emit(self.selection())
 
     def clear_selection(self, e: MouseEvent | None = None):
         self._canvas().layers.remove(self._layer)
 
 
-# class RectSelectionTool(SelectionToolBase[Layer]):
-#     def create_layer(self) -> Layer:
-#         return Bars(np.array([0]), np.array([0]), bottom=np.array([0]))
+class RectSelectionTool(SelectionToolBase[Rects]):
+    def _create_layer(self) -> Rects:
+        layer = Rects([[0, 0, 0, 0]], color="blue", alpha=0.4)
+        layer.visible = False
+        return layer
 
-#     def update_layer(
-#         self,
-#         start: tuple[float, float],
-#         now: tuple[float, float],
-#     ):
-#         x0, y0 = start
-#         x1, y1 = now
-#         self._layer.data = np.array([[x0, y0, x1, y1]])
+    def _update_layer(
+        self,
+        start: tuple[float, float],
+        now: tuple[float, float],
+    ):
+        x0, y0 = start
+        x1, y1 = now
+        self._layer.data = np.array([[x0, x1, y0, y1]])
+        self._layer.visible = True
+
+    def selection(self):
+        return self._layer.rects[0]
 
 
 class LineSelection(NamedTuple):
@@ -190,7 +196,9 @@ class _SpanSelectionTool(SelectionToolBase[Spans]):
 
 class XSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
-        return Spans([], orient="vertical", color="red", alpha=0.4)
+        layer = Spans([[0, 0]], orient="vertical", color="red", alpha=0.4)
+        layer.visible = False
+        return layer
 
     def _update_layer(
         self,
@@ -200,11 +208,14 @@ class XSpanSelectionTool(_SpanSelectionTool):
         x0, _ = start
         x1, _ = now
         self._layer.data = [[x0, x1]]
+        self._layer.visible = True
 
 
 class YSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
-        return Spans([], orient="horizontal", color="green", alpha=0.4)
+        layer = Spans([[0, 0]], orient="horizontal", color="green", alpha=0.4)
+        layer.visible = False
+        return layer
 
     def _update_layer(
         self,
@@ -245,6 +256,17 @@ def line_selector(
 ) -> LineSelectionTool:
     _buttons, _modifiers = _norm_input(buttons, modifiers)
     return LineSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)
+
+
+def rect_selector(
+    canvas: CanvasBase,
+    buttons: _MouseButton | Sequence[_MouseButton] = "left",
+    modifiers: _Modifier | Sequence[_Modifier] | None = None,
+    *,
+    tracking: bool = False,
+) -> RectSelectionTool:
+    _buttons, _modifiers = _norm_input(buttons, modifiers)
+    return RectSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)
 
 
 def xspan_selector(

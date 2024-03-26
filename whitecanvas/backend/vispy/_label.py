@@ -168,10 +168,10 @@ class Ticks:
         self._text.face = font
 
     def _plt_get_text_rotation(self) -> float:
-        return self._text.rotation
+        return -self._text.rotation
 
     def _plt_set_text_rotation(self, rotation: float):
-        self._text.rotation = rotation
+        self._text.rotation = -rotation
 
 
 class VispyTicker(Ticker):

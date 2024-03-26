@@ -8,6 +8,7 @@ from cmap import Color
 from qtpy import QtCore
 from qtpy.QtGui import QFont, QPen
 
+from whitecanvas.backend.pyqtgraph._base import PyQtAxis
 from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
 from whitecanvas.types import LineStyle
 
@@ -16,6 +17,8 @@ if TYPE_CHECKING:
     from qtpy import QtWidgets as QtW
 
     from whitecanvas.backend.pyqtgraph.canvas import Canvas
+
+_X_AXIS = ("bottom", "top")
 
 
 class _CanvasComponent:
@@ -131,7 +134,7 @@ class Axis(_CanvasComponent):
         return tuple(self._plt_get_axis().range)
 
     def _plt_set_limits(self, limits: tuple[float, float]):
-        if self._axis == "bottom":
+        if self._axis in _X_AXIS:
             self._canvas()._viewbox().setXRange(*limits, padding=0)
         else:
             self._canvas()._viewbox().setYRange(*limits, padding=0)
@@ -146,7 +149,7 @@ class Axis(_CanvasComponent):
 
     def _plt_flip(self) -> None:
         viewbox: pg.ViewBox = self._plt_get_axis().linkedView()
-        if self._axis == "bottom":
+        if self._axis in _X_AXIS:
             viewbox.invertX()
         elif self._axis == "left":
             viewbox.invertY()
@@ -205,12 +208,20 @@ class Ticks(_CanvasComponent):
     def _plt_get_visible(self) -> bool:
         return self._visible
 
+    def _plt_set_fixed_size(self, size: float | None):
+        if self._axis in _X_AXIS:
+            self._plt_get_axis().setHeight(size)
+        else:
+            self._plt_get_axis().setWidth(size)
+
     def _plt_set_visible(self, visible: bool):
         axis = self._plt_get_axis()
         if visible:
             pen = self._pen
+            self._plt_set_fixed_size(None)
         else:
             pen = QPen(array_to_qcolor(np.zeros(4)))
+            self._plt_set_fixed_size(0)
         axis.setTickPen(pen)
         axis.setTextPen(pen)
         self._visible = visible
@@ -244,7 +255,12 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().setTextPen(pen)
 
     def _plt_get_text_rotation(self) -> float:
-        return 0
+        axis = self._plt_get_axis()
+        if isinstance(axis, PyQtAxis):
+            return axis.style["tickRotation"]
+        return 0.0
 
     def _plt_set_text_rotation(self, rotation: float):
-        raise NotImplementedError
+        axis = self._plt_get_axis()
+        if isinstance(axis, PyQtAxis):
+            axis.setTickRotation(rotation)

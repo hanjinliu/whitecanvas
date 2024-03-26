@@ -11,7 +11,7 @@ from qtpy import QtCore, QtGui
 from qtpy.QtCore import Signal
 
 from whitecanvas import protocols
-from whitecanvas.backend.pyqtgraph._base import InsetPlotItem, PyQtLayer
+from whitecanvas.backend.pyqtgraph._base import InsetPlotItem, PyQtAxis, PyQtLayer
 from whitecanvas.backend.pyqtgraph._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.pyqtgraph._legend import QtItemSampleBase, make_sample_item
 from whitecanvas.backend.pyqtgraph._qt_utils import from_qt_button, from_qt_modifiers
@@ -112,14 +112,18 @@ class Canvas:
 
     def _plt_twinx(self) -> Canvas:
         """Create a twinx canvas"""
-        plotitem = self._plot_item
-        vb1 = plotitem.vb
+        vb1 = self._plot_item.vb
         vb2 = pg.ViewBox()
-        canvas = Canvas(pg.PlotItem(viewBox=vb2), yaxis="right")
+        new_item = pg.PlotItem(
+            viewBox=vb2,
+            axisItems={"right": PyQtAxis("right"), "bottom": PyQtAxis("bottom")},
+        )
+        canvas = Canvas(new_item, yaxis="right")
 
         self._get_scene().addItem(vb2)
-        plotitem.getAxis("right").linkToView(vb2)
-        vb2.setXLink(plotitem)
+        self._plot_item.getAxis("right").linkToView(vb2)
+        self._plot_item.showAxis("right")
+        vb2.setXLink(self._plot_item)
 
         def _update_views():
             vb2.setGeometry(vb1.sceneBoundingRect())
@@ -131,14 +135,17 @@ class Canvas:
         return canvas
 
     def _plt_twiny(self) -> Canvas:
-        plotitem = self._plot_item
-        vb1 = plotitem.vb
+        vb1 = self._plot_item.vb
         vb2 = pg.ViewBox()
-        canvas = Canvas(pg.PlotItem(viewBox=vb2), xaxis="top")
+        new_item = pg.PlotItem(
+            viewBox=vb2, axisItems={"left": PyQtAxis("left"), "top": PyQtAxis("top")}
+        )
+        canvas = Canvas(new_item, xaxis="top")
 
         self._get_scene().addItem(vb2)
-        plotitem.getAxis("bottom").linkToView(vb2)
-        vb2.setYLink(plotitem)
+        self._plot_item.getAxis("bottom").linkToView(vb2)
+        self._plot_item.showAxis("top")
+        vb2.setYLink(self._plot_item)
 
         def _update_views():
             vb2.setGeometry(vb1.sceneBoundingRect())
@@ -151,7 +158,10 @@ class Canvas:
 
     def _plt_inset(self, rect: Rect) -> Canvas:
         vb = pg.ViewBox()
-        item = pg.PlotItem(viewBox=vb)
+        item = pg.PlotItem(
+            viewBox=vb,
+            axisItems={"left": PyQtAxis("left"), "bottom": PyQtAxis("bottom")},
+        )
         canvas = Canvas(item)
         inset_item = InsetPlotItem(item, rect)
         inset_item.setParentItem(self._plot_item.vb)
@@ -312,17 +322,21 @@ class CanvasGrid:
         else:
             raise ValueError(f"pyqtgraph does not support {app!r}")
         self._layoutwidget = GraphicsLayoutWidget()
-        self._heights = heights  # TODO: not used
+        self._heights = heights
         self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         vb = pg.ViewBox()
         item = pg.PlotItem(viewBox=vb)
-        self._layoutwidget.addItem(item, row, col)
-        if rowspan != 1:
-            self._layoutwidget.ci.layout.setRowStretchFactor(row, rowspan)
-        if colspan != 1:
-            self._layoutwidget.ci.layout.setColumnStretchFactor(col, colspan)
+        rspan = sum(self._heights[row : row + rowspan])
+        cspan = sum(self._widths[col : col + colspan])
+        r = sum(self._heights[:row])
+        c = sum(self._widths[:col])
+        self._layoutwidget.addItem(item, r, c)
+        if rspan != 1:
+            self._layoutwidget.ci.layout.setRowStretchFactor(row, rspan)
+        if cspan != 1:
+            self._layoutwidget.ci.layout.setColumnStretchFactor(col, cspan)
         canvas = Canvas(item)
         return canvas
 

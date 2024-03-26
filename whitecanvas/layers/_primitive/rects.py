@@ -86,7 +86,7 @@ class Rects(
 
     def _set_layer_data(self, data: NDArray[np.float32]):
         self._backend._plt_set_data(*data.T)
-        self._x_hint, self._y_hint = _norm_inputs(data)
+        _, self._x_hint, self._y_hint = _norm_inputs(data)
 
     @property
     def rects(self) -> list[Rect]:
@@ -106,8 +106,7 @@ class Rects(
             color: ColorType | _Void = _void,
             hatch: Hatch | str = Hatch.SOLID,
             alpha: float = 1,
-        ) -> Rects[ConstFace, _Edge]:
-            ...
+        ) -> Rects[ConstFace, _Edge]: ...
 
         def with_face_multi(
             self,
@@ -115,8 +114,7 @@ class Rects(
             color: ColorType | Sequence[ColorType] | _Void = _void,
             hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
             alpha: float = 1,
-        ) -> Rects[MultiFace, _Edge]:
-            ...
+        ) -> Rects[MultiFace, _Edge]: ...
 
         def with_edge(
             self,
@@ -125,8 +123,7 @@ class Rects(
             width: float = 1,
             style: LineStyle | str = LineStyle.SOLID,
             alpha: float = 1,
-        ) -> Rects[_Face, ConstEdge]:
-            ...
+        ) -> Rects[_Face, ConstEdge]: ...
 
         def with_edge_multi(
             self,
@@ -135,8 +132,7 @@ class Rects(
             width: float | Sequence[float] = 1,
             style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
             alpha: float = 1,
-        ) -> Rects[_Face, MultiEdge]:
-            ...
+        ) -> Rects[_Face, MultiEdge]: ...
 
     def as_edge_only(
         self,

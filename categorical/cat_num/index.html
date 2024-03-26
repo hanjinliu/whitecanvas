@@ -1582,15 +1582,15 @@ format string.</p>
 </code></pre></div>
 <iframe src=../../_images/categorical_axis_stripplot_hover.html frameborder="0" width="400px" height="300px" scrolling="no"></iframe>
 
-<p>Each marker size can represent a numerical value. <code>with_size</code> will map the numerical
+<p>Each marker size can represent a numerical value. <code>update_size</code> will map the numerical
 values of a column to the size of the markers.</p>
 <p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="p">(</span>
     <span class="n">canvas</span>
     <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">add_stripplot</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">with_size</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">update_size</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">)</span>
+</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_stripplot_by_size.png" width="360px" /></p>

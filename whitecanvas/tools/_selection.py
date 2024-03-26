@@ -254,6 +254,31 @@ def line_selector(
     *,
     tracking: bool = False,
 ) -> LineSelectionTool:
+    """
+    Create a line selector tool with given settings.
+
+    A line selector emits a LineSelection object when a line is drawn.
+    A selection tool is constructed by specifying the canvas to attach the tool.
+
+    >>> canvas = new_canvas("matplotlib:qt")
+    >>> tool = line_selector(canvas)
+
+    Use `buttons` and `modifiers` to specify how to trigger the tool.
+
+    >>> tool = line_selector(canvas, buttons="right", modifiers="ctrl")
+
+    Parameters
+    ----------
+    canvas : CanvasBase
+        The canvas to which the tool is attached.
+    buttons : MouseButton or Sequence[MouseButton], default "left"
+        The mouse buttons that can trigger the tool.
+    modifiers : Modifier or Sequence[Modifier], optional
+        The modifier keys that must be pressed to trigger the tool.
+    tracking : bool, default False
+        If True, the tool emits the changed signal while dragging. Otherwise, it emits
+        the signal only when dragging is finished.
+    """
     _buttons, _modifiers = _norm_input(buttons, modifiers)
     return LineSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)
 
@@ -265,6 +290,31 @@ def rect_selector(
     *,
     tracking: bool = False,
 ) -> RectSelectionTool:
+    """
+    Create a rectangle selector tool with given settings.
+
+    A rectangle selector emits a Rect object when a rectangle is drawn.
+    A selection tool is constructed by specifying the canvas to attach the tool.
+
+    >>> canvas = new_canvas("matplotlib:qt")
+    >>> tool = rect_selector(canvas)
+
+    Use `buttons` and `modifiers` to specify how to trigger the tool.
+
+    >>> tool = rect_selector(canvas, buttons="right", modifiers="ctrl")
+
+    Parameters
+    ----------
+    canvas : CanvasBase
+        The canvas to which the tool is attached.
+    buttons : MouseButton or Sequence[MouseButton], default "left"
+        The mouse buttons that can trigger the tool.
+    modifiers : Modifier or Sequence[Modifier], optional
+        The modifier keys that must be pressed to trigger the tool.
+    tracking : bool, default False
+        If True, the tool emits the changed signal while dragging. Otherwise, it emits
+        the signal only when dragging is finished.
+    """
     _buttons, _modifiers = _norm_input(buttons, modifiers)
     return RectSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)
 
@@ -276,6 +326,32 @@ def xspan_selector(
     *,
     tracking: bool = False,
 ) -> XSpanSelectionTool:
+    """
+    Create a x-span selector tool with given settings.
+
+    A x-span selector emits a SpanSelection object (tuple of start and end) when a span
+    is drawn.
+    A selection tool is constructed by specifying the canvas to attach the tool.
+
+    >>> canvas = new_canvas("matplotlib:qt")
+    >>> tool = xspan_selector(canvas)
+
+    Use `buttons` and `modifiers` to specify how to trigger the tool.
+
+    >>> tool = line_selector(canvas, buttons="right", modifiers="ctrl")
+
+    Parameters
+    ----------
+    canvas : CanvasBase
+        The canvas to which the tool is attached.
+    buttons : MouseButton or Sequence[MouseButton], default "left"
+        The mouse buttons that can trigger the tool.
+    modifiers : Modifier or Sequence[Modifier], optional
+        The modifier keys that must be pressed to trigger the tool.
+    tracking : bool, default False
+        If True, the tool emits the changed signal while dragging. Otherwise, it emits
+        the signal only when dragging is finished.
+    """
     _buttons, _modifiers = _norm_input(buttons, modifiers)
     return XSpanSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)
 
@@ -287,5 +363,31 @@ def yspan_selector(
     *,
     tracking: bool = False,
 ) -> YSpanSelectionTool:
+    """
+    Create a line selector tool with given settings.
+
+    A y-span selector emits a SpanSelection object (tuple of start and end) when a span
+    is drawn.
+    A selection tool is constructed by specifying the canvas to attach the tool.
+
+    >>> canvas = new_canvas("matplotlib:qt")
+    >>> tool = yspan_selector(canvas)
+
+    Use `buttons` and `modifiers` to specify how to trigger the tool.
+
+    >>> tool = line_selector(canvas, buttons="right", modifiers="ctrl")
+
+    Parameters
+    ----------
+    canvas : CanvasBase
+        The canvas to which the tool is attached.
+    buttons : MouseButton or Sequence[MouseButton], default "left"
+        The mouse buttons that can trigger the tool.
+    modifiers : Modifier or Sequence[Modifier], optional
+        The modifier keys that must be pressed to trigger the tool.
+    tracking : bool, default False
+        If True, the tool emits the changed signal while dragging. Otherwise, it emits
+        the signal only when dragging is finished.
+    """
     _buttons, _modifiers = _norm_input(buttons, modifiers)
     return YSpanSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)

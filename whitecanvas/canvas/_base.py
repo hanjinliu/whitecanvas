@@ -978,6 +978,24 @@ class CanvasBase(ABC):
         )  # fmt: skip
         return self.add_layer(layer)
 
+    def add_rects(
+        self,
+        coords: ArrayLike,
+        *,
+        name=None,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        hatch: str | Hatch | None = None,
+    ) -> _l.Rects[_mixin.ConstFace, _mixin.ConstEdge]:
+        name = self._coerce_name(_l.Rects, name)
+        color = self._generate_colors(color)
+        hatch = theme._default("bars.hatch", hatch)
+        layer = _l.Rects(
+            coords, name=name, color=color, alpha=alpha, hatch=hatch,
+            backend=self._get_backend()
+        )  # fmt: skip
+        return self.add_layer(layer)
+
     def add_cdf(
         self,
         data: ArrayLike1D,

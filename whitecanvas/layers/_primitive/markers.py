@@ -38,12 +38,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.layers import group as _lg
-    from whitecanvas.layers._mixin import (
-        ConstEdge,
-        ConstFace,
-        MultiEdge,
-        MultiFace,
-    )
+    from whitecanvas.layers._mixin import ConstEdge, ConstFace, MultiEdge, MultiFace
 
 _void = _Void()
 _Face = TypeVar("_Face", bound=FaceNamespace)
@@ -67,8 +62,7 @@ class Markers(
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args, **kwargs) -> Markers[ConstFace, ConstEdge, float]:
-            ...
+        def __new__(cls, *args, **kwargs) -> Markers[ConstFace, ConstEdge, float]: ...
 
     def __init__(
         self,

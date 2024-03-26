@@ -229,17 +229,17 @@ canvas = new_canvas("plotly", size=(400, 300))
 canvas.show()
 ```
 
-Each marker size can represent a numerical value. `with_size` will map the numerical
+Each marker size can represent a numerical value. `update_size` will map the numerical
 values of a column to the size of the markers.
 
-``` python
+``` python hl_lines="6"
 #!name: categorical_axis_stripplot_by_size
 canvas = new_canvas("matplotlib")
 (
     canvas
     .cat_x(df, x="category", y="observation")
     .add_stripplot()
-    .with_size("temperature")
+    .update_size("temperature")
 )
 canvas.show()
 ```

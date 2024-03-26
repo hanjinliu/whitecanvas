@@ -50,7 +50,19 @@ class Bars(HeteroLayer[bk_models.Quad], SupportsMouseEvents):
 
     def _plt_set_data(self, x0, x1, y0, y1):
         cur_data = self._data.data.copy()
+        ndata: int = cur_data["x0"].size
         cur_data.update({"x0": x0, "x1": x1, "y0": y0, "y1": y1})
+        cols_to_update = [
+            "face_color", "edge_color", "width", "pattern", "style", "hovertexts"
+        ]  # fmt: skip
+        if x0.size < ndata:
+            for key in cols_to_update:
+                cur_data[key] = cur_data[key][: x0.size]
+        elif x0.size > ndata:
+            for key in cols_to_update:
+                cur_data[key] = np.concatenate(
+                    [cur_data[key], np.full(x0.size - ndata, cur_data[key][-1])]
+                )
         self._data.data = cur_data
 
     def _plt_get_ndata(self) -> int:

@@ -133,10 +133,10 @@ class Canvas:
     def _plt_make_legend(self, *args, **kwargs):
         pass
 
-    def _plt_get_mouse_enable(self):
+    def _plt_get_mouse_enabled(self):
         return self._mouse_enabled
 
-    def _plt_set_mouse_enable(self, enabled: bool):
+    def _plt_set_mouse_enabled(self, enabled: bool):
         self._mouse_enabled = enabled
 
 

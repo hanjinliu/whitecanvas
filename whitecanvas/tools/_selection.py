@@ -91,6 +91,7 @@ class SelectionToolBase(ABC, Generic[_L]):
         canvas = self._canvas()
         pos_start = e.pos
         self._on_press(pos_start)
+        yield
         if self._layer in self._canvas().layers:
             self.clear_selection()
         with canvas.autoscale_context(enabled=False):
@@ -104,7 +105,8 @@ class SelectionToolBase(ABC, Generic[_L]):
             dragged = True
 
         if dragged:
-            self.changed.emit(self.selection)
+            if not self._tracking:
+                self.changed.emit(self.selection)
             if not self._persist:
                 self.clear_selection()
 

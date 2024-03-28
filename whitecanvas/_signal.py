@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Generator, Generic, TypeVar, overload
+from typing import Any, Callable, Generator, Generic, Sequence, TypeVar, overload
 
 from psygnal import throttled
 
-from whitecanvas.types import MouseEvent
+from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType, Point
 
 _R = TypeVar("_R")
 _S = TypeVar("_S")
@@ -54,14 +54,12 @@ class MouseMoveSignal:
         self._slots: list[_Slot] = []
 
     @overload
-    def connect(self, slot: _G, *, msec: int = 0, leading: bool = True) -> _G:
-        ...
+    def connect(self, slot: _G, *, msec: int = 0, leading: bool = True) -> _G: ...
 
     @overload
     def connect(
         self, slot: None = None, *, msec: int = 0, leading: bool = True
-    ) -> Callable[[_G], _G]:
-        ...
+    ) -> Callable[[_G], _G]: ...
 
     def connect(self, slot=None, *, msec: int = 0, leading: bool = True):
         """Connect a mouse move callback."""
@@ -94,6 +92,46 @@ class MouseMoveSignal:
         """Emit the mouse event"""
         for slot in self._slots:
             slot.next(ev)
+
+    def emulate_drag(
+        self,
+        positions: Sequence[tuple[float, float]],
+        *,
+        button: str | MouseButton = MouseButton.LEFT,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ):
+        """Emulate a mouse move event."""
+        if isinstance(modifiers, str):
+            _modifiers = (Modifier(modifiers),)
+        elif isinstance(modifiers, Modifier):
+            _modifiers = MouseButton(button)
+        else:
+            _modifiers = tuple(Modifier(m) for m in modifiers)
+
+        ev = MouseEvent(
+            MouseButton(button),
+            _modifiers,
+            Point(*positions[0]),
+            MouseEventType.CLICK,
+        )
+        self.emit(ev)
+
+        for pos in positions[1:]:
+            ev = MouseEvent(
+                MouseButton(button),
+                _modifiers,
+                Point(*pos),
+                MouseEventType.MOVE,
+            )
+            self.emit(ev)
+
+        ev = MouseEvent(
+            MouseButton(button),
+            _modifiers,
+            Point(*positions[-1]),
+            MouseEventType.RELEASE,
+        )
+        self.emit(ev)
 
 
 class MouseSignal(Generic[_R]):

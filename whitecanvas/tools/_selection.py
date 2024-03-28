@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import weakref
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from typing import TYPE_CHECKING, Generic, Literal, NamedTuple, Sequence, TypeVar
 
 import numpy as np
@@ -18,10 +18,14 @@ from whitecanvas.types import (
     MouseEvent,
     MouseEventType,
     Point,
+    Rect,
+    XYData,
     _Void,
 )
 
 if TYPE_CHECKING:
+    from whitecanvas.layers._mixin import ConstEdge, ConstFace
+
     _MouseButton = Literal["left", "middle", "right", "back", "forward"] | MouseButton
     _Modifier = Literal["shift", "ctrl", "alt", "meta"] | Modifier
 
@@ -44,6 +48,7 @@ class SelectionToolBase(ABC, Generic[_L]):
         self._modifiers = set(modifiers)
         self._layer = self._create_layer()
         self._tracking = tracking
+        self._persist = True
         canvas.events.mouse_moved.connect(self.callback)
 
     def _canvas(self) -> CanvasBase:
@@ -62,9 +67,22 @@ class SelectionToolBase(ABC, Generic[_L]):
         now: tuple[float, float],
     ): ...
 
-    @abstractmethod
+    def _on_press(self, start: tuple[float, float]):
+        pass
+
+    @abstractproperty
     def selection(self):
         """This method returns the values that represents current selections."""
+
+    @property
+    def persist(self) -> bool:
+        return self._persist
+
+    @persist.setter
+    def persist(self, value: bool):
+        if not isinstance(value, bool):
+            raise TypeError("persist must be a boolean value.")
+        self._persist = value
 
     def callback(self, e: MouseEvent):
         """The callback function that is called when mouse is moved."""
@@ -72,19 +90,23 @@ class SelectionToolBase(ABC, Generic[_L]):
             return
         canvas = self._canvas()
         pos_start = e.pos
+        self._on_press(pos_start)
         if self._layer in self._canvas().layers:
             self.clear_selection()
-        canvas.add_layer(self._layer)
+        with canvas.autoscale_context(enabled=False):
+            canvas.add_layer(self._layer)
         dragged = False
         while e.type is not MouseEventType.RELEASE:
             self._update_layer(pos_start, e.pos)
             yield
             if self._tracking:
-                self.changed.emit(self.selection())
+                self.changed.emit(self.selection)
             dragged = True
 
         if dragged:
-            self.changed.emit(self.selection())
+            self.changed.emit(self.selection)
+            if not self._persist:
+                self.clear_selection()
 
     def clear_selection(self, e: MouseEvent | None = None):
         self._canvas().layers.remove(self._layer)
@@ -92,7 +114,7 @@ class SelectionToolBase(ABC, Generic[_L]):
 
 class RectSelectionTool(SelectionToolBase[Rects]):
     def _create_layer(self) -> Rects:
-        layer = Rects([[0, 0, 0, 0]], color="blue", alpha=0.4)
+        layer = Rects([[0, 1, 0, 1]], color="blue", alpha=0.4)
         layer.visible = False
         return layer
 
@@ -106,8 +128,19 @@ class RectSelectionTool(SelectionToolBase[Rects]):
         self._layer.data = np.array([[x0, x1, y0, y1]])
         self._layer.visible = True
 
-    def selection(self):
+    @property
+    def selection(self) -> Rect:
         return self._layer.rects[0]
+
+    @property
+    def face(self) -> ConstFace:
+        """Face color of the selection span."""
+        return self._layer.face
+
+    @property
+    def edge(self) -> ConstEdge:
+        """Edge color of the selection span."""
+        return self._layer.edge
 
 
 class LineSelection(NamedTuple):
@@ -117,7 +150,7 @@ class LineSelection(NamedTuple):
 
 class LineSelectionTool(SelectionToolBase[Line]):
     def _create_layer(self) -> Line:
-        return Line(np.array([0, 1]), np.array([0, 1]), color="blue", alpha=0.4)
+        return Line(np.array([]), np.array([]), color="blue", alpha=0.4)
 
     def _update_layer(
         self,
@@ -128,7 +161,8 @@ class LineSelectionTool(SelectionToolBase[Line]):
         x1, y1 = now
         self._layer.data = np.array([x0, x1]), np.array([y0, y1])
 
-    def selection(self):
+    @property
+    def selection(self) -> LineSelection:
         xs, ys = self._layer.data
         return LineSelection(Point(xs[0], ys[0]), Point(xs[1], ys[1]))
 
@@ -144,6 +178,7 @@ class LineSelectionTool(SelectionToolBase[Line]):
 
     @property
     def color(self) -> NDArray[np.float32]:
+        """Color of the selection line."""
         return self._layer.color
 
     @color.setter
@@ -152,6 +187,7 @@ class LineSelectionTool(SelectionToolBase[Line]):
 
     @property
     def width(self) -> float:
+        """Width of the selection line."""
         return self._layer.width
 
     @width.setter
@@ -160,6 +196,7 @@ class LineSelectionTool(SelectionToolBase[Line]):
 
     @property
     def style(self) -> LineStyle:
+        """Style of the selection line."""
         return self._layer.style
 
     @style.setter
@@ -168,6 +205,7 @@ class LineSelectionTool(SelectionToolBase[Line]):
 
     @property
     def alpha(self) -> float:
+        """Alpha channel of the selection line."""
         return self._layer.alpha
 
     @alpha.setter
@@ -181,22 +219,25 @@ class SpanSelection(NamedTuple):
 
 
 class _SpanSelectionTool(SelectionToolBase[Spans]):
-    def selection(self):
+    @property
+    def selection(self) -> SpanSelection:
         span = self._layer.data[0]
         return SpanSelection(span[0], span[1])
 
     @property
-    def face(self):
+    def face(self) -> ConstFace:
+        """Face color of the selection span."""
         return self._layer.face
 
     @property
-    def edge(self):
+    def edge(self) -> ConstEdge:
+        """Edge color of the selection span."""
         return self._layer.edge
 
 
 class XSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
-        layer = Spans([[0, 0]], orient="vertical", color="red", alpha=0.4)
+        layer = Spans([[0, 1]], orient="vertical", color="red", alpha=0.4)
         layer.visible = False
         return layer
 
@@ -213,7 +254,7 @@ class XSpanSelectionTool(_SpanSelectionTool):
 
 class YSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
-        layer = Spans([[0, 0]], orient="horizontal", color="green", alpha=0.4)
+        layer = Spans([[0, 1]], orient="horizontal", color="green", alpha=0.4)
         layer.visible = False
         return layer
 
@@ -227,7 +268,24 @@ class YSpanSelectionTool(_SpanSelectionTool):
         self._layer.data = [[y0, y1]]
 
 
-# class Lasso
+class LassoSelectionTool(LineSelectionTool):
+    def _update_layer(
+        self,
+        start: tuple[float, float],
+        now: tuple[float, float],
+    ):
+        x1, y1 = now
+        current = self._layer.data
+        xs = np.concatenate([current.x, [x1]])
+        ys = np.concatenate([current.y, [y1]])
+        self._layer.data = xs, ys
+
+    @property
+    def selection(self) -> XYData:
+        return self._layer.data
+
+    def _on_press(self, start: tuple[float, float]):
+        self._layer.data = np.array([start[0]]), np.array([start[1]])
 
 
 def _norm_input(
@@ -391,3 +449,39 @@ def yspan_selector(
     """
     _buttons, _modifiers = _norm_input(buttons, modifiers)
     return YSpanSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)
+
+
+def lasso_selector(
+    canvas: CanvasBase,
+    buttons: _MouseButton | Sequence[_MouseButton] = "left",
+    modifiers: _Modifier | Sequence[_Modifier] | None = None,
+    *,
+    tracking: bool = False,
+) -> LassoSelectionTool:
+    """
+    Create a Lasso selector tool with given settings.
+
+    A Lasso selector emits a XYData object by freehand drawing.
+    A selection tool is constructed by specifying the canvas to attach the tool.
+
+    >>> canvas = new_canvas("matplotlib:qt")
+    >>> tool = lasso_selector(canvas)
+
+    Use `buttons` and `modifiers` to specify how to trigger the tool.
+
+    >>> tool = lasso_selector(canvas, buttons="right", modifiers="ctrl")
+
+    Parameters
+    ----------
+    canvas : CanvasBase
+        The canvas to which the tool is attached.
+    buttons : MouseButton or Sequence[MouseButton], default "left"
+        The mouse buttons that can trigger the tool.
+    modifiers : Modifier or Sequence[Modifier], optional
+        The modifier keys that must be pressed to trigger the tool.
+    tracking : bool, default False
+        If True, the tool emits the changed signal while dragging. Otherwise, it emits
+        the signal only when dragging is finished.
+    """
+    _buttons, _modifiers = _norm_input(buttons, modifiers)
+    return LassoSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)

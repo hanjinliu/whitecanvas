@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -155,15 +156,28 @@ class CanvasBase(ABC):
 
     def _emit_mouse_moved(self, ev):
         """Emit mouse moved event with autoscaling blocked"""
-        _was_enabled = self._autoscale_enabled
-        # If new layers are added during the mouse move event, the canvas
-        # should not be autoscaled, otherwise unexpected values will be
-        # passed to the callback functions.
-        self._autoscale_enabled = False
+        self.events.mouse_moved.emit(ev)
+
+    @property
+    def autoscale_enabled(self) -> bool:
+        """Return whether autoscale is enabled."""
+        return self._autoscale_enabled
+
+    @autoscale_enabled.setter
+    def autoscale_enabled(self, enabled: bool):
+        if not isinstance(enabled, bool):
+            raise TypeError(f"Expected a bool, got {type(enabled)}.")
+        self._autoscale_enabled = enabled
+
+    @contextmanager
+    def autoscale_context(self, enabled: bool):
+        """Context manager to temporarily change the autoscale state."""
+        _was_enabled = self.autoscale_enabled
+        self.autoscale_enabled = enabled
         try:
-            self.events.mouse_moved.emit(ev)
+            yield
         finally:
-            self._autoscale_enabled = _was_enabled
+            self.autoscale_enabled = _was_enabled
 
     @abstractmethod
     def _get_backend(self) -> Backend:
@@ -192,6 +206,15 @@ class CanvasBase(ABC):
         if ratio is not None:
             ratio = float(ratio)
         self._canvas()._plt_set_aspect_ratio(ratio)
+
+    @property
+    def mouse_enabled(self) -> bool:
+        """Return whether pan/zoom is enabled."""
+        return self._canvas()._plt_get_mouse_enabled()
+
+    @mouse_enabled.setter
+    def mouse_enabled(self, enabled: bool):
+        self._canvas()._plt_set_mouse_enabled(enabled)
 
     def autoscale(
         self,
@@ -1700,12 +1723,12 @@ class CanvasBase(ABC):
         self,
         layers: Iterable[_l.Layer],
         name: str | None = None,
-    ) -> _l.LayerGroup:
-        ...
+    ) -> _l.LayerGroup: ...
 
     @overload
-    def group_layers(self, *layers: _l.Layer, name: str | None = None) -> _l.LayerGroup:
-        ...
+    def group_layers(
+        self, *layers: _l.Layer, name: str | None = None
+    ) -> _l.LayerGroup: ...
 
     def group_layers(self, layers, *more_layers, name=None):
         """
@@ -1748,10 +1771,10 @@ class CanvasBase(ABC):
         maybe_empty: bool = True,
     ):
         """This function will be called when a layer is inserted to the canvas."""
+        if not self.autoscale_enabled:
+            return
         if pad_rel is None:
             pad_rel = 0 if layer._NO_PADDING_NEEDED else 0.025
-        if not self._autoscale_enabled:
-            return
         xmin, xmax, ymin, ymax = layer.bbox_hint()
         if len(self.layers) > 1 or not maybe_empty:
             # NOTE: if there was no layer, so backend may not have xlim/ylim,

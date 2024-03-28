@@ -254,6 +254,16 @@ class Canvas:
         if fig := self._axes.get_figure():
             fig.canvas.draw_idle()
 
+    def _plt_get_mouse_enable(self):
+        return self._axes.get_navigate()
+
+    def _plt_set_mouse_enable(self, enable: bool):
+        if fig := self._axes.get_figure():
+            if toolbar := getattr(fig.canvas, "toolbar", None):
+                toolbar._update_buttons_checked()
+                return
+        return self._axes.set_navigate(enable)
+
     def _translate_mouse_event(
         self, ev: mplMouseEvent, typ: MouseEventType
     ) -> MouseEvent:

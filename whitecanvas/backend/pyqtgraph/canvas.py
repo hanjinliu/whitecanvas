@@ -242,6 +242,12 @@ class Canvas:
                 if sample is not None:
                     legend.addItem(sample, label)
 
+    def _plt_get_mouse_enabled(self):
+        return self._viewbox().mouseEnabled()[0]
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._viewbox().setMouseEnabled(enabled, enabled)
+
     def _translate_mouse_event(
         self,
         ev: QtGui.QMouseEvent | QtCore.QPointF,

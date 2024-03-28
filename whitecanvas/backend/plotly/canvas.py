@@ -165,6 +165,13 @@ class Canvas:
     def _plt_draw(self):
         pass
 
+    def _plt_get_mouse_enabled(self):
+        return self._fig.layout.xaxis.fixedrange
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._fig.layout.xaxis.fixedrange = not enabled
+        self._fig.layout.yaxis.fixedrange = not enabled
+
     def _plt_twinx(self):
         from plotly._subplots import SubplotRef
 
@@ -370,7 +377,7 @@ class CanvasGrid:
                 cols=len(widths),
                 row_heights=heights,
                 column_widths=widths,
-            )
+            ),
         )
         self._figs.update_layout(margin={"l": 6, "r": 6, "t": 30, "b": 6})
         self._app = app

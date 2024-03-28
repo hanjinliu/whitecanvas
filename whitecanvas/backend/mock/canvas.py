@@ -24,6 +24,7 @@ class Canvas:
         self._yticks = Ticks()
         self._aspect_ratio = None
         self._visible = True
+        self._mouse_enabled = True
         self._obj = MockObject()
 
     def _plt_get_native(self):
@@ -131,6 +132,12 @@ class Canvas:
 
     def _plt_make_legend(self, *args, **kwargs):
         pass
+
+    def _plt_get_mouse_enable(self):
+        return self._mouse_enabled
+
+    def _plt_set_mouse_enable(self, enabled: bool):
+        self._mouse_enabled = enabled
 
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)

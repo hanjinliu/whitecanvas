@@ -12,6 +12,12 @@ from whitecanvas.utils.normalize import as_color_array
 from whitecanvas.utils.type_check import is_not_array
 
 
+def _rectangle(x, y, dx, dy) -> Rectangle:
+    r = Rectangle(xy=(x, y), width=dx, height=dy, linestyle="-", picker=True)
+    r.get_path()._interpolation_steps = 100
+    return r
+
+
 @check_protocol(BarProtocol)
 class Bars(BarContainer, MplMouseEventsMixin):
     def __init__(self, xlow, xhigh, ylow, yhigh):
@@ -19,15 +25,16 @@ class Bars(BarContainer, MplMouseEventsMixin):
         width = xhigh - xlow
         height = yhigh - ylow
         for x, y, dx, dy in zip(xlow, ylow, width, height):
-            r = Rectangle(xy=(x, y), width=dx, height=dy, linestyle="-", picker=True)
-            r.get_path()._interpolation_steps = 100
-            patches.append(r)
+            patches.append(_rectangle(x, y, dx, dy))
         super().__init__(patches)
         self._visible = True
         MplMouseEventsMixin.__init__(self)
 
     def _plt_get_visible(self):
         return self._visible
+
+    def __iter__(self):
+        return iter(self.patches)
 
     def _plt_set_visible(self, visible):
         for patch in self.patches:
@@ -58,16 +65,23 @@ class Bars(BarContainer, MplMouseEventsMixin):
         return x0, x1, y0, y1
 
     def _plt_set_data(self, x0, x1, y0, y1):
+        for _ in range(x0.size - len(self.patches)):
+            rect = _rectangle(0, 0, 1, 1)
+            self.patches.append(rect)
+            rect.set_visible(self._visible)
+        for _ in range(len(self.patches) - x0.size):
+            self.patches.pop()
         for patch, x0i, x1i, y0i, y1i in zip(self.patches, x0, x1, y0, y1):
             patch.set_x(x0i)
             patch.set_width(x1i - x0i)
             patch.set_y(y0i)
             patch.set_height(y1i - y0i)
-        # TODO: longer or shorter
 
     ##### HasFace protocol #####
 
     def _plt_get_face_color(self) -> NDArray[np.float32]:
+        if len(self.patches) == 0:
+            return np.empty((0, 4), dtype=np.float32)
         return np.stack([patch.get_facecolor() for patch in self.patches], axis=0)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
@@ -87,6 +101,8 @@ class Bars(BarContainer, MplMouseEventsMixin):
     ##### HasEdges protocol #####
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
+        if len(self.patches) == 0:
+            return np.empty((0, 4), dtype=np.float32)
         return np.stack([patch.get_edgecolor() for patch in self.patches], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):

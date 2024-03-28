@@ -80,7 +80,7 @@ class Rects(
 
     def _norm_layer_data(self, data: ArrayLike) -> NDArray[np.float32]:
         arr = np.atleast_2d(data).astype(np.float32, copy=False)
-        if arr.shape[1] != 4:
+        if arr.size > 0 and arr.shape[1] != 4:
             raise ValueError("Data must have 4 columns")
         return arr
 
@@ -192,6 +192,8 @@ class Rects(
 
 def _norm_inputs(coords: ArrayLike):
     arr = np.atleast_2d(coords).astype(np.float32, copy=False)
+    if arr.size == 0:
+        return (np.zeros(0, dtype=np.float32),) * 4, None, None
     if arr.shape[1] != 4:
         raise ValueError("Data must have 4 columns")
     x0, x1, y0, y1 = arr.T

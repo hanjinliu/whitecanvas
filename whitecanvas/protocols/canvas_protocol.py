@@ -97,6 +97,12 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     ):
         """Make legend for the given legend items"""
 
+    def _plt_get_mouse_enabled(self) -> bool:
+        """Get mouse interaction enabled state"""
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        """Set mouse interaction enabled state"""
+
 
 @runtime_checkable
 class TextLabelProtocol(HasVisibility, Protocol):

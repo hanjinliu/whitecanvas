@@ -9,6 +9,7 @@ from psygnal import Signal, SignalGroup
 
 from whitecanvas import protocols
 from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas._signal import MouseMoveSignal, MouseSignal
 from whitecanvas.types import ColorType, LineStyle
 from whitecanvas.utils.normalize import arr_color
 
@@ -345,3 +346,20 @@ class YAxisNamespace(AxisNamespace):
 
     def _get_object(self):
         return self._get_canvas()._plt_get_yaxis()
+
+
+class MouseNamespace(AxisNamespace):
+    """Namespace that contains the mouse events."""
+
+    clicked = MouseSignal(object)
+    moved = MouseMoveSignal()
+    double_clicked = MouseSignal(object)
+
+    @property
+    def enabled(self) -> bool:
+        """Return whether pan/zoom is enabled."""
+        return self._get_canvas()._plt_get_mouse_enabled()
+
+    @enabled.setter
+    def enabled(self, enabled: bool):
+        self._get_canvas()._plt_set_mouse_enabled(enabled)

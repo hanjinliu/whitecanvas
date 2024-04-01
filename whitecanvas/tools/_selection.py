@@ -49,7 +49,7 @@ class SelectionToolBase(ABC, Generic[_L]):
         self._layer = self._create_layer()
         self._tracking = tracking
         self._persist = True
-        canvas.events.mouse_moved.connect(self.callback)
+        canvas.mouse.moved.connect(self.callback)
 
     def _canvas(self) -> CanvasBase:
         canvas = self._canvas_ref()

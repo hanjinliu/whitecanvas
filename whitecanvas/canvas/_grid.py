@@ -409,6 +409,7 @@ class SingleCanvas(_CanvasWithGrid):
         # NOTE: events, dims etc are not shared between the main canvas and the
         # SingleCanvas instance. To avoid confusion, the first and the only canvas
         # should be replaces with the SingleCanvas instance.
+        self.mouse = grid[0, 0].mouse
         grid._canvas_array[0, 0] = self
         self.events.drawn.connect(
             self._main_canvas.events.drawn.emit, unique=True, max_args=None

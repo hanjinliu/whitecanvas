@@ -76,6 +76,7 @@ class SelectionToolBase(ABC, Generic[_L]):
 
     @property
     def persist(self) -> bool:
+        """Whether the selection persists after mouse release."""
         return self._persist
 
     @persist.setter
@@ -250,13 +251,13 @@ class XSpanSelectionTool(_SpanSelectionTool):
     ):
         x0, _ = start
         x1, _ = now
-        self._layer.data = [[x0, x1]]
+        self._layer.data = np.array([[x0, x1]], dtype=np.float32)
         self._layer.visible = True
 
 
 class YSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
-        layer = Spans([[0, 1]], orient="horizontal", color="green", alpha=0.4)
+        layer = Spans([[0, 1]], orient="horizontal", color="red", alpha=0.4)
         layer.visible = False
         return layer
 
@@ -267,7 +268,8 @@ class YSpanSelectionTool(_SpanSelectionTool):
     ):
         _, y0 = start
         _, y1 = now
-        self._layer.data = [[y0, y1]]
+        self._layer.data = np.array([[y0, y1]], dtype=np.float32)
+        self._layer.visible = True
 
 
 class LassoSelectionTool(LineSelectionTool):

@@ -185,6 +185,9 @@ class Canvas:
         def _cb(qpoint: QtCore.QPointF):
             mev = self._translate_mouse_event(qpoint, MouseEventType.MOVE)
             callback(mev)
+            if not self._plt_get_mouse_enabled():
+                # for some reason, plot items are not updated when mouse is disabled
+                self._viewbox().update()
 
         self._signals.moved.connect(_cb)
 

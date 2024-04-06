@@ -82,6 +82,8 @@ docs = [
   "matplotlib>=3.8.2",
   "imageio>=2.9.0",
   "plotly>=5.3.1",
+  "qtpy>=2.4.1",
+  "pyqt5",
 ]
 
 [project.urls]

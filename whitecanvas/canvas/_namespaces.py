@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Iterable,
+    Sequence,
+    TypeVar,
+)
 
 import numpy as np
 from cmap import Color
@@ -10,7 +17,15 @@ from psygnal import Signal, SignalGroup
 from whitecanvas import protocols
 from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas._signal import MouseMoveSignal, MouseSignal
-from whitecanvas.types import ColorType, LineStyle
+from whitecanvas.types import (
+    ColorType,
+    LineStyle,
+    Modifier,
+    MouseButton,
+    MouseEvent,
+    MouseEventType,
+    Point,
+)
 from whitecanvas.utils.normalize import arr_color
 
 if TYPE_CHECKING:
@@ -363,3 +378,98 @@ class MouseNamespace(AxisNamespace):
     @enabled.setter
     def enabled(self, enabled: bool):
         self._get_canvas()._plt_set_mouse_enabled(enabled)
+
+    def emulate_click(
+        self,
+        position: tuple[float, float],
+        *,
+        button: str | MouseButton = MouseButton.LEFT,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ) -> None:
+        ev = MouseEvent(
+            MouseButton(button),
+            _norm_modifiers(modifiers),
+            Point(*position),
+            MouseEventType.PRESS,
+        )
+        self.clicked.emit(ev)
+        return None
+
+    def emulate_double_click(
+        self,
+        position: tuple[float, float],
+        *,
+        button: str | MouseButton = MouseButton.LEFT,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ) -> None:
+        ev = MouseEvent(
+            MouseButton(button),
+            _norm_modifiers(modifiers),
+            Point(*position),
+            MouseEventType.DOUBLE_CLICK,
+        )
+        self.double_clicked.emit(ev)
+
+    def emulate_hover(
+        self,
+        positions: Sequence[tuple[float, float]],
+        *,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ) -> None:
+        _modifiers = _norm_modifiers(modifiers)
+
+        for pos in positions:
+            ev = MouseEvent(
+                MouseButton.NONE,
+                _modifiers,
+                Point(*pos),
+                MouseEventType.MOVE,
+            )
+            self.moved.emit(ev)
+        return None
+
+    def emulate_drag(
+        self,
+        positions: Sequence[tuple[float, float]],
+        *,
+        button: str | MouseButton = MouseButton.LEFT,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ):
+        """Emulate a mouse press-move-release event."""
+        _modifiers = _norm_modifiers(modifiers)
+
+        ev = MouseEvent(
+            MouseButton(button),
+            _modifiers,
+            Point(*positions[0]),
+            MouseEventType.PRESS,
+        )
+        self.moved.emit(ev)
+
+        for pos in positions[1:]:
+            ev = MouseEvent(
+                MouseButton(button),
+                _modifiers,
+                Point(*pos),
+                MouseEventType.MOVE,
+            )
+            self.moved.emit(ev)
+
+        ev = MouseEvent(
+            MouseButton(button),
+            _modifiers,
+            Point(*positions[-1]),
+            MouseEventType.RELEASE,
+        )
+        self.moved.emit(ev)
+        return None
+
+
+def _norm_modifiers(modifiers) -> tuple[Modifier, ...]:
+    if isinstance(modifiers, str):
+        _modifiers = (Modifier(modifiers),)
+    elif isinstance(modifiers, Modifier):
+        _modifiers = [modifiers]
+    else:
+        _modifiers = tuple(Modifier(m) for m in modifiers)
+    return _modifiers

@@ -52,6 +52,9 @@ nav:
     - Canvas Events: events/canvas_events.md
     - Layer Events: events/layer_events.md
     - Mouse Events: events/mouse_events.md
+  - Tools:
+    - Overview: tools/index.md
+    - Mouse Selection: tools/selection.md
   - API Reference:
     - api/core.md
     - api/canvas.md

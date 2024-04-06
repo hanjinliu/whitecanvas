@@ -7,14 +7,13 @@ from typing import (
     Callable,
     Generator,
     Generic,
-    Sequence,
     TypeVar,
     overload,
 )
 
 from psygnal import throttled
 
-from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType, Point
+from whitecanvas.types import MouseEvent
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -123,46 +122,6 @@ class MouseMoveSignal(_MouseSignalMixin):
         """Emit the mouse event"""
         for slot in self._slots:
             slot.next(ev)
-
-    def emulate_drag(
-        self,
-        positions: Sequence[tuple[float, float]],
-        *,
-        button: str | MouseButton = MouseButton.LEFT,
-        modifiers: str | Modifier | Sequence[str | Modifier] = (),
-    ):
-        """Emulate a mouse move event."""
-        if isinstance(modifiers, str):
-            _modifiers = (Modifier(modifiers),)
-        elif isinstance(modifiers, Modifier):
-            _modifiers = MouseButton(button)
-        else:
-            _modifiers = tuple(Modifier(m) for m in modifiers)
-
-        ev = MouseEvent(
-            MouseButton(button),
-            _modifiers,
-            Point(*positions[0]),
-            MouseEventType.CLICK,
-        )
-        self.emit(ev)
-
-        for pos in positions[1:]:
-            ev = MouseEvent(
-                MouseButton(button),
-                _modifiers,
-                Point(*pos),
-                MouseEventType.MOVE,
-            )
-            self.emit(ev)
-
-        ev = MouseEvent(
-            MouseButton(button),
-            _modifiers,
-            Point(*positions[-1]),
-            MouseEventType.RELEASE,
-        )
-        self.emit(ev)
 
 
 class MouseSignal(_MouseSignalMixin, Generic[_R]):

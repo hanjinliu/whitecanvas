@@ -103,8 +103,7 @@ class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color=None, hatch=None, alpha=1.0):
-        ...
+    def update(self, color=None, hatch=None, alpha=1.0): ...
 
 
 class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
@@ -129,8 +128,7 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color=None, width=None, style=None, alpha=1.0):
-        ...
+    def update(self, color=None, width=None, style=None, alpha=1.0): ...
 
 
 class SinglePropertyFaceBase(FaceNamespace):
@@ -331,6 +329,12 @@ class ConstFace(SinglePropertyFaceBase):
 
     @alpha.setter
     def alpha(self, value: float):
+        if not is_real_number(value):
+            raise ValueError(
+                "Alpha must be a real number for a constant-face layer. If you want to "
+                "set multiple alpha values, use `with_face_multi` method to convert "
+                "the layer to a multi-face layer."
+            )
         if not 0 <= value <= 1:
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         try:
@@ -437,6 +441,12 @@ class ConstEdge(SinglePropertyEdgeBase):
 
     @alpha.setter
     def alpha(self, value: float):
+        if not is_real_number(value):
+            raise ValueError(
+                "Alpha must be a real number for a constant-edge layer. If you want to "
+                "set multiple alpha values, use `with_edge_multi` method to convert "
+                "the layer to a multi-edge layer."
+            )
         if not 0 <= value <= 1:
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
@@ -586,10 +596,23 @@ class AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
     def _make_sure_hatch_visible(self):
         pass
 
+    color = property()
+
+    @color.setter
+    def color(self, value):
+        self.face.color = value
+        self.edge.color = value
+
+    alpha = property()
+
+    @alpha.setter
+    def alpha(self, value):
+        self.face.alpha = value
+        self.edge.alpha = value
+
     if TYPE_CHECKING:
 
-        def _as_legend_item(self) -> _legend.LegendItem:
-            ...
+        def _as_legend_item(self) -> _legend.LegendItem: ...
 
 
 class FaceEdgeMixin(AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
@@ -819,17 +842,14 @@ _E = TypeVar("_E", bound=Enum)
 
 class EnumArray(Generic[_E]):
     @overload
-    def __getitem__(self, key: SupportsIndex) -> _E:
-        ...
+    def __getitem__(self, key: SupportsIndex) -> _E: ...
 
     @overload
     def __getitem__(
         self, key: slice | NDArray[np.integer] | list[SupportsIndex]
-    ) -> EnumArray[_E]:
-        ...
+    ) -> EnumArray[_E]: ...
 
-    def __iter__(self) -> Iterator[_E]:
-        ...
+    def __iter__(self) -> Iterator[_E]: ...
 
 
 class FontEvents(SignalGroup):

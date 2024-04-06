@@ -288,7 +288,7 @@ class SceneCanvasExt(SceneCanvas):
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
                 modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
                 pos=pos,
-                type=MouseEventType.CLICK,
+                type=MouseEventType.PRESS,
             )
             for callback in canvas._mouse_click_callbacks:
                 callback(ev)

@@ -291,6 +291,24 @@ class LassoSelectionTool(LineSelectionTool):
     def _on_press(self, start: tuple[float, float]):
         self._layer.data = np.array([start[0]]), np.array([start[1]])
 
+    def close_path(self, emit: bool = False):
+        """
+        Close the path by connecting the last point to the first point.
+
+        Parameters
+        ----------
+        emit : bool, default False
+            If True, the changed signal is emitted after closing the path.
+        """
+        current = self._layer.data
+        if len(current.x) > 2:
+            xs = np.concatenate([current.x, [current.x[0]]])
+            ys = np.concatenate([current.y, [current.y[0]]])
+            self._layer.data = xs, ys
+        if emit:
+            self.changed.emit(self.selection)
+        return
+
 
 def _norm_input(
     buttons: _MouseButton | Sequence[_MouseButton] = "left",

@@ -7,6 +7,7 @@ from numpy.testing import assert_allclose
 import pytest
 import whitecanvas as wc
 from whitecanvas import new_canvas, wrap_canvas
+from whitecanvas.types import Point, MouseEvent
 
 from ._utils import assert_color_equal, filter_warning
 
@@ -327,3 +328,49 @@ def test_screenshot(backend: str):
     canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
     if sys.platform != "win32":  # NOTE: testing in GitHub Actions fails for some reason
         canvas._repr_png_()
+
+def test_emulating_mouse_click():
+    canvas = new_canvas("mock")
+
+    clicked_history: list[Point] = []
+    double_clicked_history: list[Point] = []
+
+    @canvas.mouse.clicked.connect
+    def _clicked(ev: MouseEvent):
+        clicked_history.append(ev.pos)
+
+    @canvas.mouse.double_clicked.connect
+    def _double_clicked(ev: MouseEvent):
+        double_clicked_history.append(ev.pos)
+
+    canvas.mouse.emulate_click((1, 1))
+    assert clicked_history == [(1, 1)]
+    assert double_clicked_history == []
+
+    canvas.mouse.emulate_click((1, 2))
+    assert clicked_history == [(1, 1), (1, 2)]
+    assert double_clicked_history == []
+
+    canvas.mouse.emulate_double_click((-1, -1))
+    assert clicked_history == [(1, 1), (1, 2)]
+    assert double_clicked_history == [(-1, -1)]
+
+def test_emulating_mouse_move():
+    canvas = new_canvas("mock")
+    history: list[str] = []
+
+    @canvas.mouse.moved.connect
+    def _move(ev: MouseEvent):
+        if ev.button != "right":
+            return
+        history.append("press")
+        yield
+        while ev.type != "release":
+            history.append("move")
+            yield
+        history.append("release")
+
+    canvas.mouse.emulate_drag([(1, 1), (1, 2), (1, 3)], button="left")
+    assert history == []
+    canvas.mouse.emulate_drag([(1, 1), (1, 2), (1, 3)], button="right")
+    assert history == ["press", "move", "move", "release"]

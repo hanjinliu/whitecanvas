@@ -177,7 +177,7 @@ class Canvas:
                 button=MouseButton.LEFT,
                 modifiers=_translate_modifiers(event.modifiers),
                 pos=(event.x, event.y),
-                type=MouseEventType.CLICK,
+                type=MouseEventType.PRESS,
             )
             callback(ev)
 

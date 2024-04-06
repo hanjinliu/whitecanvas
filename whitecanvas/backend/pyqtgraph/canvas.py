@@ -174,7 +174,7 @@ class Canvas:
         """Connect callback to clicked event"""
 
         def _cb(ev):
-            mev = self._translate_mouse_event(ev, MouseEventType.CLICK)
+            mev = self._translate_mouse_event(ev, MouseEventType.PRESS)
             callback(mev)
 
         self._signals.pressed.connect(_cb)

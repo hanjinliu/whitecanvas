@@ -64,6 +64,8 @@ class Symbol(_StrEnum):
 
 
 class Modifier(_StrEnum):
+    """Enum that represents the keyboard modifiers."""
+
     SHIFT = "shift"
     CTRL = "ctrl"
     ALT = "alt"
@@ -71,6 +73,8 @@ class Modifier(_StrEnum):
 
 
 class MouseButton(_StrEnum):
+    """Enum that represents the mouse buttons."""
+
     NONE = "none"
     LEFT = "left"
     MIDDLE = "middle"
@@ -80,8 +84,10 @@ class MouseButton(_StrEnum):
 
 
 class MouseEventType(_StrEnum):
+    """Enum that represents the mouse event type."""
+
     MOVE = "move"
-    CLICK = "click"
+    PRESS = "press"
     RELEASE = "release"
     DOUBLE_CLICK = "double_click"
 

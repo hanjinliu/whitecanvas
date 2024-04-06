@@ -216,7 +216,7 @@ class Canvas:
         def _cb(ev: mplMouseEvent):
             if ev.inaxes is not self._axes or ev.dblclick:
                 return
-            callback(self._translate_mouse_event(ev, MouseEventType.CLICK))
+            callback(self._translate_mouse_event(ev, MouseEventType.PRESS))
 
         self._axes.figure.canvas.mpl_connect("button_press_event", _cb)
 

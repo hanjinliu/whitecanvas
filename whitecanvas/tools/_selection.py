@@ -118,7 +118,7 @@ class SelectionToolBase(ABC, Generic[_L]):
 
 class RectSelectionTool(SelectionToolBase[Rects]):
     def _create_layer(self) -> Rects:
-        layer = Rects([[0, 1, 0, 1]], color="blue", alpha=0.4, width=2)
+        layer = Rects([[0, 1, 0, 1]], color="blue", alpha=0.4).with_edge(width=2)
         layer.visible = False
         return layer
 

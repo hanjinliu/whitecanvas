@@ -70,3 +70,24 @@ def _on_move(ev: MouseEvent):
         yield
     print("released")
 ```
+
+## Emulating Mouse Events
+
+Mouse events can be emulated by the `emulate_*` methods.
+
+- [emulate_click()][whitecanvas.canvas._namespaces.MouseNamespace.emulate_click]
+- [emulate_double_click()][whitecanvas.canvas._namespaces.MouseNamespace.emulate_double_click]
+- [emulate_hover()][whitecanvas.canvas._namespaces.MouseNamespace.emulate_hover]
+- [emulate_drag()][whitecanvas.canvas._namespaces.MouseNamespace.emulate_drag]
+
+``` python
+#!skip
+from whitecanvas import new_canvas
+from whitecanvas.types import MouseEvent
+
+canvas = new_canvas("matplotlib:qt")
+canvas.mouse.emulate_click((100, 100), button="left")
+canvas.mouse.emulate_double_click((100, 100), button="left", modifiers="ctrl")
+canvas.mouse.emulate_hover([(100, 100), (100, 101), (100, 102)])
+canvas.mouse.emulate_drag([(100, 100), (100, 101), (100, 102)], button="left")
+```

@@ -58,6 +58,8 @@ nav:
   - API Reference:
     - api/core.md
     - api/canvas.md
+    - api/tools.md
+    - api/types.md
 
 plugins:
   - search

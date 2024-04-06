@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import weakref
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generic, Literal, NamedTuple, Sequence, TypeVar
 
 import numpy as np
@@ -70,7 +70,8 @@ class SelectionToolBase(ABC, Generic[_L]):
     def _on_press(self, start: tuple[float, float]):
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def selection(self):
         """This method returns the values that represents current selections."""
 
@@ -117,7 +118,7 @@ class SelectionToolBase(ABC, Generic[_L]):
 
 class RectSelectionTool(SelectionToolBase[Rects]):
     def _create_layer(self) -> Rects:
-        layer = Rects([[0, 1, 0, 1]], color="blue", alpha=0.4)
+        layer = Rects([[0, 1, 0, 1]], color="blue", alpha=0.4, width=2)
         layer.visible = False
         return layer
 
@@ -153,7 +154,7 @@ class LineSelection(NamedTuple):
 
 class LineSelectionTool(SelectionToolBase[Line]):
     def _create_layer(self) -> Line:
-        return Line(np.array([]), np.array([]), color="blue", alpha=0.4)
+        return Line(np.array([]), np.array([]), width=2, color="blue", alpha=0.4)
 
     def _update_layer(
         self,

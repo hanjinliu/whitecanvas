@@ -43,7 +43,7 @@ class AxisSignals(SignalGroup):
     lim = Signal(tuple)
 
 
-class StrongRef(Generic[_T]):
+class _StrongRef(Generic[_T]):
     """Strong reference to an object."""
 
     def __init__(self, obj: _T):
@@ -60,9 +60,9 @@ class Namespace:
         if canvas is not None:
             # This line *should* be an weak reference, but canvas is sometimes deleted
             # for some reason. Just use a strong reference for now.
-            self._canvas_ref = StrongRef(canvas)
+            self._canvas_ref = _StrongRef(canvas)
         else:
-            self._canvas_ref = StrongRef(_no_canvas)
+            self._canvas_ref = _StrongRef(_no_canvas)
         self._instances: dict[int, Self] = {}
 
     def __get__(self, canvas, owner=None) -> Self:
@@ -367,8 +367,13 @@ class MouseNamespace(AxisNamespace):
     """Namespace that contains the mouse events."""
 
     clicked = MouseSignal(object)
+    """Signal emitted when a mouse button is clicked."""
+
     moved = MouseMoveSignal()
+    """Signal emitted when the mouse is moved."""
+
     double_clicked = MouseSignal(object)
+    """Signal emitted when a mouse button is double-clicked."""
 
     @property
     def enabled(self) -> bool:
@@ -386,6 +391,7 @@ class MouseNamespace(AxisNamespace):
         button: str | MouseButton = MouseButton.LEFT,
         modifiers: str | Modifier | Sequence[str | Modifier] = (),
     ) -> None:
+        """Emulate a mouse press event."""
         ev = MouseEvent(
             MouseButton(button),
             _norm_modifiers(modifiers),
@@ -402,6 +408,7 @@ class MouseNamespace(AxisNamespace):
         button: str | MouseButton = MouseButton.LEFT,
         modifiers: str | Modifier | Sequence[str | Modifier] = (),
     ) -> None:
+        """Emulate a mouse double-click event."""
         ev = MouseEvent(
             MouseButton(button),
             _norm_modifiers(modifiers),
@@ -416,6 +423,7 @@ class MouseNamespace(AxisNamespace):
         *,
         modifiers: str | Modifier | Sequence[str | Modifier] = (),
     ) -> None:
+        """Emulate a mouse move event."""
         _modifiers = _norm_modifiers(modifiers)
 
         for pos in positions:

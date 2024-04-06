@@ -414,8 +414,12 @@ class CanvasGrid:
             fig.savefig(buff, format="raw")
             buff.seek(0)
             data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
-        w, h = fig.canvas.get_width_height()
-        img = data.reshape((int(h), int(w), -1))
+        # NOTE: fig.canvas.get_width_height() fails if the device pixel ratio is such
+        # as 175%.
+        wmax, hmax = fig.bbox.max
+        width = int(round(wmax / fig.canvas.device_pixel_ratio))
+        height = int(round(hmax / fig.canvas.device_pixel_ratio))
+        img = data.reshape((height, width, -1))
         return img
 
     def _plt_set_figsize(self, width: int, height: int):

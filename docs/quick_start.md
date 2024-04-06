@@ -9,8 +9,11 @@ elements. Created canvas can be shown by calling `show`.
 #!name: quick_start_empty_canvas
 from whitecanvas import new_canvas
 
-canvas = new_canvas()  # create a canvas
-canvas.show()  # show the canvas
+# create a canvas
+canvas = new_canvas()
+
+# show the canvas
+canvas.show()
 ```
 
 As `whitecanvas` is backend independent, you can specify a plotting backend when

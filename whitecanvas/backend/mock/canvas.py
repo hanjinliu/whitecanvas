@@ -253,6 +253,9 @@ class Axis:
     def _plt_set_grid_state(self, *args, **kwargs):
         pass
 
+    def _plt_set_scale(self, scale):
+        pass
+
 
 class Ticks(_SupportsText):
     def __init__(self):

@@ -10,7 +10,7 @@ from qtpy.QtGui import QFont, QPen
 
 from whitecanvas.backend.pyqtgraph._base import PyQtAxis
 from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
-from whitecanvas.types import LineStyle
+from whitecanvas.types import AxisScale, LineStyle
 
 if TYPE_CHECKING:
     import pyqtgraph as pg
@@ -162,6 +162,14 @@ class Axis(_CanvasComponent):
         axis = self._plt_get_axis()
         axis.setGrid(grid)
         # tick disappears by unknown reason.
+
+    def _plt_set_scale(self, scale: AxisScale):
+        if scale is AxisScale.LINEAR:
+            self._plt_get_axis().setLogMode(False)
+        elif scale is AxisScale.LOG:
+            self._plt_get_axis().setLogMode(True)
+        else:
+            raise ValueError(f"Unknown scale: {scale}")
 
 
 class Ticks(_CanvasComponent):

@@ -2,7 +2,15 @@ from __future__ import annotations
 
 import weakref
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, Literal, NamedTuple, Sequence, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Generic,
+    Literal,
+    NamedTuple,
+    Sequence,
+    TypeVar,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
@@ -56,6 +64,13 @@ class SelectionToolBase(ABC, Generic[_L]):
         self._persist = True
         self._enabled = True
         canvas.mouse.moved.connect(self.callback)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if self._canvas_ref() is not None:
+            self.disconnect()
 
     def _canvas(self) -> CanvasBase:
         canvas = self._canvas_ref()
@@ -130,6 +145,13 @@ class SelectionToolBase(ABC, Generic[_L]):
         self._canvas().layers.remove(self._layer)
         self.cleared.emit()
 
+    def disconnect(self):
+        """Disconnect the tool from the canvas."""
+        self._canvas().mouse.moved.disconnect(self.callback)
+        if self._layer in self._canvas().layers:
+            self.clear_selection()
+        return None
+
     @property
     def enabled(self) -> bool:
         """Whether the tool is enabled."""
@@ -172,8 +194,13 @@ class RectSelectionTool(SelectionToolBase[Rects]):
         """Edge color of the selection span."""
         return self._layer.edge
 
-    def contains_point(self, point: tuple[float, float]) -> bool:
-        x, y = point
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        x, y = _point_to_xy(*args)
         sel = self.selection
         return sel.left <= x <= sel.right and sel.bottom <= y <= sel.top
 
@@ -301,8 +328,13 @@ class XSpanSelectionTool(_SpanSelectionTool):
         self._layer.data = np.array([[x0, x1]], dtype=np.float32)
         self._layer.visible = True
 
-    def contains_point(self, point: tuple[float, float]) -> bool:
-        x, _ = point
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        x, _ = _point_to_xy(*args)
         sel = self.selection
         return sel.start <= x <= sel.end
 
@@ -332,8 +364,13 @@ class YSpanSelectionTool(_SpanSelectionTool):
         self._layer.data = np.array([[y0, y1]], dtype=np.float32)
         self._layer.visible = True
 
-    def contains_point(self, point: tuple[float, float]) -> bool:
-        _, y = point
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        _, y = _point_to_xy(*args)
         sel = self.selection
         return sel.start <= y <= sel.end
 
@@ -384,8 +421,13 @@ class LassoSelectionTool(LineSelectionTool):
             self.changed.emit(self.selection)
         return
 
-    def contains_point(self, point: tuple[float, float]) -> bool:
-        x, y = point
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        x, y = _point_to_xy(*args)
         poly = self._layer.data
         return is_in_polygon(np.array([[x, y]]), poly.stack())[0]
 
@@ -419,6 +461,14 @@ def _atleast_2d(points: NDArray[np.number]) -> NDArray[np.number]:
     if isinstance(points, XYData):
         return points.stack()
     return np.atleast_2d(points)
+
+
+def _point_to_xy(*args) -> tuple[float, float]:
+    if len(args) == 1:
+        x, y = args[0]
+    else:
+        x, y = args
+    return x, y
 
 
 def line_selector(

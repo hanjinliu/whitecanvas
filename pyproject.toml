@@ -183,6 +183,7 @@ lint.ignore = [
   "S101", "S105", "S106", "S107",
   # Ignore complexity
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLW0603",
+  "ISC001",
 ]
 lint.unfixable = [
   # Don't touch unused imports
@@ -223,4 +224,5 @@ exclude_lines = [
   "@overload",
   "@abstractmethod",
   "@deprecated",
+  "raise NotImplementedError",
 ]

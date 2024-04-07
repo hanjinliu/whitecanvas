@@ -403,6 +403,12 @@ class SizePlan(ScalarMapPlan):
         return lambda _: 12.0
 
 
+class AlphaPlan(ScalarMapPlan):
+    @classmethod
+    def _default_mapper(cls):
+        return lambda _: 1.0
+
+
 class ConstMap:
     def __init__(self, value):
         self._value = value

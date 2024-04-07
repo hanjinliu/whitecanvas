@@ -428,6 +428,12 @@ class ConstEdge(SinglePropertyEdgeBase):
 
     @width.setter
     def width(self, value: float):
+        if not is_real_number(value):
+            raise ValueError(
+                "Width must be a real number for a constant-edge layer. If you want to "
+                "set multiple width values, use `with_edge_multi` method to convert "
+                "the layer to a multi-edge layer."
+            )
         if value < 0:
             raise ValueError(f"Edge width must be non-negative, got {value!r}")
         value = float(value)

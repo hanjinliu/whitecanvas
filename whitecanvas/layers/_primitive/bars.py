@@ -351,45 +351,45 @@ class Bars(
             backend=self._backend_name
         )  # fmt: skip
 
-    if TYPE_CHECKING:
+    def with_face(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        hatch: Hatch | str = Hatch.SOLID,
+        alpha: float = 1,
+    ) -> Bars[ConstFace, _Edge]:
+        return super().with_face(color=color, hatch=hatch, alpha=alpha)
 
-        def with_face(
-            self,
-            *,
-            color: ColorType | _Void = _void,
-            hatch: Hatch | str = Hatch.SOLID,
-            alpha: float = 1,
-        ) -> Bars[ConstFace, _Edge]:
-            ...
+    def with_face_multi(
+        self,
+        *,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
+        hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
+        alpha: float = 1,
+    ) -> Bars[MultiFace, _Edge]:
+        return super().with_face_multi(color=color, hatch=hatch, alpha=alpha)
 
-        def with_face_multi(
-            self,
-            *,
-            color: ColorType | Sequence[ColorType] | _Void = _void,
-            hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
-            alpha: float = 1,
-        ) -> Bars[MultiFace, _Edge]:
-            ...
+    def with_edge(
+        self,
+        *,
+        color: ColorType | None = None,
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Bars[_Face, ConstEdge]:
+        return super().with_edge(color=color, width=width, style=style, alpha=alpha)
 
-        def with_edge(
-            self,
-            *,
-            color: ColorType | None = None,
-            width: float = 1,
-            style: LineStyle | str = LineStyle.SOLID,
-            alpha: float = 1,
-        ) -> Bars[_Face, ConstEdge]:
-            ...
-
-        def with_edge_multi(
-            self,
-            *,
-            color: ColorType | Sequence[ColorType] | None = None,
-            width: float | Sequence[float] = 1,
-            style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-            alpha: float = 1,
-        ) -> Bars[_Face, MultiEdge]:
-            ...
+    def with_edge_multi(
+        self,
+        *,
+        color: ColorType | Sequence[ColorType] | None = None,
+        width: float | Sequence[float] = 1,
+        style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Bars[_Face, MultiEdge]:
+        return super().with_edge_multi(
+            color=color, width=width, style=style, alpha=alpha
+        )
 
     def as_edge_only(
         self,

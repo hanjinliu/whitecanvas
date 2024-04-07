@@ -205,10 +205,10 @@ def test_catx_legend(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
     _c = canvas.cat_x(df, "x", "y")
-    _c.add_boxplot(color="label")
-    _c.add_violinplot(color="label").with_rug()
-    _c.add_pointplot(color="label").err_by_se()
-    _c.add_barplot(color="label")
+    _c.add_boxplot(color="label", alpha=0.8)
+    _c.add_violinplot(color="label", alpha=0.8).with_rug()
+    _c.add_pointplot(color="label", alpha=0.8).err_by_se()
+    _c.add_barplot(color="label", alpha=0.8)
     canvas.add_legend()
 
 def test_marker_legend():

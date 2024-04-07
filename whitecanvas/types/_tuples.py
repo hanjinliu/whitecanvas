@@ -63,6 +63,12 @@ class Rect(NamedTuple):
             raise ValueError("bottom must be less than or equal to top")
         return cls(float(left), float(right), float(bottom), float(top))
 
+    @classmethod
+    def with_sort(cls, left: float, right: float, bottom: float, top: float):
+        left, right = sorted([left, right])
+        bottom, top = sorted([bottom, top])
+        return cls(float(left), float(right), float(bottom), float(top))
+
     @property
     def width(self) -> float:
         """Width of the range."""

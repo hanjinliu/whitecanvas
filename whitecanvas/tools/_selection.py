@@ -10,6 +10,7 @@ from psygnal import Signal
 
 from whitecanvas.canvas import CanvasBase
 from whitecanvas.layers import Layer, Line, Rects, Spans
+from whitecanvas.tools._polygon_utils import is_in_polygon
 from whitecanvas.types import (
     ColorType,
     LineStyle,
@@ -146,6 +147,26 @@ class RectSelectionTool(SelectionToolBase[Rects]):
         """Edge color of the selection span."""
         return self._layer.edge
 
+    def contains_point(self, point: tuple[float, float]) -> bool:
+        x, y = point
+        sel = self.selection
+        return sel.left <= x <= sel.right and sel.bottom <= y <= sel.top
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        sel = self.selection
+        if points.ndim == 2 and points.shape[1] == 2:
+            xs = points[:, 0]
+            ys = points[:, 1]
+            return (
+                (sel.left <= xs)
+                & (xs <= sel.right)
+                & (sel.bottom <= ys)
+                & (ys <= sel.top)
+            )
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
+
 
 class LineSelection(NamedTuple):
     start: Point
@@ -226,7 +247,7 @@ class _SpanSelectionTool(SelectionToolBase[Spans]):
     @property
     def selection(self) -> SpanSelection:
         span = self._layer.data[0]
-        return SpanSelection(span[0], span[1])
+        return SpanSelection(*sorted(span))
 
     @property
     def face(self) -> ConstFace:
@@ -255,6 +276,20 @@ class XSpanSelectionTool(_SpanSelectionTool):
         self._layer.data = np.array([[x0, x1]], dtype=np.float32)
         self._layer.visible = True
 
+    def contains_point(self, point: tuple[float, float]) -> bool:
+        x, _ = point
+        sel = self.selection
+        return sel.start <= x <= sel.end
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        sel = self.selection
+        if points.ndim == 2 and points.shape[1] == 2:
+            xs = points[:, 0]
+            return (sel.start <= xs) & (xs <= sel.end)
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
+
 
 class YSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
@@ -271,6 +306,20 @@ class YSpanSelectionTool(_SpanSelectionTool):
         _, y1 = now
         self._layer.data = np.array([[y0, y1]], dtype=np.float32)
         self._layer.visible = True
+
+    def contains_point(self, point: tuple[float, float]) -> bool:
+        _, y = point
+        sel = self.selection
+        return sel.start <= y <= sel.end
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        sel = self.selection
+        if points.ndim == 2 and points.shape[1] == 2:
+            ys = points[:, 1]
+            return (sel.start <= ys) & (ys <= sel.end)
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
 
 
 class LassoSelectionTool(LineSelectionTool):
@@ -310,6 +359,19 @@ class LassoSelectionTool(LineSelectionTool):
             self.changed.emit(self.selection)
         return
 
+    def contains_point(self, point: tuple[float, float]) -> bool:
+        x, y = point
+        poly = self._layer.data
+        return is_in_polygon(np.array([[x, y]]), poly.stack())[0]
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        poly = self._layer.data
+        if points.ndim == 2 and points.shape[1] == 2:
+            return is_in_polygon(points, poly.stack())
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
+
 
 def _norm_input(
     buttons: _MouseButton | Sequence[_MouseButton] = "left",
@@ -326,6 +388,12 @@ def _norm_input(
         modifiers = [modifiers]
     _modifiers = [Modifier(mod) for mod in modifiers]
     return _buttons, _modifiers
+
+
+def _atleast_2d(points: NDArray[np.number]) -> NDArray[np.number]:
+    if isinstance(points, XYData):
+        return points.stack()
+    return np.atleast_2d(points)
 
 
 def line_selector(

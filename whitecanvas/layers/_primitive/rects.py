@@ -91,7 +91,7 @@ class Rects(
     @property
     def rects(self) -> list[Rect]:
         """Return the data as a list of `Rect` objects."""
-        return [Rect(*xy) for xy in self._get_layer_data()]
+        return [Rect.with_sort(*xy) for xy in self._get_layer_data()]
 
     @property
     def ndata(self) -> int:

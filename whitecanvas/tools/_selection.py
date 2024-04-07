@@ -36,6 +36,10 @@ _void = _Void()
 
 class SelectionToolBase(ABC, Generic[_L]):
     changed = Signal(object)
+    """Emitted when the selection is changed."""
+
+    cleared = Signal()
+    """Emitted when the selection is cleared by user."""
 
     def __init__(
         self,
@@ -50,6 +54,7 @@ class SelectionToolBase(ABC, Generic[_L]):
         self._layer = self._create_layer()
         self._tracking = tracking
         self._persist = True
+        self._enabled = True
         canvas.mouse.moved.connect(self.callback)
 
     def _canvas(self) -> CanvasBase:
@@ -89,6 +94,8 @@ class SelectionToolBase(ABC, Generic[_L]):
 
     def callback(self, e: MouseEvent):
         """The callback function that is called when mouse is moved."""
+        if not self._enabled:
+            return
         if e.button not in self._valid_buttons or set(e.modifiers) != self._modifiers:
             return
         canvas = self._canvas()
@@ -111,10 +118,28 @@ class SelectionToolBase(ABC, Generic[_L]):
             if not self._tracking:
                 self.changed.emit(self.selection)
             if not self._persist:
+                with self.cleared.blocked():
+                    self.clear_selection()
+        else:
+            # clicked
+            if self._persist:
                 self.clear_selection()
 
-    def clear_selection(self, e: MouseEvent | None = None):
+    def clear_selection(self):
+        """Clear the current selection."""
         self._canvas().layers.remove(self._layer)
+        self.cleared.emit()
+
+    @property
+    def enabled(self) -> bool:
+        """Whether the tool is enabled."""
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = bool(value)
+        if not self._enabled:
+            self.clear_selection()
 
 
 class RectSelectionTool(SelectionToolBase[Rects]):

@@ -206,6 +206,12 @@ class Canvas:
             stacklevel=2,
         )
 
+    def _plt_get_mouse_enabled(self) -> bool:
+        return self._camera.interactive
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._camera.interactive = enabled
+
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
@@ -277,12 +283,12 @@ class SceneCanvasExt(SceneCanvas):
         if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):
             canvas: Canvas = visual._canvas_ref()
             tr = self.scene.node_transform(visual.scene)
-            pos = tr.map(event.pos)[:2] - 0.5
+            pos = tr.map(event.pos)[:2]
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
                 modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
                 pos=pos,
-                type=MouseEventType.CLICK,
+                type=MouseEventType.PRESS,
             )
             for callback in canvas._mouse_click_callbacks:
                 callback(ev)
@@ -292,7 +298,7 @@ class SceneCanvasExt(SceneCanvas):
         if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):
             canvas: Canvas = visual._canvas_ref()
             tr = self.scene.node_transform(visual.scene)
-            pos = tr.map(event.pos)[:2] - 0.5
+            pos = tr.map(event.pos)[:2]
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
                 modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
@@ -308,7 +314,7 @@ class SceneCanvasExt(SceneCanvas):
         if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):
             canvas: Canvas = visual._canvas_ref()
             tr = self.scene.node_transform(visual.scene)
-            pos = tr.map(event.pos)[:2] - 0.5
+            pos = tr.map(event.pos)[:2]
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
                 modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
@@ -349,7 +355,9 @@ _VISPY_KEY_MAP = {
 }
 
 _VISPY_BUTTON_MAP = {
-    0: MouseButton.LEFT,
-    1: MouseButton.RIGHT,
-    2: MouseButton.MIDDLE,
+    1: MouseButton.LEFT,
+    2: MouseButton.RIGHT,
+    3: MouseButton.MIDDLE,
+    4: MouseButton.BACK,
+    5: MouseButton.FORWARD,
 }

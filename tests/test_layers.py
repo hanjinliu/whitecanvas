@@ -16,6 +16,7 @@ def test_line(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_line(np.arange(10), np.zeros(10))
     layer = canvas.add_line(np.zeros(10))
+    canvas.add_line(layer.data)
 
     repr(layer)
     layer.color

@@ -174,7 +174,7 @@ class Canvas:
         """Connect callback to clicked event"""
 
         def _cb(ev):
-            mev = self._translate_mouse_event(ev, MouseEventType.CLICK)
+            mev = self._translate_mouse_event(ev, MouseEventType.PRESS)
             callback(mev)
 
         self._signals.pressed.connect(_cb)
@@ -185,6 +185,9 @@ class Canvas:
         def _cb(qpoint: QtCore.QPointF):
             mev = self._translate_mouse_event(qpoint, MouseEventType.MOVE)
             callback(mev)
+            if not self._plt_get_mouse_enabled():
+                # for some reason, plot items are not updated when mouse is disabled
+                self._viewbox().update()
 
         self._signals.moved.connect(_cb)
 
@@ -241,6 +244,12 @@ class Canvas:
                 sample = make_sample_item(item)
                 if sample is not None:
                     legend.addItem(sample, label)
+
+    def _plt_get_mouse_enabled(self):
+        return self._viewbox().mouseEnabled()[0]
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._viewbox().setMouseEnabled(enabled, enabled)
 
     def _translate_mouse_event(
         self,

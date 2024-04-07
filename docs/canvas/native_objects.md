@@ -2,8 +2,7 @@
 
 ## Convert a backend object to `whitecanvas` canvas
 
-The `wrap_canvas`{.interpreted-text role="func"} converts a backend
-object to a `whitecanvas`{.interpreted-text role="mod"} canvas.
+The `wrap_canvas` converts a backend object to a `whitecanvas` canvas.
 
 ``` python
 #!skip

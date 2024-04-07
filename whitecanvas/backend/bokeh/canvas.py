@@ -177,7 +177,7 @@ class Canvas:
                 button=MouseButton.LEFT,
                 modifiers=_translate_modifiers(event.modifiers),
                 pos=(event.x, event.y),
-                type=MouseEventType.CLICK,
+                type=MouseEventType.PRESS,
             )
             callback(ev)
 
@@ -249,6 +249,12 @@ class Canvas:
 
     def _plt_draw(self):
         pass
+
+    def _plt_get_mouse_enabled(self):
+        return self._plot.toolbar.active_drag is None
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._plot.toolbar.active_drag = "auto" if enabled else None
 
     def _plt_twinx(self):
         self._plot.extra_y_ranges[SECOND_Y] = bk_models.DataRange1d()

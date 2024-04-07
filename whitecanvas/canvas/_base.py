@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -21,17 +23,10 @@ from typing_extensions import deprecated
 
 from whitecanvas import layers as _l
 from whitecanvas import protocols, theme
-from whitecanvas._signal import MouseMoveSignal, MouseSignal
 from whitecanvas.backend import Backend, patch_dummy_backend
-from whitecanvas.canvas import (
-    _namespaces as _ns,
-)
-from whitecanvas.canvas import (
-    dataframe as _df,
-)
-from whitecanvas.canvas import (
-    layerlist as _ll,
-)
+from whitecanvas.canvas import _namespaces as _ns
+from whitecanvas.canvas import dataframe as _df
+from whitecanvas.canvas import layerlist as _ll
 from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._dims import Dims
 from whitecanvas.canvas._fit import FitPlotter
@@ -73,9 +68,6 @@ _void = _Void()
 class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
     drawn = Signal()
-    mouse_clicked = MouseSignal(object)
-    mouse_moved = MouseMoveSignal()
-    mouse_double_clicked = MouseSignal(object)
 
 
 class CanvasBase(ABC):
@@ -87,6 +79,7 @@ class CanvasBase(ABC):
     dims = Dims()
     layers = _ll.LayerList()
     overlays = _ll.LayerList()
+    mouse = _ns.MouseNamespace()
     events: CanvasEvents
 
     def __init__(self, palette: ColormapType | None = None):
@@ -138,12 +131,12 @@ class CanvasBase(ABC):
 
     def _install_mouse_events(self):
         canvas = self._canvas()
-        canvas._plt_connect_mouse_click(self.events.mouse_clicked.emit)
-        canvas._plt_connect_mouse_click(self.events.mouse_moved.emit)
-        canvas._plt_connect_mouse_drag(self.events.mouse_moved.emit)
-        canvas._plt_connect_mouse_release(self.events.mouse_moved.emit)
-        canvas._plt_connect_mouse_double_click(self.events.mouse_double_clicked.emit)
-        canvas._plt_connect_mouse_double_click(self.events.mouse_moved.emit)
+        canvas._plt_connect_mouse_click(self.mouse.clicked.emit)
+        canvas._plt_connect_mouse_click(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_drag(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_release(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_double_click(self.mouse.double_clicked.emit)
+        canvas._plt_connect_mouse_double_click(self.mouse.moved.emit)
 
     def _emit_xlim_changed(self, lim):
         self.x.events.lim.emit(lim)
@@ -155,15 +148,58 @@ class CanvasBase(ABC):
 
     def _emit_mouse_moved(self, ev):
         """Emit mouse moved event with autoscaling blocked"""
-        _was_enabled = self._autoscale_enabled
-        # If new layers are added during the mouse move event, the canvas
-        # should not be autoscaled, otherwise unexpected values will be
-        # passed to the callback functions.
-        self._autoscale_enabled = False
+        self.mouse.moved.emit(ev)
+
+    @property
+    def mouse_clicked(self):
+        warnings.warn(
+            "`canvas.events.mouse_clicked` is deprecated. Use `canvas.mouse.clicked` "
+            "instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.clicked
+
+    @property
+    def mouse_moved(self):
+        warnings.warn(
+            "`canvas.events.mouse_moved` is deprecated. Use `canvas.mouse.moved` "
+            "instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.clicked
+
+    @property
+    def mouse_double_clicked(self):
+        warnings.warn(
+            "`canvas.events.mouse_double_clicked` is deprecated. Use "
+            "`canvas.mouse.double_clicked` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.clicked
+
+    @property
+    def autoscale_enabled(self) -> bool:
+        """Return whether autoscale is enabled."""
+        return self._autoscale_enabled
+
+    @autoscale_enabled.setter
+    def autoscale_enabled(self, enabled: bool):
+        if not isinstance(enabled, bool):
+            raise TypeError(f"Expected a bool, got {type(enabled)}.")
+        self._autoscale_enabled = enabled
+
+    @contextmanager
+    def autoscale_context(self, enabled: bool):
+        """Context manager to temporarily change the autoscale state."""
+        _was_enabled = self.autoscale_enabled
+        self.autoscale_enabled = enabled
         try:
-            self.events.mouse_moved.emit(ev)
+            yield
         finally:
-            self._autoscale_enabled = _was_enabled
+            self.autoscale_enabled = _was_enabled
 
     @abstractmethod
     def _get_backend(self) -> Backend:
@@ -192,6 +228,24 @@ class CanvasBase(ABC):
         if ratio is not None:
             ratio = float(ratio)
         self._canvas()._plt_set_aspect_ratio(ratio)
+
+    @property
+    def mouse_enabled(self) -> bool:
+        warnings.warn(
+            "`canvas.mouse_enabled` is deprecated. Use `canvas.mouse.enabled` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.enabled
+
+    @mouse_enabled.setter
+    def mouse_enabled(self, enabled: bool):
+        warnings.warn(
+            "`canvas.mouse_enabled` is deprecated. Use `canvas.mouse.enabled` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.mouse.enabled = enabled
 
     def autoscale(
         self,
@@ -1700,12 +1754,12 @@ class CanvasBase(ABC):
         self,
         layers: Iterable[_l.Layer],
         name: str | None = None,
-    ) -> _l.LayerGroup:
-        ...
+    ) -> _l.LayerGroup: ...
 
     @overload
-    def group_layers(self, *layers: _l.Layer, name: str | None = None) -> _l.LayerGroup:
-        ...
+    def group_layers(
+        self, *layers: _l.Layer, name: str | None = None
+    ) -> _l.LayerGroup: ...
 
     def group_layers(self, layers, *more_layers, name=None):
         """
@@ -1748,10 +1802,10 @@ class CanvasBase(ABC):
         maybe_empty: bool = True,
     ):
         """This function will be called when a layer is inserted to the canvas."""
+        if not self.autoscale_enabled:
+            return
         if pad_rel is None:
             pad_rel = 0 if layer._NO_PADDING_NEEDED else 0.025
-        if not self._autoscale_enabled:
-            return
         xmin, xmax, ymin, ymax = layer.bbox_hint()
         if len(self.layers) > 1 or not maybe_empty:
             # NOTE: if there was no layer, so backend may not have xlim/ylim,

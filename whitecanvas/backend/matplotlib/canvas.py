@@ -216,7 +216,7 @@ class Canvas:
         def _cb(ev: mplMouseEvent):
             if ev.inaxes is not self._axes or ev.dblclick:
                 return
-            callback(self._translate_mouse_event(ev, MouseEventType.CLICK))
+            callback(self._translate_mouse_event(ev, MouseEventType.PRESS))
 
         self._axes.figure.canvas.mpl_connect("button_press_event", _cb)
 
@@ -253,6 +253,16 @@ class Canvas:
     def _plt_draw(self):
         if fig := self._axes.get_figure():
             fig.canvas.draw_idle()
+
+    def _plt_get_mouse_enabled(self):
+        return self._axes.get_navigate()
+
+    def _plt_set_mouse_enabled(self, enable: bool):
+        if fig := self._axes.get_figure():
+            if toolbar := getattr(fig.canvas, "toolbar", None):
+                toolbar._update_buttons_checked()
+                return
+        return self._axes.set_navigate(enable)
 
     def _translate_mouse_event(
         self, ev: mplMouseEvent, typ: MouseEventType
@@ -404,8 +414,12 @@ class CanvasGrid:
             fig.savefig(buff, format="raw")
             buff.seek(0)
             data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
-        w, h = fig.canvas.get_width_height()
-        img = data.reshape((int(h), int(w), -1))
+        # NOTE: fig.canvas.get_width_height() fails if the device pixel ratio is such
+        # as 175%.
+        wmax, hmax = fig.bbox.max
+        width = int(round(wmax / fig.canvas.device_pixel_ratio))
+        height = int(round(hmax / fig.canvas.device_pixel_ratio))
+        img = data.reshape((height, width, -1))
         return img
 
     def _plt_set_figsize(self, width: int, height: int):

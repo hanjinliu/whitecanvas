@@ -166,6 +166,7 @@ class _BoxLikeMixin:
         *,
         color: ColorType | _Void = _void,
         hatch: str | Hatch | _Void = _void,
+        alpha: float | _Void = _void,
     ) -> Self:
         """
         Update the plot features to the constant values.
@@ -186,6 +187,21 @@ class _BoxLikeMixin:
             hatch_by = _p.HatchPlan.from_const(Hatch(hatch))
             self._get_base().face.hatch = hatch_by.generate(cat, self._splitby)
             self._hatch_by = hatch_by
+        if alpha is not _void:
+            self._get_base().face.alpha = alpha
+            self._get_base().edge.alpha = alpha
+        return self
+
+    def with_face(
+        self,
+        *,
+        color: ColorType | None = None,
+        hatch: str | Hatch | None = None,
+        alpha: float = 1.0,
+    ) -> Self:
+        """Add face to the plot with given settings."""
+        if color is not None:
+            self._get_base().with_face(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge(

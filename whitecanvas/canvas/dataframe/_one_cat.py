@@ -42,7 +42,14 @@ class _Aggregator(Generic[_C, _DF]):
         return f"Aggregator<{self._method}>"
 
     def __call__(self) -> OneAxisCatAggPlotter[_C, _DF]:
-        """Aggregate the values before plotting it."""
+        """
+        Aggregate the values before plotting it.
+
+        Examples
+        --------
+        Calculate mean of "value" for each "group" and connect them with lines.
+        >>> canvas.cat_x(df, "group", "value").mean().add_line()
+        """
         plotter = self._plotter
         if plotter is None:
             raise TypeError("Cannot call this method from a class.")
@@ -245,6 +252,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | None = None,
         hatch: NStr | None = None,
         dodge: NStr | bool = True,
         extent: float = 0.8,
@@ -267,6 +275,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
+        alpha : float, optional
+            Opacity of the layer.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         dodge : str, sequence of str or bool, optional
@@ -288,7 +298,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             dodge=dodge, extent=extent, shape=shape, orient=self._orient,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        self._post_add_boxlike(layer, color)
+        self._post_add_boxlike(layer, color, alpha)
         return canvas.add_layer(layer)
 
     def add_boxplot(
@@ -296,6 +306,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | None = None,
         hatch: NStr | None = None,
         dodge: NStr | bool = True,
         capsize: float = 0.1,
@@ -318,6 +329,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
+        alpha : float, optional
+            Opacity of the layer.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         dodge : str, sequence of str or bool, optional
@@ -339,7 +352,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             dodge=dodge, orient=self._orient, capsize=capsize, extent=extent,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        self._post_add_boxlike(layer, color)
+        self._post_add_boxlike(layer, color, alpha)
         return canvas.add_layer(layer)
 
     def add_pointplot(
@@ -347,6 +360,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | None = None,
         hatch: NStr | None = None,
         dodge: NStr | bool = True,
         capsize: float = 0.1,
@@ -374,6 +388,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
+        alpha : float, optional
+            Opacity of the layer.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         dodge : str, sequence of str or bool, optional
@@ -393,7 +409,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             dodge=dodge, orient=self._orient, capsize=capsize,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        self._post_add_boxlike(layer, color)
+        self._post_add_boxlike(layer, color, alpha)
         return canvas.add_layer(layer)
 
     def add_barplot(
@@ -401,6 +417,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | None = None,
         hatch: NStr | None = None,
         dodge: NStr | bool = True,
         capsize: float = 0.1,
@@ -429,6 +446,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
+        alpha : float, optional
+            Opacity of the layer.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         dodge : str, sequence of str or bool, optional
@@ -450,21 +469,24 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             dodge=dodge, orient=self._orient, capsize=capsize, extent=extent,
             backend=canvas._get_backend(),
         )  # fmt: skip
-        self._post_add_boxlike(layer, color)
+        self._post_add_boxlike(layer, color, alpha)
         return canvas.add_layer(layer)
 
-    def _post_add_boxlike(self, layer: _BoxLikeMixin, color):
+    def _post_add_boxlike(self, layer: _BoxLikeMixin, color, alpha):
         canvas = self._canvas()
         if color is not None and not layer._color_by.is_const():
             layer.update_color_palette(canvas._color_palette)
         elif color is None:
             layer.update_const(color=canvas._color_palette.next())
+        if alpha is not None:
+            layer.update_const(alpha=alpha)
 
     def add_stripplot(
         self,
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | str | None = None,
         hatch: NStr | None = None,
         symbol: NStr | None = None,
         size: str | None = None,
@@ -489,6 +511,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
+        alpha : float or str, optional
+            Opacity of the markers. If str, it must be a numerical column name.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         symbol : str or sequence of str, optional
@@ -526,10 +550,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             df, xj, yj, name=name, color=color, hatch=hatch, orient=self._orient,
             symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None and not layer._color_by.is_const():
-            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
-        elif color is None:
-            layer.update_color(canvas._color_palette.next())
+        layer._init_color_for_canvas(color, alpha, canvas)
         return canvas.add_layer(layer)
 
     def add_markers(
@@ -537,6 +558,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | str | None = None,
         hatch: NStr | None = None,
         symbol: NStr | None = None,
         size: str | None = None,
@@ -544,8 +566,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
     ) -> _lt.DFMarkerGroups[_DF]:
         """Alias of `add_stripplot` with no jittering."""
         return self.add_stripplot(
-            color=color, hatch=hatch, symbol=symbol, size=size, dodge=dodge,
-            extent=0, seed=0, name=name,
+            color=color, alpha=alpha, hatch=hatch, symbol=symbol, size=size,
+            dodge=dodge, extent=0, seed=0, name=name,
         )  # fmt: skip
 
     def add_swarmplot(
@@ -553,6 +575,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | str | None = None,
         hatch: NStr | None = None,
         symbol: NStr | None = None,
         size: str | None = None,
@@ -577,6 +600,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
+        alpha : float or str, optional
+            Opacity of the markers. If str, it must be a numerical column name.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         symbol : str or sequence of str, optional
@@ -618,10 +643,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             df, xj, yj, name=name, color=color, hatch=hatch, orient=self._orient,
             symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None and not layer._color_by.is_const():
-            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
-        elif color is None:
-            layer.update_color(canvas._color_palette.next())
+        layer._init_color_for_canvas(color, alpha, canvas)
         return canvas.add_layer(layer)
 
     def add_rugplot(
@@ -629,6 +651,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | str | None = None,
         width: float | None = None,
         style: NStr | None = None,
         dodge: NStr | bool = True,
@@ -651,6 +674,8 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Name of the layer.
         color : str or sequence of str, optional
             Column name(s) for coloring the lines. Must be categorical.
+        alpha : float or str, optional
+            Opacity of the markers. If str, it must be a numerical column name.
         hatch : str or sequence of str, optional
             Column name(s) for hatches. Must be categorical.
         symbol : str or sequence of str, optional
@@ -684,10 +709,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             df, jitter, self._get_value(), name=name, color=color, orient=self._orient,
             extent=_extent, width=width, style=style, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None and not layer._color_by.is_const():
-            layer.update_color(layer._color_by.by, palette=canvas._color_palette)
-        elif color is None:
-            layer.update_color(canvas._color_palette.next())
+        layer._init_color_for_canvas(color, alpha, canvas)
         return canvas.add_layer(layer)
 
     def add_heatmap_hist(
@@ -775,6 +797,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | None = None,
+        alpha: float | None = None,
         width: float | None = None,
         style: NStr | None = None,
         dodge: NStr | bool = False,
@@ -821,6 +844,8 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             layer.update_color(color, palette=canvas._color_palette)
         elif color is None:
             layer.update_color(canvas._color_palette.next())
+        if alpha is not None:
+            layer.update_alpha(alpha)
         return canvas.add_layer(layer)
 
     def add_markers(
@@ -828,6 +853,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | ColorType | None = None,
+        alpha: float | None = None,
         hatch: NStr | Hatch | None = None,
         size: str | float | None = None,
         symbol: NStr | Symbol | None = None,
@@ -880,6 +906,8 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             layer.update_color(color, palette=canvas._color_palette)
         elif color is None:
             layer.update_color(canvas._color_palette.next())
+        if alpha is not None:
+            layer.update_alpha(alpha)
         return canvas.add_layer(layer)
 
     def add_bars(
@@ -887,6 +915,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         *,
         name: str | None = None,
         color: NStr | ColorType | None = None,
+        alpha: float | None = None,
         hatch: NStr | Hatch | None = None,
         extent: float = 0.8,
         dodge: NStr | bool = True,
@@ -938,6 +967,8 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
             layer.update_color(color, palette=canvas._color_palette)
         elif color is None:
             layer.update_color(canvas._color_palette.next())
+        if alpha is not None:
+            layer.update_alpha(alpha)
         return canvas.add_layer(layer)
 
     def _aggregate(

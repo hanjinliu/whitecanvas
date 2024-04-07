@@ -98,16 +98,14 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         )  # fmt: skip
 
     @overload
-    def update_color(self, value: ColorType) -> Self:
-        ...
+    def update_color(self, value: ColorType) -> Self: ...
 
     @overload
     def update_color(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
-    ) -> Self:
-        ...
+    ) -> Self: ...
 
     def update_color(self, by, /, palette=None):
         """Update the color rule of the layer."""
@@ -138,6 +136,12 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
             style_by = _p.StylePlan.from_const(LineStyle(cov.value))
         self._base_layer.style = style_by.generate(self._categories, self._splitby)
         self._style_by = style_by
+        return self
+
+    def update_alpha(self, value: float) -> Self:
+        """Update alpha of the lines."""
+        for line in self._base_layer:
+            line.alpha = value
         return self
 
     def move(self, dx: float = 0.0, dy: float = 0.0, autoscale: bool = True) -> Self:
@@ -513,16 +517,14 @@ class DFLineFillBase(
         self._hatch_by = _p.HatchPlan.default()
 
     @overload
-    def update_color(self, value: ColorType) -> Self:
-        ...
+    def update_color(self, value: ColorType) -> Self: ...
 
     @overload
     def update_color(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
-    ) -> Self:
-        ...
+    ) -> Self: ...
 
     def update_color(self, by, /, palette=None):
         cov = _shared.ColumnOrValue(by, self._source)

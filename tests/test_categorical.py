@@ -54,13 +54,14 @@ def test_cat_plots(backend: str, orient: str):
         "y": np.arange(30),
         "label": np.repeat(["A", "B", "C"], 10),
         "c": ["P", "Q"] * 15,
+        "val": np.cos(np.arange(30) / 10),
     }
     if orient == "v":
         cat_plt = canvas.cat_x(df, "label", "y")
     else:
         cat_plt = canvas.cat_y(df, "y", "label")
-    cat_plt.add_stripplot(color="c").move(0.1)
-    cat_plt.add_swarmplot(color="c").move(0.1)
+    cat_plt.add_stripplot(color="c", alpha=0.8).move(0.1)
+    cat_plt.add_swarmplot(color="c", alpha="val").move(0.1)
     cat_plt.add_boxplot(color="c").with_edge().with_outliers(ratio=0.5)
     with filter_warning(backend, "plotly"):
         box = cat_plt.add_boxplot(color="c").as_edge_only().move(0.1)
@@ -158,14 +159,14 @@ def test_agg(backend: str, orient: str):
         cat_plt = canvas.cat_x(df, "label", "y")
     else:
         cat_plt = canvas.cat_y(df, "y", "label")
-    cat_plt.mean().add_line(color="c")
-    cat_plt.mean().add_markers(color="c")
-    cat_plt.mean().add_bars(color="c")
-    cat_plt.std().add_line(color="c")
-    cat_plt.sum().add_line(color="c")
-    cat_plt.median().add_line(color="c")
-    cat_plt.max().add_line(color="c")
-    cat_plt.min().add_line(color="c")
+    cat_plt.mean().add_line(color="c", alpha=0.8)
+    cat_plt.mean().add_markers(color="c", alpha=0.8)
+    cat_plt.mean().add_bars(color="c", alpha=0.8).as_edge_only()
+    cat_plt.std().add_line(color="c", width=2.5)
+    cat_plt.sum().add_line()
+    cat_plt.median().add_bars(color="c").update_width(1.5)
+    cat_plt.max().add_markers()
+    cat_plt.min().add_bars(color="c").update_hatch("/")
     cat_plt.first().add_line(color="c")
     if orient == "v":
         canvas.cat_x(df, x="label").count().add_line(color="c")

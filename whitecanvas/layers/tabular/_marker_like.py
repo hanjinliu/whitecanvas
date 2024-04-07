@@ -37,6 +37,8 @@ from whitecanvas.utils.type_check import is_real_number
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+    from whitecanvas.canvas import CanvasBase
+
 _DF = TypeVar("_DF")
 _Cols = Union[str, "tuple[str, ...]"]
 _void = _Void()
@@ -46,8 +48,7 @@ class _MarkerLikeMixin:
     _source: DataFrameWrapper[_DF]
 
     @overload
-    def update_color(self, value: ColorType) -> Self:
-        ...
+    def update_color(self, value: ColorType) -> Self: ...
 
     @overload
     def update_color(
@@ -74,6 +75,28 @@ class _MarkerLikeMixin:
         self._color_by = color_by
         return self
 
+    @overload
+    def update_alpha(self, value: float) -> Self: ...
+
+    @overload
+    def update_alpha(
+        self,
+        by: str | Iterable[str],
+        map_from: tuple[float, float] | None = None,
+        map_to: tuple[float, float] = (0.2, 1.0),
+    ) -> Self: ...
+
+    def update_alpha(self, by, /, map_from=None, map_to=(0.2, 1.0)) -> Self:
+        if isinstance(by, str):
+            alpha_by = _p.AlphaPlan.from_range(by, range=map_to, domain=map_from)
+        else:
+            if map_from is not None:
+                raise TypeError("`map_from` can only be used with a column name.")
+            alpha_by = _p.AlphaPlan.from_const(float(by))
+        self._apply_alpha(alpha_by.map(self._source))
+        self._alpha_by = alpha_by
+        return self
+
     def update_colormap(
         self,
         by: str,
@@ -94,8 +117,7 @@ class _MarkerLikeMixin:
         return self
 
     @overload
-    def update_width(self, value: float) -> Self:
-        ...
+    def update_width(self, value: float) -> Self: ...
 
     @overload
     def update_width(
@@ -131,16 +153,14 @@ class _MarkerLikeMixin:
         return self
 
     @overload
-    def update_style(self, value: ColorType) -> Self:
-        ...
+    def update_style(self, value: ColorType) -> Self: ...
 
     @overload
     def update_style(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
-    ) -> Self:
-        ...
+    ) -> Self: ...
 
     def update_style(self, by, /, palette=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
@@ -154,12 +174,25 @@ class _MarkerLikeMixin:
         self._style_by = style_by
         return self
 
+    def _init_color_for_canvas(self, color, alpha, canvas: CanvasBase):
+        if color is not None and not self._color_by.is_const():
+            self.update_color(self._color_by.by, palette=canvas._color_palette)
+        elif color is None:
+            self.update_color(canvas._color_palette.next())
+        if alpha is not None:
+            self.update_alpha(alpha)
+        return self
+
     def _apply_color(self, color):
         """Set color array to the layer."""
         raise NotImplementedError
 
     def _apply_width(self, width):
         """Set width array to the layer."""
+        raise NotImplementedError
+
+    def _apply_alpha(self, alpha):
+        """Set alpha array to the layer."""
         raise NotImplementedError
 
     def _apply_style(self, style):
@@ -217,6 +250,9 @@ class DFMarkers(
     def _apply_width(self, width):
         self.base.with_edge(color=_void, width=width, style=_void)
 
+    def _apply_alpha(self, alpha):
+        self.base.face.alpha = alpha
+
     def _apply_style(self, style):
         self.base.with_edge(color=_void, width=_void, style=style)
 
@@ -261,8 +297,7 @@ class DFMarkers(
         return self
 
     @overload
-    def update_size(self, value: float) -> Self:
-        ...
+    def update_size(self, value: float) -> Self: ...
 
     @overload
     def update_size(
@@ -296,14 +331,12 @@ class DFMarkers(
         return self
 
     @overload
-    def update_symbol(self, value: str | Symbol) -> Self:
-        ...
+    def update_symbol(self, value: str | Symbol) -> Self: ...
 
     @overload
     def update_symbol(
         self, by: str | Iterable[str] | None = None, symbols=None
-    ) -> Self:
-        ...
+    ) -> Self: ...
 
     def update_symbol(self, by, /, symbols=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
@@ -498,7 +531,7 @@ class DFBars(
         base = _l.Bars(
             x, y, bottom=bottom, name=name, orient=orient, extent=extent,
             backend=backend
-        ).with_face_multi()  # fmt: skip
+        ).with_face_multi().with_edge_multi()  # fmt: skip
         super().__init__(base, source)
         if color is not None:
             self.update_color(color)
@@ -567,10 +600,13 @@ class DFBars(
         self.base.face.color = color
 
     def _apply_width(self, width):
-        self._base_layer.with_edge(color=_void, width=width, style=_void)
+        self._base_layer.with_edge_multi(color=_void, width=width, style=_void)
+
+    def _apply_alpha(self, alpha):
+        self.base.face.alpha = alpha
 
     def _apply_style(self, style):
-        self._base_layer.with_edge(color=_void, width=_void, style=style)
+        self._base_layer.with_edge_multi(color=_void, width=_void, style=style)
 
     def update_hatch(self, by: str | Iterable[str], choices=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)
@@ -690,6 +726,9 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
 
     def _apply_color(self, color):
         self.base.color = color
+
+    def _apply_alpha(self, alpha):
+        self.base.alpha = alpha
 
     def _apply_width(self, width):
         self.base.width = width

@@ -252,6 +252,7 @@ class DFMarkers(
 
     def _apply_alpha(self, alpha):
         self.base.face.alpha = alpha
+        self.base.edge.alpha = alpha
 
     def _apply_style(self, style):
         self.base.with_edge(color=_void, width=_void, style=style)
@@ -604,6 +605,7 @@ class DFBars(
 
     def _apply_alpha(self, alpha):
         self.base.face.alpha = alpha
+        self.base.edge.alpha = alpha
 
     def _apply_style(self, style):
         self._base_layer.with_edge_multi(color=_void, width=_void, style=style)

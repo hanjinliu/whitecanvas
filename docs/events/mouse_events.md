@@ -8,7 +8,8 @@ The click events can be captured by `clicked`. Use `connect()` method to connect
 callback function to the event. The callback function must accept a single argument of
 type `MouseEvent`.
 
-``` python
+``` python hl_lines="6"
+#!skip
 from whitecanvas import new_canvas
 from whitecanvas.types import MouseEvent
 
@@ -23,7 +24,8 @@ def _on_click(ev: MouseEvent):
 
 Double-click events are very similar. They can be captured by `double_clicked`.
 
-``` python
+``` python hl_lines="6"
+#!skip
 from whitecanvas import new_canvas
 from whitecanvas.types import MouseEvent
 
@@ -38,7 +40,8 @@ def _on_click(ev: MouseEvent):
 
 It is useful to filter the mouse button and modifier inside the callback function.
 
-``` python
+``` python hl_lines="3 5"
+#!skip
 @canvas.mouse.clicked.connect
 def _on_click(ev: MouseEvent):
     if ev.button == "left":
@@ -53,7 +56,8 @@ Mouse move events need a different architecture. Unlike other events, the callba
 function must be a generator function. every time the mouse moves, the generator
 proceeds.
 
-``` python
+``` python hl_lines="6"
+#!skip
 from whitecanvas import new_canvas
 from whitecanvas.types import MouseEvent
 

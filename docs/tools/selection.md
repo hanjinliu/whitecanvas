@@ -22,7 +22,7 @@ as an argument. Once selection is done, a selector emits a `changed` signal.
 from whitecanvas import new_canvas
 from whitecanvas.tools import line_selector
 
-canvas = new_canvas("matplotlib:qt")
+canvas = new_canvas("matplotlib")
 
 selector = line_selector(canvas)  # make a selector
 

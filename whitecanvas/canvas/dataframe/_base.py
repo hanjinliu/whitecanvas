@@ -89,6 +89,7 @@ class CatIterator(Generic[_DF]):
         self,
         by: tuple[str, ...],
         dodge: tuple[str, ...] | None = None,
+        width: float = 0.8,
     ) -> Iterator[tuple[tuple, float, DataFrameWrapper[_DF]]]:
         if dodge is None:
             dodge = ()
@@ -114,9 +115,9 @@ class CatIterator(Generic[_DF]):
                 )
             if self._numeric:
                 _pos = list(self.prep_position_map(self._offsets, dodge=False).values())
-                _width = np.diff(np.sort(_pos)).min() * 0.8
+                _width = np.diff(np.sort(_pos)).min() * width
             else:
-                _width = 0.8
+                _width = width
             inv_indices = [by.index(d) for d in dodge]
             _res_map = self.category_map(dodge)
             _nres = len(_res_map)
@@ -132,11 +133,12 @@ class CatIterator(Generic[_DF]):
         by: tuple[str, ...],
         value: str,
         dodge: tuple[str, ...] | None = None,
+        width: float = 0.8,
     ) -> tuple[list[float], list[np.ndarray], list[tuple]]:
         x = []
         arrays = []
         categories = []
-        for sl, offset, group in self.iter_arrays(by, dodge):
+        for sl, offset, group in self.iter_arrays(by, dodge, width=width):
             x.append(offset)
             arrays.append(group[value])
             categories.append(sl)
@@ -146,9 +148,10 @@ class CatIterator(Generic[_DF]):
         self,
         by: tuple[str],
         dodge: tuple[str, ...] | None = None,
+        width: float = 0.8,
     ) -> dict[tuple, float]:
         out = {}
-        for sl, offset, _ in self.iter_arrays(by, dodge):
+        for sl, offset, _ in self.iter_arrays(by, dodge=dodge, width=width):
             out[sl] = offset
         return out
 
@@ -163,15 +166,18 @@ class CatIterator(Generic[_DF]):
     def axis_label(self) -> str:
         return "/".join(self._offsets)
 
-    def zoom_factor(self, dodge: tuple[str, ...] | None = None) -> float:
+    def zoom_factor(
+        self,
+        dodge: tuple[str, ...] | None = None,
+        width: float = 0.8,
+    ) -> float:
         """Return the zoom factor for the given dodge."""
         if dodge:
             _res_map = self.category_map(dodge)
             _nres = len(_res_map)
             if _nres == 1:
                 return 1.0
-            _width = 0.8
-            dmax = (_nres - 1) / 2 / _nres * _width
+            dmax = (_nres - 1) / 2 / _nres * width
             return 2 * dmax / (_nres - 1)
         else:
             return 1.0

@@ -29,6 +29,7 @@ nav:
     - Canvas Grid: canvas/grid.md
     - Joint Grid: canvas/joint_grid.md
     - Legend for the Layers: canvas/legend.md
+    - Inset and Secondary Axis: canvas/inset_second.md
     - Working with the Backend Objects: canvas/native_objects.md
   - Layers:
     - Overview: layers/index.md
@@ -51,9 +52,14 @@ nav:
     - Canvas Events: events/canvas_events.md
     - Layer Events: events/layer_events.md
     - Mouse Events: events/mouse_events.md
+  - Tools:
+    - Overview: tools/index.md
+    - Mouse Selection: tools/selection.md
   - API Reference:
     - api/core.md
     - api/canvas.md
+    - api/tools.md
+    - api/types.md
 
 plugins:
   - search

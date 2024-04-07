@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal
+from typing import Literal, Union
 
 
 class _StrEnum(Enum):
@@ -64,6 +64,8 @@ class Symbol(_StrEnum):
 
 
 class Modifier(_StrEnum):
+    """Enum that represents the keyboard modifiers."""
+
     SHIFT = "shift"
     CTRL = "ctrl"
     ALT = "alt"
@@ -71,6 +73,8 @@ class Modifier(_StrEnum):
 
 
 class MouseButton(_StrEnum):
+    """Enum that represents the mouse buttons."""
+
     NONE = "none"
     LEFT = "left"
     MIDDLE = "middle"
@@ -80,8 +84,10 @@ class MouseButton(_StrEnum):
 
 
 class MouseEventType(_StrEnum):
+    """Enum that represents the mouse event type."""
+
     MOVE = "move"
-    CLICK = "click"
+    PRESS = "press"
     RELEASE = "release"
     DOUBLE_CLICK = "double_click"
 
@@ -144,7 +150,7 @@ class Alignment(_StrEnum):
         return vertical, horizontal
 
 
-class LegendLocation(_StrEnum):
+class Location(_StrEnum):
     TOP_CENTER = "top_center"
     BOTTOM_CENTER = "bottom_center"
     CENTER_LEFT = "center_left"
@@ -173,7 +179,7 @@ class LegendLocation(_StrEnum):
         return "SIDE" in self.name
 
 
-LegendLocationStr = Literal[
+LocationStr = Literal[
     "top_center", "bottom_center", "center_left", "center_right", "center", "top_left",
     "top_right", "bottom_left", "bottom_right", "left_side_top", "left_side_center",
     "left_side_bottom", "right_side_top", "right_side_center", "right_side_bottom",
@@ -209,6 +215,9 @@ class Orientation(_StrEnum):
     @property
     def is_horizontal(self):
         return self is Orientation.HORIZONTAL
+
+
+OrientationLike = Union[Literal["vertical", "horizontal", "v", "h"], Orientation]
 
 
 class Origin(_StrEnum):

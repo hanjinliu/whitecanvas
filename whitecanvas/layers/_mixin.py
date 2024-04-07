@@ -24,6 +24,7 @@ from whitecanvas.layers._base import DataBoundLayer, LayerEvents, PrimitiveLayer
 from whitecanvas.protocols import layer_protocols as _lp
 from whitecanvas.theme import get_theme
 from whitecanvas.types import (
+    Alignment,
     ColorType,
     Hatch,
     LineStyle,
@@ -76,14 +77,6 @@ class LayerNamespace(ABC, Generic[_L]):
         attrs = ",\n    ".join(f"{p}={getattr(self, p)!r}" for p in self._properties)
         p.text(f"{type(self).__name__}(\n    layer={self._layer!r}, {attrs}\n)")
 
-    def __get__(self, obj, owner) -> Self:
-        if obj is None:
-            return self
-        _id = id(obj)
-        if (ns := self._instances.get(_id, None)) is None:
-            ns = self._instances[_id] = self.__class__(obj)
-        return ns
-
     def _setattr(self, name: str, value: Any) -> None:
         raise AttributeError(f"Cannot set attribute {name!r} on {self!r}")
 
@@ -110,8 +103,7 @@ class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color=None, hatch=None, alpha=1.0):
-        ...
+    def update(self, color=None, hatch=None, alpha=1.0): ...
 
 
 class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
@@ -136,8 +128,7 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, color=None, width=None, style=None, alpha=1.0):
-        ...
+    def update(self, color=None, width=None, style=None, alpha=1.0): ...
 
 
 class SinglePropertyFaceBase(FaceNamespace):
@@ -338,6 +329,12 @@ class ConstFace(SinglePropertyFaceBase):
 
     @alpha.setter
     def alpha(self, value: float):
+        if not is_real_number(value):
+            raise ValueError(
+                "Alpha must be a real number for a constant-face layer. If you want to "
+                "set multiple alpha values, use `with_face_multi` method to convert "
+                "the layer to a multi-face layer."
+            )
         if not 0 <= value <= 1:
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         try:
@@ -444,6 +441,12 @@ class ConstEdge(SinglePropertyEdgeBase):
 
     @alpha.setter
     def alpha(self, value: float):
+        if not is_real_number(value):
+            raise ValueError(
+                "Alpha must be a real number for a constant-edge layer. If you want to "
+                "set multiple alpha values, use `with_edge_multi` method to convert "
+                "the layer to a multi-edge layer."
+            )
         if not 0 <= value <= 1:
             raise ValueError(f"Alpha must be between 0 and 1, got {value!r}")
         self.color = (*self.color[:3], value)
@@ -549,11 +552,11 @@ class AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
         self._edge_namespace = edge
 
     def _init_events(self):
-        self._face_namespace.events.connect(self.events.face.emit)
-        self._edge_namespace.events.connect(self.events.edge.emit)
+        self._face_namespace.events.connect(self.events.face.emit, max_args=None)
+        self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         # _face_namespace may change! _make_sure_hatch_visible should connected to
         # the layer event.
-        self.events.face.connect(self._make_sure_hatch_visible)
+        self.events.face.connect(self._make_sure_hatch_visible, max_args=0)
 
     @property
     def face(self) -> _NFace:
@@ -593,10 +596,23 @@ class AbstractFaceEdgeMixin(Generic[_NFace, _NEdge]):
     def _make_sure_hatch_visible(self):
         pass
 
+    color = property()
+
+    @color.setter
+    def color(self, value):
+        self.face.color = value
+        self.edge.color = value
+
+    alpha = property()
+
+    @alpha.setter
+    def alpha(self, value):
+        self.face.alpha = value
+        self.edge.alpha = value
+
     if TYPE_CHECKING:
 
-        def _as_legend_item(self) -> _legend.LegendItem:
-            ...
+        def _as_legend_item(self) -> _legend.LegendItem: ...
 
 
 class FaceEdgeMixin(AbstractFaceEdgeMixin[MonoFace, MonoEdge]):
@@ -625,7 +641,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
@@ -642,7 +658,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._edge_namespace, ConstEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = ConstEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
@@ -655,7 +671,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
@@ -672,7 +688,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         if not isinstance(self._edge_namespace, MultiEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
@@ -826,23 +842,20 @@ _E = TypeVar("_E", bound=Enum)
 
 class EnumArray(Generic[_E]):
     @overload
-    def __getitem__(self, key: SupportsIndex) -> _E:
-        ...
+    def __getitem__(self, key: SupportsIndex) -> _E: ...
 
     @overload
     def __getitem__(
         self, key: slice | NDArray[np.integer] | list[SupportsIndex]
-    ) -> EnumArray[_E]:
-        ...
+    ) -> EnumArray[_E]: ...
 
-    def __iter__(self) -> Iterator[_E]:
-        ...
+    def __iter__(self) -> Iterator[_E]: ...
 
 
 class FontEvents(SignalGroup):
     color = Signal(object)
     size = Signal(object)
-    family = Signal(object)
+    family = Signal(str)
 
 
 class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
@@ -858,9 +871,18 @@ class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
     def size(self):
         raise NotImplementedError
 
-    @abstractproperty
+    @property
     def family(self):
-        raise NotImplementedError
+        return self._layer._backend._plt_get_text_fontfamily()
+
+    @family.setter
+    def family(self, value):
+        if value is None:
+            value = get_theme().font.family
+        if not isinstance(value, str):
+            raise TypeError(f"fontfamily must be a string, got {type(value)}.")
+        self._layer._backend._plt_set_text_fontfamily(value)
+        self.events.family.emit(value)
 
     @abstractmethod
     def update(self, *, color=_void, size=_void, family=_void):
@@ -893,19 +915,6 @@ class ConstFont(FontNamespace):
             value = get_theme().font.size
         self._layer._backend._plt_set_text_size(value)
         self.events.size.emit(value)
-
-    @property
-    def family(self):
-        return self._layer._backend._plt_get_text_fontfamily()[0]
-
-    @family.setter
-    def family(self, value):
-        if value is None:
-            value = get_theme().font.family
-        if not isinstance(value, str):
-            raise TypeError(f"fontfamily must be a string, got {type(value)}.")
-        self._layer._backend._plt_set_text_fontfamily(value)
-        self.events.family.emit(value)
 
     def update(
         self,
@@ -948,18 +957,6 @@ class MultiFont(FontNamespace):
         self._layer._backend._plt_set_text_size(sizes)
         self.events.size.emit(sizes)
 
-    @property
-    def family(self):
-        return self._layer._backend._plt_get_text_fontfamily()
-
-    @family.setter
-    def family(self, value):
-        if value is None:
-            value = get_theme().font.family
-        family = as_any_1d_array(value, self._layer.ntexts, dtype=object)
-        self._layer._backend._plt_set_text_fontfamily(family)
-        self.events.family.emit(family)
-
     def update(
         self,
         *,
@@ -983,6 +980,8 @@ class TextMixinEvents(LayerEvents):
     face = Signal(object)
     edge = Signal(object)
     font = Signal(object)
+    anchor = Signal(Alignment)
+    rotation = Signal(object)
 
 
 class TextMixin(
@@ -1003,9 +1002,9 @@ class TextMixin(
         self._edge_namespace = ConstEdge(self)
         self._font_namespace = ConstFont(self)
         super().__init__(name=name)
-        self._face_namespace.events.connect(self.events.face.emit)
-        self._edge_namespace.events.connect(self.events.edge.emit)
-        self._font_namespace.events.connect(self.events.font.emit)
+        self._face_namespace.events.connect(self.events.face.emit, max_args=None)
+        self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
+        self._font_namespace.events.connect(self.events.font.emit, max_args=None)
 
     @property
     def face(self) -> _NFace:
@@ -1024,6 +1023,7 @@ class TextMixin(
 
     def with_face(
         self,
+        *,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
         alpha: float = 1,
@@ -1032,12 +1032,13 @@ class TextMixin(
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge(
         self,
+        *,
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -1049,12 +1050,13 @@ class TextMixin(
         if not isinstance(self._edge_namespace, ConstEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = ConstEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
     def with_face_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
         alpha: float = 1,
@@ -1062,12 +1064,13 @@ class TextMixin(
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = MultiFace(self)  # type: ignore
-            self._face_namespace.events.connect(self.events.face.emit)
+            self._face_namespace.events.connect(self.events.face.emit, max_args=None)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
         return self
 
     def with_edge_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
@@ -1079,12 +1082,13 @@ class TextMixin(
         if not isinstance(self._edge_namespace, MultiEdge):
             self._edge_namespace.events.disconnect()
             self._edge_namespace = MultiEdge(self)  # type: ignore
-            self._edge_namespace.events.connect(self.events.edge.emit)
+            self._edge_namespace.events.connect(self.events.edge.emit, max_args=None)
         self.edge.update(color=color, style=style, width=width, alpha=alpha)
         return self
 
     def with_font(
         self,
+        *,
         color: ColorType | None = None,
         size: float | None = None,
         family: str | None = None,
@@ -1095,22 +1099,29 @@ class TextMixin(
         if not isinstance(self._font_namespace, ConstFace):
             self._font_namespace.events.disconnect()
             self._font_namespace = ConstFace(self)  # type: ignore
-            self._font_namespace.events.connect(self.events.font.emit)
+            self._font_namespace.events.connect(self.events.font.emit, max_args=None)
         self.font.update(color=color, size=size, family=family)
         return self
 
     def with_font_multi(
         self,
+        *,
         color: ColorType | Sequence[ColorType] | None = None,
         size: float | Sequence[float] | None = None,
         family: str | Sequence[str] | None = None,
     ) -> Self:
         """Update the face properties."""
         if color is None:
-            color = self.font.color
+            if isinstance(self._font_namespace, MultiFont):
+                color = _void  # no need to update
+            else:
+                if self.ntexts == 0:
+                    color = _void
+                else:
+                    color = self.font.color
         if not isinstance(self._font_namespace, MultiFont):
             self._font_namespace.events.disconnect()
             self._font_namespace = MultiFont(self)  # type: ignore
-            self._font_namespace.events.connect(self.events.font.emit)
+            self._font_namespace.events.connect(self.events.font.emit, max_args=None)
         self.font.update(color=color, size=size, family=family)
         return self

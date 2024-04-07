@@ -12,17 +12,18 @@ from whitecanvas.types._enums import (
     Hatch,
     HistogramKind,
     HistogramShape,
-    LegendLocation,
-    LegendLocationStr,
     LineStyle,
+    Location,
+    LocationStr,
     Modifier,
     MouseButton,
     MouseEventType,
     Orientation,
+    OrientationLike,
     Origin,
     Symbol,
 )
-from whitecanvas.types._mouse import MouseEvent
+from whitecanvas.types._mouse import MouseEvent, Point
 from whitecanvas.types._tuples import Rect, XYData, XYTextData, XYYData
 
 __all__ = [
@@ -30,8 +31,8 @@ __all__ = [
     "ColormapType",
     "ArrayLike1D",
     "LineStyle",
-    "LegendLocation",
-    "LegendLocationStr",
+    "Location",
+    "LocationStr",
     "Symbol",
     "Hatch",
     "HistBinType",
@@ -39,10 +40,12 @@ __all__ = [
     "HistogramShape",
     "KdeBandWidthType",
     "Orientation",
+    "OrientationLike",
     "Origin",
     "Modifier",
     "MouseButton",
     "MouseEvent",
+    "Point",
     "MouseEventType",
     "Alignment",
     "AxisScale",

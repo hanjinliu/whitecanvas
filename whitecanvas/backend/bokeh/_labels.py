@@ -155,7 +155,7 @@ class Ticks(_CanvasComponent):
         raise NotImplementedError
 
     def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
-        return tuple(zip(*self._plt_get_axis().ticker))
+        return [], []  # Not implemented on bokeh side
 
     def _plt_override_labels(self, pos: list[float], labels: list[str]):
         self._plt_get_axis().ticker = pos
@@ -163,7 +163,7 @@ class Ticks(_CanvasComponent):
 
     def _plt_reset_override(self):
         self._plt_get_axis().ticker = []
-        self._plt_get_axis().major_label_overrides = None
+        self._plt_get_axis().major_label_overrides = {}
 
     def _plt_get_visible(self) -> bool:
         return self._visible

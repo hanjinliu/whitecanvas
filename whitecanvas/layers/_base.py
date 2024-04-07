@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 import weakref
 from abc import ABC, abstractmethod, abstractproperty
 from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar
@@ -45,7 +44,6 @@ class Layer(ABC):
         self._x_hint = self._y_hint = None
         self._group_layer_ref: weakref.ReferenceType[LayerGroup] | None = None
         self._canvas_ref = lambda: None
-        _set_deprecated_aliases(self)
 
     @abstractproperty
     def visible(self) -> bool:
@@ -70,8 +68,10 @@ class Layer(ABC):
 
     def _connect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is added to a canvas."""
-        self.events._layer_grouped.connect(canvas._cb_layer_grouped, unique=True)
-        self.events.connect(canvas._draw_canvas, unique=True)
+        self.events._layer_grouped.connect(
+            canvas._cb_layer_grouped, unique=True, max_args=1
+        )
+        self.events.connect(canvas._draw_canvas, unique=True, max_args=0)
         self._canvas_ref = weakref.ref(canvas)
 
     def _disconnect_canvas(self, canvas: CanvasBase):
@@ -172,8 +172,9 @@ class DataBoundLayer(PrimitiveLayer[_P], Generic[_P, _T]):
     @data.setter
     def data(self, data):
         """Set the data for this layer."""
-        self._set_layer_data(self._norm_layer_data(data))
-        self.events.data.emit(data)
+        data_normed = self._norm_layer_data(data)
+        self._set_layer_data(data_normed)
+        self.events.data.emit(data_normed)
 
 
 class HoverableDataBoundLayer(DataBoundLayer[_P, _T]):
@@ -321,41 +322,3 @@ class LayerWrapper(Layer, Generic[_L]):
     def _as_legend_item(self) -> LegendItem:
         """Return the legend item for this layer."""
         return self._base_layer._as_legend_item()
-
-
-# deprecated, new
-_DEPRECATED = [
-    ("with_shift", "move"),
-    ("with_color", "update_color"),
-    ("with_color_palette", "update_color_palette"),
-    ("with_colormap", "update_colormap"),
-    ("with_style", "update_style"),
-    ("with_width", "update_width"),
-    ("with_size", "update_size"),
-    ("with_hatch", "update_hatch"),
-    ("with_symbol", "update_symbol"),
-    ("with_edge_color", "update_edge_color"),
-    ("with_edge_colormap", "update_edge_colormap"),
-]
-
-
-def _wrap_deprecation(method, old: str):
-    def wrapper(self, *args, **kwargs):
-        warnings.warn(
-            f"{old} is deprecated and will be removed in the future. "
-            f"Use {method.__name__} instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return method(self, *args, **kwargs)
-
-    wrapper.__doc__ = f"Deprecated. Use {method.__name__} instead."
-    return wrapper
-
-
-def _set_deprecated_aliases(layer: Layer):
-    for deprecated, new in _DEPRECATED:
-        if hasattr(layer, new):
-            setattr(
-                layer, deprecated, _wrap_deprecation(getattr(layer, new), deprecated)
-            )

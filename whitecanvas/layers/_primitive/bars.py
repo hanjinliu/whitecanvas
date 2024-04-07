@@ -29,6 +29,7 @@ from whitecanvas.types import (
     Hatch,
     LineStyle,
     Orientation,
+    OrientationLike,
     XYData,
     _Void,
 )
@@ -76,7 +77,7 @@ class Bars(
         height: ArrayLike1D,
         bottom: ArrayLike1D | None = None,
         *,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         extent: float = 0.8,
         name: str | None = None,
         color: ColorType = "blue",
@@ -127,10 +128,11 @@ class Bars(
 
     def _set_layer_data(self, data: XYData):
         x, height = data
+        w = self.bar_width / 2
         if self._orient.is_vertical:
-            self._backend._plt_set_data(x, height / 2, -height / 2)
+            self._backend._plt_set_data(x - w, x + w, height / 2, -height / 2)
         else:
-            self._backend._plt_set_data(-height / 2, height / 2, x)
+            self._backend._plt_set_data(-height / 2, height / 2, x - w, x + w)
         self._x_hint, self._y_hint = xyy_size_hint(x, height, height, self.orient)
 
     def set_data(
@@ -201,7 +203,7 @@ class Bars(
         if w <= 0:
             raise ValueError(f"Expected width > 0, got {w}")
         x0, x1, y0, y1 = self._backend._plt_get_data()
-        if self._orient is Orientation.VERTICAL:
+        if self._orient.is_vertical:
             dx = (w - self._bar_width) / 2
             x0 = x0 - dx
             x1 = x1 + dx
@@ -229,7 +231,7 @@ class Bars(
         antialias: bool | _Void = True,
         capsize: float = 0,
     ) -> _lg.LabeledBars:
-        if self.orient is Orientation.VERTICAL:
+        if self.orient.is_vertical:
             return self.with_yerr(
                 err, err_high, color=color, width=width,
                 style=style, antialias=antialias, capsize=capsize
@@ -280,7 +282,7 @@ class Bars(
         old_name = self.name
         yerr = self._create_errorbars(
             err, err_high, color=color, width=width, style=style,
-            antialias=antialias, capsize=capsize, orient=Orientation.VERTICAL,
+            antialias=antialias, capsize=capsize, orient="vertical",
         )  # fmt: skip
         xerr = Errorbars.empty_v(name=f"yerr-of-{old_name}", backend=self._backend_name)
         self.name = old_name
@@ -322,10 +324,11 @@ class Bars(
         style: str | _Void = _void,
         antialias: bool = True,
         capsize: float = 0,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
     ):
         from whitecanvas.layers._primitive import Errorbars
 
+        orient = Orientation.parse(orient)
         if err_high is None:
             err_high = err
         if color is _void:
@@ -348,43 +351,45 @@ class Bars(
             backend=self._backend_name
         )  # fmt: skip
 
-    def with_face(
-        self,
-        *,
-        color: ColorType | _Void = _void,
-        hatch: Hatch | str = Hatch.SOLID,
-        alpha: float = 1,
-    ) -> Bars[ConstFace, _Edge]:
-        return super().with_face(color, hatch, alpha)
+    if TYPE_CHECKING:
 
-    def with_face_multi(
-        self,
-        *,
-        color: ColorType | Sequence[ColorType] | _Void = _void,
-        hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
-        alpha: float = 1,
-    ) -> Bars[MultiFace, _Edge]:
-        return super().with_face_multi(color, hatch, alpha)
+        def with_face(
+            self,
+            *,
+            color: ColorType | _Void = _void,
+            hatch: Hatch | str = Hatch.SOLID,
+            alpha: float = 1,
+        ) -> Bars[ConstFace, _Edge]:
+            ...
 
-    def with_edge(
-        self,
-        *,
-        color: ColorType | None = None,
-        width: float = 1,
-        style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
-    ) -> Bars[_Face, ConstEdge]:
-        return super().with_edge(color, width, style, alpha)
+        def with_face_multi(
+            self,
+            *,
+            color: ColorType | Sequence[ColorType] | _Void = _void,
+            hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
+            alpha: float = 1,
+        ) -> Bars[MultiFace, _Edge]:
+            ...
 
-    def with_edge_multi(
-        self,
-        *,
-        color: ColorType | Sequence[ColorType] | None = None,
-        width: float | Sequence[float] = 1,
-        style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-        alpha: float = 1,
-    ) -> Bars[_Face, MultiEdge]:
-        return super().with_edge_multi(color, width, style, alpha)
+        def with_edge(
+            self,
+            *,
+            color: ColorType | None = None,
+            width: float = 1,
+            style: LineStyle | str = LineStyle.SOLID,
+            alpha: float = 1,
+        ) -> Bars[_Face, ConstEdge]:
+            ...
+
+        def with_edge_multi(
+            self,
+            *,
+            color: ColorType | Sequence[ColorType] | None = None,
+            width: float | Sequence[float] = 1,
+            style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
+            alpha: float = 1,
+        ) -> Bars[_Face, MultiEdge]:
+            ...
 
     def as_edge_only(
         self,

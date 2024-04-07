@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Iterable, Literal
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import CollectionFaceEdgeMixin
@@ -59,31 +59,6 @@ class BandCollection(
     def orient(self) -> Orientation:
         """Orientation of the bands."""
         return self._orient
-
-    @classmethod
-    def from_arrays(
-        cls,
-        y: list[float],
-        data: list[XYYData],
-        *,
-        band_width: float | None = None,
-        name: str | None = None,
-        orient: Orientation = Orientation.VERTICAL,
-        backend: str | Backend | None = None,
-    ):
-        from whitecanvas.utils.kde import gaussian_kde
-
-        input_ = []
-        for bottom, each in zip(y, data):
-            _each = as_array_1d(each)
-            kde = gaussian_kde(_each, bw_method=band_width)
-            sigma = np.sqrt(kde.covariance[0, 0])
-            pad = sigma * 2.5
-            x = np.linspace(_each.min() - pad, _each.max() + pad, 100)
-            y1 = kde(x)
-            y0 = np.full(y1.size, bottom)
-            input_.append(XYYData(x, y0, y1))
-        return cls(input_, name=name, orient=orient.transpose(), backend=backend)
 
     def with_hover_text(self, text: str | Iterable[Any]):
         """Set hover text for each band."""
@@ -151,27 +126,6 @@ class ViolinPlot(BandCollection):
         )
 
     @property
-    def offsets(self) -> NDArray[np.floating]:
-        if self._shape == "both":
-
-            def _getter(x: XYYData):
-                return (x.y0[0] + x.y0[1]) / 2
-
-        elif self._shape == "left":
-
-            def _getter(x: XYYData):
-                return x.y1[0]
-
-        elif self._shape == "right":
-
-            def _getter(x: XYYData):
-                return x.y0[0]
-
-        else:
-            raise ValueError(self._shape)
-        return np.array([_getter(band.data) for band in self])
-
-    @property
     def orient(self) -> Orientation:
         """Orientation of the violin plot (perpendicular to the fill orientation)."""
         return self._orient.transpose()
@@ -196,55 +150,6 @@ class ViolinPlot(BandCollection):
             y1 = (bd.y1 - ycenter) * factor + ycenter
             band.set_data(bd.x, y0, y1)
         self._extent = width
-
-    def set_datasets(
-        self,
-        offsets: list[float] | None = None,
-        dataset: list[np.ndarray] | None = None,
-        kde_band_width: float | str = "scott",
-    ):
-        from whitecanvas.utils.kde import gaussian_kde
-
-        if offsets is None:
-            _offsets = self.offsets
-        else:
-            _offsets = offsets
-        if dataset is None:
-            raise NotImplementedError
-        if len(offsets) != len(dataset):
-            raise ValueError("Length mismatch.")
-        xyy_values: list[XYYData] = []
-        for offset, values in zip(_offsets, dataset):
-            arr = as_array_1d(values)
-            kde = gaussian_kde(arr, bw_method=kde_band_width)
-
-            sigma = np.sqrt(kde.covariance[0, 0])
-            pad = sigma * 2.5
-            x_ = np.linspace(arr.min() - pad, arr.max() + pad, 100)
-            y = kde(x_)
-            if self._shape in ("both", "left"):
-                y0 = -y + offset
-            else:
-                y0 = np.zeros_like(y) + offset
-            if self._shape in ("both", "right"):
-                y1 = y + offset
-            else:
-                y1 = np.zeros_like(y) + offset
-
-            data = XYYData(x_, y0, y1)
-            xyy_values.append(data)
-
-        half_widths: list[float] = []
-        for xyy in xyy_values:
-            half_width = np.max(np.abs(xyy.ydiff))
-            if self._shape == "both":
-                half_width /= 2
-            half_widths.append(half_width)
-        factor = self.extent / np.max(half_widths) / 2
-        for xyy, xoffset, band in zip(xyy_values, _offsets, self):
-            y0 = (xyy.y0 - xoffset) * factor + xoffset
-            y1 = (xyy.y1 - xoffset) * factor + xoffset
-            band.data = XYYData(xyy.x, y0, y1)
 
     @staticmethod
     def _convert_data(

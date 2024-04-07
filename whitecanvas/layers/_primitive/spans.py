@@ -18,7 +18,15 @@ from whitecanvas.layers._mixin import (
     MultiFaceEdgeMixin,
 )
 from whitecanvas.protocols import BarProtocol
-from whitecanvas.types import ColorType, Hatch, LineStyle, Orientation, Rect, _Void
+from whitecanvas.types import (
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+    OrientationLike,
+    Rect,
+    _Void,
+)
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
@@ -52,7 +60,7 @@ class Spans(
         spans: ArrayLike,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "blue",
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
@@ -121,12 +129,12 @@ class Spans(
         return self._backend._plt_get_data()[0].size
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.events.lims.connect(self._recalculate_spans)
+        canvas.events.lims.connect(self._recalculate_spans, max_args=1)
         self._force_update_spans()
         return super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
-        canvas.events.lims.connect(self._recalculate_spans)
+        canvas.events.lims.connect(self._recalculate_spans, max_args=1)
         return super()._disconnect_canvas(canvas)
 
     def _recalculate_spans(self, rect: Rect):

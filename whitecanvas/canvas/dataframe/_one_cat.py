@@ -8,7 +8,13 @@ from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import AggMethods, BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter, _shared
-from whitecanvas.types import ColormapType, ColorType, Hatch, Orientation, Symbol
+from whitecanvas.types import (
+    ColorType,
+    Hatch,
+    HistBinType,
+    Orientation,
+    Symbol,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -162,14 +168,6 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         if self._value is None:
             raise ValueError("Value column is not specified.")
         return self._value
-
-    def _update_xy_ticks(self, pos, label):
-        """Update the x or y ticks to categorical ticks"""
-        canvas = self._canvas()
-        if self._orient.is_vertical:
-            canvas.x.ticks.set_labels(pos, label)
-        else:
-            canvas.y.ticks.set_labels(pos, label)
 
     def stack(
         self,
@@ -692,13 +690,47 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             layer.update_color(canvas._color_palette.next())
         return canvas.add_layer(layer)
 
-    def add_hist_heatmap(
+    def add_heatmap_hist(
         self,
-        cmap: ColormapType = "inferno",
-        clim: tuple[float, float] | None = None,
-    ) -> _lt.DFHeatmap[_DF]:
-        # TODO: implement this
-        raise NotImplementedError
+        *,
+        name: str | None = None,
+        color: NStr | None = None,
+        dodge: NStr | bool = False,
+        bins: HistBinType = "auto",
+        range: tuple[float, float] | None = None,
+    ) -> _lt.DFMultiHeatmap[_DF]:
+        """
+        Add a 1-D histogram heatmap.
+
+        >>> ### Use "species" column as categories and "weight" column as values.
+        >>> canvas.cat_x(df, x="species", y="weight").add_heatmap_hist()
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the heatmaps. Must be categorical.
+        dodge : str, sequence of str or bool, optional
+            Column name(s) for dodging. If True, column name(s) for splitting the data
+            will all be used for dodging to avoid overlap.
+        bins : int or sequence of int or str, default "auto"
+            Number of bins.
+        range : (float, float), optional
+            The lower and upper range of the bins.
+
+        Returns
+        -------
+        DFMultiHeatmap
+            Heatmap layer.
+        """
+        canvas = self._canvas()
+        layer = _lt.DFMultiHeatmap.build_hist_1d(
+            self._cat_iter, self._offset, self._get_value(), color=color, bins=bins,
+            name=name, range=range, palette=canvas._color_palette, orient=self._orient,
+            dodge=dodge, backend=canvas._get_backend(),
+        )  # fmt: skip
+        return canvas.add_layer(layer)
 
     # aggregators and group aggregators
     mean = _Aggregator("mean")

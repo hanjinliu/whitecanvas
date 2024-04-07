@@ -9,7 +9,7 @@ from typing import (
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
-from whitecanvas.types import ColormapType, HistBinType
+from whitecanvas.types import HistBinType
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import JointGrid
@@ -115,20 +115,19 @@ class JointCatPlotter(BaseCatPlotter[_C, _DF]):
     def add_hist2d(
         self,
         *,
-        cmap: ColormapType = "inferno",
+        color: str | Sequence[str] | None = None,
         name: str | None = None,
         bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         rangex: tuple[float, float] | None = None,
         rangey: tuple[float, float] | None = None,
-        density: bool = False,
     ) -> _lt.DFHeatmap[_DF]:
         """
         Add 2-D histogram of given x/y columns.
 
         Parameters
         ----------
-        cmap : colormap-like, default "inferno"
-            Colormap to use for the heatmap.
+        color : str or sequence of str, optional
+            Column name(s) for coloring the heatmaps. Must be categorical.
         name : str, optional
             Name of the layer.
         bins : int, array, str or tuple of them, default "auto"
@@ -138,9 +137,6 @@ class JointCatPlotter(BaseCatPlotter[_C, _DF]):
             Range of x values in which histogram will be built.
         rangey : (float, float), optional
             Range of y values in which histogram will be built.
-        density : bool, default False
-            If True, the result is the value of the probability density function at the
-            bin, normalized such that the integral over the range is 1.
 
         Returns
         -------
@@ -149,9 +145,9 @@ class JointCatPlotter(BaseCatPlotter[_C, _DF]):
         """
         grid = self._canvas()
         main = grid.main_canvas
-        layer = _lt.DFHeatmap.build_hist(
-            self._df, self._get_x(), self._get_y(), cmap=cmap, name=name, bins=bins,
-            range=(rangex, rangey), density=density, backend=grid._backend,
+        layer = _lt.DFMultiHeatmap.build_hist(
+            self._df, self._get_x(), self._get_y(), color=color, name=name, bins=bins,
+            range=(rangex, rangey), backend=grid._backend,
         )  # fmt: skip
         main.add_layer(layer)
         for _x_plt in grid._iter_x_plotters():

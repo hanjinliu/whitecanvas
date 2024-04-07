@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Any, Generic, Sequence, TypeVar
 
 import numpy as np
@@ -28,6 +27,7 @@ from whitecanvas.types import (
     Hatch,
     LineStyle,
     Orientation,
+    OrientationLike,
     Symbol,
     XYData,
     _Void,
@@ -38,12 +38,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.layers import group as _lg
-    from whitecanvas.layers._mixin import (
-        ConstEdge,
-        ConstFace,
-        MultiEdge,
-        MultiFace,
-    )
+    from whitecanvas.layers._mixin import ConstEdge, ConstFace, MultiEdge, MultiFace
 
 _void = _Void()
 _Face = TypeVar("_Face", bound=FaceNamespace)
@@ -56,17 +51,6 @@ class MarkersLayerEvents(FaceEdgeMixinEvents):
     symbol = Signal(Symbol)
     size = Signal(float)
 
-    @property
-    def picked(self):
-        """Deprecated. Use `clicked` instead."""
-        warnings.warn(
-            "The `picked` event is deprecated and will be removed in the future. "
-            "Use `clicked` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.clicked
-
 
 class Markers(
     HoverableDataBoundLayer[MarkersProtocol, XYData],
@@ -78,8 +62,7 @@ class Markers(
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args, **kwargs) -> Markers[ConstFace, ConstEdge, float]:
-            ...
+        def __new__(cls, *args, **kwargs) -> Markers[ConstFace, ConstEdge, float]: ...
 
     def __init__(
         self,
@@ -108,13 +91,6 @@ class Markers(
 
         self._backend._plt_connect_pick_event(self.events.clicked.emit)
         self._init_events()
-
-    @classmethod
-    def empty(
-        cls, backend: Backend | str | None = None
-    ) -> Markers[ConstFace, ConstEdge, float]:
-        """Return an empty markers layer."""
-        return cls([], [], backend=backend)
 
     @property
     def ndata(self) -> int:
@@ -529,7 +505,7 @@ class Markers(
 
     def with_stem(
         self,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         *,
         bottom: NDArray[np.floating] | float | None = None,
         color: ColorType | _Void = _void,
@@ -543,7 +519,7 @@ class Markers(
 
         Parameters
         ----------
-        orient : str or Orientation, default vertical
+        orient : str or Orientation, default "vertical"
             Orientation to grow stems.
         bottom : float or array-like, optional
             Bottom of the stems. If not specified, the bottom is set to 0.

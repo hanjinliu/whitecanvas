@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import warnings
 import weakref
 from typing import TYPE_CHECKING, Callable
 
@@ -8,11 +9,15 @@ import numpy as np
 from plotly import graph_objects as go
 
 from whitecanvas import protocols
-from whitecanvas.backend.plotly._base import Location, PlotlyHoverableLayer, PlotlyLayer
+from whitecanvas.backend.plotly._base import (
+    FigureLocation,
+    PlotlyHoverableLayer,
+    PlotlyLayer,
+)
 from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.plotly._legend import make_sample_item
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
-from whitecanvas.types import LegendLocation, MouseEvent
+from whitecanvas.types import Location, MouseEvent
 from whitecanvas.utils.normalize import rgba_str_color
 
 if TYPE_CHECKING:
@@ -22,21 +27,15 @@ if TYPE_CHECKING:
 class Canvas:
     def __init__(
         self,
-        fig: go.Figure | None = None,
+        fig: go.Figure,
         *,
         row: int = 0,
         col: int = 0,
         secondary_y: bool = False,
         app: str = "default",
     ):
-        # prepare widget
-        if fig is None:
-            if app == "notebook":
-                fig = go.FigureWidget()
-            else:
-                fig = go.Figure()
         self._fig = fig
-        self._loc = Location(row + 1, col + 1, secondary_y)
+        self._loc = FigureLocation(row + 1, col + 1, secondary_y)
         self._xaxis = Axis(self, axis="xaxis")
         self._yaxis = Axis(self, axis="yaxis")
         self._xticks = Ticks(self, axis="xaxis")
@@ -119,18 +118,26 @@ class Canvas:
 
     def _plt_remove_layer(self, layer: PlotlyLayer):
         """Remove layer from the canvas"""
-        self._fig._data.remove(layer._props)
+        # self._fig._data.remove(layer._props)
+        for i, trace in enumerate(self._fig.data):
+            if trace["uid"] == layer._props.uid:
+                self._fig.data = [*self._fig.data[:i], *self._fig.data[i + 1 :]]
+                break
+        else:
+            raise ValueError(f"Layer {layer._props} not found")
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""
-        return self._fig.layout.visibility == "visible"
+        return True
 
     def _plt_set_visible(self, visible: bool):
         """Set visibility of canvas"""
-        if visible:
-            self._fig.layout.visibility = "visible"
-        else:
-            self._fig.layout.visibility = "hidden"
+        if not visible:
+            warnings.warn(
+                "Plotly backend does not support hiding canvas",
+                UserWarning,
+                stacklevel=2,
+            )
 
     def _plt_connect_xlim_changed(self, callback):
         propname = f"{self._xaxis.name}.range"
@@ -157,6 +164,13 @@ class Canvas:
 
     def _plt_draw(self):
         pass
+
+    def _plt_get_mouse_enabled(self):
+        return self._fig.layout.xaxis.fixedrange
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._fig.layout.xaxis.fixedrange = not enabled
+        self._fig.layout.yaxis.fixedrange = not enabled
 
     def _plt_twinx(self):
         from plotly._subplots import SubplotRef
@@ -193,7 +207,7 @@ class Canvas:
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+        anchor: Location = Location.TOP_RIGHT,
     ):
         plotly_traces = []
         for label, item in items:
@@ -211,7 +225,7 @@ class Canvas:
                     sample.name = label
                     plotly_traces.append(sample)
         legend_kwargs = _LEGEND_KWARGS[anchor]
-        self._fig.add_traces(plotly_traces, **self._loc.asdict())
+        self._fig.add_traces(plotly_traces, **self._loc.asdictn())
         self._fig.update_layout(showlegend=True, legend=legend_kwargs, overwrite=True)
 
     def _repr_mimebundle_(self, *args, **kwargs):
@@ -219,127 +233,127 @@ class Canvas:
 
 
 _LEGEND_KWARGS = {
-    LegendLocation.TOP_LEFT: {
+    Location.TOP_LEFT: {
         "x": 0.01,
         "y": 0.99,
         "xanchor": "left",
         "yanchor": "top",
     },
-    LegendLocation.TOP_CENTER: {
+    Location.TOP_CENTER: {
         "x": 0.5,
         "y": 0.99,
         "xanchor": "center",
         "yanchor": "top",
     },
-    LegendLocation.TOP_RIGHT: {
+    Location.TOP_RIGHT: {
         "x": 0.99,
         "y": 0.99,
         "xanchor": "right",
         "yanchor": "top",
     },
-    LegendLocation.BOTTOM_LEFT: {
+    Location.BOTTOM_LEFT: {
         "x": 0.01,
         "y": 0.01,
         "xanchor": "left",
         "yanchor": "bottom",
     },
-    LegendLocation.BOTTOM_CENTER: {
+    Location.BOTTOM_CENTER: {
         "x": 0.5,
         "y": 0.01,
         "xanchor": "center",
         "yanchor": "bottom",
     },
-    LegendLocation.BOTTOM_RIGHT: {
+    Location.BOTTOM_RIGHT: {
         "x": 0.99,
         "y": 0.01,
         "xanchor": "right",
         "yanchor": "bottom",
     },
-    LegendLocation.CENTER_LEFT: {
+    Location.CENTER_LEFT: {
         "x": 0.01,
         "y": 0.5,
         "xanchor": "left",
         "yanchor": "middle",
     },
-    LegendLocation.CENTER_RIGHT: {
+    Location.CENTER_RIGHT: {
         "x": 0.99,
         "y": 0.5,
         "xanchor": "right",
         "yanchor": "middle",
     },
-    LegendLocation.CENTER: {
+    Location.CENTER: {
         "x": 0.5,
         "y": 0.5,
         "xanchor": "center",
         "yanchor": "middle",
     },
-    LegendLocation.TOP_SIDE_LEFT: {
+    Location.TOP_SIDE_LEFT: {
         "x": 0.01,
         "y": 1.03,
         "xanchor": "left",
         "yanchor": "bottom",
     },
-    LegendLocation.TOP_SIDE_CENTER: {
+    Location.TOP_SIDE_CENTER: {
         "x": 0.5,
         "y": 1.03,
         "xanchor": "center",
         "yanchor": "bottom",
     },
-    LegendLocation.TOP_SIDE_RIGHT: {
+    Location.TOP_SIDE_RIGHT: {
         "x": 0.99,
         "y": 1.03,
         "xanchor": "right",
         "yanchor": "bottom",
     },
-    LegendLocation.BOTTOM_SIDE_LEFT: {
+    Location.BOTTOM_SIDE_LEFT: {
         "x": 0.01,
         "y": -0.03,
         "xanchor": "left",
         "yanchor": "top",
     },
-    LegendLocation.BOTTOM_SIDE_CENTER: {
+    Location.BOTTOM_SIDE_CENTER: {
         "x": 0.5,
         "y": -0.03,
         "xanchor": "center",
         "yanchor": "top",
     },
-    LegendLocation.BOTTOM_SIDE_RIGHT: {
+    Location.BOTTOM_SIDE_RIGHT: {
         "x": 0.99,
         "y": -0.03,
         "xanchor": "right",
         "yanchor": "top",
     },
-    LegendLocation.LEFT_SIDE_TOP: {
+    Location.LEFT_SIDE_TOP: {
         "x": -0.03,
         "y": 0.99,
         "xanchor": "right",
         "yanchor": "top",
     },
-    LegendLocation.LEFT_SIDE_CENTER: {
+    Location.LEFT_SIDE_CENTER: {
         "x": -0.03,
         "y": 0.5,
         "xanchor": "right",
         "yanchor": "middle",
     },
-    LegendLocation.LEFT_SIDE_BOTTOM: {
+    Location.LEFT_SIDE_BOTTOM: {
         "x": -0.03,
         "y": 0.01,
         "xanchor": "right",
         "yanchor": "bottom",
     },
-    LegendLocation.RIGHT_SIDE_TOP: {
+    Location.RIGHT_SIDE_TOP: {
         "x": 1.03,
         "y": 0.99,
         "xanchor": "left",
         "yanchor": "top",
     },
-    LegendLocation.RIGHT_SIDE_CENTER: {
+    Location.RIGHT_SIDE_CENTER: {
         "x": 1.03,
         "y": 0.5,
         "xanchor": "left",
         "yanchor": "middle",
     },
-    LegendLocation.RIGHT_SIDE_BOTTOM: {
+    Location.RIGHT_SIDE_BOTTOM: {
         "x": 1.03,
         "y": 0.01,
         "xanchor": "left",
@@ -363,7 +377,7 @@ class CanvasGrid:
                 cols=len(widths),
                 row_heights=heights,
                 column_widths=widths,
-            )
+            ),
         )
         self._figs.update_layout(margin={"l": 6, "r": 6, "t": 30, "b": 6})
         self._app = app

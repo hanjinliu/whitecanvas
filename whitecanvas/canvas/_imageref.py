@@ -1,13 +1,11 @@
+# pragma: no cover
 from __future__ import annotations
 
 import weakref
 from typing import TYPE_CHECKING, Callable, Generic, TypeVar
 
 import numpy as np
-from cmap import Color
-from numpy.typing import NDArray
 
-from whitecanvas import theme
 from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.layers import _mixin
 from whitecanvas.types import ColorType, Orientation
@@ -41,19 +39,8 @@ class ImageRef(Generic[_C]):
         pos=None,
         orient: str | Orientation = Orientation.VERTICAL,
     ) -> _C:
-        from whitecanvas.layers.group.colorbar import Colorbar
-
-        canvas = self._canvas()
-        image = self._image()
-        orient = Orientation.parse(orient)
-        cbar = Colorbar(image.cmap, name=f"colorbar<{image.name}>", orient=orient)
-        cbar.shift = pos
-        if orient.is_vertical:
-            cbar.scale = image.data.shape[0] / 512
-        else:
-            cbar.scale = image.data.shape[1] / 512
-        canvas.add_layer(cbar)
-        return cbar
+        cbar = self._image()._make_colorbar(pos=pos, orient=orient)
+        return self._canvas().add_layer(cbar)
 
     def add_text(
         self,
@@ -63,86 +50,7 @@ class ImageRef(Generic[_C]):
         fmt: str = "",
         text_invalid: str | None = None,
     ) -> Texts[_mixin.MonoFace, _mixin.MonoEdge, _mixin.MultiFont]:
-        """
-        Add text annotation to each pixel of the image.
-
-        Parameters
-        ----------
-        size : int, default 8
-            Font size of the text.
-        color_rule : color-like, callable, optional
-            Rule to define the color for each text based on the color-mapped image
-            intensity.
-        fmt : str, optional
-            Format string for the text.
-
-        Returns
-        -------
-        Texts
-            Texts layer of the text annotation.
-        """
-        canvas = self._canvas()
-        image = self._image()
-
-        # normalize color_rule
-        _color_rule: Callable[[np.ndarray], np.ndarray]
-
-        def _norm_color(x) -> NDArray[np.float32]:
-            if isinstance(x, np.ndarray):
-                return x.astype(np.float32, copy=False)
-            return np.array(Color(x).rgba, dtype=np.float32)
-
-        if color_rule is None:
-            _b = _norm_color("black")
-            _w = _norm_color("white")
-            _bg = _norm_color(theme.get_theme().background_color)[:3]
-
-            def _color_rule(x: NDArray[np.number]) -> NDArray[np.float32]:
-                alpha = x[3]
-                _col = x[:3] * alpha + _bg * (1 - alpha)
-                return _b if _col.sum() > 1.5 else _w
-
-        elif callable(color_rule):
-            _color_rule = lambda x: _norm_color(color_rule(x))  # noqa: E731
-        else:
-            _col = _norm_color(color_rule)
-            _color_rule = lambda _: _col  # noqa: E731
-
-        img_data = image.data
-        img_color = image.data_mapped
-        ny, nx = image.shape
-        dx, dy = image.shift_raw
-        sx, sy = image.scale
-        ys = np.arange(ny) * sy + dy
-        xs = np.arange(nx) * sx + dx
-        texts: list[str] = []
-        xdata: list[float] = []
-        ydata: list[float] = []
-        colors: list[np.ndarray] = []
-        # normalize fmt
-        if fmt:
-            if fmt.startswith(":"):
-                fmt_style = "{" + fmt + "}"
-            elif fmt.startswith("{") and fmt.endswith("}"):
-                fmt_style = fmt
-            else:
-                fmt_style = "{:" + fmt + "}"
-        else:
-            fmt_style = "{}"
-        for iy, y in enumerate(ys):
-            for ix, x in enumerate(xs):
-                if np.isfinite(img_data[iy, ix]):
-                    text = fmt_style.format(img_data[iy, ix])
-                else:
-                    if text_invalid is None:
-                        text = repr(img_data[iy, ix])
-                    else:
-                        text = text_invalid
-                texts.append(text)
-                xdata.append(x)
-                ydata.append(y)
-                colors.append(_color_rule(img_color[iy, ix]))
-        return (
-            canvas.add_text(xdata, ydata, texts, size=size, anchor="center")
-            .with_font_multi(color=np.stack(colors, axis=0))
+        text_layer = self._image()._make_text_layer(
+            size=size, color_rule=color_rule, fmt=fmt, text_invalid=text_invalid
         )  # fmt: skip
+        return self._canvas().add_layer(text_layer)

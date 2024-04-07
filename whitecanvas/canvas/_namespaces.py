@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Iterable,
+    Sequence,
+    TypeVar,
+)
 
 import numpy as np
 from cmap import Color
@@ -9,7 +16,17 @@ from psygnal import Signal, SignalGroup
 
 from whitecanvas import protocols
 from whitecanvas._exceptions import ReferenceDeletedError
-from whitecanvas.types import AxisScale, ColorType, LineStyle
+from whitecanvas._signal import MouseMoveSignal, MouseSignal
+from whitecanvas.types import (
+    AxisScale,
+    ColorType,
+    LineStyle,
+    Modifier,
+    MouseButton,
+    MouseEvent,
+    MouseEventType,
+    Point,
+)
 from whitecanvas.utils.normalize import arr_color
 
 if TYPE_CHECKING:
@@ -27,7 +44,7 @@ class AxisSignals(SignalGroup):
     lim = Signal(tuple)
 
 
-class StrongRef(Generic[_T]):
+class _StrongRef(Generic[_T]):
     """Strong reference to an object."""
 
     def __init__(self, obj: _T):
@@ -44,9 +61,9 @@ class Namespace:
         if canvas is not None:
             # This line *should* be an weak reference, but canvas is sometimes deleted
             # for some reason. Just use a strong reference for now.
-            self._canvas_ref = StrongRef(canvas)
+            self._canvas_ref = _StrongRef(canvas)
         else:
-            self._canvas_ref = StrongRef(_no_canvas)
+            self._canvas_ref = _StrongRef(_no_canvas)
         self._instances: dict[int, Self] = {}
 
     def __get__(self, canvas, owner=None) -> Self:
@@ -264,6 +281,7 @@ class YLabelNamespace(_TextLabelNamespace):
 
 class AxisNamespace(Namespace):
     events: AxisSignals
+    _attrs = ("lim", "color", "flipped")
 
     def __init__(self, canvas: CanvasBase | None = None):
         super().__init__(canvas)
@@ -378,3 +396,123 @@ class YAxisNamespace(AxisNamespace):
 
     def _get_object(self):
         return self._get_canvas()._plt_get_yaxis()
+
+
+class MouseNamespace(AxisNamespace):
+    """Namespace that contains the mouse events."""
+
+    clicked = MouseSignal(object)
+    """Signal emitted when a mouse button is clicked."""
+
+    moved = MouseMoveSignal()
+    """Signal emitted when the mouse is moved."""
+
+    double_clicked = MouseSignal(object)
+    """Signal emitted when a mouse button is double-clicked."""
+
+    @property
+    def enabled(self) -> bool:
+        """Return whether pan/zoom is enabled."""
+        return self._get_canvas()._plt_get_mouse_enabled()
+
+    @enabled.setter
+    def enabled(self, enabled: bool):
+        self._get_canvas()._plt_set_mouse_enabled(enabled)
+
+    def emulate_click(
+        self,
+        position: tuple[float, float],
+        *,
+        button: str | MouseButton = MouseButton.LEFT,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ) -> None:
+        """Emulate a mouse press event."""
+        ev = MouseEvent(
+            MouseButton(button),
+            _norm_modifiers(modifiers),
+            Point(*position),
+            MouseEventType.PRESS,
+        )
+        self.clicked.emit(ev)
+        return None
+
+    def emulate_double_click(
+        self,
+        position: tuple[float, float],
+        *,
+        button: str | MouseButton = MouseButton.LEFT,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ) -> None:
+        """Emulate a mouse double-click event."""
+        ev = MouseEvent(
+            MouseButton(button),
+            _norm_modifiers(modifiers),
+            Point(*position),
+            MouseEventType.DOUBLE_CLICK,
+        )
+        self.double_clicked.emit(ev)
+
+    def emulate_hover(
+        self,
+        positions: Sequence[tuple[float, float]],
+        *,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ) -> None:
+        """Emulate a mouse move event."""
+        _modifiers = _norm_modifiers(modifiers)
+
+        for pos in positions:
+            ev = MouseEvent(
+                MouseButton.NONE,
+                _modifiers,
+                Point(*pos),
+                MouseEventType.MOVE,
+            )
+            self.moved.emit(ev)
+        return None
+
+    def emulate_drag(
+        self,
+        positions: Sequence[tuple[float, float]],
+        *,
+        button: str | MouseButton = MouseButton.LEFT,
+        modifiers: str | Modifier | Sequence[str | Modifier] = (),
+    ):
+        """Emulate a mouse press-move-release event."""
+        _modifiers = _norm_modifiers(modifiers)
+
+        ev = MouseEvent(
+            MouseButton(button),
+            _modifiers,
+            Point(*positions[0]),
+            MouseEventType.PRESS,
+        )
+        self.moved.emit(ev)
+
+        for pos in positions[1:]:
+            ev = MouseEvent(
+                MouseButton(button),
+                _modifiers,
+                Point(*pos),
+                MouseEventType.MOVE,
+            )
+            self.moved.emit(ev)
+
+        ev = MouseEvent(
+            MouseButton(button),
+            _modifiers,
+            Point(*positions[-1]),
+            MouseEventType.RELEASE,
+        )
+        self.moved.emit(ev)
+        return None
+
+
+def _norm_modifiers(modifiers) -> tuple[Modifier, ...]:
+    if isinstance(modifiers, str):
+        _modifiers = (Modifier(modifiers),)
+    elif isinstance(modifiers, Modifier):
+        _modifiers = [modifiers]
+    else:
+        _modifiers = tuple(Modifier(m) for m in modifiers)
+    return _modifiers

@@ -15,7 +15,7 @@ from whitecanvas.types import (
     ColorType,
     Hatch,
     LineStyle,
-    Orientation,
+    OrientationLike,
     Symbol,
 )
 
@@ -48,7 +48,7 @@ class Dims:
         self.events = DimsEvents()
         if canvas is not None:
             self._canvas_ref = weakref.ref(canvas)
-            self.events.indices.connect(canvas._draw_canvas, unique=True)
+            self.events.indices.connect(canvas._draw_canvas, unique=True, max_args=0)
         else:
             self._canvas_ref = lambda: None
 
@@ -238,7 +238,7 @@ class Dims:
         yhigh: Any,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "blue",
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
@@ -265,7 +265,7 @@ class Dims:
         low: float = 0.0,
         high: float = 1.0,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "black",
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -420,7 +420,7 @@ class InAxes:
         yhigh: Any,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "blue",
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
@@ -461,7 +461,7 @@ class InAxes:
         low: float = 0.0,
         high: float = 1.0,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "black",
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,

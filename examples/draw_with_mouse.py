@@ -13,7 +13,7 @@ def main():
     x, y = np.indices((10, 10)).reshape(2, -1)
     canvas.add_markers(x, y, color="gray")
 
-    @canvas.events.mouse_moved.connect
+    @canvas.mouse.moved.connect
     def _add_line(e: MouseEvent):
         if e.button != "left" or e.modifiers != ():
             return
@@ -28,7 +28,7 @@ def main():
         if not dragged:
             canvas.layers.remove(line)
 
-    @canvas.events.mouse_moved.connect
+    @canvas.mouse.moved.connect
     def _add_spans(e: MouseEvent):
         if e.button != "left" or e.modifiers != ("shift",):
             return

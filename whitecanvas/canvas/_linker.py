@@ -27,7 +27,7 @@ class AxisLinker:
             warnings.warn(f"Axis {axis} already linked", RuntimeWarning, stacklevel=2)
             return
         self._axis_set.add(axis)
-        axis.events.lim.connect(self.set_limits)
+        axis.events.lim.connect(self.set_limits, max_args=1)
 
     def unlink(self, axis: AxisNamespace):
         """Unlink an axis."""

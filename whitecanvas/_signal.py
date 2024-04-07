@@ -1,11 +1,22 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Generator, Generic, TypeVar, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generator,
+    Generic,
+    TypeVar,
+    overload,
+)
 
 from psygnal import throttled
 
 from whitecanvas.types import MouseEvent
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _R = TypeVar("_R")
 _S = TypeVar("_S")
@@ -49,19 +60,36 @@ def _to_generator_function(f: Callable[[MouseEvent], Any | None]):
     return _f
 
 
-class MouseMoveSignal:
+class _MouseSignalMixin:
     def __init__(self):
         self._slots: list[_Slot] = []
+        self._name: str | None = None
 
+    def __set_name__(self, owner: type[Any], name: str) -> None:
+        if self._name is None:
+            self._name = name
+
+    def __get__(self, instance: Any, owner: type[Any] | None = None) -> Self:
+        if instance is None:
+            return self
+        out = self._copy()
+        setattr(instance, self._name, out)
+        return out
+
+    def _copy(self):
+        new = self.__class__()
+        new._name = self._name
+        return new
+
+
+class MouseMoveSignal(_MouseSignalMixin):
     @overload
-    def connect(self, slot: _G, *, msec: int = 0, leading: bool = True) -> _G:
-        ...
+    def connect(self, slot: _G, *, msec: int = 0, leading: bool = True) -> _G: ...
 
     @overload
     def connect(
         self, slot: None = None, *, msec: int = 0, leading: bool = True
-    ) -> Callable[[_G], _G]:
-        ...
+    ) -> Callable[[_G], _G]: ...
 
     def connect(self, slot=None, *, msec: int = 0, leading: bool = True):
         """Connect a mouse move callback."""
@@ -96,9 +124,9 @@ class MouseMoveSignal:
             slot.next(ev)
 
 
-class MouseSignal(Generic[_R]):
+class MouseSignal(_MouseSignalMixin, Generic[_R]):
     def __init__(self, typ: type[_R]):
-        self._slots: list[Callable[[_R], Any | None]] = []
+        super().__init__()
         self._typ = typ
 
     def connect(self, slot: _F | None = None) -> _F:
@@ -124,3 +152,8 @@ class MouseSignal(Generic[_R]):
     def emit(self, *args) -> None:
         for slot in self._slots:
             slot(*args)
+
+    def _copy(self):
+        new = self.__class__(self._typ)
+        new._name = self._name
+        return new

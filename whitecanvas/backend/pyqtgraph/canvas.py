@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, cast
+from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 import pyqtgraph as pg
@@ -11,27 +11,32 @@ from qtpy import QtCore, QtGui
 from qtpy.QtCore import Signal
 
 from whitecanvas import protocols
-from whitecanvas.backend.pyqtgraph._base import PyQtLayer
+from whitecanvas.backend.pyqtgraph._base import InsetPlotItem, PyQtAxis, PyQtLayer
 from whitecanvas.backend.pyqtgraph._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.pyqtgraph._legend import QtItemSampleBase, make_sample_item
 from whitecanvas.backend.pyqtgraph._qt_utils import from_qt_button, from_qt_modifiers
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
-from whitecanvas.types import LegendLocation, MouseButton, MouseEvent, MouseEventType
+from whitecanvas.types import (
+    Location,
+    MouseButton,
+    MouseEvent,
+    MouseEventType,
+    Rect,
+)
+
+if TYPE_CHECKING:
+    from whitecanvas.canvas import CanvasBase
 
 
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
     def __init__(
         self,
-        item: pg.PlotItem | None = None,
+        item: pg.PlotItem,
         *,
         xaxis: str = "bottom",
         yaxis: str = "left",
     ):
-        # prepare widget
-        if item is None:
-            viewbox = pg.ViewBox()
-            item = pg.PlotItem(viewBox=viewbox)
         item.vb.disableAutoRange()  # auto range is done in the whitecanvas side
         self._signals = SignalListener()
         item.vb.sigRangeChanged.connect(self._signals._set_rect)
@@ -44,7 +49,6 @@ class Canvas:
         self._title = Title(self)
         self._xlabel = AxisLabel(self, axis=xaxis)
         self._ylabel = AxisLabel(self, axis=yaxis)
-        self._last_event: MouseEvent = None
 
     def _plt_get_native(self):
         return self._plot_item
@@ -108,14 +112,18 @@ class Canvas:
 
     def _plt_twinx(self) -> Canvas:
         """Create a twinx canvas"""
-        plotitem = self._plot_item
-        vb1 = plotitem.vb
+        vb1 = self._plot_item.vb
         vb2 = pg.ViewBox()
-        canvas = Canvas(pg.PlotItem(viewBox=vb2), yaxis="right")
+        new_item = pg.PlotItem(
+            viewBox=vb2,
+            axisItems={"right": PyQtAxis("right"), "bottom": PyQtAxis("bottom")},
+        )
+        canvas = Canvas(new_item, yaxis="right")
 
         self._get_scene().addItem(vb2)
-        plotitem.getAxis("right").linkToView(vb2)
-        vb2.setXLink(plotitem)
+        self._plot_item.getAxis("right").linkToView(vb2)
+        self._plot_item.showAxis("right")
+        vb2.setXLink(self._plot_item)
 
         def _update_views():
             vb2.setGeometry(vb1.sceneBoundingRect())
@@ -127,14 +135,17 @@ class Canvas:
         return canvas
 
     def _plt_twiny(self) -> Canvas:
-        plotitem = self._plot_item
-        vb1 = plotitem.vb
+        vb1 = self._plot_item.vb
         vb2 = pg.ViewBox()
-        canvas = Canvas(pg.PlotItem(viewBox=vb2), xaxis="top")
+        new_item = pg.PlotItem(
+            viewBox=vb2, axisItems={"left": PyQtAxis("left"), "top": PyQtAxis("top")}
+        )
+        canvas = Canvas(new_item, xaxis="top")
 
         self._get_scene().addItem(vb2)
-        plotitem.getAxis("bottom").linkToView(vb2)
-        vb2.setYLink(plotitem)
+        self._plot_item.getAxis("bottom").linkToView(vb2)
+        self._plot_item.showAxis("top")
+        vb2.setYLink(self._plot_item)
 
         def _update_views():
             vb2.setGeometry(vb1.sceneBoundingRect())
@@ -145,8 +156,16 @@ class Canvas:
 
         return canvas
 
-    # def _plt_inset(self, rect: Rect) -> Canvas:
-    #     ...
+    def _plt_inset(self, rect: Rect) -> Canvas:
+        vb = pg.ViewBox()
+        item = pg.PlotItem(
+            viewBox=vb,
+            axisItems={"left": PyQtAxis("left"), "bottom": PyQtAxis("bottom")},
+        )
+        canvas = Canvas(item)
+        inset_item = InsetPlotItem(item, rect)
+        inset_item.setParentItem(self._plot_item.vb)
+        return canvas
 
     def _get_scene(self) -> pg.GraphicsScene:
         return self._plot_item.scene()
@@ -155,7 +174,7 @@ class Canvas:
         """Connect callback to clicked event"""
 
         def _cb(ev):
-            mev = self._translate_mouse_event(ev, MouseEventType.CLICK)
+            mev = self._translate_mouse_event(ev, MouseEventType.PRESS)
             callback(mev)
 
         self._signals.pressed.connect(_cb)
@@ -166,6 +185,9 @@ class Canvas:
         def _cb(qpoint: QtCore.QPointF):
             mev = self._translate_mouse_event(qpoint, MouseEventType.MOVE)
             callback(mev)
+            if not self._plt_get_mouse_enabled():
+                # for some reason, plot items are not updated when mouse is disabled
+                self._viewbox().update()
 
         self._signals.moved.connect(_cb)
 
@@ -205,7 +227,7 @@ class Canvas:
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation,
+        anchor: Location,
     ):
         pos, offset = _LEGEND_POS[anchor]
         legend = self._plot_item.addLegend(sampleType=QtItemSampleBase)
@@ -222,6 +244,12 @@ class Canvas:
                 sample = make_sample_item(item)
                 if sample is not None:
                     legend.addItem(sample, label)
+
+    def _plt_get_mouse_enabled(self):
+        return self._viewbox().mouseEnabled()[0]
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._viewbox().setMouseEnabled(enabled, enabled)
 
     def _translate_mouse_event(
         self,
@@ -262,30 +290,34 @@ class Canvas:
             )
         return mev
 
+    def _plt_canvas_hook(self, canvas: CanvasBase):
+        self._plot_item.autoBtn.clicked.disconnect()
+        self._plot_item.autoBtn.clicked.connect(lambda: canvas.autoscale())
+
 
 _LEGEND_POS = {
-    LegendLocation.TOP_LEFT: ((0.0, 0.0), (10, 10)),
-    LegendLocation.TOP_CENTER: ((0.5, 0.0), (0, 10)),
-    LegendLocation.TOP_RIGHT: ((1.0, 0.0), (-10, 10)),
-    LegendLocation.CENTER_LEFT: ((0.0, 0.5), (10, 0)),
-    LegendLocation.CENTER: ((0.5, 0.5), (0, 0)),
-    LegendLocation.CENTER_RIGHT: ((1.0, 0.5), (-10, 0)),
-    LegendLocation.BOTTOM_LEFT: ((0.0, 1.0), (10, -10)),
-    LegendLocation.BOTTOM_CENTER: ((0.5, 1.0), (0, -10)),
-    LegendLocation.BOTTOM_RIGHT: ((1.0, 1.0), (-10, -10)),
+    Location.TOP_LEFT: ((0.0, 0.0), (10, 10)),
+    Location.TOP_CENTER: ((0.5, 0.0), (0, 10)),
+    Location.TOP_RIGHT: ((1.0, 0.0), (-10, 10)),
+    Location.CENTER_LEFT: ((0.0, 0.5), (10, 0)),
+    Location.CENTER: ((0.5, 0.5), (0, 0)),
+    Location.CENTER_RIGHT: ((1.0, 0.5), (-10, 0)),
+    Location.BOTTOM_LEFT: ((0.0, 1.0), (10, -10)),
+    Location.BOTTOM_CENTER: ((0.5, 1.0), (0, -10)),
+    Location.BOTTOM_RIGHT: ((1.0, 1.0), (-10, -10)),
     # These are not supported in pyqtgraph. Use the closest one.
-    LegendLocation.LEFT_SIDE_TOP: ((0.0, 0.0), (10, 10)),
-    LegendLocation.LEFT_SIDE_CENTER: ((0.0, 0.5), (10, 0)),
-    LegendLocation.LEFT_SIDE_BOTTOM: ((0.0, 1.0), (10, -10)),
-    LegendLocation.RIGHT_SIDE_TOP: ((1.0, 0.0), (-10, 10)),
-    LegendLocation.RIGHT_SIDE_CENTER: ((1.0, 0.5), (-10, 0)),
-    LegendLocation.RIGHT_SIDE_BOTTOM: ((1.0, 1.0), (-10, -10)),
-    LegendLocation.TOP_SIDE_LEFT: ((0.0, 0.0), (10, 10)),
-    LegendLocation.TOP_SIDE_CENTER: ((0.5, 0.0), (0, 10)),
-    LegendLocation.TOP_SIDE_RIGHT: ((1.0, 0.0), (-10, 10)),
-    LegendLocation.BOTTOM_SIDE_LEFT: ((0.0, 1.0), (10, -10)),
-    LegendLocation.BOTTOM_SIDE_CENTER: ((0.5, 1.0), (0, -10)),
-    LegendLocation.BOTTOM_SIDE_RIGHT: ((1.0, 1.0), (-10, -10)),
+    Location.LEFT_SIDE_TOP: ((0.0, 0.0), (10, 10)),
+    Location.LEFT_SIDE_CENTER: ((0.0, 0.5), (10, 0)),
+    Location.LEFT_SIDE_BOTTOM: ((0.0, 1.0), (10, -10)),
+    Location.RIGHT_SIDE_TOP: ((1.0, 0.0), (-10, 10)),
+    Location.RIGHT_SIDE_CENTER: ((1.0, 0.5), (-10, 0)),
+    Location.RIGHT_SIDE_BOTTOM: ((1.0, 1.0), (-10, -10)),
+    Location.TOP_SIDE_LEFT: ((0.0, 0.0), (10, 10)),
+    Location.TOP_SIDE_CENTER: ((0.5, 0.0), (0, 10)),
+    Location.TOP_SIDE_RIGHT: ((1.0, 0.0), (-10, 10)),
+    Location.BOTTOM_SIDE_LEFT: ((0.0, 1.0), (10, -10)),
+    Location.BOTTOM_SIDE_CENTER: ((0.5, 1.0), (0, -10)),
+    Location.BOTTOM_SIDE_RIGHT: ((1.0, 1.0), (-10, -10)),
 }
 
 
@@ -299,17 +331,21 @@ class CanvasGrid:
         else:
             raise ValueError(f"pyqtgraph does not support {app!r}")
         self._layoutwidget = GraphicsLayoutWidget()
-        self._heights = heights  # TODO: not used
+        self._heights = heights
         self._widths = widths
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         vb = pg.ViewBox()
         item = pg.PlotItem(viewBox=vb)
-        self._layoutwidget.addItem(item, row, col)
-        if rowspan != 1:
-            self._layoutwidget.ci.layout.setRowStretchFactor(row, rowspan)
-        if colspan != 1:
-            self._layoutwidget.ci.layout.setColumnStretchFactor(col, colspan)
+        rspan = sum(self._heights[row : row + rowspan])
+        cspan = sum(self._widths[col : col + colspan])
+        r = sum(self._heights[:row])
+        c = sum(self._widths[:col])
+        self._layoutwidget.addItem(item, r, c)
+        if rspan != 1:
+            self._layoutwidget.ci.layout.setRowStretchFactor(row, rspan)
+        if cspan != 1:
+            self._layoutwidget.ci.layout.setColumnStretchFactor(col, cspan)
         canvas = Canvas(item)
         return canvas
 

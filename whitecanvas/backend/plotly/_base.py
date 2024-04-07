@@ -79,7 +79,7 @@ class PlotlyHoverableLayer(PlotlyLayer[_O]):
 
 
 @dataclass
-class Location:
+class FigureLocation:
     row: int
     col: int
     secondary_y: bool = False
@@ -89,6 +89,15 @@ class Location:
         if self.row > 1 or self.col > 1:
             out["row"] = self.row
             out["col"] = self.col
+        if self.secondary_y:
+            out["secondary_y"] = True
+        return out
+
+    def asdictn(self):
+        out = {}
+        if self.row > 1 or self.col > 1:
+            out["rows"] = self.row
+            out["cols"] = self.col
         if self.secondary_y:
             out["secondary_y"] = True
         return out

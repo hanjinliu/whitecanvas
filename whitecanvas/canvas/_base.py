@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -17,24 +19,17 @@ import numpy as np
 from cmap import Color
 from numpy.typing import ArrayLike
 from psygnal import Signal, SignalGroup
+from typing_extensions import deprecated
 
 from whitecanvas import layers as _l
 from whitecanvas import protocols, theme
-from whitecanvas._signal import MouseMoveSignal, MouseSignal
 from whitecanvas.backend import Backend, patch_dummy_backend
-from whitecanvas.canvas import (
-    _namespaces as _ns,
-)
-from whitecanvas.canvas import (
-    dataframe as _df,
-)
-from whitecanvas.canvas import (
-    layerlist as _ll,
-)
+from whitecanvas.canvas import _namespaces as _ns
+from whitecanvas.canvas import dataframe as _df
+from whitecanvas.canvas import layerlist as _ll
 from whitecanvas.canvas._between import BetweenPlotter
 from whitecanvas.canvas._dims import Dims
 from whitecanvas.canvas._fit import FitPlotter
-from whitecanvas.canvas._imageref import ImageRef
 from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.layers import _legend, _mixin
@@ -47,10 +42,11 @@ from whitecanvas.types import (
     Hatch,
     HistBinType,
     KdeBandWidthType,
-    LegendLocation,
-    LegendLocationStr,
     LineStyle,
+    Location,
+    LocationStr,
     Orientation,
+    OrientationLike,
     Rect,
     Symbol,
     _Void,
@@ -72,9 +68,6 @@ _void = _Void()
 class CanvasEvents(SignalGroup):
     lims = Signal(Rect)
     drawn = Signal()
-    mouse_clicked = MouseSignal(object)
-    mouse_moved = MouseMoveSignal()
-    mouse_double_clicked = MouseSignal(object)
 
 
 class CanvasBase(ABC):
@@ -86,6 +79,7 @@ class CanvasBase(ABC):
     dims = Dims()
     layers = _ll.LayerList()
     overlays = _ll.LayerList()
+    mouse = _ns.MouseNamespace()
     events: CanvasEvents
 
     def __init__(self, palette: ColormapType | None = None):
@@ -111,27 +105,38 @@ class CanvasBase(ABC):
         self.y.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
 
         # connect layer events
-        self.layers.events.inserted.connect(self._cb_inserted, unique=True)
-        self.layers.events.removed.connect(self._cb_removed, unique=True)
-        self.layers.events.reordered.connect(self._cb_reordered, unique=True)
-        self.layers.events.connect(self._draw_canvas, unique=True)
+        self.layers.events.inserted.connect(
+            self._cb_inserted, unique=True, max_args=None
+        )
+        self.layers.events.removed.connect(self._cb_removed, unique=True, max_args=None)
+        self.layers.events.reordered.connect(
+            self._cb_reordered, unique=True, max_args=None
+        )
+        self.layers.events.connect(self._draw_canvas, unique=True, max_args=None)
 
-        self.overlays.events.inserted.connect(self._cb_overlay_inserted, unique=True)
-        self.overlays.events.removed.connect(self._cb_removed, unique=True)
-        self.overlays.events.connect(self._draw_canvas, unique=True)
+        self.overlays.events.inserted.connect(
+            self._cb_overlay_inserted, unique=True, max_args=None
+        )
+        self.overlays.events.removed.connect(
+            self._cb_removed, unique=True, max_args=None
+        )
+        self.overlays.events.connect(self._draw_canvas, unique=True, max_args=None)
 
         canvas = self._canvas()
         canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
         canvas._plt_connect_ylim_changed(self._emit_ylim_changed)
 
+        if hasattr(canvas, "_plt_canvas_hook"):
+            canvas._plt_canvas_hook(self)
+
     def _install_mouse_events(self):
         canvas = self._canvas()
-        canvas._plt_connect_mouse_click(self.events.mouse_clicked.emit)
-        canvas._plt_connect_mouse_click(self.events.mouse_moved.emit)
-        canvas._plt_connect_mouse_drag(self.events.mouse_moved.emit)
-        canvas._plt_connect_mouse_release(self.events.mouse_moved.emit)
-        canvas._plt_connect_mouse_double_click(self.events.mouse_double_clicked.emit)
-        canvas._plt_connect_mouse_double_click(self.events.mouse_moved.emit)
+        canvas._plt_connect_mouse_click(self.mouse.clicked.emit)
+        canvas._plt_connect_mouse_click(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_drag(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_release(self.mouse.moved.emit)
+        canvas._plt_connect_mouse_double_click(self.mouse.double_clicked.emit)
+        canvas._plt_connect_mouse_double_click(self.mouse.moved.emit)
 
     def _emit_xlim_changed(self, lim):
         self.x.events.lim.emit(lim)
@@ -143,15 +148,58 @@ class CanvasBase(ABC):
 
     def _emit_mouse_moved(self, ev):
         """Emit mouse moved event with autoscaling blocked"""
-        _was_enabled = self._autoscale_enabled
-        # If new layers are added during the mouse move event, the canvas
-        # should not be autoscaled, otherwise unexpected values will be
-        # passed to the callback functions.
-        self._autoscale_enabled = False
+        self.mouse.moved.emit(ev)
+
+    @property
+    def mouse_clicked(self):
+        warnings.warn(
+            "`canvas.events.mouse_clicked` is deprecated. Use `canvas.mouse.clicked` "
+            "instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.clicked
+
+    @property
+    def mouse_moved(self):
+        warnings.warn(
+            "`canvas.events.mouse_moved` is deprecated. Use `canvas.mouse.moved` "
+            "instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.clicked
+
+    @property
+    def mouse_double_clicked(self):
+        warnings.warn(
+            "`canvas.events.mouse_double_clicked` is deprecated. Use "
+            "`canvas.mouse.double_clicked` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.clicked
+
+    @property
+    def autoscale_enabled(self) -> bool:
+        """Return whether autoscale is enabled."""
+        return self._autoscale_enabled
+
+    @autoscale_enabled.setter
+    def autoscale_enabled(self, enabled: bool):
+        if not isinstance(enabled, bool):
+            raise TypeError(f"Expected a bool, got {type(enabled)}.")
+        self._autoscale_enabled = enabled
+
+    @contextmanager
+    def autoscale_context(self, enabled: bool):
+        """Context manager to temporarily change the autoscale state."""
+        _was_enabled = self.autoscale_enabled
+        self.autoscale_enabled = enabled
         try:
-            self.events.mouse_moved.emit(ev)
+            yield
         finally:
-            self._autoscale_enabled = _was_enabled
+            self.autoscale_enabled = _was_enabled
 
     @abstractmethod
     def _get_backend(self) -> Backend:
@@ -180,6 +228,24 @@ class CanvasBase(ABC):
         if ratio is not None:
             ratio = float(ratio)
         self._canvas()._plt_set_aspect_ratio(ratio)
+
+    @property
+    def mouse_enabled(self) -> bool:
+        warnings.warn(
+            "`canvas.mouse_enabled` is deprecated. Use `canvas.mouse.enabled` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.mouse.enabled
+
+    @mouse_enabled.setter
+    def mouse_enabled(self, enabled: bool):
+        warnings.warn(
+            "`canvas.mouse_enabled` is deprecated. Use `canvas.mouse.enabled` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.mouse.enabled = enabled
 
     def autoscale(
         self,
@@ -238,12 +304,20 @@ class CanvasBase(ABC):
         self.y.lim = ymin, ymax
         return xmin, xmax, ymin, ymax
 
-    def install_second_y(
-        self,
-        *,
-        palette: ColormapType | None = None,
-    ) -> Canvas:
-        """Create a twin canvas that share one of the axis."""
+    def install_second_x(self, *, palette: ColormapType | None = None) -> Canvas:
+        """Create a twin canvas that has a secondary x-axis and shared y-axis."""
+        try:
+            new = self._canvas()._plt_twiny()
+        except AttributeError:
+            raise NotImplementedError(
+                f"Backend {self._get_backend()} does not support `install_second_x`."
+            ) from None
+        canvas = Canvas.from_backend(new, palette=palette, backend=self._get_backend())
+        canvas._init_canvas()
+        return canvas
+
+    def install_second_y(self, *, palette: ColormapType | None = None) -> Canvas:
+        """Create a twin canvas that has a secondary y-axis and shared x-axis."""
         try:
             new = self._canvas()._plt_twinx()
         except AttributeError:
@@ -254,14 +328,34 @@ class CanvasBase(ABC):
         canvas._init_canvas()
         return canvas
 
+    @overload
     def install_inset(
-        self,
-        rect: Rect | tuple[float, float, float, float],
-        *,
-        palette: ColormapType | None = None,
-    ) -> Canvas:
-        if not isinstance(rect, Rect):
-            rect = Rect(*rect)
+        self, left: float, right: float, bottom: float, top: float, *,
+        palette: ColormapType | None = None
+    ) -> Canvas:  # fmt: skip
+        ...
+
+    @overload
+    def install_inset(
+        self, rect: Rect | tuple[float, float, float, float], /, *,
+        palette: ColormapType | None = None
+    ) -> Canvas:  # fmt: skip
+        ...
+
+    def install_inset(self, *args, palette=None, **kwargs) -> Canvas:
+        """
+        Install a new canvas pointing to an inset of the current canvas.
+
+        >>> canvas.install_inset(left=0.1, right=0.9, bottom=0.1, top=0.9)
+        >>> canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence
+        """
+        # normalize input
+        if len(args) == 1 and not kwargs:
+            rect = args[0]
+            if not isinstance(rect, Rect):
+                rect = Rect.with_check(*rect)
+        else:
+            rect = Rect.with_check(*args, **kwargs)
         try:
             new = self._canvas()._plt_inset(rect)
         except AttributeError:
@@ -534,8 +628,14 @@ class CanvasBase(ABC):
     def between(self, l0, l1) -> BetweenPlotter[Self]:
         return BetweenPlotter(self, l0, l1)
 
-    def imref(self, layer: _l.Image) -> ImageRef[Self]:
+    @deprecated(
+        "ImageRef is deprecated and will be removed in the future. "
+        "Please use the Image methods `with_text`, `with_colorbar` instead.",
+    )
+    def imref(self, layer: _l.Image):
         """The Image reference namespace."""
+        from whitecanvas.canvas._imageref import ImageRef
+
         while isinstance(layer, _l.LayerWrapper):
             layer = layer._base_layer
         if not isinstance(layer, _l.Image):
@@ -552,7 +652,7 @@ class CanvasBase(ABC):
         self,
         layers: Sequence[str | _l.Layer] | None = None,
         *,
-        location: LegendLocation | LegendLocationStr = "top_right",
+        location: Location | LocationStr = "top_right",
         title: str | None = None,
     ):
         """
@@ -595,7 +695,7 @@ class CanvasBase(ABC):
             layers = list(self.layers)
         if title is not None:
             layers = [title, *layers]
-        location = LegendLocation(location)
+        location = Location(location)
 
         items = list[tuple[str, _legend.LegendItem]]()
         for layer in layers:
@@ -751,7 +851,7 @@ class CanvasBase(ABC):
     def add_bars(
         self, center: ArrayLike1D, height: ArrayLike1D, *,
         bottom: ArrayLike1D | None = None, name=None,
-        orient: str | Orientation = Orientation.VERTICAL, extent: float | None = None,
+        orient: OrientationLike = "vertical", extent: float | None = None,
         color: ColorType | None = None, alpha: float = 1.0,
         hatch: str | Hatch | None = None,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
@@ -760,7 +860,7 @@ class CanvasBase(ABC):
     @overload
     def add_bars(
         self, height: ArrayLike1D, *, bottom: ArrayLike1D | None = None,
-        name=None, orient: str | Orientation = Orientation.VERTICAL,
+        name=None, orient: OrientationLike = "vertical",
         extent: float | None = None, color: ColorType | None = None,
         alpha: float = 1.0, hatch: str | Hatch | None = None,
     ) -> _l.Bars[_mixin.ConstFace, _mixin.ConstEdge]:  # fmt: skip
@@ -771,7 +871,7 @@ class CanvasBase(ABC):
         *args,
         bottom=None,
         name=None,
-        orient=Orientation.VERTICAL,
+        orient="vertical",
         extent=None,
         color=None,
         alpha=1.0,
@@ -790,7 +890,7 @@ class CanvasBase(ABC):
             Bottom level of the bars.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         extent : float, default 0.8
             Bar width in the canvas coordinate
@@ -830,7 +930,7 @@ class CanvasBase(ABC):
         name: str | None = None,
         shape: Literal["step", "polygon", "bars"] = "bars",
         kind: Literal["count", "density", "frequency", "percent"] = "count",
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
@@ -857,7 +957,7 @@ class CanvasBase(ABC):
             the line nodes.
         kind : {"count", "density", "probability", "frequency", "percent"}, optional
             Kind of the histogram.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
@@ -932,12 +1032,30 @@ class CanvasBase(ABC):
         )  # fmt: skip
         return self.add_layer(layer)
 
+    def add_rects(
+        self,
+        coords: ArrayLike,
+        *,
+        name=None,
+        color: ColorType | None = None,
+        alpha: float = 1.0,
+        hatch: str | Hatch | None = None,
+    ) -> _l.Rects[_mixin.ConstFace, _mixin.ConstEdge]:
+        name = self._coerce_name(_l.Rects, name)
+        color = self._generate_colors(color)
+        hatch = theme._default("bars.hatch", hatch)
+        layer = _l.Rects(
+            coords, name=name, color=color, alpha=alpha, hatch=hatch,
+            backend=self._get_backend()
+        )  # fmt: skip
+        return self.add_layer(layer)
+
     def add_cdf(
         self,
         data: ArrayLike1D,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
@@ -955,7 +1073,7 @@ class CanvasBase(ABC):
             1D Array of data.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
@@ -988,7 +1106,7 @@ class CanvasBase(ABC):
         spans: ArrayLike,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "blue",
         alpha: float = 0.4,
         hatch: str | Hatch = Hatch.SOLID,
@@ -1010,7 +1128,7 @@ class CanvasBase(ABC):
             Array that contains the start and end points of the spans.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
@@ -1229,7 +1347,7 @@ class CanvasBase(ABC):
         yhigh: ArrayLike1D,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
@@ -1247,7 +1365,7 @@ class CanvasBase(ABC):
             The other y coordinates of the band.
         name : str, optional
             Name of the layer, by default None
-        orient : str, Orientation, default Orientation.VERTICAL
+        orient : str, Orientation, default "vertical"
             Orientation of the band. If vertical, band will be filled between
             vertical orientation.,
         color : color-like, default None
@@ -1277,7 +1395,7 @@ class CanvasBase(ABC):
         yhigh: ArrayLike1D,
         *,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType | None = None,
         width: float | None = None,
         style: LineStyle | str | None = None,
@@ -1298,7 +1416,7 @@ class CanvasBase(ABC):
             Upper bound of the errorbars.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the errorbars. If vertical, errorbars will be parallel
             to the y axis.
         color : color-like, optional
@@ -1337,7 +1455,7 @@ class CanvasBase(ABC):
         low: float = 0.0,
         high: float = 1.0,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         color: ColorType = "black",
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
@@ -1365,7 +1483,7 @@ class CanvasBase(ABC):
             The upper bound of the rug lines.
         name : str, optional
             Name of the layer.
-        orient : str or Orientation, default Orientation.VERTICAL
+        orient : str or Orientation, default "vertical"
             Orientation of the errorbars. If vertical, rug lines will be parallel
             to the y axis.
         color : color-like, optional
@@ -1399,7 +1517,7 @@ class CanvasBase(ABC):
         *,
         bottom: float = 0.0,
         name: str | None = None,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         band_width: KdeBandWidthType = "scott",
         color: ColorType | None = None,
         width: float | None = None,
@@ -1416,7 +1534,7 @@ class CanvasBase(ABC):
             Scalar value that define the height of the bottom line.
         name : str, optional
             Name of the layer, by default None
-        orient : str, Orientation, default Orientation.VERTICAL
+        orient : str, Orientation, default "vertical"
             Orientation of the KDE.
         band_width : float or str, default "scott"
             Method to calculate the estimator bandwidth.
@@ -1624,7 +1742,6 @@ class CanvasBase(ABC):
                 idx = max([self.layers.index(l) for l in over])
             self.layers.insert(idx + 1, layer)
         else:
-            idx = self.layers.index(under)
             if isinstance(under, _l.Layer):
                 idx = self.layers.index(under)
             else:
@@ -1637,12 +1754,12 @@ class CanvasBase(ABC):
         self,
         layers: Iterable[_l.Layer],
         name: str | None = None,
-    ) -> _l.LayerGroup:
-        ...
+    ) -> _l.LayerGroup: ...
 
     @overload
-    def group_layers(self, *layers: _l.Layer, name: str | None = None) -> _l.LayerGroup:
-        ...
+    def group_layers(
+        self, *layers: _l.Layer, name: str | None = None
+    ) -> _l.LayerGroup: ...
 
     def group_layers(self, layers, *more_layers, name=None):
         """
@@ -1685,10 +1802,10 @@ class CanvasBase(ABC):
         maybe_empty: bool = True,
     ):
         """This function will be called when a layer is inserted to the canvas."""
+        if not self.autoscale_enabled:
+            return
         if pad_rel is None:
             pad_rel = 0 if layer._NO_PADDING_NEEDED else 0.025
-        if not self._autoscale_enabled:
-            return
         xmin, xmax, ymin, ymax = layer.bbox_hint()
         if len(self.layers) > 1 or not maybe_empty:
             # NOTE: if there was no layer, so backend may not have xlim/ylim,

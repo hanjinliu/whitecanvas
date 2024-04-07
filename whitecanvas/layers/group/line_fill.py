@@ -18,6 +18,7 @@ from whitecanvas.types import (
     KdeBandWidthType,
     LineStyle,
     Orientation,
+    OrientationLike,
     XYData,
 )
 from whitecanvas.utils.hist import get_hist_edges, histograms
@@ -204,7 +205,7 @@ class Histogram(LineFillBase):
         color: ColorType = "black",
         style: str | LineStyle = LineStyle.SOLID,
         width: float = 1.0,
-        orient: str | Orientation = "vertical",
+        orient: OrientationLike = "vertical",
         backend: str | Backend | None = None,
     ) -> Histogram:
         """Create a histogram from an array."""
@@ -367,17 +368,18 @@ class Kde(LineFillBase):
         color: ColorType = "blue",
         style: str | LineStyle = LineStyle.SOLID,
         width: float = 1.0,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         backend: Backend | str | None = None,
     ):
         data = as_array_1d(data)
         x, y1, bw = cls._calculate_params(data, band_width, bottom, scale)
-        if orient.is_vertical:
+        ori = Orientation.parse(orient)
+        if ori.is_vertical:
             line = Line(x, y1, color=color, style=style, width=width, backend=backend)
         else:
             line = Line(y1, x, color=color, style=style, width=width, backend=backend)
         fill = Band(
-            x, np.full(x.size, bottom), y1, color=color, alpha=0.2, orient=orient,
+            x, np.full(x.size, bottom), y1, color=color, alpha=0.2, orient=ori,
             backend=backend,
         )  # fmt: skip
         return Kde(data, bw, line, fill, name=name, bottom=bottom, scale=scale)
@@ -407,7 +409,7 @@ class Area(LineFillBase):
         x: ArrayLike1D,
         y: ArrayLike1D,
         bottom: ArrayLike1D | float = 0.0,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = "vertical",
         name: str | None = None,
         backend: Backend | str | None = None,
     ):
@@ -423,6 +425,13 @@ class Area(LineFillBase):
         """The data used to plot the histogram."""
         x, y0, y1 = self.fill.data
         return XYData(x, y1 - y0)
+
+    @data.setter
+    def data(self, data: XYData):
+        x, y = data
+        bottom = self.fill.data.y0
+        self.line.data = x, y + bottom
+        self.fill.data = x, bottom, y + bottom
 
     @property
     def orient(self) -> Orientation:

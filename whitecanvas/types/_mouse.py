@@ -1,16 +1,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from whitecanvas.types._enums import Modifier, MouseButton, MouseEventType
+
+
+class Point(NamedTuple):
+    x: float
+    y: float
 
 
 @dataclass
 class MouseEvent:
     button: MouseButton
     modifiers: tuple[Modifier, ...]
-    pos: tuple[float, float]
+    pos: Point
     type: MouseEventType
+
+    def __post_init__(self):
+        self.pos = Point(*self.pos)  # normalize
 
     def update(self, other: MouseEvent):
         self.button = other.button

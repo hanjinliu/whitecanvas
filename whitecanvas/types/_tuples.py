@@ -48,12 +48,20 @@ class XYTextData(NamedTuple):
 
 
 class Rect(NamedTuple):
-    """Rectangular range."""
+    """Rectangular range in left, right, bottom, top order."""
 
     left: float
     right: float
     bottom: float
     top: float
+
+    @classmethod
+    def with_check(cls, left: float, right: float, bottom: float, top: float):
+        if left > right:
+            raise ValueError("left must be less than or equal to right")
+        if bottom > top:
+            raise ValueError("bottom must be less than or equal to top")
+        return cls(float(left), float(right), float(bottom), float(top))
 
     @property
     def width(self) -> float:

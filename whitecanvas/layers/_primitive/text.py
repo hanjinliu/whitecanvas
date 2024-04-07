@@ -20,7 +20,7 @@ from whitecanvas.types import (
     XYTextData,
     _Void,
 )
-from whitecanvas.utils.normalize import normalize_xy
+from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
@@ -44,6 +44,8 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
         backend: Backend | str | None = None,
     ):
         super().__init__(name=name)
+        x = as_array_1d(x)
+        y = as_array_1d(y)
         self._backend = self._create_backend(Backend(backend), x, y, text)
         self.update(
             color=color,
@@ -62,15 +64,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
 
     def _norm_layer_data(self, data: Any) -> XYTextData:
         xpos, ypos, t = data
-        if xpos is None or ypos is None:
-            x0, y0 = self.pos
-            if xpos is None:
-                xpos = x0
-            if ypos is None:
-                ypos = y0
-        if t is None:
-            t = self._backend._plt_get_text()
-        elif isinstance(t, str):
+        if isinstance(t, str):
             t = [t] * self.ndata
         else:
             t = [str(t0) for t0 in t]
@@ -116,15 +110,15 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     def pos(self, pos: tuple[ArrayLike1D, ArrayLike1D]):
         return self.set_pos(*pos)
 
-    def set_pos(self, xpos: ArrayLike1D, ypos: ArrayLike1D):
+    def set_pos(self, x: ArrayLike1D | None = None, y: ArrayLike1D | None = None):
         """Set the position of the text."""
-        if xpos is None or ypos is None:
+        if x is None or y is None:
             x0, y0 = self.pos
-            if xpos is None:
-                xpos = x0
-            if ypos is None:
-                ypos = y0
-        xdata, ydata = normalize_xy(xpos, ypos)
+            if x is None:
+                x = x0
+            if y is None:
+                y = y0
+        xdata, ydata = normalize_xy(x, y)
         if xdata.size != self.ndata:
             raise ValueError(
                 f"Length of x ({xdata.size}) and y ({ydata.size}) must be equal "
@@ -153,7 +147,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     @property
     def anchor(self) -> Alignment:
         """Anchor of the text."""
-        return self._backend._plt_get_text_anchor()[0]
+        return self._backend._plt_get_text_anchor()
 
     @anchor.setter
     def anchor(self, anc: str | Alignment):
@@ -167,6 +161,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     @rotation.setter
     def rotation(self, rotation: float):
         self._backend._plt_set_text_rotation(np.full(self.ndata, float(rotation)))
+        self.events.rotation.emit(rotation)
 
     @property
     def family(self) -> str:

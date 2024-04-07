@@ -17,6 +17,7 @@ from whitecanvas.types import (
     ColorType,
     LineStyle,
     Orientation,
+    OrientationLike,
     XYYData,
     _Void,
 )
@@ -40,7 +41,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         t: ArrayLike1D,
         edge_low: ArrayLike1D,
         edge_high: ArrayLike1D,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = Orientation.VERTICAL,
         *,
         name: str | None = None,
         color: ColorType = "black",
@@ -92,7 +93,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
     @classmethod
     def empty(
         cls,
-        orient: str | Orientation = Orientation.VERTICAL,
+        orient: OrientationLike = Orientation.VERTICAL,
         name: str | None = None,
         backend: Backend | str | None = None,
     ) -> Errorbars:

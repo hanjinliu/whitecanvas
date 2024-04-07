@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import warnings
 import weakref
 from typing import TYPE_CHECKING, Callable, cast
@@ -12,6 +13,7 @@ from vispy.scene import PanZoomCamera, SceneCanvas, ViewBox, visuals
 from vispy.util import keys
 
 from whitecanvas import protocols
+from whitecanvas.backend.vispy._gridlines import GridLines
 from whitecanvas.backend.vispy._label import Axis, TextLabel, Ticks
 from whitecanvas.types import Modifier, MouseButton, MouseEvent, MouseEventType
 
@@ -71,11 +73,11 @@ class Canvas:
         y_axis.stretch = (0.1, 1)
         grid.add_widget(y_axis, row=1, col=0)
         y_axis.link_view(self._viewbox)
+        self._grid_lines = GridLines(self)
         self._xaxis = x_axis
         self._yaxis = y_axis
         self._xticks = Ticks(x_axis)
         self._yticks = Ticks(y_axis)
-        self._title = TextLabel("")
         self._xlabel = TextLabel("")
         self._ylabel = TextLabel("")
         self._grid = grid
@@ -91,7 +93,7 @@ class Canvas:
         self._viewbox.freeze()
 
     def _plt_get_native(self):
-        return self._viewbox.scene
+        return self._outer_viewbox
 
     def _plt_get_title(self):
         return self._title
@@ -137,7 +139,13 @@ class Canvas:
         self._camera.aspect = ratio
 
     def _plt_add_layer(self, layer: visuals.visuals.Visual):
-        layer.set_gl_state("opaque", depth_test=False)
+        layer.set_gl_state(
+            depth_test=False,
+            cull_face=False,
+            blend=True,
+            blend_func=("src_alpha", "one_minus_src_alpha", "one", "one"),
+            blend_equation="func_add",
+        )
         layer.parent = self._viewbox.scene
 
     def _plt_remove_layer(self, layer):
@@ -198,10 +206,29 @@ class Canvas:
             stacklevel=2,
         )
 
+    def _plt_get_mouse_enabled(self) -> bool:
+        return self._camera.interactive
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._camera.interactive = enabled
+
 
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
     def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
+        if app == "qt":  # pragma: no cover
+            import importlib
+
+            for mod in ["PyQt5", "PyQt6", "PyQt4"]:
+                try:
+                    importlib.import_module(mod)
+                except ImportError:
+                    pass
+                else:
+                    app = mod.lower()
+                    break
+            else:
+                raise ValueError("No Qt bindings found.")
         if app != "default":
             vispy_use(_APP_NAMES.get(app, app))
         self._scene = SceneCanvasExt(keys="interactive")
@@ -221,7 +248,7 @@ class CanvasGrid:
         return canvas
 
     def _plt_get_background_color(self):
-        return self._scene.bgcolor
+        return self._scene.bgcolor.rgba
 
     def _plt_set_background_color(self, color):
         self._scene.bgcolor = color
@@ -243,7 +270,6 @@ _APP_NAMES = {
     "qt4": "pyqt4",
     "qt5": "pyqt5",
     "qt6": "pyqt6",
-    "qt": "pyqt5",
     "tk": "tkinter",
     "notebook": "jupyter_rfb",
 }
@@ -257,12 +283,12 @@ class SceneCanvasExt(SceneCanvas):
         if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):
             canvas: Canvas = visual._canvas_ref()
             tr = self.scene.node_transform(visual.scene)
-            pos = tr.map(event.pos)[:2] - 0.5
+            pos = tr.map(event.pos)[:2]
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
                 modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
                 pos=pos,
-                type=MouseEventType.CLICK,
+                type=MouseEventType.PRESS,
             )
             for callback in canvas._mouse_click_callbacks:
                 callback(ev)
@@ -272,7 +298,7 @@ class SceneCanvasExt(SceneCanvas):
         if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):
             canvas: Canvas = visual._canvas_ref()
             tr = self.scene.node_transform(visual.scene)
-            pos = tr.map(event.pos)[:2] - 0.5
+            pos = tr.map(event.pos)[:2]
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
                 modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
@@ -288,7 +314,7 @@ class SceneCanvasExt(SceneCanvas):
         if isinstance(visual, ViewBox) and hasattr(visual, "_canvas_ref"):
             canvas: Canvas = visual._canvas_ref()
             tr = self.scene.node_transform(visual.scene)
-            pos = tr.map(event.pos)[:2] - 0.5
+            pos = tr.map(event.pos)[:2]
             ev = MouseEvent(
                 button=_VISPY_BUTTON_MAP.get(event.button, MouseButton.NONE),
                 modifiers=tuple(_VISPY_KEY_MAP[mod] for mod in event.modifiers),
@@ -329,7 +355,9 @@ _VISPY_KEY_MAP = {
 }
 
 _VISPY_BUTTON_MAP = {
-    0: MouseButton.LEFT,
-    1: MouseButton.RIGHT,
-    2: MouseButton.MIDDLE,
+    1: MouseButton.LEFT,
+    2: MouseButton.RIGHT,
+    3: MouseButton.MIDDLE,
+    4: MouseButton.BACK,
+    5: MouseButton.FORWARD,
 }

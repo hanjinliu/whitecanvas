@@ -157,10 +157,10 @@ class Ticks(_CanvasComponent):
         return getattr(layout, self._axis)
 
     def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
-        return (
-            self._plt_get_axis().tickvals,
-            self._plt_get_axis().ticktext,
-        )
+        texts = self._plt_get_axis().ticktext
+        if texts is None:
+            return [], []
+        return self._plt_get_axis().tickvals, list(texts)
 
     def _plt_override_labels(self, pos: list[float], labels: list[str]):
         self._plt_get_axis().tickvals = pos
@@ -196,7 +196,7 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().tickfont.color = rgba_str_color(color)
 
     def _plt_get_text_rotation(self) -> float:
-        return self._plt_get_axis().tickangle
+        return -self._plt_get_axis().tickangle
 
     def _plt_set_text_rotation(self, angle: float):
-        self._plt_get_axis().tickangle = angle
+        self._plt_get_axis().tickangle = -angle

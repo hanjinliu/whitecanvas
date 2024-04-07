@@ -164,7 +164,7 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
         self._fontsize = np.full(ndata, 10.0, dtype=np.float32)
         self._text_color = np.zeros((ndata, 4), dtype=np.float32)
         self._rotation = np.zeros(ndata, dtype=np.float32)
-        self._anchors = [Alignment.LEFT] * ndata
+        self._anchor = [Alignment.LEFT] * ndata
 
     def _plt_get_ndata(self) -> int:
         return len(self._text)
@@ -195,13 +195,11 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
     def _plt_set_text_position(self, position):
         self._plt_set_data(*position)
 
-    def _plt_get_text_anchor(self) -> list[Alignment]:
-        return self._anchors
+    def _plt_get_text_anchor(self) -> Alignment:
+        return self._anchor
 
-    def _plt_set_text_anchor(self, anc: list[Alignment]):
-        if isinstance(anc, (str, Alignment)):
-            anc = [Alignment(anc)] * self._plt_get_ndata()
-        self._anchors = anc
+    def _plt_set_text_anchor(self, anc: Alignment):
+        self._anchor = anc
 
     def _plt_get_text_rotation(self):
         return self._rotation
@@ -211,10 +209,8 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
             rotation = np.full(self._rotation.shape, rotation, dtype=np.float32)
         self._rotation = rotation
 
-    def _plt_get_text_fontfamily(self) -> list[str]:
+    def _plt_get_text_fontfamily(self) -> str:
         return self._fontfamily
 
-    def _plt_set_text_fontfamily(self, family: list[str]):
-        if isinstance(family, str):
-            family = [family] * self._plt_get_ndata()
+    def _plt_set_text_fontfamily(self, family: str):
         self._fontfamily = family

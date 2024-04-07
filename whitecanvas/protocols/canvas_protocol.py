@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from whitecanvas.layers._legend import LegendItem
-    from whitecanvas.types import AxisScale, LegendLocation, LineStyle, MouseEvent
+    from whitecanvas.types import AxisScale, LineStyle, Location, MouseEvent
 
 
 @runtime_checkable
@@ -93,9 +93,15 @@ class CanvasProtocol(HasVisibility, HasLayers, Protocol):
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation,
+        anchor: Location,
     ):
         """Make legend for the given legend items"""
+
+    def _plt_get_mouse_enabled(self) -> bool:
+        """Get mouse interaction enabled state"""
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        """Set mouse interaction enabled state"""
 
 
 @runtime_checkable

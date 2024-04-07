@@ -8,7 +8,6 @@ import numpy as np
 from typing_extensions import Concatenate, ParamSpec
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers._base import _wrap_deprecation
 from whitecanvas.layers._primitive.line import LineMixin
 from whitecanvas.protocols import LineProtocol
 from whitecanvas.types import ColorType, LineStyle, Rect
@@ -46,17 +45,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         super().__init__(name=name)
 
         xdata = np.array([_lower, _upper])
-        _sig = inspect.signature(model)
-        try:
-            _sig.bind(xdata)
-        except TypeError:
-            ydata = np.zeros_like(xdata)
-            self._y_hint = None
-            self._params_ready = False
-        else:
-            ydata = model(xdata)
-            self._y_hint = ydata.min(), ydata.max()
-            self._params_ready = True
+        ydata, self._y_hint, self._params_ready = _try_init_ydata(model, xdata)
         self._backend = self._create_backend(Backend(backend), xdata, ydata)
         self.update(
             color=color, width=width, style=style, alpha=alpha,
@@ -68,10 +57,6 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         self._args = ()
         self._kwargs = {}
         self._linspace_num = 256
-
-        setattr(  # noqa: B010
-            self, "with_params", _wrap_deprecation(self.update_params, "with_params")
-        )
 
     def update_params(self, *args: _P.args, **kwargs: _P.kwargs) -> Self:
         """Set the parameters of the model function."""
@@ -101,7 +86,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         return self
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.x.events.lim.connect(self._recalculate_line)
+        canvas.x.events.lim.connect(self._recalculate_line, max_args=1)
         self._recalculate_line(canvas.x.lim)
         super()._connect_canvas(canvas)
 
@@ -123,6 +108,43 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
             else:
                 return
         self._backend._plt_set_data(xdata, ydata)
+
+
+def _try_init_ydata(
+    model: Callable[[Concatenate[np.ndarray, _P]], np.ndarray],
+    xdata: np.ndarray,
+):
+    try:
+        _sig = inspect.signature(model)
+    except ValueError:
+        return _try_init_ydata_for_ufunc(model, xdata)
+    try:
+        _sig.bind(xdata)
+    except TypeError:
+        ydata = np.zeros_like(xdata)
+        yhint = None
+        ready = False
+    else:
+        ydata = model(xdata)
+        yhint = ydata.min(), ydata.max()
+        ready = True
+    return ydata, yhint, ready
+
+
+def _try_init_ydata_for_ufunc(
+    model: Callable[[Concatenate[np.ndarray, _P]], np.ndarray],
+    xdata: np.ndarray,
+):
+    try:
+        ydata = model(xdata)
+    except TypeError:
+        ydata = np.zeros_like(xdata)
+        yhint = None
+        ready = False
+    else:
+        yhint = ydata.min(), ydata.max()
+        ready = True
+    return ydata, yhint, ready
 
 
 class InfLine(LineMixin[LineProtocol]):
@@ -196,7 +218,7 @@ class InfLine(LineMixin[LineProtocol]):
         return self
 
     def _connect_canvas(self, canvas: Canvas):
-        canvas.events.lims.connect(self._recalculate_line)
+        canvas.events.lims.connect(self._recalculate_line, max_args=1)
         self._recalculate_line(canvas.lims)
         self._last_rect = canvas.lims
         super()._connect_canvas(canvas)

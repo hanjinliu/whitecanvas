@@ -23,7 +23,7 @@ from whitecanvas.backend.bokeh._labels import (
 from whitecanvas.backend.bokeh._legend import make_sample_item
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
 from whitecanvas.types import (
-    LegendLocation,
+    Location,
     Modifier,
     MouseButton,
     MouseEvent,
@@ -42,6 +42,7 @@ def _prep_plot(width=400, height=300) -> bk_plotting.figure:
     return plot
 
 
+SECOND_X = "second-x"
 SECOND_Y = "second-y"
 
 
@@ -49,11 +50,10 @@ SECOND_Y = "second-y"
 class Canvas:
     def __init__(
         self,
-        plot: bk_models.Plot | None = None,
+        plot: bk_models.Plot,
+        second_x: bool = False,
         second_y: bool = False,
     ):
-        if plot is None:
-            plot = _prep_plot()
         assert isinstance(plot, bk_models.Plot)
         self._plot = plot
         self._xaxis = XAxis(self)
@@ -64,13 +64,16 @@ class Canvas:
         self._xticks = XTicks(self)
         self._yticks = YTicks(self)
         self._mouse_button: MouseButton = MouseButton.NONE
+        self._second_x = second_x
         self._second_y = second_y
 
     def _set_mouse_down(self, event):
         self._mouse_button = event
 
     def _get_xaxis(self):
-        return self._plot.xaxis[0]
+        if not self._second_x:
+            return self._plot.xaxis[0]
+        return self._plot.xaxis[1]
 
     def _get_yaxis(self):
         if not self._second_y:
@@ -78,7 +81,9 @@ class Canvas:
         return self._plot.yaxis[1]
 
     def _get_xrange(self):
-        return self._plot.x_range
+        if not self._second_x:
+            return self._plot.x_range
+        return self._plot.extra_x_ranges[SECOND_X]
 
     def _get_yrange(self):
         if not self._second_y:
@@ -113,13 +118,19 @@ class Canvas:
         return self._plot.renderers
 
     def _plt_reorder_layers(self, layers: list[BokehLayer]):
+        # NOTE: if plot has second_x or second_y, renderers will have more than layers
         model_to_idx_map = {id(layer._model): i for i, layer in enumerate(layers)}
+        existing_glyphs = {id(layer._model) for layer in layers}
         renderers = self._bokeh_renderers()
+        idx_converter = []
+        for i, renderer in enumerate(renderers):
+            if id(renderer.glyph) in existing_glyphs:
+                idx_converter.append(i)
         renderers_sorted = []
         for r in renderers:
             idx = model_to_idx_map.get(id(r.glyph))
             if idx is not None:
-                renderers_sorted.append(renderers[idx])
+                renderers_sorted.append(renderers[idx_converter[idx]])
             else:
                 renderers_sorted.append(r)
         self._plot.renderers = renderers_sorted
@@ -133,6 +144,8 @@ class Canvas:
     def _plt_add_layer(self, layer: BokehLayer):
         if self._second_y:
             self._plot.add_glyph(layer._data, layer._model, y_range_name=SECOND_Y)
+        elif self._second_x:
+            self._plot.add_glyph(layer._data, layer._model, x_range_name=SECOND_X)
         else:
             self._plot.add_glyph(layer._data, layer._model)
 
@@ -142,8 +155,10 @@ class Canvas:
         for i, renderer in enumerate(self._bokeh_renderers()):
             if renderer.glyph == layer._model:
                 idx = i
+                del self._plot.renderers[idx]
                 break
-        del self._plot.renderers[idx]
+        else:
+            raise ValueError(f"Layer {layer} not found")
 
     def _plt_get_visible(self) -> bool:
         """Get visibility of canvas"""
@@ -162,7 +177,7 @@ class Canvas:
                 button=MouseButton.LEFT,
                 modifiers=_translate_modifiers(event.modifiers),
                 pos=(event.x, event.y),
-                type=MouseEventType.CLICK,
+                type=MouseEventType.PRESS,
             )
             callback(ev)
 
@@ -235,18 +250,32 @@ class Canvas:
     def _plt_draw(self):
         pass
 
+    def _plt_get_mouse_enabled(self):
+        return self._plot.toolbar.active_drag is None
+
+    def _plt_set_mouse_enabled(self, enabled: bool):
+        self._plot.toolbar.active_drag = "auto" if enabled else None
+
     def _plt_twinx(self):
+        self._plot.extra_y_ranges[SECOND_Y] = bk_models.DataRange1d()
         self._plot.add_layout(
             bk_models.LinearAxis(y_range_name=SECOND_Y),
             "right",
         )
-        self._plot.extra_y_ranges = {SECOND_Y: bk_models.DataRange1d()}
         return Canvas(self._plot, second_y=True)
+
+    def _plt_twiny(self):
+        self._plot.extra_x_ranges[SECOND_X] = bk_models.DataRange1d()
+        self._plot.add_layout(
+            bk_models.LinearAxis(x_range_name=SECOND_X),
+            "above",
+        )
+        return Canvas(self._plot, second_x=True)
 
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+        anchor: Location = Location.TOP_RIGHT,
     ):
         bk_items = []
         bk_samples = []
@@ -285,27 +314,27 @@ def _translate_modifiers(mod: bk_events.KeyModifiers | None) -> tuple[Modifier, 
 
 # location and side
 _LEGEND_LOCATIONS = {
-    LegendLocation.TOP_LEFT: ("top_left", "center"),
-    LegendLocation.TOP_CENTER: ("center_top", "center"),
-    LegendLocation.TOP_RIGHT: ("top_right", "center"),
-    LegendLocation.CENTER_LEFT: ("center_left", "center"),
-    LegendLocation.CENTER: ("center_center", "center"),
-    LegendLocation.CENTER_RIGHT: ("center_right", "center"),
-    LegendLocation.BOTTOM_LEFT: ("bottom_left", "center"),
-    LegendLocation.BOTTOM_CENTER: ("bottom_center", "center"),
-    LegendLocation.BOTTOM_RIGHT: ("bottom_right", "center"),
-    LegendLocation.LEFT_SIDE_TOP: ("top", "left"),
-    LegendLocation.LEFT_SIDE_CENTER: ("center", "left"),
-    LegendLocation.LEFT_SIDE_BOTTOM: ("bottom", "left"),
-    LegendLocation.RIGHT_SIDE_TOP: ("top", "right"),
-    LegendLocation.RIGHT_SIDE_CENTER: ("center", "right"),
-    LegendLocation.RIGHT_SIDE_BOTTOM: ("bottom", "right"),
-    LegendLocation.TOP_SIDE_LEFT: ("left", "above"),
-    LegendLocation.TOP_SIDE_CENTER: ("center", "above"),
-    LegendLocation.TOP_SIDE_RIGHT: ("right", "above"),
-    LegendLocation.BOTTOM_SIDE_LEFT: ("left", "below"),
-    LegendLocation.BOTTOM_SIDE_CENTER: ("center", "below"),
-    LegendLocation.BOTTOM_SIDE_RIGHT: ("right", "below"),
+    Location.TOP_LEFT: ("top_left", "center"),
+    Location.TOP_CENTER: ("center_top", "center"),
+    Location.TOP_RIGHT: ("top_right", "center"),
+    Location.CENTER_LEFT: ("center_left", "center"),
+    Location.CENTER: ("center_center", "center"),
+    Location.CENTER_RIGHT: ("center_right", "center"),
+    Location.BOTTOM_LEFT: ("bottom_left", "center"),
+    Location.BOTTOM_CENTER: ("bottom_center", "center"),
+    Location.BOTTOM_RIGHT: ("bottom_right", "center"),
+    Location.LEFT_SIDE_TOP: ("top", "left"),
+    Location.LEFT_SIDE_CENTER: ("center", "left"),
+    Location.LEFT_SIDE_BOTTOM: ("bottom", "left"),
+    Location.RIGHT_SIDE_TOP: ("top", "right"),
+    Location.RIGHT_SIDE_CENTER: ("center", "right"),
+    Location.RIGHT_SIDE_BOTTOM: ("bottom", "right"),
+    Location.TOP_SIDE_LEFT: ("left", "above"),
+    Location.TOP_SIDE_CENTER: ("center", "above"),
+    Location.TOP_SIDE_RIGHT: ("right", "above"),
+    Location.BOTTOM_SIDE_LEFT: ("left", "below"),
+    Location.BOTTOM_SIDE_CENTER: ("center", "below"),
+    Location.BOTTOM_SIDE_RIGHT: ("right", "below"),
 }
 
 
@@ -320,6 +349,8 @@ class CanvasGrid:
             for w in widths:
                 p = _prep_plot(width=int(w / wsum * 600), height=int(h / hsum * 600))
                 p.visible = False
+                wheel_zoom = bk_models.WheelZoomTool()
+                p.add_tools(wheel_zoom)
                 row.append(p)
             children.append(row)
         self._grid_plot: bk_layouts.GridPlot = bk_layouts.gridplot(
@@ -348,7 +379,9 @@ class CanvasGrid:
                 bk_plotting.curdoc().add_root(self._grid_plot)
 
     def _plt_get_background_color(self):
-        return arr_color(self._grid_plot.background_fill_color)
+        for _, _, child in self._iter_bokeh_subplots():
+            return child.background_fill_color
+        return np.ones(4, dtype=np.float32)
 
     def _plt_set_background_color(self, color):
         color = hex_color(color)

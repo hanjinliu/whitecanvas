@@ -110,6 +110,15 @@ class _MarkerLikeMixin:
 
         >>> layer.update_width(2.0)  # set widths of all components to 2.0
         >>> layer.update_width("var")  # set width according to the column "var"
+
+        Parameters
+        ----------
+        map_from : tuple of float, optional
+            Limits of values that will be linearly mapped to the edge width. Data
+            points outside this range will be clipped. If not specified, the min/max
+            of the data will be used.
+        map_to : tuple of float, optional
+            Minimum and maximum size of the markers.
         """
         if isinstance(by, str):
             width_by = _p.WidthPlan.from_range(by, range=map_to, domain=map_from)
@@ -263,7 +272,21 @@ class DFMarkers(
         ...
 
     def update_size(self, by, /, map_from=None, map_to=(3, 15)):
-        """Set the size of the markers."""
+        """
+        Set the size of the markers.
+
+        >>> layer.update_size(2.0)  # set size of all components to 2.0
+        >>> layer.update_size("var")  # set sizes according to the column "var"
+
+        Parameters
+        ----------
+        map_from : tuple of float, optional
+            Limits of values that will be linearly mapped to the marker size. Data
+            points outside this range will be clipped. If not specified, the min/max
+            of the data will be used.
+        map_to : tuple of float, optional
+            Minimum and maximum size of the markers.
+        """
         if isinstance(by, str):
             size_by = _p.SizePlan.from_range(by, range=map_to, domain=map_from)
         else:

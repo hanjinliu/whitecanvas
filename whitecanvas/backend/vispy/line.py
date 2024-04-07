@@ -98,6 +98,9 @@ class MultiLine(visuals.Line):
         )
         self.unfreeze()
 
+    def _plt_get_ndata(self):
+        return len(self._data_raw)
+
     ##### BaseProtocol #####
     def _plt_get_visible(self) -> bool:
         return self.visible
@@ -137,7 +140,7 @@ class MultiLine(visuals.Line):
                 )
                 self.set_data(width=width[0])
 
-    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()
+    _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_styles()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return self._seg_colors

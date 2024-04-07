@@ -34,7 +34,7 @@ from whitecanvas.backend.matplotlib.image import Image as whitecanvasImage
 from whitecanvas.backend.matplotlib.text import Texts as whitecanvasText
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
 from whitecanvas.types import (
-    LegendLocation,
+    Location,
     Modifier,
     MouseButton,
     MouseEvent,
@@ -45,9 +45,7 @@ from whitecanvas.types import (
 
 @protocols.check_protocol(protocols.CanvasProtocol)
 class Canvas:
-    def __init__(self, ax: plt.Axes | None = None):
-        if ax is None:
-            ax = plt.gca()
+    def __init__(self, ax: plt.Axes):
         self._axes = ax
         self._xaxis = XAxis(self)
         self._yaxis = YAxis(self)
@@ -218,7 +216,7 @@ class Canvas:
         def _cb(ev: mplMouseEvent):
             if ev.inaxes is not self._axes or ev.dblclick:
                 return
-            callback(self._translate_mouse_event(ev, MouseEventType.CLICK))
+            callback(self._translate_mouse_event(ev, MouseEventType.PRESS))
 
         self._axes.figure.canvas.mpl_connect("button_press_event", _cb)
 
@@ -256,6 +254,16 @@ class Canvas:
         if fig := self._axes.get_figure():
             fig.canvas.draw_idle()
 
+    def _plt_get_mouse_enabled(self):
+        return self._axes.get_navigate()
+
+    def _plt_set_mouse_enabled(self, enable: bool):
+        if fig := self._axes.get_figure():
+            if toolbar := getattr(fig.canvas, "toolbar", None):
+                toolbar._update_buttons_checked()
+                return
+        return self._axes.set_navigate(enable)
+
     def _translate_mouse_event(
         self, ev: mplMouseEvent, typ: MouseEventType
     ) -> MouseEvent:
@@ -289,7 +297,7 @@ class Canvas:
     def _plt_make_legend(
         self,
         items: list[tuple[str, LegendItem]],
-        anchor: LegendLocation = LegendLocation.TOP_RIGHT,
+        anchor: Location = Location.TOP_RIGHT,
     ):
         artists: list[Artist] = []
         names: list[str] = []
@@ -307,7 +315,11 @@ class Canvas:
                     names.append(name)
         if artists:
             loc, bbox_to_anchor = _LEGEND_LOC_MAP[anchor]
-            self._axes.legend(artists, names, loc=loc, bbox_to_anchor=bbox_to_anchor)
+            font_size = self._plt_get_xticks()._plt_get_size()
+            self._axes.legend(
+                artists, names, loc=loc, bbox_to_anchor=bbox_to_anchor,
+                prop={"size": font_size},
+            )  # fmt: skip
             if anchor.is_side:
                 self._axes.figure.tight_layout()
 
@@ -327,27 +339,27 @@ _MOUSE_MOD_MAP = {
     "meta": Modifier.META,
 }
 _LEGEND_LOC_MAP = {
-    LegendLocation.TOP_RIGHT: ("upper right", None),
-    LegendLocation.TOP_CENTER: ("upper center", None),
-    LegendLocation.TOP_LEFT: ("upper left", None),
-    LegendLocation.BOTTOM_RIGHT: ("lower right", None),
-    LegendLocation.BOTTOM_CENTER: ("lower center", None),
-    LegendLocation.BOTTOM_LEFT: ("lower left", None),
-    LegendLocation.CENTER_RIGHT: ("center right", None),
-    LegendLocation.CENTER_LEFT: ("center left", None),
-    LegendLocation.CENTER: ("center", None),
-    LegendLocation.TOP_SIDE_LEFT: ("lower left", (0, 1.03)),
-    LegendLocation.TOP_SIDE_CENTER: ("lower center", (0.5, 1.03)),
-    LegendLocation.TOP_SIDE_RIGHT: ("lower right", (1, 1.03)),
-    LegendLocation.BOTTOM_SIDE_LEFT: ("upper left", (0, -0.03)),
-    LegendLocation.BOTTOM_SIDE_CENTER: ("upper center", (0.5, -0.03)),
-    LegendLocation.BOTTOM_SIDE_RIGHT: ("upper right", (1, -0.03)),
-    LegendLocation.LEFT_SIDE_TOP: ("upper right", (-0.03, 1)),
-    LegendLocation.LEFT_SIDE_CENTER: ("center right", (-0.03, 0.5)),
-    LegendLocation.LEFT_SIDE_BOTTOM: ("lower right", (-0.03, 0)),
-    LegendLocation.RIGHT_SIDE_TOP: ("upper left", (1.03, 1)),
-    LegendLocation.RIGHT_SIDE_CENTER: ("center left", (1.03, 0.5)),
-    LegendLocation.RIGHT_SIDE_BOTTOM: ("lower left", (1.03, 0)),
+    Location.TOP_RIGHT: ("upper right", None),
+    Location.TOP_CENTER: ("upper center", None),
+    Location.TOP_LEFT: ("upper left", None),
+    Location.BOTTOM_RIGHT: ("lower right", None),
+    Location.BOTTOM_CENTER: ("lower center", None),
+    Location.BOTTOM_LEFT: ("lower left", None),
+    Location.CENTER_RIGHT: ("center right", None),
+    Location.CENTER_LEFT: ("center left", None),
+    Location.CENTER: ("center", None),
+    Location.TOP_SIDE_LEFT: ("lower left", (0, 1.03)),
+    Location.TOP_SIDE_CENTER: ("lower center", (0.5, 1.03)),
+    Location.TOP_SIDE_RIGHT: ("lower right", (1, 1.03)),
+    Location.BOTTOM_SIDE_LEFT: ("upper left", (0, -0.03)),
+    Location.BOTTOM_SIDE_CENTER: ("upper center", (0.5, -0.03)),
+    Location.BOTTOM_SIDE_RIGHT: ("upper right", (1, -0.03)),
+    Location.LEFT_SIDE_TOP: ("upper right", (-0.03, 1)),
+    Location.LEFT_SIDE_CENTER: ("center right", (-0.03, 0.5)),
+    Location.LEFT_SIDE_BOTTOM: ("lower right", (-0.03, 0)),
+    Location.RIGHT_SIDE_TOP: ("upper left", (1.03, 1)),
+    Location.RIGHT_SIDE_CENTER: ("center left", (1.03, 0.5)),
+    Location.RIGHT_SIDE_BOTTOM: ("lower left", (1.03, 0)),
 }
 
 
@@ -402,8 +414,12 @@ class CanvasGrid:
             fig.savefig(buff, format="raw")
             buff.seek(0)
             data = np.frombuffer(buff.getvalue(), dtype=np.uint8)
-        w, h = fig.canvas.get_width_height()
-        img = data.reshape((int(h), int(w), -1))
+        # NOTE: fig.canvas.get_width_height() fails if the device pixel ratio is such
+        # as 175%.
+        wmax, hmax = fig.bbox.max
+        width = int(round(wmax / fig.canvas.device_pixel_ratio))
+        height = int(round(hmax / fig.canvas.device_pixel_ratio))
+        img = data.reshape((height, width, -1))
         return img
 
     def _plt_set_figsize(self, width: int, height: int):

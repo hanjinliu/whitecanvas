@@ -170,11 +170,11 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
         var_name: str | None = None,
         value_name: str | None = None,
     ) -> Self:
-        out = {k: [] for k in id_vars + value_vars}
         if var_name is None:
             var_name = "variable"
         if value_name is None:
             value_name = "value"
+        out = {k: [] for k in [*id_vars, var_name, value_name]}
         for k, v in self._data.items():
             if k in id_vars:
                 out[k].extend(v)

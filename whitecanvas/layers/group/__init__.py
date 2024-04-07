@@ -5,9 +5,11 @@ from whitecanvas.layers.group._collections import (
 )
 from whitecanvas.layers.group.band_collection import BandCollection, ViolinPlot
 from whitecanvas.layers.group.boxplot import BoxPlot
+from whitecanvas.layers.group.colorbar import Colorbar
 from whitecanvas.layers.group.graph import Graph
 from whitecanvas.layers.group.labeled import (
     LabeledBars,
+    LabeledImage,
     LabeledLine,
     LabeledMarkers,
     LabeledPlot,
@@ -26,12 +28,14 @@ __all__ = [
     "LineBand",
     "BandCollection",
     "BracketText",
+    "Colorbar",
     "Panel",
     "MainAndOtherLayers",
     "LabeledLine",
     "LabeledMarkers",
     "LabeledBars",
     "LabeledPlot",
+    "LabeledImage",
     "LineFillBase",
     "ViolinPlot",
     "MarkerCollection",

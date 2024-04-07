@@ -18,7 +18,7 @@ class Texts(Artist, MplLayer):
         self, x: NDArray[np.floating], y: NDArray[np.floating], text: list[str]
     ):
         super().__init__()
-        self._children = []
+        self._children: list[mplText] = []
         for x0, y0, text0 in zip(x, y, text):
             self._children.append(
                 mplText(
@@ -27,6 +27,8 @@ class Texts(Artist, MplLayer):
                     color=np.array([0, 0, 0, 1], dtype=np.float32),
                 )  # fmt: skip
             )
+        self._font_family = "Arial"
+        self._align = Alignment.BOTTOM_LEFT
         self._remove_method = _remove_method
 
     def draw(self, renderer):
@@ -76,45 +78,42 @@ class Texts(Artist, MplLayer):
 
     def _plt_get_text_position(self) -> tuple[NDArray[np.float32], NDArray[np.float32]]:
         ar = np.array([child.get_position() for child in self.get_children()])
+        if ar.size == 0:
+            return np.array([]), np.array([])
         return ar[:, 0], ar[:, 1]
 
     def _plt_set_text_position(
         self, position: tuple[NDArray[np.float32], NDArray[np.float32]]
     ):
         x, y = position
+        if x.size > len(self._children):
+            for _ in range(x.size - len(self._children)):
+                self._children.append(
+                    mplText(
+                        0, 0, "", verticalalignment="baseline",
+                        horizontalalignment="left", clip_on=True,
+                        color=np.array([0, 0, 0, 1], dtype=np.float32),
+                    )  # fmt: skip
+                )
+        elif x.size < len(self._children):
+            for c in self._children[x.size :]:
+                c.remove()
+            self._children = self._children[: x.size]
         for child, x0, y0 in zip(self.get_children(), x, y):
             child.set_position((x0, y0))
 
     def _plt_get_text_anchor(self) -> Alignment:
-        out = []
-        for child in self.get_children():
-            va = child.get_verticalalignment()
-            ha = child.get_horizontalalignment()
-            if (aln := _ALIGNMENTS.get((va, ha))) is None:
-                v = _VERTICAL_ALIGNMENTS[va]
-                h = _HORIZONTAL_ALIGNMENTS[ha]
-                aln = Alignment.merge(v, h)
-                _ALIGNMENTS[(va, ha)] = aln
-                _ALIGNMENTS_INV[aln] = (va, ha)
-            out.append(aln)
-        return out
+        return self._align
 
-    def _plt_set_text_anchor(self, anc: Alignment | list[Alignment]):
+    def _plt_set_text_anchor(self, anc: Alignment):
         """Set the text position."""
-        if isinstance(anc, Alignment):
-            v, h = anc.split()
-            va = _VERTICAL_ALIGNMENTS_INV[v]
-            ha = _HORIZONTAL_ALIGNMENTS_INV[h]
-            for child in self.get_children():
-                child.set_verticalalignment(va)
-                child.set_horizontalalignment(ha)
-        else:
-            for child, anc0 in zip(self.get_children(), anc):
-                v, h = anc0.split()
-                va = _VERTICAL_ALIGNMENTS_INV[v]
-                ha = _HORIZONTAL_ALIGNMENTS_INV[h]
-                child.set_verticalalignment(va)
-                child.set_horizontalalignment(ha)
+        v, h = anc.split()
+        va = _VERTICAL_ALIGNMENTS_INV[v]
+        ha = _HORIZONTAL_ALIGNMENTS_INV[h]
+        for child in self.get_children():
+            child.set_verticalalignment(va)
+            child.set_horizontalalignment(ha)
+        self._align = anc
 
     def _plt_get_text_rotation(self) -> NDArray[np.float32]:
         return np.array(
@@ -125,14 +124,13 @@ class Texts(Artist, MplLayer):
         for child, rotation0 in zip(self.get_children(), rotation):
             child.set_rotation(rotation0)
 
-    def _plt_get_text_fontfamily(self) -> list[str]:
-        return [child.get_fontfamily() for child in self.get_children()]
+    def _plt_get_text_fontfamily(self) -> str:
+        return self._font_family
 
-    def _plt_set_text_fontfamily(self, fontfamily: str | list[str]):
-        if isinstance(fontfamily, str):
-            fontfamily = [fontfamily] * len(self.get_children())
-        for child, fontfamily0 in zip(self.get_children(), fontfamily):
-            child.set_fontfamily(fontfamily0)
+    def _plt_set_text_fontfamily(self, fontfamily: str):
+        for child in self.get_children():
+            child.set_fontfamily(fontfamily)
+        self._font_family = fontfamily
 
     ##### HasFaces #####
 
@@ -250,9 +248,6 @@ _HORIZONTAL_ALIGNMENTS = {
     "right": Alignment.RIGHT,
 }
 _HORIZONTAL_ALIGNMENTS_INV = {v: k for k, v in _HORIZONTAL_ALIGNMENTS.items()}
-
-_ALIGNMENTS: dict[tuple[str, str], Alignment] = {}
-_ALIGNMENTS_INV: dict[Alignment, tuple[str, str]] = {}
 
 
 def _remove_method(this: Texts):

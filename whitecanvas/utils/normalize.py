@@ -6,10 +6,12 @@ import numpy as np
 from cmap import Color
 from numpy.typing import ArrayLike, NDArray
 
+from whitecanvas.types import XYData
 from whitecanvas.utils import type_check as _tc
 
 
 def as_array_1d(x: ArrayLike, dtype=None) -> NDArray[np.number]:
+    """Normalize the input as a 1D array."""
     x = np.asarray(x, dtype=dtype)
     if x.ndim != 1:
         raise ValueError(f"Expected 1D array, got {x.ndim}D array")
@@ -19,7 +21,10 @@ def as_array_1d(x: ArrayLike, dtype=None) -> NDArray[np.number]:
 
 
 def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
+    """Normalize the input as two 1D array with the same shape."""
     if len(args) == 1:
+        if isinstance(args[0], XYData):
+            return args[0].x, args[0].y
         arr = np.asarray(args[0])
         if arr.dtype.kind not in "iuf":
             raise ValueError(f"Input {args[0]!r} did not return a numeric array")

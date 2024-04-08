@@ -2,7 +2,15 @@ from __future__ import annotations
 
 import weakref
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, Literal, NamedTuple, Sequence, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Generic,
+    Literal,
+    NamedTuple,
+    Sequence,
+    TypeVar,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,6 +18,7 @@ from psygnal import Signal
 
 from whitecanvas.canvas import CanvasBase
 from whitecanvas.layers import Layer, Line, Rects, Spans
+from whitecanvas.tools._polygon_utils import is_in_polygon
 from whitecanvas.types import (
     ColorType,
     LineStyle,
@@ -35,6 +44,10 @@ _void = _Void()
 
 class SelectionToolBase(ABC, Generic[_L]):
     changed = Signal(object)
+    """Emitted when the selection is changed."""
+
+    cleared = Signal()
+    """Emitted when the selection is cleared by user."""
 
     def __init__(
         self,
@@ -49,7 +62,15 @@ class SelectionToolBase(ABC, Generic[_L]):
         self._layer = self._create_layer()
         self._tracking = tracking
         self._persist = True
+        self._enabled = True
         canvas.mouse.moved.connect(self.callback)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if self._canvas_ref() is not None:
+            self.disconnect()
 
     def _canvas(self) -> CanvasBase:
         canvas = self._canvas_ref()
@@ -88,6 +109,8 @@ class SelectionToolBase(ABC, Generic[_L]):
 
     def callback(self, e: MouseEvent):
         """The callback function that is called when mouse is moved."""
+        if not self._enabled:
+            return
         if e.button not in self._valid_buttons or set(e.modifiers) != self._modifiers:
             return
         canvas = self._canvas()
@@ -110,15 +133,42 @@ class SelectionToolBase(ABC, Generic[_L]):
             if not self._tracking:
                 self.changed.emit(self.selection)
             if not self._persist:
+                with self.cleared.blocked():
+                    self.clear_selection()
+        else:
+            # clicked
+            if self._persist:
                 self.clear_selection()
 
-    def clear_selection(self, e: MouseEvent | None = None):
+    def clear_selection(self):
+        """Clear the current selection."""
         self._canvas().layers.remove(self._layer)
+        self.cleared.emit()
+
+    def disconnect(self):
+        """Disconnect the tool from the canvas."""
+        self._canvas().mouse.moved.disconnect(self.callback)
+        if self._layer in self._canvas().layers:
+            self.clear_selection()
+        return None
+
+    @property
+    def enabled(self) -> bool:
+        """Whether the tool is enabled."""
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = bool(value)
+        if not self._enabled:
+            self.clear_selection()
 
 
 class RectSelectionTool(SelectionToolBase[Rects]):
     def _create_layer(self) -> Rects:
-        layer = Rects([[0, 1, 0, 1]], color="blue", alpha=0.4).with_edge(width=2)
+        layer = Rects([[0, 1, 0, 1]], color="blue", alpha=0.25).with_edge(
+            width=2, alpha=0.4
+        )
         layer.visible = False
         return layer
 
@@ -145,6 +195,31 @@ class RectSelectionTool(SelectionToolBase[Rects]):
     def edge(self) -> ConstEdge:
         """Edge color of the selection span."""
         return self._layer.edge
+
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        x, y = _point_to_xy(*args)
+        sel = self.selection
+        return sel.left <= x <= sel.right and sel.bottom <= y <= sel.top
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        sel = self.selection
+        if points.ndim == 2 and points.shape[1] == 2:
+            xs = points[:, 0]
+            ys = points[:, 1]
+            return (
+                (sel.left <= xs)
+                & (xs <= sel.right)
+                & (sel.bottom <= ys)
+                & (ys <= sel.top)
+            )
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
 
 
 class LineSelection(NamedTuple):
@@ -226,7 +301,7 @@ class _SpanSelectionTool(SelectionToolBase[Spans]):
     @property
     def selection(self) -> SpanSelection:
         span = self._layer.data[0]
-        return SpanSelection(span[0], span[1])
+        return SpanSelection(*sorted(span))
 
     @property
     def face(self) -> ConstFace:
@@ -241,7 +316,7 @@ class _SpanSelectionTool(SelectionToolBase[Spans]):
 
 class XSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
-        layer = Spans([[0, 1]], orient="vertical", color="red", alpha=0.4)
+        layer = Spans([[0, 1]], orient="vertical", color="red", alpha=0.25)
         layer.visible = False
         return layer
 
@@ -255,10 +330,29 @@ class XSpanSelectionTool(_SpanSelectionTool):
         self._layer.data = np.array([[x0, x1]], dtype=np.float32)
         self._layer.visible = True
 
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        x, _ = _point_to_xy(*args)
+        sel = self.selection
+        return sel.start <= x <= sel.end
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        sel = self.selection
+        if points.ndim == 2 and points.shape[1] == 2:
+            xs = points[:, 0]
+            return (sel.start <= xs) & (xs <= sel.end)
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
+
 
 class YSpanSelectionTool(_SpanSelectionTool):
     def _create_layer(self) -> Spans:
-        layer = Spans([[0, 1]], orient="horizontal", color="red", alpha=0.4)
+        layer = Spans([[0, 1]], orient="horizontal", color="red", alpha=0.25)
         layer.visible = False
         return layer
 
@@ -271,6 +365,25 @@ class YSpanSelectionTool(_SpanSelectionTool):
         _, y1 = now
         self._layer.data = np.array([[y0, y1]], dtype=np.float32)
         self._layer.visible = True
+
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        _, y = _point_to_xy(*args)
+        sel = self.selection
+        return sel.start <= y <= sel.end
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        sel = self.selection
+        if points.ndim == 2 and points.shape[1] == 2:
+            ys = points[:, 1]
+            return (sel.start <= ys) & (ys <= sel.end)
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
 
 
 class LassoSelectionTool(LineSelectionTool):
@@ -310,6 +423,71 @@ class LassoSelectionTool(LineSelectionTool):
             self.changed.emit(self.selection)
         return
 
+    @overload
+    def contains_point(self, point: tuple[float, float], /) -> bool: ...
+    @overload
+    def contains_point(self, x: float, y: float, /) -> bool: ...
+
+    def contains_point(self, *args) -> bool:
+        x, y = _point_to_xy(*args)
+        poly = self._layer.data
+        return is_in_polygon(np.array([[x, y]]), poly.stack())[0]
+
+    def contains_points(self, points: XYData | NDArray[np.number]) -> NDArray[np.bool_]:
+        points = _atleast_2d(points)
+        poly = self._layer.data
+        if points.ndim == 2 and points.shape[1] == 2:
+            return is_in_polygon(points, poly.stack())
+        else:
+            raise ValueError("points must be (2,) or (N, 2) array.")
+
+
+class PolygonSelectionTool(LassoSelectionTool):
+    def callback(self, e: MouseEvent):
+        """The callback function that is called when mouse is moved."""
+        if not self._enabled:
+            return
+        if e.button not in self._valid_buttons or set(e.modifiers) != self._modifiers:
+            return
+        canvas = self._canvas()
+        pos_start = e.pos
+        self._on_press(pos_start)
+        yield
+        if self._layer in self._canvas().layers:
+            self.clear_selection()
+            return
+        with canvas.autoscale_context(enabled=False):
+            canvas.add_layer(self._layer)
+
+        while True:
+            while e.type is not MouseEventType.RELEASE:
+                yield  # dragging
+            self._update_layer(pos_start, e.pos)
+            yield
+            while e.button is MouseButton.NONE:
+                cur_data = self._layer.data
+                x0, y0 = e.pos
+                xs = np.concatenate([cur_data.x[:-1], [x0]])
+                ys = np.concatenate([cur_data.y[:-1], [y0]])
+                self._layer.data = xs, ys
+                yield
+            if e.type is MouseEventType.DOUBLE_CLICK:
+                break
+            elif e.button in self._valid_buttons:
+                if e.type is MouseEventType.PRESS:
+                    self._update_layer(pos_start, e.pos)
+                    if self._tracking:
+                        self.changed.emit(self.selection)
+            elif e.type is MouseEventType.PRESS:
+                break
+            yield
+        yield
+        if not self._tracking:
+            self.changed.emit(self.selection)
+        if not self._persist:
+            with self.cleared.blocked():
+                self.clear_selection()
+
 
 def _norm_input(
     buttons: _MouseButton | Sequence[_MouseButton] = "left",
@@ -326,6 +504,20 @@ def _norm_input(
         modifiers = [modifiers]
     _modifiers = [Modifier(mod) for mod in modifiers]
     return _buttons, _modifiers
+
+
+def _atleast_2d(points: NDArray[np.number]) -> NDArray[np.number]:
+    if isinstance(points, XYData):
+        return points.stack()
+    return np.atleast_2d(points)
+
+
+def _point_to_xy(*args) -> tuple[float, float]:
+    if len(args) == 1:
+        x, y = args[0]
+    else:
+        x, y = args
+    return x, y
 
 
 def line_selector(
@@ -508,3 +700,39 @@ def lasso_selector(
     """
     _buttons, _modifiers = _norm_input(buttons, modifiers)
     return LassoSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)
+
+
+def polygon_selector(
+    canvas: CanvasBase,
+    buttons: _MouseButton | Sequence[_MouseButton] = "left",
+    modifiers: _Modifier | Sequence[_Modifier] | None = None,
+    *,
+    tracking: bool = False,
+) -> LassoSelectionTool:
+    """
+    Create a polygon selector tool with given settings.
+
+    A polygon selector emits a XYData object by freehand drawing.
+    A selection tool is constructed by specifying the canvas to attach the tool.
+
+    >>> canvas = new_canvas("matplotlib:qt")
+    >>> tool = polygon_selector(canvas)
+
+    Use `buttons` and `modifiers` to specify how to trigger the tool.
+
+    >>> tool = polygon_selector(canvas, buttons="right", modifiers="ctrl")
+
+    Parameters
+    ----------
+    canvas : CanvasBase
+        The canvas to which the tool is attached.
+    buttons : MouseButton or Sequence[MouseButton], default "left"
+        The mouse buttons that can trigger the tool.
+    modifiers : Modifier or Sequence[Modifier], optional
+        The modifier keys that must be pressed to trigger the tool.
+    tracking : bool, default False
+        If True, the tool emits the changed signal while dragging. Otherwise, it emits
+        the signal only when dragging is finished.
+    """
+    _buttons, _modifiers = _norm_input(buttons, modifiers)
+    return PolygonSelectionTool(canvas, _buttons, _modifiers, tracking=tracking)

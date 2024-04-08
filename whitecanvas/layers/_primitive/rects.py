@@ -91,48 +91,52 @@ class Rects(
     @property
     def rects(self) -> list[Rect]:
         """Return the data as a list of `Rect` objects."""
-        return [Rect(*xy) for xy in self._get_layer_data()]
+        return [Rect.with_sort(*xy) for xy in self._get_layer_data()]
 
     @property
     def ndata(self) -> int:
         """The number of data points"""
         return self.data.shape[0]
 
-    if TYPE_CHECKING:
+    def with_face(
+        self,
+        *,
+        color: ColorType | _Void = _void,
+        hatch: Hatch | str = Hatch.SOLID,
+        alpha: float = 1,
+    ) -> Rects[ConstFace, _Edge]:
+        return super().with_face(color=color, hatch=hatch, alpha=alpha)
 
-        def with_face(
-            self,
-            *,
-            color: ColorType | _Void = _void,
-            hatch: Hatch | str = Hatch.SOLID,
-            alpha: float = 1,
-        ) -> Rects[ConstFace, _Edge]: ...
+    def with_face_multi(
+        self,
+        *,
+        color: ColorType | Sequence[ColorType] | _Void = _void,
+        hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
+        alpha: float = 1,
+    ) -> Rects[MultiFace, _Edge]:
+        return super().with_face_multi(color=color, hatch=hatch, alpha=alpha)
 
-        def with_face_multi(
-            self,
-            *,
-            color: ColorType | Sequence[ColorType] | _Void = _void,
-            hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
-            alpha: float = 1,
-        ) -> Rects[MultiFace, _Edge]: ...
+    def with_edge(
+        self,
+        *,
+        color: ColorType | None = None,
+        width: float = 1,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Rects[_Face, ConstEdge]:
+        return super().with_edge(color=color, width=width, style=style, alpha=alpha)
 
-        def with_edge(
-            self,
-            *,
-            color: ColorType | None = None,
-            width: float = 1,
-            style: LineStyle | str = LineStyle.SOLID,
-            alpha: float = 1,
-        ) -> Rects[_Face, ConstEdge]: ...
-
-        def with_edge_multi(
-            self,
-            *,
-            color: ColorType | Sequence[ColorType] | None = None,
-            width: float | Sequence[float] = 1,
-            style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-            alpha: float = 1,
-        ) -> Rects[_Face, MultiEdge]: ...
+    def with_edge_multi(
+        self,
+        *,
+        color: ColorType | Sequence[ColorType] | None = None,
+        width: float | Sequence[float] = 1,
+        style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
+        alpha: float = 1,
+    ) -> Rects[_Face, MultiEdge]:
+        return super().with_edge_multi(
+            color=color, width=width, style=style, alpha=alpha
+        )
 
     def as_edge_only(
         self,

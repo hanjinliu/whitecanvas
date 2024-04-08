@@ -1206,7 +1206,7 @@
         
   
   <span class="md-ellipsis">
-    tools
+    whitecanvas.tools
   </span>
   
 
@@ -2496,7 +2496,19 @@
 <span class="normal">81</span>
 <span class="normal">82</span>
 <span class="normal">83</span>
-<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Rect</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Rect</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Rectangular range in left, right, bottom, top order.&quot;&quot;&quot;</span>
 
     <span class="n">left</span><span class="p">:</span> <span class="nb">float</span>
@@ -2504,12 +2516,24 @@
     <span class="n">bottom</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">top</span><span class="p">:</span> <span class="nb">float</span>
 
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Rect(left=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">, right=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;bottom=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">, top=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">with_check</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">bottom</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">left</span> <span class="o">&gt;</span> <span class="n">right</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;left must be less than or equal to right&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">bottom</span> <span class="o">&gt;</span> <span class="n">top</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bottom must be less than or equal to top&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">right</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">bottom</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">with_sort</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">bottom</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">])</span>
+        <span class="n">bottom</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">bottom</span><span class="p">,</span> <span class="n">top</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">right</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">bottom</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
 
     <span class="nd">@property</span>
@@ -2854,7 +2878,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../tools/" class="md-footer__link md-footer__link--prev" aria-label="Previous: tools">
+          <a href="../tools/" class="md-footer__link md-footer__link--prev" aria-label="Previous: whitecanvas.tools">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -2864,7 +2888,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                tools
+                whitecanvas.tools
               </div>
             </div>
           </a>

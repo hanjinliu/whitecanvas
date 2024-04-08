@@ -1136,12 +1136,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Line Selection Tool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#styling-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Styling Selection
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rectangle-selection-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rectangle Selection Tool
+    </span>
+  </a>
+  
 </li>
       
         <li class="md-nav__item">
   <a href="#other-selection-tools" class="md-nav__link">
     <span class="md-ellipsis">
       Other Selection Tools
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-if-selection-contains-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check If Selection Contains Points
     </span>
   </a>
   
@@ -1266,7 +1299,7 @@
         
   
   <span class="md-ellipsis">
-    tools
+    whitecanvas.tools
   </span>
   
 
@@ -1337,12 +1370,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Line Selection Tool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#styling-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Styling Selection
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rectangle-selection-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rectangle Selection Tool
+    </span>
+  </a>
+  
 </li>
       
         <li class="md-nav__item">
   <a href="#other-selection-tools" class="md-nav__link">
     <span class="md-ellipsis">
       Other Selection Tools
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-if-selection-contains-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check If Selection Contains Points
     </span>
   </a>
   
@@ -1393,9 +1459,10 @@ your canvas. Currently, the selection tool is only available for following backe
 </tbody>
 </table>
 <h2 id="line-selection-tool">Line Selection Tool</h2>
-<p>The line selection tool can be created by <code>line_selector</code> function. Because selection
-temporarily adds a new layer to the canvas, the selection tool requires a canvas object
-as an argument. Once selection is done, a selector emits a <code>changed</code> signal.</p>
+<p>Line selection tools can be created by <a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.line_selector"><code>line_selector</code></a>
+function. Because selection temporarily adds a new layer to the canvas, the selection
+tool requires a canvas object as an argument. Once selection is done, a selector emits a
+<code>changed</code> signal.</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
 <span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">line_selector</span>
 
@@ -1420,13 +1487,77 @@ again a named tuple of x and y coordinates.</p>
 signal emitted during the mouse drag,</p>
 <div class="highlight"><pre><span></span><code><span class="n">selector</span> <span class="o">=</span> <span class="n">line_selector</span><span class="p">(</span><span class="n">canvas</span><span class="p">,</span> <span class="n">tracking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
+<h3 id="styling-selection">Styling Selection</h3>
+<p>As all the selection is a layer, you can style the selection.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">line_selector</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">selector</span> <span class="o">=</span> <span class="n">line_selector</span><span class="p">(</span><span class="n">canvas</span><span class="p">)</span>  <span class="c1"># make a selector</span>
+
+<span class="hll"><span class="n">selector</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+</span><span class="hll"><span class="n">selector</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">3</span>
+</span><span class="hll"><span class="n">selector</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s2">&quot;--&quot;</span>
+</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">emulate_drag</span><span class="p">([(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)],</span> <span class="n">button</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/selection_tools_line_styled.py.png" width="360px" /></p>
+<h2 id="rectangle-selection-tool">Rectangle Selection Tool</h2>
+<p>Rectangle selector(<a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.rect_selector"><code>rect_selector</code></a>) is similar to
+the line selector, but it emits a <code>Rect</code> object.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">rect_selector</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="hll"><span class="n">selector</span> <span class="o">=</span> <span class="n">rect_selector</span><span class="p">(</span><span class="n">canvas</span><span class="p">)</span>  <span class="c1"># make a selector</span>
+</span>
+<span class="c1"># connect a callback function</span>
+<span class="nd">@selector</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">connect</span>
+<span class="k">def</span> <span class="nf">_on_selection</span><span class="p">(</span><span class="n">sel</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">emulate_drag</span><span class="p">([(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)],</span> <span class="n">button</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/selection_tools_rect.py.png" width="360px" /></p>
+<div class="highlight"><span class="filename">Output</span><pre><span></span><code>Rect(left=0.2, right=0.8, bottom=0.2, top=0.6)
+</code></pre></div>
 <h2 id="other-selection-tools">Other Selection Tools</h2>
 <ul>
-<li>Rectangle selection (<a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.rect_selector">rect_selector</a>)</li>
 <li>X-span selection (<a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.xspan_selector">xspan_selector</a>)</li>
 <li>Y-span selection (<a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.yspan_selector">yspan_selector</a>)</li>
 <li>Lasso (free-hand) selection (<a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.lasso_selector">lasso_selector</a>)</li>
+<li>Polygon selection (<a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.polygon_selector">polygon_selector</a>)</li>
 </ul>
+<h2 id="check-if-selection-contains-points">Check If Selection Contains Points</h2>
+<p>Mouse selection is usually used to select data points. To do this, you have to connect a
+callback function that checks if points are inside the selection area.</p>
+<p>Following example demonstrates how to highlight selected points by a rectangle
+selection.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">rect_selector</span>
+
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">layer</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+
+<span class="n">selector</span> <span class="o">=</span> <span class="n">rect_selector</span><span class="p">(</span><span class="n">canvas</span><span class="p">)</span>
+
+<span class="nd">@selector</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">connect</span>
+<span class="k">def</span> <span class="nf">_on_selection</span><span class="p">():</span>
+    <span class="c1"># get the indices of points inside the selection area</span>
+<span class="hll">    <span class="n">indices</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</span>    <span class="c1"># highlight selected points</span>
+    <span class="n">layer</span><span class="o">.</span><span class="n">with_face_multi</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">))</span>
+
+<span class="n">canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">emulate_drag</span><span class="p">([(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)])</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/selection_contains.py.png" width="360px" /></p>
+<p>Same methods are defined for other selection tools with area.</p>
 
 
 

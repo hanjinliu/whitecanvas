@@ -1,4 +1,4 @@
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 
 from whitecanvas import theme
 from whitecanvas.canvas import link_axes

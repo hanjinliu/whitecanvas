@@ -1,4 +1,4 @@
-# tools
+# whitecanvas.tools
 
 ::: whitecanvas.tools
     options:

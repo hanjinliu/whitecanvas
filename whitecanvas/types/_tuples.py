@@ -55,6 +55,12 @@ class Rect(NamedTuple):
     bottom: float
     top: float
 
+    def __repr__(self) -> str:
+        return (
+            f"Rect(left={self.left:.6g}, right={self.right:.6g}, "
+            f"bottom={self.bottom:.6g}, top={self.top:.6g})"
+        )
+
     @classmethod
     def with_check(cls, left: float, right: float, bottom: float, top: float):
         if left > right:

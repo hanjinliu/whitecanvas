@@ -3060,7 +3060,8 @@
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1944</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1943</span>
+<span class="normal">1944</span>
 <span class="normal">1945</span>
 <span class="normal">1946</span>
 <span class="normal">1947</span>
@@ -3098,8 +3099,7 @@
 <span class="normal">1979</span>
 <span class="normal">1980</span>
 <span class="normal">1981</span>
-<span class="normal">1982</span>
-<span class="normal">1983</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
+<span class="normal">1982</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
     <span class="n">_CURRENT_INSTANCE</span><span class="p">:</span> <span class="n">Canvas</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -3176,7 +3176,8 @@
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1958</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1957</span>
+<span class="normal">1958</span>
 <span class="normal">1959</span>
 <span class="normal">1960</span>
 <span class="normal">1961</span>
@@ -3191,8 +3192,7 @@
 <span class="normal">1970</span>
 <span class="normal">1971</span>
 <span class="normal">1972</span>
-<span class="normal">1973</span>
-<span class="normal">1974</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">1973</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_backend</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">obj</span><span class="p">:</span> <span class="n">protocols</span><span class="o">.</span><span class="n">CanvasProtocol</span><span class="p">,</span>
@@ -5109,8 +5109,7 @@
 <span class="normal">1937</span>
 <span class="normal">1938</span>
 <span class="normal">1939</span>
-<span class="normal">1940</span>
-<span class="normal">1941</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="normal">1940</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for any canvas object.&quot;&quot;&quot;</span>
 
     <span class="n">title</span> <span class="o">=</span> <span class="n">_ns</span><span class="o">.</span><span class="n">TitleNamespace</span><span class="p">()</span>
@@ -5811,7 +5810,7 @@
 <span class="sd">            The line layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span> <span class="o">=</span> <span class="n">normalize_xy</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Line</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
         <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -5876,7 +5875,7 @@
 <span class="sd">            The markers layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span> <span class="o">=</span> <span class="n">normalize_xy</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Markers</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">symbol</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;markers.symbol&quot;</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span>
         <span class="n">size</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;markers.size&quot;</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
@@ -5951,7 +5950,7 @@
             <span class="n">bottom</span> <span class="o">=</span> <span class="n">as_array_1d</span><span class="p">(</span><span class="n">bottom</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">bottom</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">height</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected bottom to have the same shape as height&quot;</span><span class="p">)</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Bars</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">extent</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;bars.extent&quot;</span><span class="p">,</span> <span class="n">extent</span><span class="p">)</span>
         <span class="n">hatch</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;bars.hatch&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="p">)</span>
@@ -6007,7 +6006,7 @@
 <span class="sd">        Bars</span>
 <span class="sd">            The bars layer that represents the histogram.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
         <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -6081,7 +6080,7 @@
         <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">hatch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Hatch</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_l</span><span class="o">.</span><span class="n">Rects</span><span class="p">[</span><span class="n">_mixin</span><span class="o">.</span><span class="n">ConstFace</span><span class="p">,</span> <span class="n">_mixin</span><span class="o">.</span><span class="n">ConstEdge</span><span class="p">]:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Rects</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">hatch</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;bars.hatch&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="p">)</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Rects</span><span class="p">(</span>
@@ -6131,7 +6130,7 @@
 <span class="sd">        Line</span>
 <span class="sd">            The line layer that represents the CDF.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
         <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -6182,7 +6181,7 @@
 <span class="sd">        Spans</span>
 <span class="sd">            The spans layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Spans</span><span class="p">(</span>
             <span class="n">spans</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">orient</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
@@ -6234,7 +6233,7 @@
 <span class="sd">        InfLine</span>
 <span class="sd">            The infline layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">InfLine</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
         <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -6288,7 +6287,7 @@
 <span class="sd">        InfCurve</span>
 <span class="sd">            The infcurve layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">InfCurve</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
         <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -6420,7 +6419,7 @@
 <span class="sd">        Band</span>
 <span class="sd">            The band layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Band</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Band</span><span class="p">(</span>
             <span class="n">xdata</span><span class="p">,</span> <span class="n">ylow</span><span class="p">,</span> <span class="n">yhigh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">orient</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
@@ -6477,7 +6476,7 @@
 <span class="sd">        Errorbars</span>
 <span class="sd">            The errorbars layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Errorbars</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
         <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -6542,7 +6541,7 @@
 <span class="sd">        Rug</span>
 <span class="sd">            The rug layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Errorbars</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Rug</span><span class="p">(</span>
             <span class="n">events</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
@@ -6590,7 +6589,7 @@
 <span class="sd">        Kde</span>
 <span class="sd">            The KDE layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_lg</span><span class="o">.</span><span class="n">Kde</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
         <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -6821,13 +6820,12 @@
             <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">,</span> <span class="o">*</span><span class="n">more_layers</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">_lg</span><span class="o">.</span><span class="n">LayerTuple</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_coerce_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">_l</span><span class="o">.</span><span class="n">Layer</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_coerce_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">layer_type</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">layer_type</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="n">basename</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="n">basename</span> <span class="o">=</span> <span class="n">default</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">-0&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">basename</span> <span class="o">=</span> <span class="n">name</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">_exists</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">}</span>
         <span class="k">while</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_exists</span><span class="p">:</span>
@@ -7365,7 +7363,7 @@ vertical orientation.,</p>
 <span class="sd">    Band</span>
 <span class="sd">        The band layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Band</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Band</span><span class="p">(</span>
         <span class="n">xdata</span><span class="p">,</span> <span class="n">ylow</span><span class="p">,</span> <span class="n">yhigh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">orient</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
@@ -7641,7 +7639,7 @@ canvas.add_bars(..., orient="horizontal")  # horizontal bars</p>
         <span class="n">bottom</span> <span class="o">=</span> <span class="n">as_array_1d</span><span class="p">(</span><span class="n">bottom</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">bottom</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">height</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected bottom to have the same shape as height&quot;</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Bars</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">extent</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;bars.extent&quot;</span><span class="p">,</span> <span class="n">extent</span><span class="p">)</span>
     <span class="n">hatch</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;bars.hatch&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="p">)</span>
@@ -7923,7 +7921,7 @@ canvas.add_bars(..., orient="horizontal")  # horizontal bars</p>
 <span class="sd">    Line</span>
 <span class="sd">        The line layer that represents the CDF.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -8258,7 +8256,7 @@ to the y axis.</p>
 <span class="sd">    Errorbars</span>
 <span class="sd">        The errorbars layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Errorbars</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -8758,7 +8756,7 @@ the line nodes.</p>
 <span class="sd">    Bars</span>
 <span class="sd">        The bars layer that represents the histogram.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -9812,7 +9810,7 @@ signature as <code>scipy.optimize.curve_fit</code>.</p>
 <span class="sd">    InfCurve</span>
 <span class="sd">        The infcurve layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">InfCurve</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -10104,7 +10102,7 @@ rotation from the x axis.</p>
 <span class="sd">    InfLine</span>
 <span class="sd">        The infline layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">InfLine</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -10378,7 +10376,7 @@ rotation from the x axis.</p>
 <span class="sd">    Kde</span>
 <span class="sd">        The KDE layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_lg</span><span class="o">.</span><span class="n">Kde</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -10916,7 +10914,7 @@ canvas.add_line(x, y, ...)</p>
 <span class="sd">        The line layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span> <span class="o">=</span> <span class="n">normalize_xy</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Line</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.width&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;line.style&quot;</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span>
@@ -11164,7 +11162,7 @@ canvas.add_markers(y)  # use 0, 1, ... for the x values</p>
 <span class="sd">        The markers layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span> <span class="o">=</span> <span class="n">normalize_xy</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Markers</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">symbol</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;markers.symbol&quot;</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;markers.size&quot;</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
@@ -11505,7 +11503,7 @@ to the y axis.</p>
 <span class="sd">    Rug</span>
 <span class="sd">        The rug layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">_l</span><span class="o">.</span><span class="n">Errorbars</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Rug</span><span class="p">(</span>
         <span class="n">events</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
@@ -11782,7 +11780,7 @@ to the y axis.</p>
 <span class="sd">    Spans</span>
 <span class="sd">        The spans layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
     <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Spans</span><span class="p">(</span>
         <span class="n">spans</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">orient</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>

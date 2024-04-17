@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar
 
 import numpy as np
@@ -212,7 +212,8 @@ class Slicable(ABC, Generic[_T]):
     def slice_at(self, index: tuple[int, ...]) -> _T:
         """Get the sliced data at the given index."""
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def shape(self) -> tuple[int, ...]:
         """The shape of the data."""
 
@@ -264,8 +265,7 @@ class TableArray(Slicable[NDArray[np.number]]):
     def __init__(self, obj: dict[Any, dict[str, NDArray[np.number]]]):
         self._obj = obj
 
-    def slice_at(self, index: tuple[int, ...]):
-        ...
+    def slice_at(self, index: tuple[int, ...]): ...
 
 
 class StackedArray(Slicable[_T]):

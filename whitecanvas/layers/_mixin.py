@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
@@ -90,15 +90,18 @@ class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
     events: FaceEvents
     _events_class = FaceEvents
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def color(self) -> NDArray[np.floating]:
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def hatch(self) -> Hatch | EnumArray[Hatch]:
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def alpha(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
@@ -111,19 +114,23 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
     events: EdgeEvents
     _events_class = EdgeEvents
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def color(self) -> NDArray[np.floating]:
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def width(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def style(self) -> LineStyle | EnumArray[LineStyle]:
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def alpha(self) -> float | NDArray[np.floating]:
         raise NotImplementedError
 
@@ -869,11 +876,13 @@ class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
     events: FontEvents
     _events_class = FontEvents
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def color(self):
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def size(self):
         raise NotImplementedError
 

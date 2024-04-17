@@ -72,12 +72,10 @@ class Dims:
         return [a.name for a in self._axes]
 
     @overload
-    def axis(self, name: str) -> DimAxis:
-        ...
+    def axis(self, name: str) -> DimAxis: ...
 
     @overload
-    def axis(self, name: str, *, default: _T) -> DimAxis | _T:
-        ...
+    def axis(self, name: str, *, default: _T) -> DimAxis | _T: ...
 
     def axis(self, name, *, default=_default):
         """Get the axis by name."""
@@ -94,20 +92,16 @@ class Dims:
         return {a.name: a.value() for a in self._axes}
 
     @overload
-    def set_indices(self, arg: dict[str, SupportsIndex]):
-        ...
+    def set_indices(self, arg: dict[str, SupportsIndex]): ...
 
     @overload
-    def set_indices(self, arg: Sequence[SupportsIndex]):
-        ...
+    def set_indices(self, arg: Sequence[SupportsIndex]): ...
 
     @overload
-    def set_indices(self, arg: SupportsIndex):
-        ...
+    def set_indices(self, arg: SupportsIndex): ...
 
     @overload
-    def set_indices(self, **kwargs: SupportsIndex):
-        ...
+    def set_indices(self, **kwargs: SupportsIndex): ...
 
     def set_indices(self, arg=None, **kwargs: Any):
         """
@@ -348,7 +342,7 @@ class InAxes:
             Layer stack of a line layer.
         """
         canvas = self._get_canvas()
-        name = canvas._coerce_name(_l.Line, name)
+        name = canvas._coerce_name(name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYLayerStack.from_layer_class(
             _l.Line, xdata, ydata, name=name, color=color, width=width, style=style,
@@ -368,7 +362,7 @@ class InAxes:
         size: float = 5.0,
     ) -> _ndl.XYLayerStack:
         canvas = self._get_canvas()
-        name = canvas._coerce_name(_l.Markers, name)
+        name = canvas._coerce_name(name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYLayerStack.from_layer_class(
             _l.Markers, xdata, ydata, name=name, color=color, hatch=hatch,
@@ -405,7 +399,7 @@ class InAxes:
             Layer stack of a band layer.
         """
         canvas = self._get_canvas()
-        name = canvas._coerce_name(_l.Band, name)
+        name = canvas._coerce_name(name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYYLayerStack.from_layer_class(
             _l.Band, xdata, ylow, yhigh, name=name, color=color, hatch=hatch,
@@ -445,7 +439,7 @@ class InAxes:
             Layer stack of an errorbars layer.
         """
         canvas = self._get_canvas()
-        name = canvas._coerce_name(_l.Errorbars, name)
+        name = canvas._coerce_name(name)
         color = canvas._generate_colors(color)
         stack = _ndl.XYYLayerStack.from_layer_class(
             _l.Errorbars, xdata, ylow, yhigh, name=name, orient=orient, color=color,
@@ -482,7 +476,7 @@ class InAxes:
             Layer stack of a rug layer.
         """
         canvas = self._get_canvas()
-        name = canvas._coerce_name(_l.Rug, name)
+        name = canvas._coerce_name(name)
         color = canvas._generate_colors(color)
         stack = _ndl.YLayerStack.from_layer_class(
             _l.Rug, events, low=low, high=high, name=name, orient=orient,
@@ -522,7 +516,7 @@ class InAxes:
             Layer stack of text layers.
         """
         canvas = self._get_canvas()
-        name = canvas._coerce_name(_l.Texts, name)
+        name = canvas._coerce_name(name)
         stack = _ndl.TextLayerStack.from_layer_class(
             _l.Texts, xdata, ydata, string, name=name, color=color, size=size,
             rotation=rotation, anchor=anchor, family=family,
@@ -558,7 +552,7 @@ class InAxes:
             Layer stack of image layers.
         """
         canvas = self._get_canvas()
-        name = canvas._coerce_name(_l.Image, name)
+        name = canvas._coerce_name(name)
         stack = _ndl.ImageLayerStack.from_layer_class(
             _l.Image, image, name=name, cmap=cmap, clim=clim, rgb=rgb,
             backend=canvas._get_backend(),

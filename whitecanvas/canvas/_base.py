@@ -771,7 +771,7 @@ class CanvasBase(ABC):
             The line layer.
         """
         xdata, ydata = normalize_xy(*args)
-        name = self._coerce_name(_l.Line, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
@@ -836,7 +836,7 @@ class CanvasBase(ABC):
             The markers layer.
         """
         xdata, ydata = normalize_xy(*args)
-        name = self._coerce_name(_l.Markers, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         symbol = theme._default("markers.symbol", symbol)
         size = theme._default("markers.size", size)
@@ -911,7 +911,7 @@ class CanvasBase(ABC):
             bottom = as_array_1d(bottom)
             if bottom.shape != height.shape:
                 raise ValueError("Expected bottom to have the same shape as height")
-        name = self._coerce_name(_l.Bars, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         extent = theme._default("bars.extent", extent)
         hatch = theme._default("bars.hatch", hatch)
@@ -967,7 +967,7 @@ class CanvasBase(ABC):
         Bars
             The bars layer that represents the histogram.
         """
-        name = self._coerce_name("histogram", name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
@@ -1041,7 +1041,7 @@ class CanvasBase(ABC):
         alpha: float = 1.0,
         hatch: str | Hatch | None = None,
     ) -> _l.Rects[_mixin.ConstFace, _mixin.ConstEdge]:
-        name = self._coerce_name(_l.Rects, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         hatch = theme._default("bars.hatch", hatch)
         layer = _l.Rects(
@@ -1091,7 +1091,7 @@ class CanvasBase(ABC):
         Line
             The line layer that represents the CDF.
         """
-        name = self._coerce_name("histogram", name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
@@ -1142,7 +1142,7 @@ class CanvasBase(ABC):
         Spans
             The spans layer.
         """
-        name = self._coerce_name("histogram", name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         layer = _l.Spans(
             spans, name=name, orient=orient, color=color, alpha=alpha,
@@ -1194,7 +1194,7 @@ class CanvasBase(ABC):
         InfLine
             The infline layer.
         """
-        name = self._coerce_name(_l.InfLine, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
@@ -1248,7 +1248,7 @@ class CanvasBase(ABC):
         InfCurve
             The infcurve layer.
         """
-        name = self._coerce_name(_l.InfCurve, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
@@ -1380,7 +1380,7 @@ class CanvasBase(ABC):
         Band
             The band layer.
         """
-        name = self._coerce_name(_l.Band, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         layer = _l.Band(
             xdata, ylow, yhigh, name=name, orient=orient, color=color,
@@ -1437,7 +1437,7 @@ class CanvasBase(ABC):
         Errorbars
             The errorbars layer.
         """
-        name = self._coerce_name(_l.Errorbars, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
@@ -1502,7 +1502,7 @@ class CanvasBase(ABC):
         Rug
             The rug layer.
         """
-        name = self._coerce_name(_l.Errorbars, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         layer = _l.Rug(
             events, low=low, high=high, name=name, color=color, alpha=alpha,
@@ -1550,7 +1550,7 @@ class CanvasBase(ABC):
         Kde
             The KDE layer.
         """
-        name = self._coerce_name(_lg.Kde, name)
+        name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)
         style = theme._default("line.style", style)
@@ -1781,13 +1781,12 @@ class CanvasBase(ABC):
             layers = [layers, *more_layers]
         return _lg.LayerTuple(layers, name=name)
 
-    def _coerce_name(self, layer_type: type[_l.Layer] | str, name: str | None) -> str:
+    def _coerce_name(self, name: str | None, default: str = "data") -> str:
         if name is None:
-            if isinstance(layer_type, str):
-                name = layer_type
-            else:
-                name = layer_type.__name__.lower()
-        basename = name
+            basename = default
+            name = f"{default}-0"
+        else:
+            basename = name
         i = 0
         _exists = {layer.name for layer in self.layers}
         while name in _exists:

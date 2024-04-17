@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import weakref
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar
 
 import numpy as np
@@ -29,6 +29,10 @@ class LayerEvents(SignalGroup):
     _layer_grouped = Signal(object)  # (group)
 
 
+def _no_ref() -> None:
+    return None
+
+
 class Layer(ABC):
     events: LayerEvents
     _events_class: type[LayerEvents]
@@ -43,9 +47,10 @@ class Layer(ABC):
         self._name = name if name is not None else self.__class__.__name__
         self._x_hint = self._y_hint = None
         self._group_layer_ref: weakref.ReferenceType[LayerGroup] | None = None
-        self._canvas_ref = lambda: None
+        self._canvas_ref = _no_ref
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def visible(self) -> bool:
         """Return true if the layer is visible"""
 
@@ -78,7 +83,7 @@ class Layer(ABC):
         """If needed, do something when layer is removed from a canvas."""
         self.events._layer_grouped.disconnect(canvas._cb_layer_grouped)
         self.events.disconnect(canvas._draw_canvas)
-        self._canvas_ref = lambda: None
+        self._canvas_ref = _no_ref
 
     def _canvas(self) -> CanvasBase:
         canvas = self._canvas_ref()
@@ -192,15 +197,14 @@ class HoverableDataBoundLayer(DataBoundLayer[_P, _T]):
         self._backend._plt_set_hover_text(texts)
         return self
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def ndata(self) -> int:
         """Number of data points."""
 
 
 class LayerGroup(Layer):
-    """
-    A group of layers that will be treated as a single layer in the canvas.
-    """
+    """A group of layers that will be treated as a single layer in the canvas."""
 
     def __init__(self, name: str | None = None):
         super().__init__(name)

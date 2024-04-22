@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from whitecanvas.canvas import Canvas
 from whitecanvas.plot._canvases import current_canvas
@@ -75,3 +75,79 @@ else:
     update_labels = _make_method("update_labels", pref="")
     update_font = _make_method("update_font", pref="")
     legend = _make_method("legend", pref="add_")
+
+
+@overload
+def xlim() -> tuple[float, float]: ...
+
+
+@overload
+def xlim(min: float, max: float, /) -> tuple[float, float]: ...
+
+
+@overload
+def xlim(minmax: tuple[float, float], /) -> tuple[float, float]: ...
+
+
+def xlim(*args):
+    if len(args) == 0:
+        return current_canvas().x.lim
+    elif len(args) == 1:
+        x0, x1 = args[0]
+    else:
+        x0, x1 = args
+    current_canvas().x.lim = x0, x1
+    return current_canvas().x.lim
+
+
+@overload
+def ylim() -> tuple[float, float]: ...
+
+
+@overload
+def ylim(min: float, max: float, /) -> tuple[float, float]: ...
+
+
+@overload
+def ylim(minmax: tuple[float, float], /) -> tuple[float, float]: ...
+
+
+def ylim(*args):
+    if len(args) == 0:
+        return current_canvas().y.lim
+    elif len(args) == 1:
+        y0, y1 = args[0]
+    else:
+        y0, y1 = args
+    current_canvas().y.lim = y0, y1
+    return current_canvas().y.lim
+
+
+def title(title: str | None = None) -> str:
+    if title is not None:
+        current_canvas().title = title
+    return current_canvas().title
+
+
+def xlabel(label: str | None = None) -> str:
+    if label is not None:
+        current_canvas().x.label = label
+    return current_canvas().x.label
+
+
+def ylabel(label: str | None = None) -> str:
+    if label is not None:
+        current_canvas().y.label = label
+    return current_canvas().y.label
+
+
+def xticks(ticks: list[float] | None = None) -> list[float]:
+    if ticks is not None:
+        current_canvas().x.ticks = ticks
+    return current_canvas().x.ticks
+
+
+def yticks(ticks: list[float] | None = None) -> list[float]:
+    if ticks is not None:
+        current_canvas().y.ticks = ticks
+    return current_canvas().y.ticks

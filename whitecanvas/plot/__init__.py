@@ -34,10 +34,17 @@ from whitecanvas.plot._methods import (
     rug,
     spans,
     text,
+    title,
     update_axes,
     update_font,
     update_labels,
     vline,
+    xlabel,
+    xlim,
+    xticks,
+    ylabel,
+    ylim,
+    yticks,
 )
 
 __all__ = [
@@ -69,4 +76,11 @@ __all__ = [
     "current_grid",
     "current_canvas",
     "use",
+    "xlim",
+    "ylim",
+    "xlabel",
+    "ylabel",
+    "xticks",
+    "yticks",
+    "title",
 ]

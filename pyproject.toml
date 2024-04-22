@@ -30,7 +30,6 @@ dependencies = [
   "cmap>=0.1.2",
 ]
 
-
 [project.optional-dependencies]
 matplotlib = [
   "matplotlib>=3.4.3,!=3.8.0",

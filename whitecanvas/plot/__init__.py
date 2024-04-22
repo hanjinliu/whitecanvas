@@ -7,28 +7,50 @@ Plot API for whitecanvas.
 >>> plt.show()
 """
 
-from whitecanvas.core import new_canvas
-from whitecanvas.plot._canvases import current_canvas, current_grid, show, subplots
+from whitecanvas.plot._canvases import (
+    current_canvas,
+    current_grid,
+    figure,
+    show,
+    subplots,
+    use,
+)
 from whitecanvas.plot._methods import (
     band,
     bars,
     cat,
+    cat_x,
+    cat_xy,
+    cat_y,
     errorbars,
     hist,
+    hline,
     infcurve,
     infline,
     kde,
+    legend,
     line,
     markers,
     rug,
     spans,
     text,
+    title,
+    update_axes,
+    update_font,
+    update_labels,
+    vline,
+    xlabel,
+    xlim,
+    xticks,
+    ylabel,
+    ylim,
+    yticks,
 )
-
-figure = new_canvas
 
 __all__ = [
     "line",
+    "hline",
+    "vline",
     "markers",
     "bars",
     "band",
@@ -41,9 +63,24 @@ __all__ = [
     "rug",
     "text",
     "cat",
+    "cat_x",
+    "cat_y",
+    "cat_xy",
+    "update_axes",
+    "update_labels",
+    "update_font",
+    "legend",
     "figure",
     "show",
     "subplots",
     "current_grid",
     "current_canvas",
+    "use",
+    "xlim",
+    "ylim",
+    "xlabel",
+    "ylabel",
+    "xticks",
+    "yticks",
+    "title",
 ]

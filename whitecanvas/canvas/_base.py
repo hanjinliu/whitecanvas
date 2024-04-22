@@ -393,9 +393,20 @@ class CanvasBase(ABC):
 
     def update_axes(
         self,
+        *,
         visible: bool = _void,
         color: ColorType | None = _void,
     ):
+        """
+        Update axes appearance.
+
+        Parameters
+        ----------
+        visible : bool, optional
+            Whether to show the axes.
+        color : color-like, optional
+            Color of the axes.
+        """
         if visible is not _void:
             self.x.ticks.visible = visible
             self.y.ticks.visible = visible

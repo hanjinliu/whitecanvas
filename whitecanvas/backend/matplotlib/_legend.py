@@ -69,9 +69,9 @@ def _(item: _leg.PlotLegendItem):
 def _(item: _leg.ErrorLegendItem):
     line_2d = Line2D([], [], color="#00000000")
     caps = Line2D([], [], color=item.color, linewidth=item.width)
-    barlines = Line2D(
-        [], [], color=item.color, linewidth=item.width, linestyle=item.style.value
-    )  # fmt: skip
+    barlines = LineCollection(
+        [], color=item.color, linewidth=item.width, linestyle=item.style.value
+    )
     return ErrorbarContainer((line_2d, (caps,), [barlines]), has_yerr=True)
 
 

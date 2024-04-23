@@ -70,24 +70,135 @@ class CanvasEvents(SignalGroup):
     drawn = Signal()
 
 
-class CanvasBase(ABC):
-    """Base class for any canvas object."""
-
+class CanvasNDBase(ABC):
     title = _ns.TitleNamespace()
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
-    dims = Dims()
     layers = _ll.LayerList()
-    overlays = _ll.LayerList()
-    mouse = _ns.MouseNamespace()
     events: CanvasEvents
 
     def __init__(self, palette: ColormapType | None = None):
         if palette is None:
             palette = theme.get_theme().palette
-        self._color_palette = ColorPalette(palette)
         self.events = CanvasEvents()
+        self._color_palette = ColorPalette(palette)
         self._is_grouping = False
+
+    @abstractmethod
+    def _get_backend(self) -> Backend:
+        """Return the backend."""
+
+    @abstractmethod
+    def _canvas(self) -> protocols.CanvasProtocol:
+        """Return the canvas object."""
+
+    @abstractmethod
+    def _autoscale_for_layer(self, layer: _l.Layer):
+        """Autoscale the canvas for the given layer."""
+
+    def _draw_canvas(self):
+        self._canvas()._plt_draw()
+        self.events.drawn.emit()
+
+    def _coerce_name(self, name: str | None, default: str = "data") -> str:
+        if name is None:
+            basename = default
+            name = f"{default}-0"
+        else:
+            basename = name
+        i = 0
+        _exists = {layer.name for layer in self.layers}
+        while name in _exists:
+            name = f"{basename}-{i}"
+            i += 1
+        return name
+
+    def _cb_inserted(self, idx: int, layer: _l.Layer):
+        if self._is_grouping:
+            # this happens when the grouped layer is inserted
+            layer._connect_canvas(self)
+            return
+
+        _canvas = self._canvas()
+        for l in _iter_layers(layer):
+            _canvas._plt_add_layer(l._backend)
+            l._connect_canvas(self)
+
+        if isinstance(layer, _l.LayerWrapper):
+            # TODO: check if connecting LayerGroup is necessary
+            layer._connect_canvas(self)
+        # autoscale
+        self._autoscale_for_layer(layer)
+        self._cb_reordered()
+
+    def _cb_reordered(self):
+        layer_backends = []
+        for layer in self.layers:
+            if isinstance(layer, _l.PrimitiveLayer):
+                layer_backends.append(layer._backend)
+            elif isinstance(layer, _l.LayerGroup):
+                for child in layer.iter_primitive():
+                    layer_backends.append(child._backend)
+            elif isinstance(layer, _l.LayerWrapper):
+                for child in _iter_layers(layer):
+                    layer_backends.append(child._backend)
+            else:
+                raise RuntimeError(f"type {type(layer)} not expected")
+        self._canvas()._plt_reorder_layers(layer_backends)
+
+    def _cb_removed(self, idx: int, layer: _l.Layer):
+        if self._is_grouping:
+            return
+        _canvas = self._canvas()
+        for l in _iter_layers(layer):
+            _canvas._plt_remove_layer(l._backend)
+            l._disconnect_canvas(self)
+
+    def _cb_layer_grouped(self, group: _l.LayerGroup):
+        indices: list[int] = []  # layers to remove
+        not_found: list[_l.PrimitiveLayer] = []  # primitive layers to add
+        id_exists = set(map(id, self.layers.iter_primitives()))
+        for layer in group.iter_children():
+            try:
+                idx = self.layers.index(layer)
+                indices.append(idx)
+            except ValueError:
+                not_found.extend(_iter_layers(layer))
+        if not indices:
+            return
+        self._is_grouping = True
+        try:
+            for idx in reversed(indices):
+                # remove from the layer list since it is directly grouped
+                self.layers.pop(idx)
+            self.layers.append(group)
+            _canvas = self._canvas()
+            for child in not_found:
+                if id(child) in id_exists:
+                    # skip since it is already in the canvas
+                    continue
+                child._connect_canvas(self)
+                _canvas._plt_add_layer(child._backend)
+        finally:
+            self._is_grouping = False
+        self._cb_reordered()
+        self._autoscale_for_layer(group)
+
+    def _generate_colors(self, color: ColorType | None) -> Color:
+        if color is None:
+            color = self._color_palette.next()
+        return color
+
+
+class CanvasBase(CanvasNDBase):
+    """Base class for any canvas object."""
+
+    dims = Dims()
+    overlays = _ll.LayerList()
+    mouse = _ns.MouseNamespace()
+
+    def __init__(self, palette: ColormapType | None = None):
+        super().__init__(palette)
         self._autoscale_enabled = True
         if not self._get_backend().is_dummy():
             self._init_canvas()
@@ -200,18 +311,6 @@ class CanvasBase(ABC):
             yield
         finally:
             self.autoscale_enabled = _was_enabled
-
-    @abstractmethod
-    def _get_backend(self) -> Backend:
-        """Return the backend."""
-
-    @abstractmethod
-    def _canvas(self) -> protocols.CanvasProtocol:
-        """Return the canvas object."""
-
-    def _draw_canvas(self):
-        self._canvas()._plt_draw()
-        self.events.drawn.emit()
 
     @property
     def native(self) -> Any:
@@ -1792,19 +1891,6 @@ class CanvasBase(ABC):
             layers = [layers, *more_layers]
         return _lg.LayerTuple(layers, name=name)
 
-    def _coerce_name(self, name: str | None, default: str = "data") -> str:
-        if name is None:
-            basename = default
-            name = f"{default}-0"
-        else:
-            basename = name
-        i = 0
-        _exists = {layer.name for layer in self.layers}
-        while name in _exists:
-            name = f"{basename}-{i}"
-            i += 1
-        return name
-
     def _autoscale_for_layer(
         self,
         layer: _l.Layer,
@@ -1861,24 +1947,6 @@ class CanvasBase(ABC):
             ymax += dy
         self.lims = xmin, xmax, ymin, ymax
 
-    def _cb_inserted(self, idx: int, layer: _l.Layer):
-        if self._is_grouping:
-            # this happens when the grouped layer is inserted
-            layer._connect_canvas(self)
-            return
-
-        _canvas = self._canvas()
-        for l in _iter_layers(layer):
-            _canvas._plt_add_layer(l._backend)
-            l._connect_canvas(self)
-
-        if isinstance(layer, _l.LayerWrapper):
-            # TODO: check if connecting LayerGroup is necessary
-            layer._connect_canvas(self)
-        # autoscale
-        self._autoscale_for_layer(layer)
-        self._cb_reordered()
-
     def _cb_overlay_inserted(self, idx: int, layer: _l.Layer):
         _canvas = self._canvas()
         fn = self._get_backend().get("as_overlay")
@@ -1899,21 +1967,6 @@ class CanvasBase(ABC):
         for l in _iter_layers(layer):
             _canvas._plt_remove_layer(l._backend)
             l._disconnect_canvas(self)
-
-    def _cb_reordered(self):
-        layer_backends = []
-        for layer in self.layers:
-            if isinstance(layer, _l.PrimitiveLayer):
-                layer_backends.append(layer._backend)
-            elif isinstance(layer, _l.LayerGroup):
-                for child in layer.iter_primitive():
-                    layer_backends.append(child._backend)
-            elif isinstance(layer, _l.LayerWrapper):
-                for child in _iter_layers(layer):
-                    layer_backends.append(child._backend)
-            else:
-                raise RuntimeError(f"type {type(layer)} not expected")
-        self._canvas()._plt_reorder_layers(layer_backends)
 
     def _cb_layer_grouped(self, group: _l.LayerGroup):
         indices: list[int] = []  # layers to remove

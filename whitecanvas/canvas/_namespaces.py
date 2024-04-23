@@ -83,6 +83,10 @@ class Namespace:
             raise TypeError("No canvas is associated with the class itself.")
         return l._canvas()
 
+    def _draw_canvas(self):
+        if canvas := self._canvas_ref():
+            canvas._draw_canvas()
+
     def __repr__(self) -> str:
         cname = type(self).__name__
         l = self._canvas_ref()
@@ -263,6 +267,11 @@ class YTickNamespace(_TicksNamespace):
         return self._get_canvas()._plt_get_yticks()
 
 
+class ZTickNamespace(_TicksNamespace):
+    def _get_object(self):
+        return self._get_canvas()._plt_get_zticks()
+
+
 class TitleNamespace(_TextLabelNamespace):
     def _get_object(self):
         return self._get_canvas()._plt_get_title()
@@ -276,6 +285,11 @@ class XLabelNamespace(_TextLabelNamespace):
 class YLabelNamespace(_TextLabelNamespace):
     def _get_object(self):
         return self._get_canvas()._plt_get_ylabel()
+
+
+class ZLabelNamespace(_TextLabelNamespace):
+    def _get_object(self):
+        return self._get_canvas()._plt_get_zlabel()
 
 
 class AxisNamespace(Namespace):
@@ -320,6 +334,7 @@ class AxisNamespace(Namespace):
     @color.setter
     def color(self, color):
         self._get_object()._plt_set_color(np.array(Color(color)))
+        self._draw_canvas()
 
     @property
     def flipped(self) -> bool:
@@ -361,6 +376,14 @@ class YAxisNamespace(AxisNamespace):
 
     def _get_object(self):
         return self._get_canvas()._plt_get_yaxis()
+
+
+class ZAxisNamespace(AxisNamespace):
+    label = ZLabelNamespace()
+    ticks = ZTickNamespace()
+
+    def _get_object(self):
+        return self._get_canvas()._plt_get_zaxis()
 
 
 class MouseNamespace(AxisNamespace):

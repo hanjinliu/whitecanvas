@@ -47,6 +47,22 @@ def new_canvas(
     return cvs
 
 
+def new_canvas_3d(
+    backend: Backend | str | None = None,
+    *,
+    size: tuple[int, int] | None = None,
+    palette: str | ColormapType | None = None,
+):
+    from whitecanvas.canvas.canvas3d._base import SingleCanvas3D
+
+    _grid = CanvasGrid([1], [1], backend=backend)
+    _grid.add_canvas_3d(0, 0, palette=palette)
+    cvs = SingleCanvas3D(_grid)
+    if size is not None:
+        cvs.size = size
+    return cvs
+
+
 def new_grid(
     rows: int | Sequence[int] = 1,
     cols: int | Sequence[int] = 1,

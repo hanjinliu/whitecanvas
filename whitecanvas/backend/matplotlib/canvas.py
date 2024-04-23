@@ -8,25 +8,18 @@ import matplotlib as mpl
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.artist import Artist
-from matplotlib.backend_bases import (
-    MouseButton as mplMouseButton,
-)
-from matplotlib.backend_bases import (
-    MouseEvent as mplMouseEvent,
-)
+from matplotlib.backend_bases import MouseButton as mplMouseButton
+from matplotlib.backend_bases import MouseEvent as mplMouseEvent
 from matplotlib.collections import Collection
 from matplotlib.lines import Line2D
 
 from whitecanvas import protocols
 from whitecanvas.backend.matplotlib._base import MplLayer, MplMouseEventsMixin
 from whitecanvas.backend.matplotlib._labels import (
+    MplAxis,
+    MplLabel,
+    MplTicks,
     Title,
-    XAxis,
-    XLabel,
-    XTicks,
-    YAxis,
-    YLabel,
-    YTicks,
 )
 from whitecanvas.backend.matplotlib._legend import make_sample_item
 from whitecanvas.backend.matplotlib.bars import Bars
@@ -47,13 +40,13 @@ from whitecanvas.types import (
 class Canvas:
     def __init__(self, ax: plt.Axes):
         self._axes = ax
-        self._xaxis = XAxis(self)
-        self._yaxis = YAxis(self)
+        self._xaxis = MplAxis(self, "x")
+        self._yaxis = MplAxis(self, "y")
         self._title = Title(self)
-        self._xlabel = XLabel(self)
-        self._ylabel = YLabel(self)
-        self._xticks = XTicks(self)
-        self._yticks = YTicks(self)
+        self._xlabel = MplLabel(self, "x")
+        self._ylabel = MplLabel(self, "y")
+        self._xticks = MplTicks(self, "x")
+        self._yticks = MplTicks(self, "y")
         ax.set_axisbelow(True)  # grid lines below other layers
         self._annot = ax.annotate(
             text="", xy=(0, 0), xytext=(20, -20), textcoords="data",
@@ -390,6 +383,15 @@ class CanvasGrid:
         axes = self._fig.add_subplot(self._gridspec[row:r1, col:c1])
         axes.set_facecolor(self._fig.get_facecolor())
         return Canvas(axes)
+
+    def _plt_add_canvas_3d(self, row: int, col: int, rowspan: int, colspan: int):
+        from whitecanvas.backend.matplotlib.canvas3d import Canvas3D
+
+        r1 = row + rowspan
+        c1 = col + colspan
+        axes = self._fig.add_subplot(self._gridspec[row:r1, col:c1], projection="3d")
+        axes.set_facecolor(self._fig.get_facecolor())
+        return Canvas3D(axes)
 
     def _plt_get_visible(self) -> bool:
         return self._fig.get_visible()

@@ -47,6 +47,22 @@ class XYTextData(NamedTuple):
     text: NDArray[np.object_]
 
 
+class XYZData(NamedTuple):
+    """
+    Tuple of x, y, and z array.
+
+    Used for data of Surface etc.
+    """
+
+    x: NDArray[np.floating]
+    y: NDArray[np.floating]
+    z: NDArray[np.floating]
+
+    def stack(self) -> NDArray[np.floating]:
+        """Data as a stacked (N, 3) array."""
+        return np.stack([self.x, self.y, self.z], axis=1)
+
+
 class Rect(NamedTuple):
     """Rectangular range in left, right, bottom, top order."""
 

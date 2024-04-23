@@ -6,7 +6,7 @@ import numpy as np
 from cmap import Color
 from numpy.typing import ArrayLike, NDArray
 
-from whitecanvas.types import XYData
+from whitecanvas.types import XYData, XYZData
 from whitecanvas.utils import type_check as _tc
 
 
@@ -54,6 +54,38 @@ def normalize_xy(*args) -> tuple[NDArray[np.number], NDArray[np.number]]:
     else:
         raise TypeError(f"Expected 1 or 2 positional arguments, got {len(args)}")
     return xdata, ydata
+
+
+def normalize_xyz(
+    *args,
+) -> tuple[NDArray[np.number], NDArray[np.number], NDArray[np.number]]:
+    """Normalize the input as three 1D array with the same shape."""
+    if len(args) == 1:
+        if isinstance(args[0], XYZData):
+            return args[0].x, args[0].y, args[0].z
+        arr = np.asarray(args[0])
+        if arr.dtype.kind not in "iuf":
+            raise ValueError(f"Input {args[0]!r} did not return a numeric array")
+        if arr.ndim == 2 and arr.shape[1] == 3:
+            xdata = arr[:, 0]
+            ydata = arr[:, 1]
+            zdata = arr[:, 2]
+        else:
+            raise ValueError(
+                f"Expected 1D array or 2D array with shape (N, 3), got {arr.shape}"
+            )
+    elif len(args) == 3:
+        xdata = as_array_1d(args[0])
+        ydata = as_array_1d(args[1])
+        zdata = as_array_1d(args[2])
+        if xdata.size != ydata.size != zdata.size:
+            raise ValueError(
+                "Expected xdata, ydata, and zdata to have the same size, "
+                f"got {xdata.size}, {ydata.size}, and {zdata.size}"
+            )
+    else:
+        raise TypeError(f"Expected 1 or 3 positional arguments, got {len(args)}")
+    return xdata, ydata, zdata
 
 
 def arr_color(color) -> np.ndarray:

@@ -6,3 +6,4 @@ from whitecanvas.backend.matplotlib.image import Image
 from whitecanvas.backend.matplotlib.line import MonoLine, MultiLine
 from whitecanvas.backend.matplotlib.markers import Markers
 from whitecanvas.backend.matplotlib.text import Texts
+from whitecanvas.backend.matplotlib.vectors import Vectors

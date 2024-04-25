@@ -5,19 +5,19 @@ from typing import TYPE_CHECKING
 
 import matplotlib.transforms as mtransforms
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D, art3d
+from mpl_toolkits.mplot3d import art3d
 from numpy.typing import NDArray
 
-from whitecanvas.backend.matplotlib._base import symbol_to_path
+from whitecanvas.backend.matplotlib._base import MplLayer, symbol_to_path
 from whitecanvas.types import Hatch, LineStyle, Symbol
 from whitecanvas.utils.normalize import as_color_array
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
-    from whitecanvas.backend.matplotlib.canvas import Canvas
+    from whitecanvas.backend.matplotlib.components3d import Canvas3D
 
 
-class Markers3D(art3d.Path3DCollection):
+class Markers3D(art3d.Path3DCollection, MplLayer):
     def __init__(self, xdata, ydata, zdata):
         offsets = np.stack([xdata, ydata], axis=1)
         self._zdata = zdata
@@ -116,5 +116,5 @@ class Markers3D(art3d.Path3DCollection):
             width = np.full(len(self.get_offsets()), width)
         self.set_linewidth(width)
 
-    def post_add(self, canvas: Canvas):
+    def post_add(self, canvas: Canvas3D):
         self.set_offset_transform(canvas._axes.transData)

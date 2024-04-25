@@ -136,9 +136,13 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
         elif color.shape in [(size, 3), (size, 4)]:
             return color
         else:
+            if isinstance(color, np.ndarray):
+                color_repr = f"ndarray of shape={color.shape} and dtype={color.dtype}"
+            else:
+                color_repr = repr(color)
             raise ValueError(
                 f"Color array must have shape (3,), (4,), (N={size}, 3), or (N={size},"
-                f" 4) but got\n{color!r}"
+                f" 4) but got {color_repr}."
             )
     try:
         arr = np.array(color)

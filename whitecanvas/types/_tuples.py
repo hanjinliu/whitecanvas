@@ -63,6 +63,18 @@ class XYZData(NamedTuple):
         return np.stack([self.x, self.y, self.z], axis=1)
 
 
+class XYVectorData(NamedTuple):
+    x: NDArray[np.floating]
+    y: NDArray[np.floating]
+    vx: NDArray[np.floating]
+    vy: NDArray[np.floating]
+
+
+class MeshData(NamedTuple):
+    vertices: NDArray[np.floating]
+    faces: NDArray[np.intp]
+
+
 class Rect(NamedTuple):
     """Rectangular range in left, right, bottom, top order."""
 

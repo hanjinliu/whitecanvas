@@ -15,14 +15,11 @@ from whitecanvas.types import (
     LineStyle,
     XYZData,
 )
-from whitecanvas.utils.normalize import (
-    as_array_1d,
-    normalize_xyz,
-)
+from whitecanvas.utils.normalize import as_array_1d, normalize_xyz
 
 
 class Line3D(LineMixin[LineProtocol], DataBoundLayer3D[LineProtocol, XYZData]):
-    _backend_class_name = "canvas3d.MonoLine3D"
+    _backend_class_name = "components3d.MonoLine3D"
     events: LineLayerEvents
     _events_class = LineLayerEvents
 

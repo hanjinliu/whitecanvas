@@ -28,6 +28,8 @@ class Canvas3D:
             self._axes.add_line(layer)
         elif isinstance(layer, art3d.Path3DCollection):
             self._axes.add_collection3d(layer)
+        elif isinstance(layer, art3d.Poly3DCollection):
+            self._axes.add_collection(layer)
         else:
             raise NotImplementedError(f"{layer}")
         if hasattr(layer, "post_add"):

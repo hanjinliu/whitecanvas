@@ -9,6 +9,7 @@ from whitecanvas.layers._primitive.rects import Rects
 from whitecanvas.layers._primitive.rug import Rug
 from whitecanvas.layers._primitive.spans import Spans
 from whitecanvas.layers._primitive.text import Texts
+from whitecanvas.layers._primitive.vectors import Vectors
 
 __all__ = [
     "Line",
@@ -24,4 +25,5 @@ __all__ = [
     "Texts",
     "Image",
     "Rects",
+    "Vectors",
 ]

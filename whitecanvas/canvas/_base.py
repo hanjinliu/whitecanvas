@@ -1260,6 +1260,32 @@ class CanvasBase(CanvasNDBase):
         )  # fmt: skip
         return self.add_layer(layer)
 
+    def add_vectors(
+        self,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        vx: ArrayLike1D,
+        vy: ArrayLike1D,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.Vectors:
+        name = self._coerce_name(name)
+        color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
+        layer = _l.Vectors(
+            as_array_1d(x, dtype=np.float32), as_array_1d(y, dtype=np.float32),
+            as_array_1d(vx, dtype=np.float32), as_array_1d(vy, dtype=np.float32),
+            name=name, color=color, width=width, style=style,
+            alpha=alpha, antialias=antialias, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
     def add_infline(
         self,
         pos: tuple[float, float] = (0, 0),

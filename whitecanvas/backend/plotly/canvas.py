@@ -389,6 +389,11 @@ class CanvasGrid:
             raise NotImplementedError("Plotly backend does not support rowspan/colspan")
         return Canvas(self._figs, row=row, col=col, app=self._app)
 
+    def _plt_add_canvas_3d(self, row: int, col: int, rowspan: int, colspan: int):
+        from whitecanvas.backend.plotly.components3d import Canvas3D
+
+        return Canvas3D(self._figs, row=row, col=col, app=self._app)
+
     def _plt_show(self):
         if self._app in ("qt", "wx", "tk"):
             return NotImplemented

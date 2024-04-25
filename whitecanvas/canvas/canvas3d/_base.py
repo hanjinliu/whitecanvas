@@ -26,11 +26,7 @@ class Canvas3DBase(CanvasNDBase):
 
     z = _ns.ZAxisNamespace()
 
-    def __init__(
-        self,
-        *,
-        palette: ColormapType | None = None,
-    ):
+    def __init__(self, *, palette: ColormapType | None = None):
         super().__init__(palette=palette)
         self._autoscale_enabled = True
         if not self._get_backend().is_dummy():
@@ -38,15 +34,25 @@ class Canvas3DBase(CanvasNDBase):
 
     def _init_canvas(self):
         # default colors and font
-        _t = theme.get_theme()
-        _ft = _t.font
-        self.x.color = _t.foreground_color
-        self.y.color = _t.foreground_color
-        self.x.label.update(family=_ft.family, color=_ft.color, size=_ft.size)
-        self.y.label.update(family=_ft.family, color=_ft.color, size=_ft.size)
-        self.title.update(family=_ft.family, color=_ft.color, size=_ft.size)
-        self.x.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
-        self.y.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
+        if self._get_backend().name in ("matplotlib", "plotly"):
+            _t = theme.get_theme()
+            _ft = _t.font
+            self.x.color = _t.foreground_color
+            self.y.color = _t.foreground_color
+            self.x.label.update(family=_ft.family, color=_ft.color, size=_ft.size)
+            self.y.label.update(family=_ft.family, color=_ft.color, size=_ft.size)
+            self.title.update(family=_ft.family, color=_ft.color, size=_ft.size)
+            self.x.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
+            self.y.ticks.update(family=_ft.family, color=_ft.color, size=_ft.size)
+
+            # lim changed events
+            canvas = self._canvas()
+            canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
+            canvas._plt_connect_ylim_changed(self._emit_ylim_changed)
+            canvas._plt_connect_zlim_changed(self._emit_zlim_changed)
+
+            if hasattr(canvas, "_plt_canvas_hook"):
+                canvas._plt_canvas_hook(self)
 
         # connect layer events
         self.layers.events.inserted.connect(
@@ -57,14 +63,6 @@ class Canvas3DBase(CanvasNDBase):
             self._cb_reordered, unique=True, max_args=None
         )
         self.layers.events.connect(self._draw_canvas, unique=True, max_args=None)
-
-        canvas = self._canvas()
-        canvas._plt_connect_xlim_changed(self._emit_xlim_changed)
-        canvas._plt_connect_ylim_changed(self._emit_ylim_changed)
-        canvas._plt_connect_zlim_changed(self._emit_zlim_changed)
-
-        if hasattr(canvas, "_plt_canvas_hook"):
-            canvas._plt_canvas_hook(self)
 
     def _autoscale_for_layer(
         self,
@@ -140,7 +138,7 @@ class Canvas3DBase(CanvasNDBase):
         style=None,
         alpha=1.0,
         antialias=True,
-    ):
+    ) -> layer3d.Line3D:
         xdata, ydata, zdata = normalize_xyz(*args)
         name = self._coerce_name(name)
         color = self._generate_colors(color)
@@ -149,6 +147,73 @@ class Canvas3DBase(CanvasNDBase):
         layer = layer3d.Line3D(
             xdata, ydata, zdata, name=name, color=color, width=width, style=style,
             alpha=alpha, antialias=antialias, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_markers(
+        self,
+        *args,
+        name=None,
+        symbol=None,
+        size=None,
+        color=None,
+        alpha=1.0,
+        hatch=None,
+    ) -> layer3d.Markers3D:
+        """
+        Add markers (scatter plot).
+
+        >>> canvas.add_markers(x, y)  # standard usage
+        >>> canvas.add_markers(y)  # use 0, 1, ... for the x values
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        symbol : str or Symbol, optional
+            Marker symbols. Use the theme default if not specified.
+        size : float, optional
+            Marker size. Use the theme default if not specified.
+        color : color-like, optional
+            Color of the marker faces.
+        alpha : float, default 1.0
+            Alpha channel of the marker faces.
+        hatch : str or FacePattern, optional
+            Pattern of the marker faces. Use the theme default if not specified.
+
+        Returns
+        -------
+        Markers
+            The markers layer.
+        """
+        xdata, ydata, zdata = normalize_xyz(*args)
+        name = self._coerce_name(name)
+        color = self._generate_colors(color)
+        symbol = theme._default("markers.symbol", symbol)
+        size = theme._default("markers.size", size)
+        hatch = theme._default("markers.hatch", hatch)
+        layer = layer3d.Markers3D(
+            xdata, ydata, zdata, name=name, symbol=symbol, size=size, color=color,
+            alpha=alpha, hatch=hatch, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    def add_mesh(
+        self,
+        verts,
+        faces,
+        *,
+        name=None,
+        color=None,
+        hatch=None,
+        alpha=1.0,
+    ) -> layer3d.Mesh3D:
+        name = self._coerce_name(name)
+        color = self._generate_colors(color)
+        hatch = theme._default("markers.hatch", hatch)
+        layer = layer3d.Mesh3D(
+            verts, faces, name=name, color=color, hatch=hatch, alpha=alpha,
+            backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

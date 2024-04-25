@@ -237,14 +237,27 @@ class CanvasGrid:
         self._heights = heights
         self._widths = widths
 
-    def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int):
+    def _calc_rc_and_span(self, row: int, col: int, rowspan: int, colspan: int):
         rspan = sum(self._heights[row : row + rowspan])
         cspan = sum(self._widths[col : col + colspan])
         r = sum(self._heights[:row])
         c = sum(self._widths[:col])
-        viewbox: ViewBox = self._grid.add_view(r, c, rspan, cspan)
+        return r, c, rspan, cspan
+
+    def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int):
+        view_pos = self._calc_rc_and_span(row, col, rowspan, colspan)
+        viewbox: ViewBox = self._grid.add_view(*view_pos)
         canvas = Canvas(viewbox)
         canvas._set_scene_ref(self._scene)
+        return canvas
+
+    def _plt_add_canvas_3d(self, row: int, col: int, rowspan: int, colspan: int):
+        from whitecanvas.backend.vispy.components3d import Canvas3D
+
+        view_pos = self._calc_rc_and_span(row, col, rowspan, colspan)
+        viewbox: ViewBox = self._grid.add_view(*view_pos)
+        canvas = Canvas3D(viewbox)
+        # canvas._set_scene_ref(self._scene)
         return canvas
 
     def _plt_get_background_color(self):

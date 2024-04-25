@@ -1,37 +1,37 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-from matplotlib.lines import Line2D
-from mpl_toolkits.mplot3d import art3d
+from matplotlib.quiver import Quiver
 from numpy.typing import NDArray
 
-from whitecanvas.backend.matplotlib._base import MplLayer
-from whitecanvas.protocols import LineProtocol, check_protocol
+from whitecanvas.backend.matplotlib._base import FakeAxes, MplLayer
+from whitecanvas.protocols import VectorsProtocol, check_protocol
 from whitecanvas.types import LineStyle
-from whitecanvas.utils.normalize import as_color_array
-from whitecanvas.utils.type_check import is_real_number
+
+if TYPE_CHECKING:
+    from whitecanvas.backend.matplotlib.canvas import Canvas
 
 
-class MonoLine3D(art3d.Line3D, MplLayer):
-    def __init__(self, xdata, ydata, zdata):
+@check_protocol(VectorsProtocol)
+class Vectors(Quiver, MplLayer):
+    def __init__(self, x0, x1, y0, y1):
         super().__init__(
-            xdata,
-            ydata,
-            zdata,
-            linewidth=1,
-            linestyle="-",
-            color="blue",
-            markersize=0,
-            # picker=True,
-            # pickradius=5,
+            FakeAxes(), x0, y0, x1, y1, angles="xy", scale_units="xy", scale=1
         )
 
-    ##### XYDataProtocol #####
     def _plt_get_data(self):
-        return self.get_data_3d()
+        return self.X, self.Y, self.U, self.V
 
-    def _plt_set_data(self, xdata, ydata, zdata):
-        self.set_data_3d(xdata, ydata, zdata)
+    def _plt_set_data(self, x0, x1, y0, y1):
+        self.set_UVC(x1 - x0, y1 - y0)
+        self.set_offsets(np.column_stack([x0, y0]))
+
+    def post_add(self, canvas: Canvas):
+        self.transform = canvas._axes.transData
+        self.set_offset_transform(canvas._axes.transData)
+        self._axes = canvas._axes
 
     ##### HasEdges #####
     def _plt_get_edge_width(self) -> float:
@@ -47,7 +47,7 @@ class MonoLine3D(art3d.Line3D, MplLayer):
         self.set_linestyle(style.value)
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return self.get_color()
+        return self.get_edgecolor()
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         self.set_color(color)

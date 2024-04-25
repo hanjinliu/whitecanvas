@@ -385,7 +385,7 @@ class CanvasGrid:
         return Canvas(axes)
 
     def _plt_add_canvas_3d(self, row: int, col: int, rowspan: int, colspan: int):
-        from whitecanvas.backend.matplotlib.canvas3d import Canvas3D
+        from whitecanvas.backend.matplotlib.components3d import Canvas3D
 
         r1 = row + rowspan
         c1 = col + colspan

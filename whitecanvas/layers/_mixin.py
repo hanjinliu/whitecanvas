@@ -228,6 +228,9 @@ class MultiPropertyFaceBase(FaceNamespace):
         hatch = self.hatch[0]
         return _legend.FaceInfo(color, hatch)
 
+    def _ndata(self) -> int:
+        return self._layer.ndata
+
     @property
     def alpha(self) -> float:
         return self.color[:, 3]
@@ -265,6 +268,9 @@ class MultiPropertyEdgeBase(EdgeNamespace):
         width = self.width[0]
         style = self.style[0]
         return _legend.EdgeInfo(color, width, style)
+
+    def _ndata(self) -> int:
+        return self._layer.ndata
 
     @property
     def alpha(self) -> float:
@@ -473,8 +479,8 @@ class MultiFace(MultiPropertyFaceBase):
 
     @color.setter
     def color(self, color):
-        col = as_color_array(color, self._layer.ndata)
-        if self._layer.ndata > 0:
+        col = as_color_array(color, self._ndata())
+        if self._ndata() > 0:
             self._layer._backend._plt_set_face_color(col)
         self.events.color.emit(col)
 
@@ -491,7 +497,7 @@ class MultiFace(MultiPropertyFaceBase):
             pass
         else:
             hatch = [Hatch(p) for p in hatch]
-        if self._layer.ndata > 0:
+        if self._ndata() > 0:
             self._layer._backend._plt_set_face_hatch(hatch)
         self.events.hatch.emit(hatch)
 
@@ -504,8 +510,8 @@ class MultiEdge(MultiPropertyEdgeBase):
 
     @color.setter
     def color(self, color):
-        col = as_color_array(color, self._layer.ndata)
-        if self._layer.ndata > 0:
+        col = as_color_array(color, self._ndata())
+        if self._ndata() > 0:
             self._layer._backend._plt_set_edge_color(col)
         self.events.color.emit(col)
 
@@ -518,14 +524,14 @@ class MultiEdge(MultiPropertyEdgeBase):
     def width(self, width: float | Iterable[float]):
         if not is_real_number(width):
             width = np.asarray(width, dtype=np.float32)
-            if width.shape != (self._layer.ndata,):
+            if width.shape != (self._ndata(),):
                 raise ValueError(
                     "Width must be a scalar or an array of length "
-                    f"{self._layer.ndata}, got {width.shape!r}"
+                    f"{self._ndata()}, got {width.shape!r}"
                 )
         else:
             width = float(width)
-        if self._layer.ndata > 0:
+        if self._ndata() > 0:
             self._layer._backend._plt_set_edge_width(width)
         self.events.width.emit(width)
 
@@ -542,7 +548,7 @@ class MultiEdge(MultiPropertyEdgeBase):
             pass
         else:
             style = [LineStyle(s) for s in style]
-        if self._layer.ndata > 0:
+        if self._ndata() > 0:
             self._layer._backend._plt_set_edge_style(style)
         self.events.style.emit(style)
 

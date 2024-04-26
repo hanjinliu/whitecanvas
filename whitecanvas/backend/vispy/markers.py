@@ -129,7 +129,7 @@ class Markers(visuals.Markers):
             symbol=self.symbol,
         )
 
-    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_patterns()
+    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_hatches()
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:

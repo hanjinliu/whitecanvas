@@ -158,7 +158,7 @@ class Band(VispyBand):
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         self.color = color
 
-    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_pattern()
+    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_hatch()
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:

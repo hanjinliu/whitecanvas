@@ -27,9 +27,19 @@ def edge_styles():
     return _getter, _setter
 
 
-def face_pattern():
+def edge_width():
     def _getter(self):
-        return getattr(self, "__face_pattern_value", Hatch.SOLID)
+        return getattr(self, "__edge_width_value", 1.0)
+
+    def _setter(self, value: float):
+        setattr(self, "__edge_width_value", value)
+
+    return _getter, _setter
+
+
+def face_hatch():
+    def _getter(self):
+        return getattr(self, "__face_hatch_value", Hatch.SOLID)
 
     def _setter(self, value: Hatch):
         setattr(self, "__face_pattern_value", value)
@@ -37,15 +47,15 @@ def face_pattern():
     return _getter, _setter
 
 
-def face_patterns():
+def face_hatches():
     def _getter(self):
         return getattr(
-            self, "__face_pattern_value", [Hatch.SOLID] * self._plt_get_ndata()
+            self, "__face_hatch_value", [Hatch.SOLID] * self._plt_get_ndata()
         )
 
     def _setter(self, value: Hatch | list[Hatch]):
         if isinstance(value, Hatch):
             value = [value] * self._plt_get_ndata()
-        setattr(self, "__face_pattern_value", value)
+        setattr(self, "__face_hatch_value", value)
 
     return _getter, _setter

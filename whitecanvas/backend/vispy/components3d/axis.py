@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from vispy import scene
-from vispy.scene.visuals import Compound, Line, Mesh, Text
+from vispy.scene.visuals import Compound, Line, Text
 
 if TYPE_CHECKING:
     from whitecanvas.backend.vispy.components3d.canvas import Camera, Canvas3D
@@ -41,8 +41,7 @@ class Axis3D(Compound):
         origin = np.asarray(origin)
         dr = np.zeros(3)
         if length is None:
-            start, end = self._line.pos
-            length = np.sqrt(np.sum((end - start) ** 2))
+            length = self._length()
         dr[self._dim] = length
         pos = np.stack([origin, origin + dr], axis=0)
         self._line.set_data(pos)
@@ -52,6 +51,11 @@ class Axis3D(Compound):
         start = self._line.pos[0]
         end = self._line.pos[1]
         return start[self._dim], end[self._dim]
+
+    def _length(self) -> float:
+        start = self._line.pos[0]
+        end = self._line.pos[1]
+        return np.sqrt(np.sum((end - start) ** 2))
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         new_origin = self._line.pos[0]
@@ -63,9 +67,15 @@ class Axis3D(Compound):
         canvas._zaxis._update_pos(new_origin)
 
         start = self._line.pos[0]
-        end = self._line.pos[1]
-        canvas._viewbox.camera.center = (start + end) / 2
-        canvas._viewbox.camera.scale_factor = np.max(end - start) * 1.5
+        vecx = canvas._xaxis._line.pos[1] - start
+        vecy = canvas._yaxis._line.pos[1] - start
+        vecz = canvas._zaxis._line.pos[1] - start
+        sizex = np.sqrt(np.dot(vecx, vecx))
+        sizey = np.sqrt(np.dot(vecy, vecy))
+        sizez = np.sqrt(np.dot(vecz, vecz))
+        center = start + (vecx + vecy + vecz) / 2
+        canvas._viewbox.camera.center = center
+        canvas._viewbox.camera.scale_factor = max(sizex, sizey, sizez) * 1.5
 
     def _plt_get_color(self):
         return self._line.color
@@ -79,9 +89,6 @@ class Axis3D(Compound):
         axis = 1 - self._dim
         flipped[axis] = not flipped[axis]
         camera.flip = tuple(flipped)
-
-
-# class AxisLabel3D
 
 
 class AxisLabel3D:

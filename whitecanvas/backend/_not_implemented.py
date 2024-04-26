@@ -56,7 +56,7 @@ def face_hatch():
         return getattr(self, "__face_hatch_value", Hatch.SOLID)
 
     def _setter(self, value: Hatch):
-        setattr(self, "__face_pattern_value", value)
+        setattr(self, "__face_hatch_value", value)
 
     return _getter, _setter
 

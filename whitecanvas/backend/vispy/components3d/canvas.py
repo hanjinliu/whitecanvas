@@ -11,7 +11,6 @@ from whitecanvas.backend.vispy._label import TextLabel
 from whitecanvas.backend.vispy.components3d.axis import Axis3D, AxisLabel3D
 
 if TYPE_CHECKING:
-    from vispy.app.canvas import MouseEvent as vispyMouseEvent
     from vispy.scene import Grid
 
 

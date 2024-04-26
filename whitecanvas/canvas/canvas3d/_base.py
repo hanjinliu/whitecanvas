@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,7 +12,14 @@ from whitecanvas.canvas import _namespaces as _ns
 from whitecanvas.canvas._base import CanvasNDBase
 from whitecanvas.layers import layer3d
 from whitecanvas.layers._base import Layer
-from whitecanvas.types import ColormapType, Orientation
+from whitecanvas.types import (
+    ArrayLike1D,
+    ColormapType,
+    ColorType,
+    Hatch,
+    LineStyle,
+    Orientation,
+)
 from whitecanvas.utils.normalize import normalize_xyz
 
 if TYPE_CHECKING:
@@ -129,6 +136,23 @@ class Canvas3DBase(CanvasNDBase):
         """Whether autoscale is enabled."""
         return self._autoscale_enabled
 
+    @overload
+    def add_line(
+        self, x: ArrayLike1D, y: ArrayLike1D, z: ArrayLike1D, *,
+        name: str | None = None, color: ColorType | None = None,
+        width: float | None = None, style: str | LineStyle | None = None,
+        alpha: float = 1.0, antialias: bool = True,
+    ) -> layer3d.Line3D:  # fmt: skip
+        ...
+
+    @overload
+    def add_line(
+        self, data: Any, *, name: str | None = None, color: ColorType | None = None,
+        width: float | None = None, style: str | LineStyle | None = None,
+        alpha: float = 1.0, antialias: bool = True,
+    ) -> layer3d.Line3D:  # fmt: skip
+        ...
+
     def add_line(
         self,
         *args,
@@ -149,6 +173,23 @@ class Canvas3DBase(CanvasNDBase):
             alpha=alpha, antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
+
+    @overload
+    def add_markers(
+        self, data: Any, *, name: str | None = None, symbol: str | None = None,
+        size: float | None = None, color: ColorType | None = None, alpha: float = 1.0,
+        hatch: str | Hatch | None = None,
+    ) -> layer3d.Markers3D:  # fmt: skip
+        ...
+
+    @overload
+    def add_markers(
+        self, x: ArrayLike1D, y: ArrayLike1D, z: ArrayLike1D, *,
+        name: str | None = None, symbol: str | None = None, size: float | None = None,
+        color: ColorType | None = None, alpha: float = 1.0,
+        hatch: str | Hatch | None = None,
+    ) -> layer3d.Markers3D:  # fmt: skip
+        ...
 
     def add_markers(
         self,
@@ -178,7 +219,7 @@ class Canvas3DBase(CanvasNDBase):
             Color of the marker faces.
         alpha : float, default 1.0
             Alpha channel of the marker faces.
-        hatch : str or FacePattern, optional
+        hatch : str or Hatch, optional
             Pattern of the marker faces. Use the theme default if not specified.
 
         Returns
@@ -200,14 +241,32 @@ class Canvas3DBase(CanvasNDBase):
 
     def add_mesh(
         self,
-        verts,
-        faces,
+        verts: NDArray[np.floating],
+        faces: NDArray[np.intp],
         *,
-        name=None,
-        color=None,
-        hatch=None,
-        alpha=1.0,
+        name: str | None = None,
+        color: ColorType | None = None,
+        hatch: str | Hatch | None = None,
+        alpha: float = 1.0,
     ) -> layer3d.Mesh3D:
+        """
+        Add a mesh layer.
+
+        Parameters
+        ----------
+        verts : 2D array-like
+            Vertices of the mesh.
+        faces : 2D array-like
+            Faces of the mesh.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the surface.
+        hatch : str or Hatch, optional
+            Hatch pattern of the surface faces.
+        alpha : float, default 1.0
+            Alpha channel of the surface faces.
+        """
         name = self._coerce_name(name)
         color = self._generate_colors(color)
         hatch = theme._default("markers.hatch", hatch)
@@ -216,6 +275,69 @@ class Canvas3DBase(CanvasNDBase):
             backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
+
+    @overload
+    def add_surface(
+        self, z: NDArray[np.floating], *, name: str | None =None,
+        color: ColorType | None = None, hatch: str | Hatch | None = None,
+        alpha: float = 1.0,
+    ) -> layer3d.Mesh3D:  # fmt: skip
+        ...
+
+    @overload
+    def add_surface(
+        self, x: NDArray[np.floating], y: NDArray[np.floating], z: NDArray[np.floating],
+        *, name: str | None =None, color: ColorType | None = None,
+        hatch: str | Hatch | None = None, alpha: float = 1.0,
+    ) -> layer3d.Mesh3D:  # fmt: skip
+        ...
+
+    def add_surface(
+        self,
+        *args,
+        name: str | None = None,
+        color: ColorType | None = None,
+        hatch: str | Hatch | None = None,
+        alpha: float = 1.0,
+    ) -> layer3d.Mesh3D:
+        """
+        Add a surface plot defined by z = f(x, y).
+
+        The x, y are usually calculated by `np.meshgrid` or `np.indices`.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the surface.
+        hatch : str or Hatch, optional
+            Hatch pattern of the surface faces.
+        alpha : float, default 1.0
+            Alpha channel of the surface faces.
+        """
+        if len(args) == 1:
+            z = np.asarray(args[0])
+            if z.ndim != 2:
+                raise ValueError(f"Expected 2D array for z, got shape {z.shape}")
+            x, y = np.indices(z.shape)
+        elif len(args) == 3:
+            x = np.asarray(args[0])
+            y = np.asarray(args[1])
+            z = np.asarray(args[2])
+        else:
+            raise TypeError(f"Expected 1 or 3 positional arguments, got {len(args)}")
+        nx, ny = x.shape
+        verts = np.stack((x.ravel(), y.ravel(), z.ravel()), axis=1)
+        # (i, j), (i + 1, j), (i, j + 1)
+        # (i + 1, j + 1), (i + 1, j), (i, j + 1)
+        corners = (np.arange(nx - 1)[..., None] + np.arange(ny - 1) * nx).ravel()
+        face0 = np.stack((corners, corners + 1, corners + nx), axis=1)
+        face1 = np.stack((corners + 1, corners + nx + 1, corners + nx), axis=1)
+        faces = np.concatenate((face0, face1), axis=0)
+        return self.add_mesh(
+            verts, faces, name=name, color=color, hatch=hatch, alpha=alpha
+        )
 
     def add_layer(self, layer: _L3D) -> _L3D:
         """Add a layer to the canvas."""

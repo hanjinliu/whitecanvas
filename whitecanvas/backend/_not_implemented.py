@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import numpy as np
+
 from whitecanvas.types import Hatch, LineStyle
 
 
@@ -33,6 +35,18 @@ def edge_width():
 
     def _setter(self, value: float):
         setattr(self, "__edge_width_value", value)
+
+    return _getter, _setter
+
+
+def edge_color():
+    def _getter(self):
+        return getattr(
+            self, "__edge_color_value", np.array([0, 0, 0, 255], dtype=np.float32)
+        )
+
+    def _setter(self, value: float):
+        setattr(self, "__edge_color_value", value)
 
     return _getter, _setter
 

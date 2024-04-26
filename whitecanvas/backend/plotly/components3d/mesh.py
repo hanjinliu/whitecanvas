@@ -56,12 +56,6 @@ class Mesh3D(PlotlyHoverableLayer[go.Mesh3d]):
         self._props["facecolor"] = [rgba_str_color(c) for c in color]
 
     _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_hatches()
-
-    def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return arr_color(self._props["vertexcolor"])
-
-    def _plt_set_edge_color(self, color: NDArray[np.float32]):
-        self._props["vertexcolor"] = color
-
+    _plt_get_edge_color, _plt_set_edge_color = _not_implemented.edge_color()
     _plt_get_edge_width, _plt_set_edge_width = _not_implemented.edge_width()
     _plt_get_edge_style, _plt_set_edge_style = _not_implemented.edge_style()

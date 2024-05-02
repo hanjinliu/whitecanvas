@@ -159,7 +159,7 @@ class JointGrid(CanvasGrid):
 
     def _link_marginal_to_main(self, layer: _l.Layer, main: _l.Layer) -> None:
         # TODO: this is not the only thing to be done
-        main.events.visible.connect_setattr(layer, "visible")
+        main.events.visible.connect_setattr(layer, "visible", maxargs=1)
 
     def add_legend(
         self,
@@ -445,8 +445,7 @@ class MarginalPlotter(ABC):
         color: ColorType,
         hatch: Hatch = Hatch.SOLID,
         backend: str | Backend | None = None,
-    ) -> _l.Layer:
-        ...
+    ) -> _l.Layer: ...
 
     @abstractmethod
     def add_layer_for_cat_markers(
@@ -456,8 +455,7 @@ class MarginalPlotter(ABC):
         color: NStr | None = None,
         hatch: NStr | None = None,
         backend: str | Backend | None = None,
-    ) -> _l.Layer:
-        ...
+    ) -> _l.Layer: ...
 
     @abstractmethod
     def add_layer_for_cat_hist2d(
@@ -468,8 +466,7 @@ class MarginalPlotter(ABC):
         bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         limits: tuple[float, float] | None = None,
         backend: str | Backend | None = None,
-    ) -> _l.Layer:
-        ...
+    ) -> _l.Layer: ...
 
 
 class MarginalHistPlotter(MarginalPlotter):

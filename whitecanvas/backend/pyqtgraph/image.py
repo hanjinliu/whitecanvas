@@ -6,7 +6,6 @@ from cmap import Colormap
 from qtpy.QtGui import QTransform
 
 from whitecanvas.backend.pyqtgraph._base import PyQtLayer
-from whitecanvas.backend.pyqtgraph._qt_utils import array_to_qcolor
 from whitecanvas.protocols import ImageProtocol, check_protocol
 
 
@@ -28,10 +27,7 @@ class Image(pg.ImageItem, PyQtLayer):
 
     def _plt_set_colormap(self, cmap: Colormap):
         self._cmap = cmap
-        stops = cmap.color_stops
-        colors = [array_to_qcolor(col) for col in stops.color_array]
-        pg_cmap = pg.ColorMap(stops.stops, colors)
-        self.setColorMap(pg_cmap)
+        self.setColorMap(cmap.to_pyqtgraph())
 
     def _plt_get_clim(self) -> tuple[float, float]:
         low, high = self.getLevels()

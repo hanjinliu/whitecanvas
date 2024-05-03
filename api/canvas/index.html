@@ -15738,7 +15738,7 @@ the existing canvases if False.</p>
 
     <span class="k">def</span> <span class="nf">_link_marginal_to_main</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_l</span><span class="o">.</span><span class="n">Layer</span><span class="p">,</span> <span class="n">main</span><span class="p">:</span> <span class="n">_l</span><span class="o">.</span><span class="n">Layer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># TODO: this is not the only thing to be done</span>
-        <span class="n">main</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">visible</span><span class="o">.</span><span class="n">connect_setattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;visible&quot;</span><span class="p">)</span>
+        <span class="n">main</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">visible</span><span class="o">.</span><span class="n">connect_setattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;visible&quot;</span><span class="p">,</span> <span class="n">maxargs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">add_legend</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

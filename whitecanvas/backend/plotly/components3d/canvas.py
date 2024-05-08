@@ -32,6 +32,7 @@ class Canvas3D(Canvas):
         self._xlabel = AxisLabel3D(self, axis="xaxis")
         self._ylabel = AxisLabel3D(self, axis="yaxis")
         self._zlabel = AxisLabel3D(self, axis="zaxis")
+        self._is_aspect_locked = False
 
     def _plt_get_zaxis(self):
         return self._zaxis
@@ -41,6 +42,15 @@ class Canvas3D(Canvas):
 
     def _plt_get_zticks(self):
         return self._zticks
+
+    def _plt_get_aspect_locked(self) -> bool:
+        return self._is_aspect_locked
+
+    def _plt_set_aspect_locked(self, locked: bool):
+        if locked:
+            self._fig.update_layout(scene_aspectmode="auto")
+        else:
+            self._fig.update_layout(scene_aspectmode="data")
 
     def _plt_connect_xlim_changed(self, callback):
         propname = f"scene.{self._xaxis.name}.range"

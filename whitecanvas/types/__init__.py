@@ -31,6 +31,7 @@ from whitecanvas.types._tuples import (
     XYVectorData,
     XYYData,
     XYZData,
+    XYZVectorData,
 )
 
 __all__ = [
@@ -60,6 +61,7 @@ __all__ = [
     "XYTextData",
     "XYZData",
     "XYVectorData",
+    "XYZVectorData",
     "Rect",
     "MeshData",
     "_Void",

@@ -189,6 +189,27 @@ class CanvasNDBase(ABC):
             color = self._color_palette.next()
         return color
 
+    @property
+    def autoscale_enabled(self) -> bool:
+        """Return whether autoscale is enabled."""
+        return self._autoscale_enabled
+
+    @autoscale_enabled.setter
+    def autoscale_enabled(self, enabled: bool):
+        if not isinstance(enabled, bool):
+            raise TypeError(f"Expected a bool, got {type(enabled)}.")
+        self._autoscale_enabled = enabled
+
+    @contextmanager
+    def autoscale_context(self, enabled: bool):
+        """Context manager to temporarily change the autoscale state."""
+        _was_enabled = self.autoscale_enabled
+        self.autoscale_enabled = enabled
+        try:
+            yield
+        finally:
+            self.autoscale_enabled = _was_enabled
+
 
 class CanvasBase(CanvasNDBase):
     """Base class for any canvas object."""
@@ -290,27 +311,6 @@ class CanvasBase(CanvasNDBase):
             stacklevel=2,
         )
         return self.mouse.clicked
-
-    @property
-    def autoscale_enabled(self) -> bool:
-        """Return whether autoscale is enabled."""
-        return self._autoscale_enabled
-
-    @autoscale_enabled.setter
-    def autoscale_enabled(self, enabled: bool):
-        if not isinstance(enabled, bool):
-            raise TypeError(f"Expected a bool, got {type(enabled)}.")
-        self._autoscale_enabled = enabled
-
-    @contextmanager
-    def autoscale_context(self, enabled: bool):
-        """Context manager to temporarily change the autoscale state."""
-        _was_enabled = self.autoscale_enabled
-        self.autoscale_enabled = enabled
-        try:
-            yield
-        finally:
-            self.autoscale_enabled = _was_enabled
 
     @property
     def native(self) -> Any:
@@ -493,8 +493,8 @@ class CanvasBase(CanvasNDBase):
     def update_axes(
         self,
         *,
-        visible: bool = _void,
-        color: ColorType | None = _void,
+        visible: bool | None = None,
+        color: ColorType | None = None,
     ):
         """
         Update axes appearance.
@@ -506,16 +506,12 @@ class CanvasBase(CanvasNDBase):
         color : color-like, optional
             Color of the axes.
         """
-        if visible is not _void:
-            self.x.ticks.visible = visible
-            self.y.ticks.visible = visible
-        if color is not _void:
-            self.x.color = color
-            self.x.ticks.color = color
-            self.x.label.color = color
-            self.y.color = color
-            self.y.ticks.color = color
-            self.y.label.color = color
+        if visible is not None:
+            self.x.ticks.visible = self.y.ticks.visible = visible
+        if color is not None:
+            self.x.color = self.y.color = color
+            self.x.ticks.color = self.y.ticks.color = color
+            self.x.label.color = self.y.label.color = color
         return self
 
     def update_labels(
@@ -543,9 +539,9 @@ class CanvasBase(CanvasNDBase):
 
     def update_font(
         self,
-        size: float | _Void = _void,
-        color: ColorType | _Void = _void,
-        family: str | _Void = _void,
+        size: float | None = None,
+        color: ColorType | None = None,
+        family: str | None = None,
     ) -> Self:
         """
         Update all the fonts, including the title, x/y labels and x/y tick labels.
@@ -559,13 +555,13 @@ class CanvasBase(CanvasNDBase):
         family : str, optional
             New font family.
         """
-        if size is not _void:
+        if size is not None:
             self.title.size = self.x.label.size = self.y.label.size = size
             self.x.ticks.size = self.y.ticks.size = size
-        if family is not _void:
+        if family is not None:
             self.title.family = self.x.label.family = self.y.label.family = family
             self.x.ticks.family = self.y.ticks.family = family
-        if color is not _void:
+        if color is not None:
             self.title.color = self.x.label.color = self.y.label.color = color
             self.x.ticks.color = self.y.ticks.color = color
         return self

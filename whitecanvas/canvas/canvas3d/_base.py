@@ -20,7 +20,7 @@ from whitecanvas.types import (
     LineStyle,
     Orientation,
 )
-from whitecanvas.utils.normalize import normalize_xyz
+from whitecanvas.utils.normalize import as_array_1d, normalize_xyz
 
 if TYPE_CHECKING:
     from whitecanvas.canvas import CanvasGrid
@@ -132,9 +132,94 @@ class Canvas3DBase(CanvasNDBase):
         return self._canvas()._plt_get_native()
 
     @property
-    def autoscale_enabled(self) -> bool:
-        """Whether autoscale is enabled."""
-        return self._autoscale_enabled
+    def aspect_locked(self) -> bool:
+        return self._canvas()._plt_get_aspect_locked()
+
+    @aspect_locked.setter
+    def aspect_locked(self, value: bool):
+        self._canvas()._plt_set_aspect_locked(value)
+
+    def update_axes(
+        self,
+        *,
+        visible: bool | None = None,
+        color: ColorType | None = None,
+    ):
+        """
+        Update axes appearance.
+
+        Parameters
+        ----------
+        visible : bool, optional
+            Whether to show the axes.
+        color : color-like, optional
+            Color of the axes.
+        """
+        if visible is not None:
+            self.x.ticks.visible = self.y.ticks.visible = self.z.ticks.visible = visible
+        if color is not None:
+            self.x.color = self.y.color = self.z.color = color
+            self.x.ticks.color = self.y.ticks.color = self.z.ticks.color = color
+            self.x.label.color = self.y.label.color = self.z.label.color = color
+        return self
+
+    def update_labels(
+        self,
+        title: str | None = None,
+        x: str | None = None,
+        y: str | None = None,
+        z: str | None = None,
+    ) -> Self:
+        """
+        Helper function to update the title, x, y and z labels.
+
+        >>> from whitecanvas import new_canvas_3d
+        >>> canvas = new_canvas_3d("matplotlib").update_labels("Title", "X", "Y", "Z")
+        """
+        if title is not None:
+            self.title.text = title
+            self.title.visible = True
+        if x is not None:
+            self.x.label.text = x
+            self.x.label.visible = True
+        if y is not None:
+            self.y.label.text = y
+            self.y.label.visible = True
+        if z is not None:
+            self.z.label.text = z
+            self.z.label.visible = True
+        return self
+
+    def update_font(
+        self,
+        size: float | None = None,
+        color: ColorType | None = None,
+        family: str | None = None,
+    ) -> Self:
+        """
+        Update all the fonts, including the title, x/y labels and x/y tick labels.
+
+        Parameters
+        ----------
+        size : float, optional
+            New font size.
+        color : color-like, optional
+            New font color.
+        family : str, optional
+            New font family.
+        """
+        if size is not None:
+            self.title.size = size
+            self.x.label.size = self.y.label.size = self.z.label.size = size
+            self.x.ticks.size = self.y.ticks.size = self.z.ticks.size = size
+        if family is not None:
+            self.title.family = family
+            self.x.label.family = self.y.label.family = self.z.label.family = family
+            self.x.ticks.family = self.y.ticks.family = self.z.ticks.family = family
+        if color is not None:
+            self.title.color = self.x.label.color = self.y.label.color = color
+            self.x.ticks.color = self.y.ticks.color = self.z.ticks.color = color
+        return self
 
     @overload
     def add_line(
@@ -338,6 +423,35 @@ class Canvas3DBase(CanvasNDBase):
         return self.add_mesh(
             verts, faces, name=name, color=color, hatch=hatch, alpha=alpha
         )
+
+    def add_vectors(
+        self,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        z: ArrayLike1D,
+        vx: ArrayLike1D,
+        vy: ArrayLike1D,
+        vz: ArrayLike1D,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> layer3d.Vectors3D:
+        name = self._coerce_name(name)
+        color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
+        layer = layer3d.Vectors3D(
+            as_array_1d(x, dtype=np.float32), as_array_1d(y, dtype=np.float32),
+            as_array_1d(z, dtype=np.float32), as_array_1d(vx, dtype=np.float32),
+            as_array_1d(vy, dtype=np.float32), as_array_1d(vz, dtype=np.float32),
+            name=name, color=color, width=width, style=style,
+            alpha=alpha, antialias=antialias, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
 
     def add_layer(self, layer: _L3D) -> _L3D:
         """Add a layer to the canvas."""

@@ -7,6 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D, art3d
 
 from whitecanvas.backend.matplotlib._base import MplLayer, MplMouseEventsMixin
 from whitecanvas.backend.matplotlib._labels import MplAxis, MplLabel, MplTicks, Title
+from whitecanvas.backend.matplotlib.components3d.vectors3d import Vectors3D
 
 
 class Canvas3D:
@@ -26,7 +27,7 @@ class Canvas3D:
     def _plt_add_layer(self, layer):
         if isinstance(layer, art3d.Line3D):
             self._axes.add_line(layer)
-        elif isinstance(layer, art3d.Path3DCollection):
+        elif isinstance(layer, (art3d.Path3DCollection, Vectors3D)):
             self._axes.add_collection3d(layer)
         elif isinstance(layer, art3d.Poly3DCollection):
             self._axes.add_collection(layer)
@@ -71,6 +72,16 @@ class Canvas3D:
     def _plt_reorder_layers(self, layers: list[MplLayer]):
         for i, layer in enumerate(layers):
             layer._plt_set_zorder(i)
+
+    def _plt_get_aspect_locked(self) -> bool:
+        out = self._axes.get_aspect()
+        return out == "equal"
+
+    def _plt_set_aspect_locked(self, locked: bool):
+        if locked:
+            self._axes.set_aspect("equal")
+        else:
+            self._axes.set_aspect("auto")
 
     def _plt_connect_xlim_changed(
         self, callback: Callable[[tuple[float, float]], None]

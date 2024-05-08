@@ -20,9 +20,11 @@ class Camera(ArcballCamera):
         fov: float = 0,
         distance: None | float = None,
         translate_speed: float = 1,
+        aspect_locked: bool = True,
         **kwargs,
     ):
         super().__init__(fov, distance, translate_speed, **kwargs)
+        self._aspect_locked = aspect_locked
 
 
 class Canvas3D:
@@ -92,3 +94,9 @@ class Canvas3D:
 
     def _plt_get_zlabel(self):
         return self._zlabel
+
+    def _plt_get_aspect_locked(self) -> bool:
+        return True
+
+    def _plt_set_aspect_locked(self, locked: bool):
+        pass

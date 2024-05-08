@@ -70,6 +70,15 @@ class XYVectorData(NamedTuple):
     vy: NDArray[np.floating]
 
 
+class XYZVectorData(NamedTuple):
+    x: NDArray[np.floating]
+    y: NDArray[np.floating]
+    z: NDArray[np.floating]
+    vx: NDArray[np.floating]
+    vy: NDArray[np.floating]
+    vz: NDArray[np.floating]
+
+
 class MeshData(NamedTuple):
     vertices: NDArray[np.floating]
     faces: NDArray[np.intp]

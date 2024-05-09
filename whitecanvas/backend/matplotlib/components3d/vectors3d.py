@@ -15,16 +15,16 @@ if TYPE_CHECKING:
 
 
 class Vectors3D(Quiver, MplLayer):
-    def __init__(self, x0, x1, y0, y1, z0, z1):
+    def __init__(self, x0, dx, y0, dy, z0, dz):
         super().__init__(
-            FakeAxes(), x0, y0, x1, y1, angles="xy", scale_units="xy", scale=1
+            FakeAxes(), x0, y0, dx, dy, angles="xy", scale_units="xy", scale=1
         )
         self._3d_x = x0
         self._3d_y = y0
         self._3d_z = z0
-        self._3d_u = x1 - x0
-        self._3d_v = y1 - y0
-        self._3d_w = z1 - z0
+        self._3d_u = dx
+        self._3d_v = dy
+        self._3d_w = dz
 
     def do_3d_projection(self, renderer=None):
         x, y, z = proj3d.proj_transform(self._3d_x, self._3d_y, self._3d_z, self.axes.M)
@@ -41,13 +41,13 @@ class Vectors3D(Quiver, MplLayer):
     def _plt_get_data(self):
         return self._3d_x, self._3d_y, self._3d_z, self._3d_u, self._3d_v, self._3d_w
 
-    def _plt_set_data(self, x0, x1, y0, y1, z0, z1):
+    def _plt_set_data(self, x0, dx, y0, dy, z0, dz):
         self._3d_x = x0
         self._3d_y = y0
         self._3d_z = z0
-        self._3d_u = x1 - x0
-        self._3d_v = y1 - y0
-        self._3d_w = z1 - z0
+        self._3d_u = dx
+        self._3d_v = dy
+        self._3d_w = dz
         self.do_3d_projection()
 
     ##### HasEdges #####

@@ -16,16 +16,16 @@ if TYPE_CHECKING:
 
 @check_protocol(VectorsProtocol)
 class Vectors(Quiver, MplLayer):
-    def __init__(self, x0, x1, y0, y1):
+    def __init__(self, x0, dx, y0, dy):
         super().__init__(
-            FakeAxes(), x0, y0, x1, y1, angles="xy", scale_units="xy", scale=1
+            FakeAxes(), x0, y0, dx, dy, angles="xy", scale_units="xy", scale=1
         )
 
     def _plt_get_data(self):
         return self.X, self.Y, self.U, self.V
 
-    def _plt_set_data(self, x0, x1, y0, y1):
-        self.set_UVC(x1 - x0, y1 - y0)
+    def _plt_set_data(self, x0, dx, y0, dy):
+        self.set_UVC(dx, dy)
         self.set_offsets(np.column_stack([x0, y0]))
 
     def post_add(self, canvas: Canvas):

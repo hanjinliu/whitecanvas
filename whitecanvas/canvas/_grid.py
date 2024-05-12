@@ -172,6 +172,40 @@ class CanvasGrid:
         canvas.events.drawn.connect(self.events.drawn.emit, unique=True, max_args=None)
         return canvas
 
+    def add_canvas_3d(
+        self,
+        row: int,
+        col: int,
+        rowspan: int = 1,
+        colspan: int = 1,
+        *,
+        palette: str | None = None,
+    ):
+        """Add a canvas to the grid at the given position"""
+        from whitecanvas.canvas.canvas3d._base import Canvas3D
+
+        for idx, item in np.ndenumerate(self._canvas_array[row, col]):
+            if item is not None:
+                raise ValueError(f"Canvas already exists at {idx}")
+        backend_canvas = self._backend_object._plt_add_canvas_3d(
+            row, col, rowspan, colspan
+        )
+        canvas = self._canvas_array[row, col] = Canvas3D.from_backend(
+            backend_canvas,
+            backend=self._backend,
+            palette=palette,
+        )
+        # Now backend axes/viewbox are created, we can install mouse events
+        # canvas._install_mouse_events()
+
+        # link axes if needed
+        if self._x_linked:
+            self._x_linker_ref.link(canvas.x)
+        if self._y_linked:
+            self._y_linker_ref.link(canvas.y)
+        canvas.events.drawn.connect(self.events.drawn.emit, unique=True, max_args=None)
+        return canvas
+
     def _iter_add_canvas(self, **kwargs) -> Iterator[Canvas]:
         for row in range(len(self._heights)):
             for col in range(len(self._widths)):

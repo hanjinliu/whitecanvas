@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generator
+from typing import Any, Generator
 
 from whitecanvas.theme._dataclasses import DARK_THEME, LIGHT_THEME, Theme
 
@@ -27,7 +27,7 @@ def get_theme(name: str | Theme | None = None) -> Theme:
     return _EXISTING_THEMES[name]
 
 
-def _default(attr: str, value):
+def _default(attr: str, value) -> Any:
     if value is not None:
         return value
     out = _DEFAULT_THEME

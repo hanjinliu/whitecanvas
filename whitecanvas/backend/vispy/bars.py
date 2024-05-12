@@ -67,7 +67,7 @@ class Bars(visuals.Compound):
         for rect, c in zip(self._rectangles, color):
             rect.color = c
 
-    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_patterns()
+    _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_hatches()
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:

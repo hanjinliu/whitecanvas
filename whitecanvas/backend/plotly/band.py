@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from plotly import graph_objects as go
 
-from whitecanvas.backend._not_implemented import face_pattern
+from whitecanvas.backend._not_implemented import face_hatch
 from whitecanvas.backend.plotly._base import (
     PlotlyHoverableLayer,
     from_plotly_linestyle,
@@ -81,7 +81,7 @@ class Band(PlotlyHoverableLayer[go.Scatter]):
     def _plt_set_face_color(self, color):
         self._props["fillcolor"] = rgba_str_color(color)
 
-    _plt_get_face_hatch, _plt_set_face_hatch = face_pattern()
+    _plt_get_face_hatch, _plt_set_face_hatch = face_hatch()
 
     def _plt_get_edge_color(self):
         return arr_color(self._props["line"]["color"])

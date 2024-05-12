@@ -83,6 +83,12 @@ class AxisLabel(_SupportsTitle):
         return getattr(layout, self._axis).title
 
 
+class AxisLabel3D(AxisLabel):
+    def _get_title(self):
+        layout = self._canvas()._subplot_layout()
+        return getattr(layout.scene, self._axis).title
+
+
 class Axis(_CanvasComponent):
     def __init__(self, canvas: Canvas, axis: str):
         super().__init__(canvas)
@@ -122,6 +128,11 @@ class Axis(_CanvasComponent):
         axis.showgrid = visible
         axis.gridcolor = rgba_str_color(color)
         axis.gridwidth = width
+
+
+class Axis3D(Axis):
+    def _plt_get_axis(self):
+        return getattr(self._canvas()._subplot_layout().scene, self._axis)
 
 
 class Ticks(_CanvasComponent):
@@ -178,3 +189,9 @@ class Ticks(_CanvasComponent):
 
     def _plt_set_text_rotation(self, angle: float):
         self._plt_get_axis().tickangle = -angle
+
+
+class Ticks3D(Ticks):
+    def _plt_get_axis(self):
+        layout = self._canvas()._subplot_layout()
+        return getattr(layout.scene, self._axis)

@@ -5,3 +5,4 @@ from whitecanvas.backend.pyqtgraph.image import Image
 from whitecanvas.backend.pyqtgraph.line import MonoLine, MultiLine
 from whitecanvas.backend.pyqtgraph.markers import Markers
 from whitecanvas.backend.pyqtgraph.text import Texts
+from whitecanvas.backend.pyqtgraph.vectors import Vectors

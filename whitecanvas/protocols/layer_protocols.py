@@ -6,7 +6,7 @@ import numpy as np
 from cmap import Colormap
 from numpy.typing import NDArray
 
-from whitecanvas.types import Alignment, Hatch, LineStyle, Orientation, Symbol
+from whitecanvas.types import Alignment, Hatch, LineStyle, MeshData, Orientation, Symbol
 
 Array1D = NDArray[np.number]
 
@@ -268,12 +268,39 @@ class TextProtocol(HasText, HasEdges, HasFaces, Protocol):
 
 
 @runtime_checkable
-class ArrowProtocol(HasEdges, Protocol):
-    def _plt_get_arrow_size(self) -> float:
-        """Return the arrow size."""
+class VectorsProtocol(XXYYDataProtocol, HasEdges, Protocol):
+    def _plt_get_antialias(self) -> bool:
+        """Return the anti alias."""
 
-    def _plt_set_arrow_size(self, size: float):
-        """Set the arrow size."""
+    def _plt_set_antialias(self, antialias: bool):
+        """Set the anti alias."""
+
+
+@runtime_checkable
+class MeshProtocol(BaseProtocol, HasFaces, HasEdges, Protocol):
+    def _plt_get_data(self) -> MeshData:
+        """Return the mesh data."""
+
+    def _plt_set_data(self, data: MeshData):
+        """Set the mesh data."""
+
+    def _plt_get_face_color(self) -> NDArray[np.float32]:
+        """Return the face color."""
+
+    def _plt_set_face_color(self, color: NDArray[np.float32]):
+        """Set the face color."""
+
+    def _plt_get_edge_color(self) -> NDArray[np.float32]:
+        """Return the edge color."""
+
+    def _plt_set_edge_color(self, color: NDArray[np.float32]):
+        """Set the edge color."""
+
+    def _plt_get_edge_width(self) -> float:
+        """Return the edge width."""
+
+    def _plt_set_edge_width(self, width: float):
+        """Set the edge width."""
 
 
 @runtime_checkable

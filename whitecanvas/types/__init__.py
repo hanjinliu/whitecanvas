@@ -23,7 +23,16 @@ from whitecanvas.types._enums import (
     Symbol,
 )
 from whitecanvas.types._mouse import MouseEvent, Point
-from whitecanvas.types._tuples import Rect, XYData, XYTextData, XYYData
+from whitecanvas.types._tuples import (
+    MeshData,
+    Rect,
+    XYData,
+    XYTextData,
+    XYVectorData,
+    XYYData,
+    XYZData,
+    XYZVectorData,
+)
 
 __all__ = [
     "ColorType",
@@ -50,6 +59,10 @@ __all__ = [
     "XYData",
     "XYYData",
     "XYTextData",
+    "XYZData",
+    "XYVectorData",
+    "XYZVectorData",
     "Rect",
+    "MeshData",
     "_Void",
 ]

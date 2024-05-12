@@ -9,7 +9,6 @@ from whitecanvas.protocols.canvas_protocol import (
     TicksProtocol,
 )
 from whitecanvas.protocols.layer_protocols import (
-    ArrowProtocol,
     BandProtocol,
     BarProtocol,
     BaseProtocol,
@@ -17,13 +16,15 @@ from whitecanvas.protocols.layer_protocols import (
     ImageProtocol,
     LineProtocol,
     MarkersProtocol,
+    MeshProtocol,
     MultiLineProtocol,
     RangeDataProtocol,
     TextProtocol,
+    VectorsProtocol,
 )
 
 __all__ = [
-    "ArrowProtocol",
+    "VectorsProtocol",
     "BaseProtocol",
     "LineProtocol",
     "MultiLineProtocol",
@@ -40,6 +41,7 @@ __all__ = [
     "TextLabelProtocol",
     "TicksProtocol",
     "AxisProtocol",
+    "MeshProtocol",
 ]
 
 _C = TypeVar("_C")

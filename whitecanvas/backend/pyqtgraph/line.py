@@ -108,11 +108,11 @@ class MultiLine(pg.ItemGroup, PyQtLayer):
 
     def __init__(self, data: list[NDArray[np.floating]]):
         super().__init__()
-        pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
-        pen.setCosmetic(True)
         self._lines: list[pg.PlotCurveItem] = []
         self._qpens: list[QtGui.QPen] = []
         for i, seg in enumerate(data):
+            pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
+            pen.setCosmetic(True)
             item = pg.PlotCurveItem(
                 seg[:, 0], seg[:, 1], pen=pen, antialias=True, clickable=True
             )

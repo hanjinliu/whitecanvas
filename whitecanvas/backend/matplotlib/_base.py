@@ -22,6 +22,12 @@ class MplLayer:
         self.set_zorder(zorder)
 
 
+class FakeAxes:
+    def __init__(self):
+        self.transData = None
+        self.transAxes = None
+
+
 def symbol_to_path(symbol: Symbol):
     marker_obj = mmarkers.MarkerStyle(symbol.value)
     return marker_obj.get_path().transformed(marker_obj.get_transform())

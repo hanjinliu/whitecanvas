@@ -9,6 +9,9 @@ from matplotlib.ticker import AutoLocator, AutoMinorLocator
 from whitecanvas.types import LineStyle
 
 if TYPE_CHECKING:
+    from matplotlib import axis as mpl_axis
+    from matplotlib import text as mpl_text
+
     from whitecanvas.backend.matplotlib.canvas import Canvas
 
 
@@ -77,18 +80,26 @@ class Title(SupportsText):
         self._fontdict = d
 
 
-class XLabel(SupportsText):
+class MplLabel(SupportsText):
+    def __init__(self, canvas: Canvas, name: str):
+        super().__init__(canvas)
+        self._axis_name = name
+
+    def _set_label(self, text: str, fontdict: dict[str, str] = {}):
+        fname = f"set_{self._axis_name}label"
+        getattr(self._canvas()._axes, fname)(text, fontdict)
+
     def _plt_get_text(self) -> str:
-        return self._canvas()._axes.get_xlabel()
+        return getattr(self._canvas()._axes, f"get_{self._axis_name}label")()
 
     def _plt_set_text(self, text: str):
-        self._canvas()._axes.set_xlabel(text, self._fontdict)
+        self._set_label(text, self._fontdict)
         self._text = text
 
     def _plt_set_color(self, color):
         d = self._fontdict.copy()
         d["color"] = color
-        self._canvas()._axes.set_xlabel(self._text, fontdict=d)
+        self._set_label(self._text, fontdict=d)
         self._fontdict = d
 
     def _plt_get_visible(self) -> bool:
@@ -96,230 +107,136 @@ class XLabel(SupportsText):
 
     def _plt_set_visible(self, visible: bool):
         if visible:
-            self._canvas()._axes.set_xlabel(self._text, fontdict=self._fontdict)
+            self._set_label(self._text, fontdict=self._fontdict)
         else:
-            self._canvas()._axes.set_xlabel("")
+            self._set_label("")
 
     def _plt_set_size(self, size: str):
         d = self._fontdict.copy()
         d["fontsize"] = size
-        self._canvas()._axes.set_xlabel(self._text, fontdict=d)
+        self._set_label(self._text, fontdict=d)
         self._fontdict = d
 
     def _plt_set_fontfamily(self, font):
         d = self._fontdict.copy()
         d["family"] = font
-        self._canvas()._axes.set_xlabel(self._text, fontdict=d)
+        self._set_label(self._text, fontdict=d)
         self._fontdict = d
 
 
-class YLabel(SupportsText):
-    def _plt_get_text(self) -> str:
-        return self._canvas()._axes.get_ylabel()
+class MplTicks(SupportsText):
+    def __init__(self, canvas: Canvas, name: str):
+        super().__init__(canvas)
+        self._axis_name = name
 
-    def _plt_set_text(self, text: str):
-        self._canvas()._axes.set_ylabel(text, self._fontdict)
-        self._text = text
-
-    def _plt_set_color(self, color):
-        d = self._fontdict.copy()
-        d["color"] = color
-        self._canvas()._axes.set_ylabel(self._text, fontdict=d)
-        self._fontdict = d
-
-    def _plt_get_visible(self) -> bool:
-        return bool(self._canvas()._axes.get_ylabel())
-
-    def _plt_set_visible(self, visible: bool):
-        if visible:
-            self._canvas()._axes.set_ylabel(self._text, fontdict=self._fontdict)
-        else:
-            self._canvas()._axes.set_ylabel("")
-
-    def _plt_set_size(self, size: str):
-        d = self._fontdict.copy()
-        d["fontsize"] = size
-        self._canvas()._axes.set_ylabel(self._text, fontdict=d)
-        self._fontdict = d
-
-    def _plt_set_fontfamily(self, font):
-        d = self._fontdict.copy()
-        d["family"] = font
-        self._canvas()._axes.set_ylabel(self._text, fontdict=d)
-        self._fontdict = d
-
-
-class XTicks(SupportsText):
-    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
+    def _get_tick_labels(self) -> list[mpl_text.Text]:
         axes = self._canvas()._axes
-        return axes.get_xticks(), [x.get_text() for x in axes.get_xticklabels()]
+        return getattr(axes, f"get_{self._axis_name}ticklabels")()
+
+    def _get_ticks(self) -> list[float]:
+        axes = self._canvas()._axes
+        return getattr(axes, f"get_{self._axis_name}ticks")()
+
+    def _set_ticks(self, ticks: list[float]):
+        axes = self._canvas()._axes
+        getattr(axes, f"set_{self._axis_name}ticks")(ticks)
+
+    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
+        return self._get_ticks(), [x.get_text() for x in self._get_tick_labels()]
 
     def _plt_override_labels(self, pos: list[float], labels: list[str]):
-        self._canvas()._axes.set_xticks(pos, labels)
+        axes = self._canvas()._axes
+        getattr(axes, f"set_{self._axis_name}ticks")(pos, labels)
 
     def _plt_reset_override(self):
         # FIXME: This is not a perfect solution. It will update the x-axis scale.
-        self._canvas()._axes.get_xaxis().clear()
+        axis = getattr(self._canvas()._axes, f"get_{self._axis_name}axis")()
+        axis.clear()
 
     def _plt_set_color(self, color):
         d = self._fontdict.copy()
         d["color"] = color
-        for x in self._canvas()._axes.get_xticklabels():
+        for x in self._get_tick_labels():
             x.set_color(color)
         self._fontdict = d
 
     def _plt_get_visible(self) -> bool:
-        return self._canvas()._axes.get_xticklines()[0].get_visible()
+        ticklines = getattr(self._canvas()._axes, f"get_{self._axis_name}ticklines")()
+        return ticklines[0].get_visible()
 
     def _plt_set_visible(self, visible: bool):
         axes = self._canvas()._axes
-        for tick in axes.get_xticklines():
+        for tick in getattr(axes, f"get_{self._axis_name}ticklines")():
             tick.set_visible(visible)
-        for text in axes.get_xticklabels():
+        for text in self._get_tick_labels():
             text.set_visible(visible)
 
     def _plt_set_size(self, size: str):
         d = self._fontdict.copy()
         d["fontsize"] = size
-        for x in self._canvas()._axes.get_xticklabels():
+        for x in self._get_tick_labels():
             x.set_fontsize(size)
         self._fontdict = d
 
     def _plt_set_fontfamily(self, font):
         d = self._fontdict.copy()
         d["family"] = font
-        for x in self._canvas()._axes.get_xticklabels():
+        for x in self._get_tick_labels():
             x.set_fontfamily(font)
         self._fontdict = d
 
     def _plt_get_text_rotation(self) -> float:
-        return self._canvas()._axes.get_xticklabels()[0].get_rotation()
+        return self._get_tick_labels()[0].get_rotation()
 
     def _plt_set_text_rotation(self, rotation: float):
-        for x in self._canvas()._axes.get_xticklabels():
+        for x in self._get_tick_labels():
             x.set_rotation(rotation)
 
 
-class YTicks(SupportsText):
-    def _plt_get_tick_labels(self) -> tuple[list[float], list[str]]:
-        axes = self._canvas()._axes
-        return axes.get_yticks(), [x.get_text() for x in axes.get_yticklabels()]
-
-    def _plt_override_labels(self, pos: list[float], labels: list[str]):
-        self._canvas()._axes.set_yticks(pos, labels)
-
-    def _plt_reset_override(self):
-        self._canvas()._axes.get_yaxis().clear()
-
-    def _plt_set_color(self, color):
-        d = self._fontdict.copy()
-        d["color"] = color
-        for x in self._canvas()._axes.get_yticklabels():
-            x.set_color(color)
-        self._fontdict = d
-
-    def _plt_get_visible(self) -> bool:
-        return self._canvas()._axes.get_yticklines()[0].get_visible()
-
-    def _plt_set_visible(self, visible: bool):
-        axes = self._canvas()._axes
-        for tick in axes.get_yticklines():
-            tick.set_visible(visible)
-        for text in axes.get_yticklabels():
-            text.set_visible(visible)
-
-    def _plt_set_size(self, size: str):
-        d = self._fontdict.copy()
-        d["fontsize"] = size
-        for x in self._canvas()._axes.get_yticklabels():
-            x.set_fontsize(size)
-        self._fontdict = d
-
-    def _plt_set_fontfamily(self, font):
-        d = self._fontdict.copy()
-        d["family"] = font
-        for x in self._canvas()._axes.get_yticklabels():
-            x.set_fontfamily(font)
-        self._fontdict = d
-
-
-class AxisBase:
-    def __init__(self, canvas: Canvas):
+class MplAxis:
+    def __init__(self, canvas: Canvas, name: str):
         self._canvas = weakref.ref(canvas)
-
-
-class XAxis(AxisBase):
-    def __init__(self, canvas: Canvas):
-        self._canvas = weakref.ref(canvas)
+        self._axis_name = name
 
     def _plt_get_limits(self) -> tuple[float, float]:
         axes = self._canvas()._axes
-        x0, x1 = axes.get_xlim()
-        if axes.xaxis_inverted():
+        x0, x1 = getattr(axes, f"get_{self._axis_name}lim")()
+        if getattr(axes, f"{self._axis_name}axis_inverted")():
             return x1, x0
         else:
             return x0, x1
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         axes = self._canvas()._axes
-        if axes.xaxis_inverted():
+        if getattr(axes, f"{self._axis_name}axis_inverted")():
             limits = limits[::-1]
-        axes.set_xlim(*limits)
+        getattr(axes, f"set_{self._axis_name}lim")(*limits)
+
+    def _get_mpl_axis(self) -> mpl_axis.Axis:
+        return getattr(self._canvas()._axes, f"{self._axis_name}axis")
 
     def _plt_get_color(self):
-        return self._canvas()._axes.xaxis.get_tick_params()["color"]
+        return self._get_mpl_axis().get_tick_params()["color"]
 
     def _plt_set_color(self, color):
-        ax = self._canvas()._axes
+        ax = self._get_mpl_axis()
         color = tuple(color)
-        ax.xaxis.set_tick_params(color=color, labelcolor=color)
-        ax.spines["bottom"].set_color(color)
-
-    def _plt_flip(self):
-        self._canvas()._axes.invert_xaxis()
-
-    def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
-        self._canvas()._axes.xaxis.grid(
-            visible,
-            which="major",
-            color=color,
-            linestyle=style.value,
-            linewidth=width,
-        )
-
-
-class YAxis(AxisBase):
-    def __init__(self, canvas: Canvas):
-        self._canvas = weakref.ref(canvas)
-
-    def _plt_get_limits(self) -> tuple[float, float]:
-        axes = self._canvas()._axes
-        y0, y1 = axes.get_ylim()
-        if axes.yaxis_inverted():
-            return y1, y0
+        ax.set_tick_params(color=color, labelcolor=color)
+        if hasattr(ax, "line"):  # 3D
+            ax.line.set_color(color)
         else:
-            return y0, y1
-
-    def _plt_set_limits(self, limits: tuple[float, float]):
-        axes = self._canvas()._axes
-        if axes.yaxis_inverted():
-            limits = limits[::-1]
-        axes.set_ylim(*limits)
-
-    def _plt_get_color(self):
-        return self._canvas()._axes.yaxis.get_tick_params()["color"]
-
-    def _plt_set_color(self, color):
-        ax = self._canvas()._axes
-        color = tuple(color)
-        ax.yaxis.set_tick_params(color=color, labelcolor=color)
-        ax.spines["left"].set_color(color)
+            if self._axis_name == "x":
+                self._canvas()._axes.spines["bottom"].set_color(color)
+            else:
+                self._canvas()._axes.spines["left"].set_color(color)
 
     def _plt_flip(self):
-        self._canvas()._axes.invert_yaxis()
+        axis = self._get_mpl_axis()
+        axis.set_inverted(not axis.get_inverted())
 
     def _plt_set_grid_state(self, visible: bool, color, width: float, style: LineStyle):
-        self._canvas()._axes.yaxis.grid(
+        axis = self._get_mpl_axis()
+        axis.grid(
             visible,
             which="major",
             color=color,

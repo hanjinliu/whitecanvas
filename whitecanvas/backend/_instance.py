@@ -72,6 +72,17 @@ class Backend:
             raise RuntimeError(f"Backend {self._name!r} does not implement {attr!r}")
         return out
 
+    def get_submodule(self, attr: str):
+        """Get a submodule from the current backend."""
+        import importlib
+
+        if self.is_dummy():
+            return _dummy_backend_module
+        out = importlib.import_module(f"whitecanvas.backend.{self._name}.{attr}")
+        if out is None:
+            raise RuntimeError(f"Backend {self._name!r} does not implement {attr!r}")
+        return out
+
     def is_dummy(self) -> bool:
         """True is the backend is a dummy backend."""
         return self.name.startswith(".")
@@ -87,7 +98,7 @@ class DummyBackendModule:
         self.Canvas = DummyObject
 
     def __getattr__(self, key):
-        raise RuntimeError(f"Cannot install {key!r} before finishing layouting.")
+        return DummyObject
 
 
 _dummy_backend_module = DummyBackendModule()

@@ -7,4 +7,5 @@ from whitecanvas.backend.mock.layers import (
     MonoLine,
     MultiLine,
     Texts,
+    Vectors,
 )

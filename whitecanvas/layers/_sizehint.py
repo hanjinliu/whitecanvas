@@ -47,3 +47,26 @@ def xyy_size_hint(
     else:
         _x_hint, _y_hint = y_minmax, x_minmax
     return _x_hint, _y_hint
+
+
+def xyz_size_hint(
+    x: NDArray[np.number],
+    y: NDArray[np.number],
+    z: NDArray[np.number],
+    xpad_rel: float = 0.0,
+    ypad_rel: float = 0.0,
+    zpad_rel: float = 0.0,
+) -> tuple[_Hint, _Hint, _Hint]:
+    if x.size == 0:
+        return None, None, None
+    xmin, xmax = x.min(), x.max()
+    ymin, ymax = y.min(), y.max()
+    zmin, zmax = z.min(), z.max()
+    xpad = (xmax - xmin) * xpad_rel
+    ypad = (ymax - ymin) * ypad_rel
+    zpad = (zmax - zmin) * zpad_rel
+    x_minmax = x.min() - xpad, x.max() + xpad
+    y_minmax = y.min() - ypad, y.max() + ypad
+    z_minmax = z.min() - zpad, z.max() + zpad
+    _x_hint, _y_hint, _z_hint = x_minmax, y_minmax, z_minmax
+    return _x_hint, _y_hint, _z_hint

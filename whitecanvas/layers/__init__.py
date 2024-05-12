@@ -20,6 +20,7 @@ from whitecanvas.layers._primitive import (
     Rug,
     Spans,
     Texts,
+    Vectors,
 )
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "Texts",
     "Rects",
     "Image",
+    "Vectors",
 ]

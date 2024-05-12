@@ -70,24 +70,156 @@ class CanvasEvents(SignalGroup):
     drawn = Signal()
 
 
-class CanvasBase(ABC):
-    """Base class for any canvas object."""
-
+class CanvasNDBase(ABC):
     title = _ns.TitleNamespace()
     x = _ns.XAxisNamespace()
     y = _ns.YAxisNamespace()
-    dims = Dims()
     layers = _ll.LayerList()
-    overlays = _ll.LayerList()
-    mouse = _ns.MouseNamespace()
     events: CanvasEvents
 
     def __init__(self, palette: ColormapType | None = None):
         if palette is None:
             palette = theme.get_theme().palette
-        self._color_palette = ColorPalette(palette)
         self.events = CanvasEvents()
+        self._color_palette = ColorPalette(palette)
         self._is_grouping = False
+
+    @abstractmethod
+    def _get_backend(self) -> Backend:
+        """Return the backend."""
+
+    @abstractmethod
+    def _canvas(self) -> protocols.CanvasProtocol:
+        """Return the canvas object."""
+
+    @abstractmethod
+    def _autoscale_for_layer(self, layer: _l.Layer):
+        """Autoscale the canvas for the given layer."""
+
+    def _draw_canvas(self):
+        self._canvas()._plt_draw()
+        self.events.drawn.emit()
+
+    def _coerce_name(self, name: str | None, default: str = "data") -> str:
+        if name is None:
+            basename = default
+            name = f"{default}-0"
+        else:
+            basename = name
+        i = 0
+        _exists = {layer.name for layer in self.layers}
+        while name in _exists:
+            name = f"{basename}-{i}"
+            i += 1
+        return name
+
+    def _cb_inserted(self, idx: int, layer: _l.Layer):
+        if self._is_grouping:
+            # this happens when the grouped layer is inserted
+            layer._connect_canvas(self)
+            return
+
+        _canvas = self._canvas()
+        for l in _iter_layers(layer):
+            _canvas._plt_add_layer(l._backend)
+            l._connect_canvas(self)
+
+        if isinstance(layer, _l.LayerWrapper):
+            # TODO: check if connecting LayerGroup is necessary
+            layer._connect_canvas(self)
+        # autoscale
+        self._autoscale_for_layer(layer)
+        self._cb_reordered()
+
+    def _cb_reordered(self):
+        layer_backends = []
+        for layer in self.layers:
+            if isinstance(layer, _l.PrimitiveLayer):
+                layer_backends.append(layer._backend)
+            elif isinstance(layer, _l.LayerGroup):
+                for child in layer.iter_primitive():
+                    layer_backends.append(child._backend)
+            elif isinstance(layer, _l.LayerWrapper):
+                for child in _iter_layers(layer):
+                    layer_backends.append(child._backend)
+            else:
+                raise RuntimeError(f"type {type(layer)} not expected")
+        self._canvas()._plt_reorder_layers(layer_backends)
+
+    def _cb_removed(self, idx: int, layer: _l.Layer):
+        if self._is_grouping:
+            return
+        _canvas = self._canvas()
+        for l in _iter_layers(layer):
+            _canvas._plt_remove_layer(l._backend)
+            l._disconnect_canvas(self)
+
+    def _cb_layer_grouped(self, group: _l.LayerGroup):
+        indices: list[int] = []  # layers to remove
+        not_found: list[_l.PrimitiveLayer] = []  # primitive layers to add
+        id_exists = set(map(id, self.layers.iter_primitives()))
+        for layer in group.iter_children():
+            try:
+                idx = self.layers.index(layer)
+                indices.append(idx)
+            except ValueError:
+                not_found.extend(_iter_layers(layer))
+        if not indices:
+            return
+        self._is_grouping = True
+        try:
+            for idx in reversed(indices):
+                # remove from the layer list since it is directly grouped
+                self.layers.pop(idx)
+            self.layers.append(group)
+            _canvas = self._canvas()
+            for child in not_found:
+                if id(child) in id_exists:
+                    # skip since it is already in the canvas
+                    continue
+                child._connect_canvas(self)
+                _canvas._plt_add_layer(child._backend)
+        finally:
+            self._is_grouping = False
+        self._cb_reordered()
+        self._autoscale_for_layer(group)
+
+    def _generate_colors(self, color: ColorType | None) -> Color:
+        if color is None:
+            color = self._color_palette.next()
+        return color
+
+    @property
+    def autoscale_enabled(self) -> bool:
+        """Return whether autoscale is enabled."""
+        return self._autoscale_enabled
+
+    @autoscale_enabled.setter
+    def autoscale_enabled(self, enabled: bool):
+        if not isinstance(enabled, bool):
+            raise TypeError(f"Expected a bool, got {type(enabled)}.")
+        self._autoscale_enabled = enabled
+
+    @contextmanager
+    def autoscale_context(self, enabled: bool):
+        """Context manager to temporarily change the autoscale state."""
+        _was_enabled = self.autoscale_enabled
+        self.autoscale_enabled = enabled
+        try:
+            yield
+        finally:
+            self.autoscale_enabled = _was_enabled
+
+
+class CanvasBase(CanvasNDBase):
+    """Base class for any canvas object."""
+
+    dims = Dims()
+    overlays = _ll.LayerList()
+    mouse = _ns.MouseNamespace()
+
+    def __init__(self, palette: ColormapType | None = None):
+        super().__init__(palette)
         self._autoscale_enabled = True
         if not self._get_backend().is_dummy():
             self._init_canvas()
@@ -179,39 +311,6 @@ class CanvasBase(ABC):
             stacklevel=2,
         )
         return self.mouse.clicked
-
-    @property
-    def autoscale_enabled(self) -> bool:
-        """Return whether autoscale is enabled."""
-        return self._autoscale_enabled
-
-    @autoscale_enabled.setter
-    def autoscale_enabled(self, enabled: bool):
-        if not isinstance(enabled, bool):
-            raise TypeError(f"Expected a bool, got {type(enabled)}.")
-        self._autoscale_enabled = enabled
-
-    @contextmanager
-    def autoscale_context(self, enabled: bool):
-        """Context manager to temporarily change the autoscale state."""
-        _was_enabled = self.autoscale_enabled
-        self.autoscale_enabled = enabled
-        try:
-            yield
-        finally:
-            self.autoscale_enabled = _was_enabled
-
-    @abstractmethod
-    def _get_backend(self) -> Backend:
-        """Return the backend."""
-
-    @abstractmethod
-    def _canvas(self) -> protocols.CanvasProtocol:
-        """Return the canvas object."""
-
-    def _draw_canvas(self):
-        self._canvas()._plt_draw()
-        self.events.drawn.emit()
 
     @property
     def native(self) -> Any:
@@ -394,8 +493,8 @@ class CanvasBase(ABC):
     def update_axes(
         self,
         *,
-        visible: bool = _void,
-        color: ColorType | None = _void,
+        visible: bool | None = None,
+        color: ColorType | None = None,
     ):
         """
         Update axes appearance.
@@ -407,16 +506,12 @@ class CanvasBase(ABC):
         color : color-like, optional
             Color of the axes.
         """
-        if visible is not _void:
-            self.x.ticks.visible = visible
-            self.y.ticks.visible = visible
-        if color is not _void:
-            self.x.color = color
-            self.x.ticks.color = color
-            self.x.label.color = color
-            self.y.color = color
-            self.y.ticks.color = color
-            self.y.label.color = color
+        if visible is not None:
+            self.x.ticks.visible = self.y.ticks.visible = visible
+        if color is not None:
+            self.x.color = self.y.color = color
+            self.x.ticks.color = self.y.ticks.color = color
+            self.x.label.color = self.y.label.color = color
         return self
 
     def update_labels(
@@ -444,9 +539,9 @@ class CanvasBase(ABC):
 
     def update_font(
         self,
-        size: float | _Void = _void,
-        color: ColorType | _Void = _void,
-        family: str | _Void = _void,
+        size: float | None = None,
+        color: ColorType | None = None,
+        family: str | None = None,
     ) -> Self:
         """
         Update all the fonts, including the title, x/y labels and x/y tick labels.
@@ -460,13 +555,13 @@ class CanvasBase(ABC):
         family : str, optional
             New font family.
         """
-        if size is not _void:
+        if size is not None:
             self.title.size = self.x.label.size = self.y.label.size = size
             self.x.ticks.size = self.y.ticks.size = size
-        if family is not _void:
+        if family is not None:
             self.title.family = self.x.label.family = self.y.label.family = family
             self.x.ticks.family = self.y.ticks.family = family
-        if color is not _void:
+        if color is not None:
             self.title.color = self.x.label.color = self.y.label.color = color
             self.x.ticks.color = self.y.ticks.color = color
         return self
@@ -1161,6 +1256,65 @@ class CanvasBase(ABC):
         )  # fmt: skip
         return self.add_layer(layer)
 
+    def add_vectors(
+        self,
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        vx: ArrayLike1D,
+        vy: ArrayLike1D,
+        *,
+        name: str | None = None,
+        color: ColorType | None = None,
+        width: float | None = None,
+        style: LineStyle | str | None = None,
+        alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.Vectors:
+        """
+        Add a vector field to the canvas.
+
+        >>> canvas.add_vectors(x, y, vx, vy)
+
+        Parameters
+        ----------
+        x : array-like
+            X coordinates of the vectors.
+        y : array-like
+            Y coordinates of the vectors.
+        vx : array-like
+            X components of the vectors.
+        vy : array-like
+            Y components of the vectors.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
+            Alpha channel of the line.
+        antialias : bool, default True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        Vectors
+            The vectors layer.
+        """
+        name = self._coerce_name(name)
+        color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
+        layer = _l.Vectors(
+            as_array_1d(x, dtype=np.float32), as_array_1d(y, dtype=np.float32),
+            as_array_1d(vx, dtype=np.float32), as_array_1d(vy, dtype=np.float32),
+            name=name, color=color, width=width, style=style,
+            alpha=alpha, antialias=antialias, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
     def add_infline(
         self,
         pos: tuple[float, float] = (0, 0),
@@ -1792,19 +1946,6 @@ class CanvasBase(ABC):
             layers = [layers, *more_layers]
         return _lg.LayerTuple(layers, name=name)
 
-    def _coerce_name(self, name: str | None, default: str = "data") -> str:
-        if name is None:
-            basename = default
-            name = f"{default}-0"
-        else:
-            basename = name
-        i = 0
-        _exists = {layer.name for layer in self.layers}
-        while name in _exists:
-            name = f"{basename}-{i}"
-            i += 1
-        return name
-
     def _autoscale_for_layer(
         self,
         layer: _l.Layer,
@@ -1861,24 +2002,6 @@ class CanvasBase(ABC):
             ymax += dy
         self.lims = xmin, xmax, ymin, ymax
 
-    def _cb_inserted(self, idx: int, layer: _l.Layer):
-        if self._is_grouping:
-            # this happens when the grouped layer is inserted
-            layer._connect_canvas(self)
-            return
-
-        _canvas = self._canvas()
-        for l in _iter_layers(layer):
-            _canvas._plt_add_layer(l._backend)
-            l._connect_canvas(self)
-
-        if isinstance(layer, _l.LayerWrapper):
-            # TODO: check if connecting LayerGroup is necessary
-            layer._connect_canvas(self)
-        # autoscale
-        self._autoscale_for_layer(layer)
-        self._cb_reordered()
-
     def _cb_overlay_inserted(self, idx: int, layer: _l.Layer):
         _canvas = self._canvas()
         fn = self._get_backend().get("as_overlay")
@@ -1899,21 +2022,6 @@ class CanvasBase(ABC):
         for l in _iter_layers(layer):
             _canvas._plt_remove_layer(l._backend)
             l._disconnect_canvas(self)
-
-    def _cb_reordered(self):
-        layer_backends = []
-        for layer in self.layers:
-            if isinstance(layer, _l.PrimitiveLayer):
-                layer_backends.append(layer._backend)
-            elif isinstance(layer, _l.LayerGroup):
-                for child in layer.iter_primitive():
-                    layer_backends.append(child._backend)
-            elif isinstance(layer, _l.LayerWrapper):
-                for child in _iter_layers(layer):
-                    layer_backends.append(child._backend)
-            else:
-                raise RuntimeError(f"type {type(layer)} not expected")
-        self._canvas()._plt_reorder_layers(layer_backends)
 
     def _cb_layer_grouped(self, group: _l.LayerGroup):
         indices: list[int] = []  # layers to remove

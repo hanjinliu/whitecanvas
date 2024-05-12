@@ -112,7 +112,7 @@ class PrimitiveLayer(Layer, Generic[_P]):
 
     _backend: _P
     _backend_name: str
-    _backend_class_name = None
+    _backend_class_name: str | None = None
 
     @property
     def visible(self) -> bool:
@@ -128,8 +128,15 @@ class PrimitiveLayer(Layer, Generic[_P]):
     def _create_backend(self, backend: Backend, *args) -> _P:
         """Create a backend object."""
         if self._backend_class_name is not None:
-            self._backend_name = backend.name
-            return backend.get(self._backend_class_name)(*args)
+            if "." not in self._backend_class_name:
+                backend_cls_name = self._backend_class_name
+                self._backend_name = backend.name
+                return backend.get(backend_cls_name)(*args)
+            else:
+                _mod, _cls = self._backend_class_name.rsplit(".")
+                backend_cls = getattr(backend.get_submodule(_mod), _cls)
+                self._backend_name = backend.name
+                return backend_cls(*args)
         for mro in reversed(type(self).__mro__):
             name = mro.__name__
             if (

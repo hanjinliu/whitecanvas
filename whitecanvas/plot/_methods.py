@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     kde = _CANVAS.add_kde
     rug = _CANVAS.add_rug
     text = _CANVAS.add_text
+    vectors = _CANVAS.add_vectors
     # categorical methods
     cat = _CANVAS.cat
     cat_x = _CANVAS.cat_x
@@ -67,6 +68,7 @@ else:
     kde = _make_method("kde")
     rug = _make_method("rug")
     text = _make_method("text")
+    vectors = _make_method("vectors")
     cat = _make_method("cat", pref="")
     cat_x = _make_method("cat_x", pref="")
     cat_y = _make_method("cat_y", pref="")

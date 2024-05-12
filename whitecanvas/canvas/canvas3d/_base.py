@@ -133,6 +133,7 @@ class Canvas3DBase(CanvasNDBase):
 
     @property
     def aspect_locked(self) -> bool:
+        """Whether the aspect ratio is locked."""
         return self._canvas()._plt_get_aspect_locked()
 
     @aspect_locked.setter
@@ -440,6 +441,28 @@ class Canvas3DBase(CanvasNDBase):
         alpha: float = 1.0,
         antialias: bool = True,
     ) -> layer3d.Vectors3D:
+        """
+        Add a 3D vector field.
+
+        Parameters
+        ----------
+        x, y, z : array-like
+            Base points of the vectors.
+        vx, vy, vz : array-like
+            Components of the vectors.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the vectors.
+        width : float, optional
+            Width of the vectors.
+        style : str or LineStyle, optional
+            Style of the vectors.
+        alpha : float, default 1.0
+            Alpha channel of the vectors.
+        antialias : bool, default True
+            Whether to use antialiasing.
+        """
         name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)

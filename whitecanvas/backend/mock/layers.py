@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from cmap import Colormap
+from numpy.typing import NDArray
 
 from whitecanvas import protocols
 from whitecanvas.backend.mock._base import (
@@ -214,3 +215,27 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
 
     def _plt_set_text_fontfamily(self, family: str):
         self._fontfamily = family
+
+
+@protocols.check_protocol(protocols.VectorsProtocol)
+class Vectors(MockHasData, MockHasEdges):
+    def __init__(self, x0, dx, y0, dy):
+        super().__init__((x0, dx, y0, dy))
+
+    def _plt_get_ndata(self) -> int:
+        return self._plt_get_data()[0].size
+
+    def _plt_get_edge_color(self) -> NDArray[np.float32]:
+        if not hasattr(self, "_edge_color"):
+            ndata = self._plt_get_ndata()
+            self._edge_color = np.zeros((ndata, 4), dtype=np.float32)
+        return self._edge_color
+
+    def _plt_set_edge_color(self, color: NDArray[np.float32]):
+        self._edge_color = as_color_array(color, self._plt_get_ndata())
+
+    def _plt_get_antialias(self) -> bool:
+        return self._antialias
+
+    def _plt_set_antialias(self, antialias: bool):
+        self._antialias = antialias

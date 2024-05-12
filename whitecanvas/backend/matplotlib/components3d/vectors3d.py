@@ -27,11 +27,21 @@ class Vectors3D(Quiver, MplLayer):
         self._3d_w = dz
 
     def do_3d_projection(self, renderer=None):
-        x, y, z = proj3d.proj_transform(self._3d_x, self._3d_y, self._3d_z, self.axes.M)
-        u, v, w = proj3d.proj_transform(self._3d_u, self._3d_v, self._3d_w, self.axes.M)
-        self.set_UVC(u, v)
-        self.set_offsets(np.column_stack([x, y]))
-        return np.min(z)
+        x0, y0, z0 = proj3d.proj_transform(
+            self._3d_x,
+            self._3d_y,
+            self._3d_z,
+            self.axes.M,
+        )
+        x1, y1, z1 = proj3d.proj_transform(
+            self._3d_x + self._3d_u,
+            self._3d_y + self._3d_v,
+            self._3d_z + self._3d_w,
+            self.axes.M,
+        )
+        self.set_UVC(x1 - x0, y1 - y0)
+        self.set_offsets(np.column_stack([x0, y0]))
+        return np.min(z0)
 
     def post_add(self, canvas: Canvas3D):
         self.transform = canvas._axes.transData

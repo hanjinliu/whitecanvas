@@ -3,12 +3,12 @@ from __future__ import annotations
 import numpy as np
 from vispy.scene import visuals
 
-from whitecanvas.backend.vispy.line import MonoLine as Line2D
+from whitecanvas.backend.vispy.line import MonoLine as MonoLine2D
 
 
-class Line3D(Line2D):
-    def __init__(self, xdata, ydata):
-        data = np.stack([xdata, ydata], axis=1)
+class MonoLine3D(MonoLine2D):
+    def __init__(self, xdata, ydata, zdata):
+        data = np.stack([xdata, ydata, zdata], axis=1)
         visuals.Line.__init__(self, data, antialias=True)
         self.unfreeze()
 

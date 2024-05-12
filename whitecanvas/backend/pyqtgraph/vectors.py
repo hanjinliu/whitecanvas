@@ -45,7 +45,8 @@ class ArrowHeads(pg.ItemGroup):
                 )
                 self.addItem(item)
         for i, item in enumerate(self.childItems()):
-            item.setStyle(pos=pos[i], angle=angle[i])
+            item.setStyle(angle=angle[i])
+            item.setPos(*pos[i])
 
     def setPens(self, pens: list[QtGui.QPen]):
         for pen, item in zip(pens, self.childItems()):
@@ -79,7 +80,7 @@ class Vectors(pg.ItemGroup, PyQtLayer):
         self._arrow_tails = arrow_tails
 
     def _plt_get_data(self):
-        return self._start[:, 0], self._start[:, 1], self._vec[:, 0], self._vec[:, 1]
+        return self._start[:, 0], self._vec[:, 0], self._start[:, 1], self._vec[:, 1]
 
     def _plt_set_data(self, x0, dx, y0, dy):
         angles = np.degrees(np.arctan2(dy, -dx))

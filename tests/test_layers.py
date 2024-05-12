@@ -385,3 +385,21 @@ def test_rects(backend: str):
     layer.rects
     layer.as_edge_only()
     layer.with_hover_template("x={left:.2f}, y={bottom:.2f}")
+
+
+def test_vectors(backend: str):
+    if backend not in ("matplotlib", "pyqtgraph", "mock"):
+        pytest.skip(f"Vectors not supported by {backend}")
+    canvas = new_canvas(backend=backend)
+    layer = canvas.add_vectors(np.arange(10), np.zeros(10), np.ones(10), np.zeros(10))
+    layer.data
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.zeros(10))
+    assert_allclose(layer.data.vx, np.ones(10))
+    assert_allclose(layer.data.vy, np.zeros(10))
+    layer.data = np.arange(10) * 2, np.zeros(10), np.ones(10), np.zeros(10)
+    assert_allclose(layer.data.x, np.arange(10) * 2)
+    layer.color
+    layer.color = [1.0, 0.0, 0.0, 1.0]
+    layer.width = 3
+    layer.style = ":"

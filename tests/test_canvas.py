@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 
 import pytest
 import whitecanvas as wc
-from whitecanvas import new_canvas, wrap_canvas
+from whitecanvas import new_canvas, wrap_canvas, new_canvas_3d
 from whitecanvas.types import Point, MouseEvent
 
 from ._utils import assert_color_equal, filter_warning
@@ -374,3 +374,17 @@ def test_emulating_mouse_move():
     assert history == []
     canvas.mouse.emulate_drag([(1, 1), (1, 2), (1, 3)], button="right")
     assert history == ["press", "move", "move", "release"]
+
+def test_canvas_3d(backend: str):
+    if backend not in ("matplotlib", "vispy", "plotly"):
+        pytest.skip(f"{backend} does not support 3d")
+    canvas = new_canvas_3d(backend=backend)
+    if backend != "vispy":
+        canvas.update_axes(visible=True, color="gray")
+        canvas.update_font(size=13, color="pink", family="Arial")
+    canvas.update_labels(title="Title", x="X", y="Y", z="Z")
+    canvas.add_line([0, 1, 2], [0, 1, 2], [0, 1, 2])
+    canvas.add_markers([0, 1, 2], [0, 1, 2], [0, 1, 2])
+    if backend == "matplotlib":
+        canvas.add_vectors([0, 1, 2], [0, 1, 2], [0, 0, 0], [0, 1, 2], [0, 1, 2], [1, 1, 1])
+    canvas.add_surface(np.array([[2,3,2], [3,2,3]]))

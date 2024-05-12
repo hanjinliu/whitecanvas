@@ -22,7 +22,7 @@ class Vectors(Quiver, MplLayer):
         )
 
     def _plt_get_data(self):
-        return self.X, self.Y, self.U, self.V
+        return self.X, self.U, self.Y, self.V
 
     def _plt_set_data(self, x0, dx, y0, dy):
         self.set_UVC(dx, dy)

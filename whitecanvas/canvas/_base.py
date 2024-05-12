@@ -1270,6 +1270,39 @@ class CanvasBase(CanvasNDBase):
         alpha: float = 1.0,
         antialias: bool = True,
     ) -> _l.Vectors:
+        """
+        Add a vector field to the canvas.
+
+        >>> canvas.add_vectors(x, y, vx, vy)
+
+        Parameters
+        ----------
+        x : array-like
+            X coordinates of the vectors.
+        y : array-like
+            Y coordinates of the vectors.
+        vx : array-like
+            X components of the vectors.
+        vy : array-like
+            Y components of the vectors.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
+            Alpha channel of the line.
+        antialias : bool, default True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        Vectors
+            The vectors layer.
+        """
         name = self._coerce_name(name)
         color = self._generate_colors(color)
         width = theme._default("line.width", width)

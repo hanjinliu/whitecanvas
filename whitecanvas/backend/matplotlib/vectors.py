@@ -25,8 +25,10 @@ class Vectors(Quiver, MplLayer):
         return self.X, self.U, self.Y, self.V
 
     def _plt_set_data(self, x0, dx, y0, dy):
+        self.XY = np.column_stack([x0, y0])
+        self.X, self.Y = x0, y0
+        self.set_offsets(self.XY)
         self.set_UVC(dx, dy)
-        self.set_offsets(np.column_stack([x0, y0]))
 
     def post_add(self, canvas: Canvas):
         self.transform = canvas._axes.transData

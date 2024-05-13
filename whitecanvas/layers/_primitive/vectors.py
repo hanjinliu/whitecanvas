@@ -94,7 +94,7 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
 
     def _set_layer_data(self, data: XYVectorData):
         x0, y0, vx, vy = data
-        self._backend._plt_set_data(x0, y0, vx, vy)
+        self._backend._plt_set_data(x0, vx, y0, vy)
         self._x_hint, self._y_hint = xy_size_hint(
             np.concatenate([x0, x0 + vx]), np.concatenate([y0, y0 + vy])
         )

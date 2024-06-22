@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 
 import numpy as np
 
 from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import AggMethods, BaseCatPlotter, CatIterator
+from whitecanvas.canvas.dataframe._misc import make_sorter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.types import (
@@ -107,6 +108,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         value: str | None,
         update_labels: bool = False,
         numeric: bool = False,
+        sort_func: Callable[[tuple], int] | None = None,
     ):
         super().__init__(canvas, df)
         if isinstance(offset, str):
@@ -139,7 +141,12 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         #             f"(dtype={arr.dtype!r})."
         #         )
         self._offset: tuple[str, ...] = offset
-        self._cat_iter = CatIterator(self._df, offset, numeric=numeric)
+        self._cat_iter = CatIterator(
+            self._df,
+            offsets=offset,
+            numeric=numeric,
+            sort_func=sort_func,
+        )
         self._value = value
         self._update_labels = update_labels
         if update_labels:
@@ -244,6 +251,21 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         out = type(self)(self._canvas(), df, var_name, value_name, self._update_labels)
         out._df = df
         return out
+
+    def sort_in_order(self, order: Sequence[Any]) -> Self:
+        """
+        Sort the data in the given order.
+
+        Parameters
+        ----------
+        order : sequence of any
+            The order to sort the data.
+        """
+        order_normed = tuple(u if isinstance(u, tuple) else (u,) for u in order)
+        return type(self)(
+            self._canvas(), self._df, self._offset, self._value, self._update_labels,
+            sort_func=make_sorter(order_normed)
+        )  # fmt: skip
 
     ### 1-D categorical ###
 

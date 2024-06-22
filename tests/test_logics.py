@@ -84,6 +84,28 @@ def test_melt():
     df = {"x": rng.normal(size=15), "y": rng.normal(size=15)}
     canvas.cat_x(df).melt().add_boxplot(color="variable")
 
+def test_sort():
+    rng = np.random.default_rng(1642)
+    df = {
+        "x": ["a"] * 14 + ["b"] * 10 + ["c"] * 16,
+        "y": ["p"] * 20 + ["q"] * 20,
+        "val": rng.normal(size=40),
+    }
+    canvas = new_canvas(backend="mock")
+    canvas.cat_x(df, "x", "val").sort_in_order(["b", "a", "c"]).add_boxplot()
+    assert canvas.x.ticks.labels == ["b", "a", "c"]
+
+    canvas = new_canvas(backend="mock")
+    (
+        canvas
+        .cat_xy(df, "x", "y")
+        .sort_in_order(x=["b", "a", "c"], y=["q", "p"])
+        .mean()
+        .add_heatmap("val")
+    )
+    assert canvas.x.ticks.labels == ["b", "a", "c"]
+    assert canvas.y.ticks.labels == ["q", "p"]
+
 def test_matplotlib_tooltip():
     canvas = new_canvas(backend="matplotlib")
     canvas.add_markers([1, 2, 3], [4, 5, 6])

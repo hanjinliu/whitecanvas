@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from whitecanvas.layers.tabular._dataframe import DataFrameWrapper
 
 _C = TypeVar("_C")  # NOTE: don't have to be a canvas
+_T = TypeVar("_T")
 _DF = TypeVar("_DF")
 NStr = Union[str, Sequence[str]]
 AggMethods = Literal["min", "max", "mean", "median", "sum", "std"]
@@ -57,13 +58,15 @@ class CatIterator(Generic[_DF]):
         df: DataFrameWrapper[_DF],
         offsets: tuple[str, ...],
         numeric: bool = False,
-        sort_func: Callable[[tuple], int] | None = None,
+        sort_func: Callable[[Sequence[_T]], Sequence[_T]] | None = None,
     ):
         self._df = df
-        self._offsets = offsets
+        self._offsets = tuple(offsets)
         self._cat_map_cache = {}
         self._numeric = numeric
-        if sort_func is not None and numeric:
+        if sort_func is None:
+            sort_func = lambda x: x  # noqa: E731
+        elif numeric:
             raise ValueError("sort_func is not allowed for numeric data.")
         self._sort_func = sort_func
 
@@ -83,10 +86,11 @@ class CatIterator(Generic[_DF]):
         if len(columns) == 0:
             return {(): 0}
         serieses = [self._df[c] for c in columns]
-        if self._sort_func is None:
-            _map = {uni: i for i, uni in enumerate(OrderedSet(zip(*serieses)))}
+        if columns == self._offsets:
+            categories = self._sort_func(OrderedSet(zip(*serieses)))
         else:
-            _map = {uni: self._sort_func(uni) for uni in set(zip(*serieses))}
+            categories = OrderedSet(zip(*serieses))
+        _map = {uni: i for i, uni in enumerate(categories)}
         self._cat_map_cache[columns] = _map
         return _map
 

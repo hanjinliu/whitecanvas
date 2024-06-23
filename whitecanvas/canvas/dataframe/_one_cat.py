@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 import numpy as np
 
 from whitecanvas import theme
+from whitecanvas.canvas.dataframe import _misc
 from whitecanvas.canvas.dataframe._base import AggMethods, BaseCatPlotter, CatIterator
-from whitecanvas.canvas.dataframe._misc import make_sorter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.types import (
@@ -254,7 +254,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
 
     def sort_in_order(self, order: Sequence[Any]) -> Self:
         """
-        Sort the data in the given order.
+        Sort the categories in the given order.
 
         Parameters
         ----------
@@ -264,8 +264,26 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         order_normed = tuple(u if isinstance(u, tuple) else (u,) for u in order)
         return type(self)(
             self._canvas(), self._df, self._offset, self._value, self._update_labels,
-            sort_func=make_sorter(order_normed)
+            sort_func=_misc.make_sorter_manual(order_normed)
         )  # fmt: skip
+
+    def sort(self, *, ascending: bool = True) -> Self:
+        """
+        Sort the categories in ascending or descending order.
+
+        Parameters
+        ----------
+        ascending : bool, default True
+            Whether to sort the data in ascending order.
+        """
+        return type(self)(
+            self._canvas(),
+            self._df,
+            self._offset,
+            self._value,
+            self._update_labels,
+            sort_func=_misc.sorter_ascending if ascending else _misc.sorter_descending,
+        )
 
     ### 1-D categorical ###
 

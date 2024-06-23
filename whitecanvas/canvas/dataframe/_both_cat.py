@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 
 import numpy as np
 
+from whitecanvas.canvas.dataframe import _misc
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter, CatIterator
-from whitecanvas.canvas.dataframe._misc import make_sorter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
 from whitecanvas.types import ColormapType
@@ -87,8 +87,8 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
     def sort_in_order(
         self,
         *,
-        x: Sequence[Any],
-        y: Sequence[Any],
+        x: Sequence[Any] | None = None,
+        y: Sequence[Any] | None = None,
     ) -> Self:
         """
         Sort the data in the given order.
@@ -100,16 +100,48 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
         y : sequence of any
             The order to sort the y-axis data.
         """
-        x_normed = tuple(u if isinstance(u, tuple) else (u,) for u in x)
-        y_normed = tuple(u if isinstance(u, tuple) else (u,) for u in y)
+        if x is not None:
+            x_sorter = _misc.make_sorter_manual(
+                [u if isinstance(u, tuple) else (u,) for u in x]
+            )
+        else:
+            x_sorter = None
+        if y is not None:
+            y_sorter = _misc.make_sorter_manual(
+                [u if isinstance(u, tuple) else (u,) for u in y]
+            )
+        else:
+            y_sorter = None
+
         return type(self)(
             self._canvas(),
             self._df,
             x=self._x,
             y=self._y,
             update_labels=self._update_label,
-            x_sorter=make_sorter(x_normed),
-            y_sorter=make_sorter(y_normed),
+            x_sorter=x_sorter,
+            y_sorter=y_sorter,
+        )
+
+    def sort(self, *, x_ascending: bool = True, y_ascending: bool = True) -> Self:
+        """
+        Sort the categories in ascending or descending order.
+
+        Parameters
+        ----------
+        x_ascending : bool, default True
+            Sort the x-axis categories in ascending order.
+        y_ascending : bool, default True
+            Sort the y-axis categories in ascending order.
+        """
+        return type(self)(
+            self._canvas(),
+            self._df,
+            x=self._x,
+            y=self._y,
+            update_labels=self._update_label,
+            x_sorter=_misc.sorter_ascending if x_ascending else _misc.sorter_descending,
+            y_sorter=_misc.sorter_ascending if y_ascending else _misc.sorter_descending,
         )
 
     def _update_xy_label(

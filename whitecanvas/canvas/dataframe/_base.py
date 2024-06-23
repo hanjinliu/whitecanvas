@@ -3,6 +3,7 @@ from __future__ import annotations
 import weakref
 from typing import (
     TYPE_CHECKING,
+    Callable,
     Generic,
     Iterator,
     Literal,
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
     from whitecanvas.layers.tabular._dataframe import DataFrameWrapper
 
 _C = TypeVar("_C")  # NOTE: don't have to be a canvas
+_T = TypeVar("_T")
 _DF = TypeVar("_DF")
 NStr = Union[str, Sequence[str]]
 AggMethods = Literal["min", "max", "mean", "median", "sum", "std"]
@@ -56,11 +58,17 @@ class CatIterator(Generic[_DF]):
         df: DataFrameWrapper[_DF],
         offsets: tuple[str, ...],
         numeric: bool = False,
+        sort_func: Callable[[Sequence[_T]], Sequence[_T]] | None = None,
     ):
         self._df = df
-        self._offsets = offsets
+        self._offsets = tuple(offsets)
         self._cat_map_cache = {}
         self._numeric = numeric
+        if sort_func is None:
+            sort_func = lambda x: x  # noqa: E731
+        elif numeric:
+            raise ValueError("sort_func is not allowed for numeric data.")
+        self._sort_func = sort_func
 
     @property
     def df(self) -> DataFrameWrapper[_DF]:
@@ -70,19 +78,20 @@ class CatIterator(Generic[_DF]):
     def offsets(self) -> tuple[str, ...]:
         return self._offsets
 
-    def category_map(self, columns: tuple[str, ...] | None = None) -> dict[tuple, int]:
+    def category_map(self, columns: tuple[str, ...]) -> dict[tuple, int]:
         """Calculate how to map category columns to integers."""
-        if columns is None:
-            key = self._offsets
-        else:
-            key = tuple(columns)
-        if key in self._cat_map_cache:
-            return self._cat_map_cache[key]
-        if len(key) == 0:
+        columns = tuple(columns)
+        if columns in self._cat_map_cache:
+            return self._cat_map_cache[columns]
+        if len(columns) == 0:
             return {(): 0}
-        columns = [self._df[c] for c in key]
-        _map = {uni: i for i, uni in enumerate(OrderedSet(zip(*columns)))}
-        self._cat_map_cache[key] = _map
+        serieses = [self._df[c] for c in columns]
+        if columns == self._offsets:
+            categories = self._sort_func(OrderedSet(zip(*serieses)))
+        else:
+            categories = OrderedSet(zip(*serieses))
+        _map = {uni: i for i, uni in enumerate(categories)}
+        self._cat_map_cache[columns] = _map
         return _map
 
     def iter_arrays(
@@ -91,6 +100,16 @@ class CatIterator(Generic[_DF]):
         dodge: tuple[str, ...] | None = None,
         width: float = 0.8,
     ) -> Iterator[tuple[tuple, float, DataFrameWrapper[_DF]]]:
+        """
+        Iterate over the groups of the DataFrame for plotting.
+
+        Returns
+        -------
+        Iterator of (tuple, float, DataFrameWrapper[_DF])
+            The first tuple is the group key, the second float is the x (or y)
+            coordinate the group should be plotted at, and the third is the subset
+            of the DataFrame that corresponds to the group.
+        """
         if dodge is None:
             dodge = ()
         if set(self._offsets) > set(by):
@@ -156,12 +175,14 @@ class CatIterator(Generic[_DF]):
         return out
 
     def axis_ticks(self) -> tuple[list[float], list[str]]:
-        pos = []
-        labels = []
+        """Prepare the axis ticks and labels for the category plot."""
+        pos: list[float] = []
+        labels: list[str] = []
         for k, v in self.category_map(self._offsets).items():
             pos.append(v)
             labels.append("\n".join(map(str, k)))
-        return pos, labels
+        pos_indices = np.argsort(pos)
+        return [pos[i] for i in pos_indices], [labels[i] for i in pos_indices]
 
     def axis_label(self) -> str:
         return "/".join(self._offsets)

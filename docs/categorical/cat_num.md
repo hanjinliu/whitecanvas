@@ -471,3 +471,56 @@ canvas = new_canvas("matplotlib")
     .with_outliers(size=8)
 )
 ```
+
+## Sort categorical axis
+
+By default, the order of the categories is determined by the order of appearance in the
+data. In the example data, the order of `"category"` is "A" and "B".
+
+If you want to sort the categories as you like, you can use the sorting methods of the
+categorical plotters.
+
+### Sort in ascending or descending order
+
+The `sort` method will sort the categories in ascending or descending order. The default
+is ascending. Use `ascending=False` to sort in descending order.
+
+``` python hl_lines="5"
+#!name: categorical_axis_sort_descending
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .sort(ascending=False)
+    .add_violinplot(color="replicate")
+)
+```
+
+Sorting works similarly for the categorical axis with multiple columns.
+
+``` python hl_lines="4"
+#!name: categorical_axis_sort_descending_multiple
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x=["category", "replicate"], y="observation")
+    .sort(ascending=False)
+    .add_violinplot(color="replicate")
+)
+```
+
+### Sort in any order
+
+If you already know the category names and want to sort them in a certain order, use the
+`sort_in_order` method.
+
+``` python hl_lines="5"
+#!name: categorical_axis_sort_manual
+canvas = new_canvas("matplotlib")
+(
+    canvas
+    .cat_x(df, x="category", y="observation")
+    .sort_in_order(["B", "A"])
+    .add_violinplot(color="replicate")
+)
+```

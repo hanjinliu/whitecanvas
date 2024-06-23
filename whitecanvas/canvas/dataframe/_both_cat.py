@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 
 import numpy as np
 
+from whitecanvas.canvas.dataframe import _misc
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
@@ -22,6 +23,8 @@ _DF = TypeVar("_DF")
 
 
 class _XYAggregator(Generic[_C, _DF]):
+    """Aggregator for XY-categorical plots."""
+
     def __init__(self, method: str, plotter: XYCatPlotter[_C, _DF] = None):
         self._method = method
         self._plotter = plotter
@@ -33,7 +36,14 @@ class _XYAggregator(Generic[_C, _DF]):
         return f"XYAggregator<{self._method}>"
 
     def __call__(self) -> XYCatAggPlotter[_C, _DF]:
-        """Aggregate the values before plotting it."""
+        """
+        Aggregate the values before plotting it.
+
+        Examples
+        --------
+        >>> canvas.cat_xy(df, "x", "y").count().add_heatmap("value")
+        >>> canvas.cat_xy(df, "x", "y").mean().add_heatmap("value")
+        """
         plotter = self._plotter
         if plotter is None:
             raise TypeError("Cannot call this method from a class.")
@@ -57,6 +67,8 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
         x: str | tuple[str, ...],
         y: str | tuple[str, ...],
         update_labels: bool = False,
+        x_sorter: Callable[[tuple], int] | None = None,
+        y_sorter: Callable[[tuple], int] | None = None,
     ):
         super().__init__(canvas, df)
         if isinstance(x, str):
@@ -66,11 +78,71 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
         self._x: tuple[str, ...] = x
         self._y: tuple[str, ...] = y
         self._update_label = update_labels
-        self._cat_iter_x = CatIterator(self._df, x)
-        self._cat_iter_y = CatIterator(self._df, y)
+        self._cat_iter_x = CatIterator(self._df, x, sort_func=x_sorter)
+        self._cat_iter_y = CatIterator(self._df, y, sort_func=y_sorter)
         if update_labels:
             self._update_xy_label(x, y)
         self._update_axis_labels()
+
+    def sort_in_order(
+        self,
+        *,
+        x: Sequence[Any] | None = None,
+        y: Sequence[Any] | None = None,
+    ) -> Self:
+        """
+        Sort the data in the given order.
+
+        Parameters
+        ----------
+        x : sequence of any
+            The order to sort the x-axis data.
+        y : sequence of any
+            The order to sort the y-axis data.
+        """
+        if x is not None:
+            x_sorter = _misc.make_sorter_manual(
+                [u if isinstance(u, tuple) else (u,) for u in x]
+            )
+        else:
+            x_sorter = None
+        if y is not None:
+            y_sorter = _misc.make_sorter_manual(
+                [u if isinstance(u, tuple) else (u,) for u in y]
+            )
+        else:
+            y_sorter = None
+
+        return type(self)(
+            self._canvas(),
+            self._df,
+            x=self._x,
+            y=self._y,
+            update_labels=self._update_label,
+            x_sorter=x_sorter,
+            y_sorter=y_sorter,
+        )
+
+    def sort(self, *, x_ascending: bool = True, y_ascending: bool = True) -> Self:
+        """
+        Sort the categories in ascending or descending order.
+
+        Parameters
+        ----------
+        x_ascending : bool, default True
+            Sort the x-axis categories in ascending order.
+        y_ascending : bool, default True
+            Sort the y-axis categories in ascending order.
+        """
+        return type(self)(
+            self._canvas(),
+            self._df,
+            x=self._x,
+            y=self._y,
+            update_labels=self._update_label,
+            x_sorter=_misc.sorter_ascending if x_ascending else _misc.sorter_descending,
+            y_sorter=_misc.sorter_ascending if y_ascending else _misc.sorter_descending,
+        )
 
     def _update_xy_label(
         self,

@@ -950,6 +950,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sort-categorical-axis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort categorical axis
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sort categorical axis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sort-in-ascending-or-descending-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort in ascending or descending order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-in-any-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort in any order
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1516,6 +1549,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sort-categorical-axis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort categorical axis
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sort categorical axis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sort-in-ascending-or-descending-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort in ascending or descending order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-in-any-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort in any order
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1902,6 +1968,45 @@ strip plot, arguments specific to strip plot (<code>symbol</code>, <code>size</c
 </span><span class="p">)</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_violin_with_outliers.png" width="360px" /></p>
+<h2 id="sort-categorical-axis">Sort categorical axis</h2>
+<p>By default, the order of the categories is determined by the order of appearance in the
+data. In the example data, the order of <code>"category"</code> is "A" and "B".</p>
+<p>If you want to sort the categories as you like, you can use the sorting methods of the
+categorical plotters.</p>
+<h3 id="sort-in-ascending-or-descending-order">Sort in ascending or descending order</h3>
+<p>The <code>sort</code> method will sort the categories in ascending or descending order. The default
+is ascending. Use <code>ascending=False</code> to sort in descending order.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span>    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_sort_descending.png" width="360px" /></p>
+<p>Sorting works similarly for the categorical axis with multiple columns.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+<span class="hll">    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;replicate&quot;</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+</span>    <span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_sort_descending_multiple.png" width="360px" /></p>
+<h3 id="sort-in-any-order">Sort in any order</h3>
+<p>If you already know the category names and want to sort them in a certain order, use the
+<code>sort_in_order</code> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span>
+    <span class="o">.</span><span class="n">cat_x</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">sort_in_order</span><span class="p">([</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">])</span>
+</span>    <span class="o">.</span><span class="n">add_violinplot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;replicate&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_axis_sort_manual.png" width="360px" /></p>
 
 
 

@@ -315,5 +315,6 @@ def test_pandas_and_polars():
     cat_pd.first().add_markers(color="c")
 
     cat_pl.add_swarmplot(color="c")
+    cat_pl.sort().add_stripplot(color="c")
     cat_pl.mean().add_markers(color="c")
     cat_pl.first().add_markers(color="c")

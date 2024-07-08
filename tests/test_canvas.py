@@ -3,6 +3,7 @@ from pathlib import Path
 import tempfile
 import numpy as np
 from numpy.testing import assert_allclose
+import matplotlib.pyplot as plt
 
 import pytest
 import whitecanvas as wc
@@ -275,6 +276,7 @@ def test_multidim():
 
 def test_multidim_slider():
     # TODO: how to test other app backends?
+    plt.close("all")
     canvas = new_canvas(backend="matplotlib:qt")
     x = np.arange(5)
     ys = [x, x ** 2, x ** 3]

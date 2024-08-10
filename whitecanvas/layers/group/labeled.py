@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar, ove
 import numpy as np
 from cmap import Colormap
 from numpy.typing import NDArray
-from typing_extensions import deprecated
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend, _mixin, _text_utils
@@ -28,14 +27,12 @@ from whitecanvas.types import (
     Origin,
     Rect,
     XYData,
-    _Void,
 )
 from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-_void = _Void()
 _NFace = TypeVar("_NFace", bound="_mixin.FaceNamespace")
 _NEdge = TypeVar("_NEdge", bound="_mixin.EdgeNamespace")
 _Size = TypeVar("_Size")
@@ -130,10 +127,6 @@ class _LabeledLayerBase(LayerContainer):
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(px + xoff, py + yoff)
         self._text_offset = _offset
-
-    @deprecated("add_text_offset is deprecated. Please use with_text_offset instead.")
-    def add_text_offset(self, *args, **kwargs):
-        return self.with_text_offset(*args, **kwargs)
 
     def with_xerr(
         self,
@@ -736,12 +729,12 @@ class LabeledImage(LayerContainer):
         self.image.origin = origin
 
     @overload
-    def fit_to(self, bbox: Rect | tuple[float, float, float, float], /) -> Image:
-        ...
+    def fit_to(self, bbox: Rect | tuple[float, float, float, float], /) -> Image: ...
 
     @overload
-    def fit_to(self, left: float, right: float, bottom: float, top: float, /) -> Image:
-        ...
+    def fit_to(
+        self, left: float, right: float, bottom: float, top: float, /
+    ) -> Image: ...
 
     def fit_to(self, *args) -> Image:
         """Fit the image to the given bounding box."""

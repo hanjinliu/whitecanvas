@@ -19,7 +19,6 @@ import numpy as np
 from cmap import Color
 from numpy.typing import ArrayLike
 from psygnal import Signal, SignalGroup
-from typing_extensions import deprecated
 
 from whitecanvas import layers as _l
 from whitecanvas import protocols, theme
@@ -49,7 +48,6 @@ from whitecanvas.types import (
     OrientationLike,
     Rect,
     Symbol,
-    _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 from whitecanvas.utils.type_check import is_real_number
@@ -62,7 +60,6 @@ if TYPE_CHECKING:
 
 _L = TypeVar("_L", bound=_l.Layer)
 _L0 = TypeVar("_L0", _l.Bars, _l.Band)
-_void = _Void()
 
 
 class CanvasEvents(SignalGroup):
@@ -733,22 +730,6 @@ class CanvasBase(CanvasNDBase):
 
     def between(self, l0, l1) -> BetweenPlotter[Self]:
         return BetweenPlotter(self, l0, l1)
-
-    @deprecated(
-        "ImageRef is deprecated and will be removed in the future. "
-        "Please use the Image methods `with_text`, `with_colorbar` instead.",
-    )
-    def imref(self, layer: _l.Image):
-        """The Image reference namespace."""
-        from whitecanvas.canvas._imageref import ImageRef
-
-        while isinstance(layer, _l.LayerWrapper):
-            layer = layer._base_layer
-        if not isinstance(layer, _l.Image):
-            raise TypeError(
-                f"Expected an Image layer or its wrapper, got {type(layer)}."
-            )
-        return ImageRef(self, layer)
 
     def fit(self, layer: _l.DataBoundLayer[_P]) -> FitPlotter[Self, _P]:
         """The fit plotter namespace."""

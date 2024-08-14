@@ -26,6 +26,7 @@ from whitecanvas.types import (
     LineStyle,
     Orientation,
     OrientationLike,
+    StepStyle,
     Symbol,
     XYData,
     _Void,
@@ -499,6 +500,115 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
             xdata, ydata, name=name, color=color, alpha=alpha, antialias=antialias,
             width=width, style=style, backend=backend,
         )  # fmt: skip
+
+
+class LineStep(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData]):
+    _backend_class_name = "MonoLine"
+    events: LineLayerEvents
+    _events_class = LineLayerEvents
+
+    def __init__(
+        self,
+        xdata: ArrayLike1D,
+        ydata: ArrayLike1D,
+        *,
+        name: str | None = None,
+        where: str | StepStyle = StepStyle.MID,
+        color: ColorType = "blue",
+        width: float = 1,
+        alpha: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
+        backend: Backend | str | None = None,
+    ):
+        xdata, ydata = normalize_xy(xdata, ydata)
+        self._where = StepStyle(where)
+        super().__init__(name=name)
+        xback, yback = self._data_to_backend_data(XYData(xdata, ydata))
+        self._backend = self._create_backend(Backend(backend), xback, yback)
+        self.update(
+            color=color, width=width, style=style, alpha=alpha, antialias=antialias
+        )
+        self._x_hint, self._y_hint = xy_size_hint(xback, yback)
+        self._backend._plt_connect_pick_event(self.events.clicked.emit)
+
+    def _data_to_backend_data(self, data: XYData) -> XYData:
+        if data.x.size < 2:
+            return data
+        if self._where is StepStyle.PRE:
+            xdata = np.repeat(data.x, 2)[:-1]
+            ydata = np.repeat(data.y, 2)[1:]
+        elif self._where is StepStyle.POST:
+            xdata = np.repeat(data.x, 2)[1:]
+            ydata = np.repeat(data.y, 2)[:-1]
+        else:
+            xrep = np.repeat((data.x[1:] + data.x[:-1]) / 2, 2)
+            xdata = np.concatenate([data.x[:1], xrep, data.x[-1:]])
+            ydata = np.repeat(data.y, 2)
+        return XYData(xdata, ydata)
+
+    def _get_layer_data(self) -> XYData:
+        xback, yback = self._backend._plt_get_data()
+        if self._where is StepStyle.PRE:
+            xdata = xback[::2]
+            ydata = yback[::2]
+        elif self._where is StepStyle.POST:
+            xdata = xback[1::2]
+            ydata = yback[1::2]
+        else:
+            xmids = xback[1:-1:2]
+            xmid = (xmids[2:] + xmids[:-2]) / 2
+            xdata = np.concatenate([xback[:1], xmid, xback[-1:]])
+            ydata = yback[1::2]
+        return XYData(xdata, ydata)
+
+    def _norm_layer_data(self, data: Any) -> XYData:
+        if isinstance(data, np.ndarray):
+            if data.ndim != 2 or data.shape[1] != 2:
+                raise ValueError(f"Expected data to be (N, 2), got {data.shape}")
+            xdata, ydata = data[:, 0], data[:, 1]
+        else:
+            xdata, ydata = data
+            if xdata is None:
+                xdata = self.data.x
+            else:
+                xdata = as_array_1d(xdata)
+            if ydata is None:
+                ydata = self.data.y
+            else:
+                ydata = as_array_1d(ydata)
+        if xdata.size != ydata.size:
+            raise ValueError(
+                "Expected xdata and ydata to have the same size, "
+                f"got {xdata.size} and {ydata.size}"
+            )
+        return XYData(xdata, ydata)
+
+    def _set_layer_data(self, data: XYData):
+        x0, y0 = self._data_to_backend_data(data)
+        self._backend._plt_set_data(x0, y0)
+        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
+
+    def set_data(
+        self,
+        xdata: ArrayLike1D | None = None,
+        ydata: ArrayLike1D | None = None,
+    ):
+        self.data = xdata, ydata
+
+    @property
+    def ndata(self) -> int:
+        """Number of data points."""
+        return self.data.x.size
+
+    @property
+    def where(self) -> StepStyle:
+        return self._where
+
+    @where.setter
+    def where(self, where: str | StepStyle):
+        self._where = StepStyle(where)
+        self._set_layer_data(self.data)
 
 
 class MultiLineEvents(LayerEvents):

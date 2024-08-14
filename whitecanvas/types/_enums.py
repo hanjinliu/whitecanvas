@@ -40,6 +40,12 @@ class Hatch(_StrEnum):
     DOTS = "."
 
 
+class StepStyle(_StrEnum):
+    PRE = "pre"
+    POST = "post"
+    MID = "mid"
+
+
 class Symbol(_StrEnum):
     CIRCLE = "o"
     SQUARE = "s"

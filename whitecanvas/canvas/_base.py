@@ -47,6 +47,7 @@ from whitecanvas.types import (
     Orientation,
     OrientationLike,
     Rect,
+    StepStyle,
     Symbol,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
@@ -931,6 +932,75 @@ class CanvasBase(CanvasNDBase):
         layer = _l.Markers(
             xdata, ydata, name=name, symbol=symbol, size=size, color=color,
             alpha=alpha, hatch=hatch, backend=self._get_backend(),
+        )  # fmt: skip
+        return self.add_layer(layer)
+
+    @overload
+    def add_step(
+        self, ydata: ArrayLike1D, *, name: str | None = None,
+        where: Literal["pre", "post", "mid"] | StepStyle = "pre",
+        color: ColorType | None = None, width: float | None = None,
+        style: LineStyle | str | None = None, alpha: float = 1.0,
+        antialias: bool = True,
+    ) -> _l.LineStep:  # fmt: skip
+        ...
+
+    @overload
+    def add_step(
+        self, xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
+        where: Literal["pre", "post", "mid"] | StepStyle = "pre",
+        color: ColorType | None = None, width: float | None = None,
+        style: LineStyle | str | None = None, alpha: float = 1.0,
+    ) -> _l.LineStep:  # fmt: skip
+        ...
+
+    def add_step(
+        self,
+        *args,
+        name=None,
+        where="pre",
+        color=None,
+        width=None,
+        style=None,
+        alpha=1.0,
+        antialias=True,
+    ):
+        """
+        Add a step plot to the canvas.
+
+        >>> canvas.add_step(y, ...)
+        >>> canvas.add_step(x, y, ...)
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the layer.
+        where : "pre", "post" or "mid", default "pre"
+            Where the step should be placed.
+        color : color-like, optional
+            Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
+        alpha : float, default 1.0
+            Alpha channel of the line.
+        antialias : bool, default True
+            Antialiasing of the line.
+
+        Returns
+        -------
+        LineStep
+            The line-step layer.
+        """
+        xdata, ydata = normalize_xy(*args)
+        name = self._coerce_name(name)
+        color = self._generate_colors(color)
+        width = theme._default("line.width", width)
+        style = theme._default("line.style", style)
+        layer = _l.LineStep(
+            xdata, ydata, name=name, color=color, width=width, style=style, where=where,
+            alpha=alpha, antialias=antialias, backend=self._get_backend(),
         )  # fmt: skip
         return self.add_layer(layer)
 

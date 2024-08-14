@@ -124,6 +124,20 @@ def test_bars(backend: str):
     layer.top = np.arange(10) / 10 + 4
     layer.as_edge_only()
 
+def test_step(backend: str):
+    canvas = new_canvas(backend=backend)
+    canvas.add_step(np.arange(10), np.zeros(10), where="pre")
+    layer = canvas.add_step(np.zeros(10))
+
+    repr(layer)
+    layer.where = "mid"
+    assert layer.where == "mid"
+    layer.where = "post"
+    assert layer.where == "post"
+
+    canvas.add_step(np.arange(10), np.zeros(10), where="mid")
+    canvas.add_step(np.arange(10), np.zeros(10), where="post")
+
 def test_infcurve(backend: str):
     canvas = new_canvas(backend=backend)
 

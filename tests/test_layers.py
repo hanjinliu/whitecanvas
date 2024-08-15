@@ -124,6 +124,45 @@ def test_bars(backend: str):
     layer.top = np.arange(10) / 10 + 4
     layer.as_edge_only()
 
+def test_step(backend: str):
+    canvas = new_canvas(backend=backend)
+    layer = canvas.add_step(np.arange(10), np.arange(10), where="pre")
+
+    repr(layer)
+
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+    layer.data = np.arange(10), np.arange(10)
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+
+    layer.where = "mid"
+    assert layer.where == "mid"
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+    layer.data = np.arange(10), np.arange(10)
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+
+    layer.where = "mid_t"
+    assert layer.where == "mid_t"
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+    layer.data = np.arange(10), np.arange(10)
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+
+    layer.where = "post"
+    assert layer.where == "post"
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+    layer.data = np.arange(10), np.arange(10)
+    assert_allclose(layer.data.x, np.arange(10))
+    assert_allclose(layer.data.y, np.arange(10))
+
+    canvas.add_step(np.arange(10), np.zeros(10), where="mid")
+    canvas.add_step(np.arange(10), np.zeros(10), where="post")
+
 def test_infcurve(backend: str):
     canvas = new_canvas(backend=backend)
 

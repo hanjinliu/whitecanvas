@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload
+from typing import Generic, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
 from whitecanvas.layers._primitive import Band, Line
+from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import (
     ArrayLike1D,
@@ -24,16 +25,18 @@ from whitecanvas.types import (
 from whitecanvas.utils.hist import get_hist_edges, histograms
 from whitecanvas.utils.normalize import as_array_1d
 
+_L = TypeVar("_L", bound=_SingleLine)
 
-class LineFillBase(LayerContainer):
+
+class LineFillBase(LayerContainer, Generic[_L]):
     _ATTACH_TO_AXIS = True
 
-    def __init__(self, line: Line, fill: Band, name: str | None = None):
+    def __init__(self, line: _L, fill: Band, name: str | None = None):
         super().__init__([line, fill], name=name)
         self._fill_alpha = 0.2
 
     @property
-    def line(self) -> Line:
+    def line(self) -> _L:
         """The line layer."""
         return self._children[0]
 
@@ -74,7 +77,7 @@ class LineFillBase(LayerContainer):
         return _legend.BarLegendItem(self.fill.face, edge)
 
 
-class Histogram(LineFillBase):
+class Histogram(LineFillBase[Line]):
     def __init__(
         self,
         data: NDArray[np.number],
@@ -174,12 +177,10 @@ class Histogram(LineFillBase):
     @overload
     def update_edges(
         self, bins: HistBinType, limits: tuple[float, float] | None = None
-    ):
-        ...
+    ): ...
 
     @overload
-    def update_edges(self, edges: NDArray[np.number]):
-        ...
+    def update_edges(self, edges: NDArray[np.number]): ...
 
     def update_edges(self, bins, limits=None):
         """
@@ -275,7 +276,7 @@ def _prep_bottom(ydata: NDArray[np.number]) -> NDArray[np.number]:
     return np.full(ydata.size, 0)
 
 
-class Kde(LineFillBase):
+class Kde(LineFillBase[Line]):
     def __init__(
         self,
         data: NDArray[np.number],
@@ -403,7 +404,7 @@ class Kde(LineFillBase):
         return x, y1, kde.factor
 
 
-class Area(LineFillBase):
+class Area(LineFillBase[Line]):
     def __init__(
         self,
         x: ArrayLike1D,

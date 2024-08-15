@@ -50,6 +50,7 @@ class LineCollection(LayerCollectionBase[Line]):
 
     @property
     def width(self) -> NDArray[np.float32]:
+        """Array of line widths."""
         return np.array([line.width for line in self], dtype=np.float32)
 
     @width.setter
@@ -67,6 +68,7 @@ class LineCollection(LayerCollectionBase[Line]):
 
     @property
     def color(self) -> NDArray[np.float32]:
+        """2D array of RGBA color values."""
         return np.array([line.color for line in self], dtype=np.float32)
 
     @color.setter
@@ -76,7 +78,8 @@ class LineCollection(LayerCollectionBase[Line]):
             line.color = c
 
     @property
-    def style(self) -> list[LineStyle]:
+    def style(self) -> Sequence[LineStyle]:
+        """Array of line styles."""
         return np.array([line.style for line in self], dtype=np.float32)
 
     @style.setter

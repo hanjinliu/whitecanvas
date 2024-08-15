@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     _CANVAS = Canvas(backend="mock")
     # add-layer methods
     line = _CANVAS.add_line
+    step = _CANVAS.add_step
     hline = _CANVAS.add_hline
     vline = _CANVAS.add_vline
     markers = _CANVAS.add_markers
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
     legend = _CANVAS.add_legend
 else:
     line = _make_method("line")
+    step = _make_method("step")
     hline = _make_method("hline")
     vline = _make_method("vline")
     markers = _make_method("markers")

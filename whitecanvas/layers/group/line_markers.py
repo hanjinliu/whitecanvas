@@ -1,38 +1,41 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from numpy.typing import ArrayLike
 
 from whitecanvas.layers import _legend, _text_utils
-from whitecanvas.layers._primitive import Errorbars, Line, Markers, Texts
+from whitecanvas.layers._primitive import Errorbars, Markers, Texts
+from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import Alignment, ColorType, LineStyle, Orientation, _Void
 
 if TYPE_CHECKING:
+    from whitecanvas.layers._primitive.markers import _Edge, _Face, _Size
     from whitecanvas.layers.group.labeled import LabeledPlot
 
 _void = _Void()
+_L = TypeVar("_L", bound=_SingleLine)
 
 
-class Plot(LayerContainer):
+class Plot(LayerContainer, Generic[_L]):
     """A Plot layer is composed of a line and a markers layer."""
 
     def __init__(
         self,
-        line: Line,
-        markers: Markers,
+        line: _L,
+        markers: Markers[_Face, _Edge, _Size],
         name: str | None = None,
     ):
         super().__init__([line, markers], name=name)
 
     @property
-    def line(self) -> Line:
+    def line(self) -> _L:
         """The line layer."""
         return self._children[0]
 
     @property
-    def markers(self) -> Markers:
+    def markers(self) -> Markers[_Face, _Edge, _Size]:
         """The markers layer."""
         return self._children[1]
 

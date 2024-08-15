@@ -145,35 +145,12 @@ class LineMixin(PrimitiveLayer[_Line]):
         return _legend.LineLegendItem(self.color, self.width, self.style)
 
 
-class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData]):
+class _SingleLine(
+    LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData]
+):
     _backend_class_name = "MonoLine"
     events: LineLayerEvents
     _events_class = LineLayerEvents
-
-    def __init__(
-        self,
-        xdata: ArrayLike1D,
-        ydata: ArrayLike1D,
-        *,
-        name: str | None = None,
-        color: ColorType = "blue",
-        width: float = 1,
-        alpha: float = 1.0,
-        style: LineStyle | str = LineStyle.SOLID,
-        antialias: bool = True,
-        backend: Backend | str | None = None,
-    ):
-        xdata, ydata = normalize_xy(xdata, ydata)
-        super().__init__(name=name)
-        self._backend = self._create_backend(Backend(backend), xdata, ydata)
-        self.update(
-            color=color, width=width, style=style, alpha=alpha, antialias=antialias
-        )
-        self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
-        self._backend._plt_connect_pick_event(self.events.clicked.emit)
-
-    def _get_layer_data(self) -> XYData:
-        return XYData(*self._backend._plt_get_data())
 
     def _norm_layer_data(self, data: Any) -> XYData:
         if isinstance(data, np.ndarray):
@@ -197,22 +174,21 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
             )
         return XYData(xdata, ydata)
 
-    def _set_layer_data(self, data: XYData):
-        x0, y0 = data
-        self._backend._plt_set_data(x0, y0)
-        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
-
     def set_data(
         self,
         xdata: ArrayLike1D | None = None,
         ydata: ArrayLike1D | None = None,
     ):
+        """Set x and y data of the line."""
         self.data = xdata, ydata
 
     @property
     def ndata(self) -> int:
         """Number of data points."""
         return self.data.x.size
+
+    def _data_to_backend_data(self, data: XYData) -> XYData:
+        return data
 
     def with_markers(
         self,
@@ -221,7 +197,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         color: ColorType | _Void = _void,
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
-    ) -> _lg.Plot:
+    ) -> _lg.Plot[Self]:
         """
         Add markers at each data point.
 
@@ -268,7 +244,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> _lg.LabeledLine:
+    ) -> _lg.LabeledLine[Self]:
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group import LabeledLine
 
@@ -302,7 +278,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         style: str | _Void = _void,
         antialias: bool | _Void = _void,
         capsize: float = 0,
-    ) -> _lg.LabeledLine:
+    ) -> _lg.LabeledLine[Self]:
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group import LabeledLine
 
@@ -334,7 +310,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         color: ColorType | _Void = _void,
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
-    ) -> _lg.LineBand:
+    ) -> _lg.LineBand[Self]:
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
@@ -343,10 +319,11 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         if color is _void:
             color = self.color
         data = self.data
+        _x, _y0 = self._data_to_backend_data(XYData(data.y, data.x - err))
+        _, _y1 = self._data_to_backend_data(XYData(data.y, data.x + err_high))
         band = Band(
-            data.y, data.x - err, data.x + err_high, orient="horizontal",
-            color=color, alpha=alpha, hatch=hatch, name=f"xband-of-{self.name}",
-            backend=self._backend_name,
+            _x, _y0, _y1, orient=Orientation.HORIZONTAL, color=color, alpha=alpha,
+            hatch=hatch, name=f"xband-of-{self.name}", backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
         self.name = f"line-of-{self.name}"
@@ -360,7 +337,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         color: ColorType | _Void = _void,
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
-    ) -> _lg.LineBand:
+    ) -> _lg.LineBand[Self]:
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
@@ -369,10 +346,11 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         if color is _void:
             color = self.color
         data = self.data
+        _x, _y0 = self._data_to_backend_data(XYData(data.x, data.y - err))
+        _, _y1 = self._data_to_backend_data(XYData(data.x, data.y + err_high))
         band = Band(
-            data.x, data.y - err, data.y + err_high, orient=Orientation.VERTICAL,
-            color=color, alpha=alpha, hatch=hatch, name=f"yband-of-{self.name}",
-            backend=self._backend_name,
+            _x, _y0, _y1, orient=Orientation.VERTICAL, color=color, alpha=alpha,
+            hatch=hatch, name=f"yband-of-{self.name}", backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
         self.name = f"line-of-{self.name}"
@@ -385,7 +363,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         color: ColorType | _Void = _void,
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
-    ) -> _lg.LineBand:
+    ) -> _lg.LineBand[Self]:
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
@@ -408,7 +386,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         color: ColorType | _Void = _void,
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
-    ) -> _lg.LineBand:
+    ) -> _lg.LineBand[Self]:
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
@@ -423,6 +401,45 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         old_name = self.name
         self.name = f"line-of-{self.name}"
         return LineBand(self, band, name=old_name)
+
+
+class Line(_SingleLine):
+    _backend_class_name = "MonoLine"
+    events: LineLayerEvents
+    _events_class = LineLayerEvents
+
+    def __init__(
+        self,
+        xdata: ArrayLike1D,
+        ydata: ArrayLike1D,
+        *,
+        name: str | None = None,
+        color: ColorType = "blue",
+        width: float = 1.0,
+        alpha: float = 1.0,
+        style: LineStyle | str = LineStyle.SOLID,
+        antialias: bool = True,
+        backend: Backend | str | None = None,
+    ):
+        xdata, ydata = normalize_xy(xdata, ydata)
+        super().__init__(name=name)
+        self._backend = self._create_backend(Backend(backend), xdata, ydata)
+        self.update(
+            color=color, width=width, style=style, alpha=alpha, antialias=antialias
+        )
+        self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
+        self._backend._plt_connect_pick_event(self.events.clicked.emit)
+
+    def _data_to_backend_data(self, data: XYData) -> XYData:
+        return data
+
+    def _get_layer_data(self) -> XYData:
+        return XYData(*self._backend._plt_get_data())
+
+    def _set_layer_data(self, data: XYData):
+        x0, y0 = data
+        self._backend._plt_set_data(x0, y0)
+        self._x_hint, self._y_hint = xy_size_hint(x0, y0)
 
     def with_text(
         self,
@@ -502,7 +519,7 @@ class Line(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData
         )  # fmt: skip
 
 
-class LineStep(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XYData]):
+class LineStep(_SingleLine):
     _backend_class_name = "MonoLine"
     events: LineLayerEvents
     _events_class = LineLayerEvents
@@ -535,31 +552,46 @@ class LineStep(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XY
     def _data_to_backend_data(self, data: XYData) -> XYData:
         if data.x.size < 2:
             return data
-        if self._where is StepStyle.PRE:
+        if self._where is StepStyle.PRE or self._where is StepStyle.POST_T:
             xdata = np.repeat(data.x, 2)[:-1]
             ydata = np.repeat(data.y, 2)[1:]
-        elif self._where is StepStyle.POST:
+        elif self._where is StepStyle.POST or self._where is StepStyle.PRE_T:
             xdata = np.repeat(data.x, 2)[1:]
             ydata = np.repeat(data.y, 2)[:-1]
-        else:
+        elif self._where is StepStyle.MID:
             xrep = np.repeat((data.x[1:] + data.x[:-1]) / 2, 2)
             xdata = np.concatenate([data.x[:1], xrep, data.x[-1:]])
             ydata = np.repeat(data.y, 2)
+        elif self._where is StepStyle.MID_T:
+            yrep = np.repeat((data.y[1:] + data.y[:-1]) / 2, 2)
+            xdata = np.repeat(data.x, 2)
+            ydata = np.concatenate([data.y[:1], yrep, data.y[-1:]])
+        else:  # pragma: no cover
+            raise ValueError(f"Invalid step style: {self._where}")
         return XYData(xdata, ydata)
 
     def _get_layer_data(self) -> XYData:
         xback, yback = self._backend._plt_get_data()
-        if self._where is StepStyle.PRE:
+        if (
+            self._where is StepStyle.PRE
+            or self._where is StepStyle.POST_T
+            or self._where is StepStyle.POST
+            or self._where is StepStyle.PRE_T
+        ):
             xdata = xback[::2]
             ydata = yback[::2]
-        elif self._where is StepStyle.POST:
-            xdata = xback[1::2]
-            ydata = yback[1::2]
-        else:
+        elif self._where is StepStyle.MID:
             xmids = xback[1:-1:2]
-            xmid = (xmids[2:] + xmids[:-2]) / 2
+            xmid = (xmids[1:] + xmids[:-1]) / 2
             xdata = np.concatenate([xback[:1], xmid, xback[-1:]])
             ydata = yback[1::2]
+        elif self._where is StepStyle.MID_T:
+            ymids = yback[1:-1:2]
+            ymid = (ymids[1:] + ymids[:-1]) / 2
+            xdata = xback[::2]
+            ydata = np.concatenate([yback[:1], ymid, yback[-1:]])
+        else:  # pragma: no cover
+            raise ValueError(f"Invalid step style: {self._where}")
         return XYData(xdata, ydata)
 
     def _norm_layer_data(self, data: Any) -> XYData:
@@ -589,26 +621,15 @@ class LineStep(LineMixin[LineProtocol], HoverableDataBoundLayer[LineProtocol, XY
         self._backend._plt_set_data(x0, y0)
         self._x_hint, self._y_hint = xy_size_hint(x0, y0)
 
-    def set_data(
-        self,
-        xdata: ArrayLike1D | None = None,
-        ydata: ArrayLike1D | None = None,
-    ):
-        self.data = xdata, ydata
-
-    @property
-    def ndata(self) -> int:
-        """Number of data points."""
-        return self.data.x.size
-
     @property
     def where(self) -> StepStyle:
         return self._where
 
     @where.setter
     def where(self, where: str | StepStyle):
+        data = self.data
         self._where = StepStyle(where)
-        self._set_layer_data(self.data)
+        self._set_layer_data(data)
 
 
 class MultiLineEvents(LayerEvents):

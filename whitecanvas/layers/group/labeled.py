@@ -10,6 +10,7 @@ from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend, _mixin, _text_utils
 from whitecanvas.layers._base import PrimitiveLayer
 from whitecanvas.layers._primitive import Bars, Errorbars, Image, Line, Markers, Texts
+from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import LayerContainer, RichContainerEvents
 from whitecanvas.layers.group._offsets import NoOffset, TextOffset
@@ -36,6 +37,7 @@ if TYPE_CHECKING:
 _NFace = TypeVar("_NFace", bound="_mixin.FaceNamespace")
 _NEdge = TypeVar("_NEdge", bound="_mixin.EdgeNamespace")
 _Size = TypeVar("_Size")
+_L = TypeVar("_L", bound=_SingleLine)
 
 
 class _LabeledLayerBase(LayerContainer):
@@ -247,9 +249,9 @@ class _LabeledLayerBase(LayerContainer):
         return self
 
 
-class LabeledLine(_LabeledLayerBase):
+class LabeledLine(_LabeledLayerBase, Generic[_L]):
     @property
-    def line(self) -> Line:
+    def line(self) -> _L:
         """The line layer."""
         return self._children[0]
 
@@ -396,14 +398,14 @@ class LabeledBars(
 class LabeledPlot(
     _LabeledLayerBase,
     _mixin.AbstractFaceEdgeMixin["PlotFace", "PlotEdge"],
-    Generic[_NFace, _NEdge, _Size],
+    Generic[_NFace, _NEdge, _Size, _L],
 ):
     evens: RichContainerEvents
     _events_class = RichContainerEvents
 
     def __init__(
         self,
-        layer: Plot,
+        layer: Plot[_L],
         xerr: Errorbars,
         yerr: Errorbars,
         texts: Texts | None = None,
@@ -415,12 +417,12 @@ class LabeledPlot(
         self._init_events()
 
     @property
-    def plot(self) -> Plot:
+    def plot(self) -> Plot[_L]:
         """The plot (line + markers) layer."""
         return self._children[0]
 
     @property
-    def line(self) -> Line:
+    def line(self) -> _L:
         """The line layer."""
         return self.plot.line
 
@@ -446,7 +448,7 @@ class LabeledPlot(
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
         backend: str | Backend | None = None,
-    ) -> LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]:
+    ) -> LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float, Line]:
         x, y, err_data = _init_mean_sd(x, data, color)
         xerr, yerr = _init_error_bars(x, y, err_data, orient, capsize, backend)
         if not orient.is_vertical:
@@ -473,7 +475,7 @@ class LabeledPlot(
         alpha: float = 1.0,
         hatch: str | Hatch = Hatch.SOLID,
         backend: str | Backend | None = None,
-    ) -> LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]:
+    ) -> LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float, Line]:
         def _estimate(arrs: list[NDArray[np.number]]):
             _mean = []
             _sd = []
@@ -527,7 +529,7 @@ class LabeledPlot(
 
 
 class PlotFace(_mixin.MultiPropertyFaceBase):
-    _layer: LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float]
+    _layer: LabeledPlot[_mixin.MultiFace, _mixin.MultiEdge, float, _L]
 
     @property
     def color(self) -> NDArray[np.floating]:
@@ -566,7 +568,7 @@ class PlotFace(_mixin.MultiPropertyFaceBase):
 
 
 class PlotEdge(_mixin.MultiPropertyEdgeBase):
-    _layer: LabeledPlot[_NFace, _NEdge, float] | LabeledBars[_NFace, _NEdge]
+    _layer: LabeledPlot[_NFace, _NEdge, float, _L] | LabeledBars[_NFace, _NEdge]
 
     @property
     def color(self) -> NDArray[np.floating]:

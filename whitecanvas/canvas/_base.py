@@ -938,9 +938,9 @@ class CanvasBase(CanvasNDBase):
     @overload
     def add_step(
         self, ydata: ArrayLike1D, *, name: str | None = None,
-        where: Literal["pre", "post", "mid"] | StepStyle = "pre",
-        color: ColorType | None = None, width: float | None = None,
-        style: LineStyle | str | None = None, alpha: float = 1.0,
+        where: str | StepStyle = "pre", color: ColorType | None = None,
+        width: float | None = None, style: LineStyle | str | None = None,
+        alpha: float = 1.0, orient: OrientationLike = "horizontal",
         antialias: bool = True,
     ) -> _l.LineStep:  # fmt: skip
         ...
@@ -948,9 +948,10 @@ class CanvasBase(CanvasNDBase):
     @overload
     def add_step(
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
-        where: Literal["pre", "post", "mid"] | StepStyle = "pre",
-        color: ColorType | None = None, width: float | None = None,
-        style: LineStyle | str | None = None, alpha: float = 1.0,
+        where: str | StepStyle = "pre", color: ColorType | None = None,
+        width: float | None = None, style: LineStyle | str | None = None,
+        alpha: float = 1.0, orient: OrientationLike = "horizontal",
+        antialias: bool = True,
     ) -> _l.LineStep:  # fmt: skip
         ...
 
@@ -975,10 +976,10 @@ class CanvasBase(CanvasNDBase):
         ----------
         name : str, optional
             Name of the layer.
-        where : "pre", "post" or "mid", default "pre"
+        where : str or StepStyle, default "pre"
             Where the step should be placed.
         color : color-like, optional
-            Color of the bars.
+            Color of the steps.
         width : float, optional
             Line width. Use the theme default if not specified.
         style : str or LineStyle, optional
@@ -1000,7 +1001,7 @@ class CanvasBase(CanvasNDBase):
         style = theme._default("line.style", style)
         layer = _l.LineStep(
             xdata, ydata, name=name, color=color, width=width, style=style, where=where,
-            alpha=alpha, antialias=antialias, backend=self._get_backend(),
+            alpha=alpha, antialias=antialias, backend=self._get_backend()
         )  # fmt: skip
         return self.add_layer(layer)
 

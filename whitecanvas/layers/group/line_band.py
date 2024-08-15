@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from whitecanvas.layers._primitive import Band, Line, Markers
+from typing import Generic, TypeVar
+
+from whitecanvas.layers._primitive import Band, Markers
+from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import ColorType, Hatch, Symbol, XYData, _Void
 
 _void = _Void()
+_L = TypeVar("_L", bound=_SingleLine)
 
 
-class LineBand(LayerContainer):
+class LineBand(LayerContainer, Generic[_L]):
     """
     Group of Line, Band and Markers.
 
@@ -19,7 +23,7 @@ class LineBand(LayerContainer):
 
     def __init__(
         self,
-        line: Line,
+        line: _L,
         band: Band,
         markers: Markers | None = None,
         name: str | None = None,
@@ -29,7 +33,7 @@ class LineBand(LayerContainer):
         super().__init__([line, band, markers], name=name)
 
     @property
-    def line(self) -> Line:
+    def line(self) -> _L:
         """The central line layer."""
         return self._children[0]
 

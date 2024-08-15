@@ -430,9 +430,6 @@ class Line(_SingleLine):
         self._x_hint, self._y_hint = xy_size_hint(xdata, ydata)
         self._backend._plt_connect_pick_event(self.events.clicked.emit)
 
-    def _data_to_backend_data(self, data: XYData) -> XYData:
-        return data
-
     def _get_layer_data(self) -> XYData:
         return XYData(*self._backend._plt_get_data())
 

@@ -3078,8 +3078,7 @@
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2114</span>
-<span class="normal">2115</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2115</span>
 <span class="normal">2116</span>
 <span class="normal">2117</span>
 <span class="normal">2118</span>
@@ -3117,7 +3116,8 @@
 <span class="normal">2150</span>
 <span class="normal">2151</span>
 <span class="normal">2152</span>
-<span class="normal">2153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
+<span class="normal">2153</span>
+<span class="normal">2154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
     <span class="n">_CURRENT_INSTANCE</span><span class="p">:</span> <span class="n">Canvas</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -3194,8 +3194,7 @@
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2128</span>
-<span class="normal">2129</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2129</span>
 <span class="normal">2130</span>
 <span class="normal">2131</span>
 <span class="normal">2132</span>
@@ -3210,7 +3209,8 @@
 <span class="normal">2141</span>
 <span class="normal">2142</span>
 <span class="normal">2143</span>
-<span class="normal">2144</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">2144</span>
+<span class="normal">2145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_backend</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">obj</span><span class="p">:</span> <span class="n">protocols</span><span class="o">.</span><span class="n">CanvasProtocol</span><span class="p">,</span>
@@ -3260,8 +3260,7 @@
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 212</span>
-<span class="normal"> 213</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 213</span>
 <span class="normal"> 214</span>
 <span class="normal"> 215</span>
 <span class="normal"> 216</span>
@@ -5159,7 +5158,8 @@
 <span class="normal">2108</span>
 <span class="normal">2109</span>
 <span class="normal">2110</span>
-<span class="normal">2111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">CanvasNDBase</span><span class="p">):</span>
+<span class="normal">2111</span>
+<span class="normal">2112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">CanvasNDBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for any canvas object.&quot;&quot;&quot;</span>
 
     <span class="n">dims</span> <span class="o">=</span> <span class="n">Dims</span><span class="p">()</span>
@@ -5694,16 +5694,16 @@
         <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add legend item to the canvas.</span>
+<span class="sd">        Add legend items to the canvas.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        layers : sequence of layer or str, optional</span>
 <span class="sd">            Which item to be added to the legend. If str is given, it will be converted</span>
-<span class="sd">            into a title label.</span>
+<span class="sd">            into a legend title label.</span>
 <span class="sd">        location : LegendLocation, default &quot;top_right&quot;</span>
-<span class="sd">            Location of the legend. Can be following strings. Combination of the</span>
-<span class="sd">            following strings (e.g., &quot;top_left&quot;, &quot;center_right&quot;).</span>
+<span class="sd">            Location of the legend. Can be combination of &quot;top&quot;, &quot;bottom&quot;, &quot;left&quot;,</span>
+<span class="sd">            &quot;right&quot; and &quot;center&quot; (e.g., &quot;top_left&quot;, &quot;center_right&quot;).</span>
 
 <span class="sd">            ```</span>
 <span class="sd">                   (2) left  center right</span>
@@ -5733,7 +5733,7 @@
             <span class="n">layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">title</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">]</span>
-        <span class="n">location</span> <span class="o">=</span> <span class="n">Location</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">Location</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
 
         <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_legend</span><span class="o">.</span><span class="n">LegendItem</span><span class="p">]]()</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
@@ -5888,7 +5888,7 @@
     <span class="nd">@overload</span>
     <span class="k">def</span> <span class="nf">add_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">ydata</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">where</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">StepStyle</span> <span class="o">=</span> <span class="s2">&quot;pre&quot;</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">where</span><span class="p">:</span> <span class="n">StepStyleStr</span> <span class="o">|</span> <span class="n">StepStyle</span> <span class="o">=</span> <span class="s2">&quot;pre&quot;</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="p">:</span> <span class="n">LineStyle</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">orient</span><span class="p">:</span> <span class="n">OrientationLike</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">,</span>
         <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -5898,7 +5898,7 @@
     <span class="nd">@overload</span>
     <span class="k">def</span> <span class="nf">add_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">xdata</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span> <span class="n">ydata</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">where</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">StepStyle</span> <span class="o">=</span> <span class="s2">&quot;pre&quot;</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">where</span><span class="p">:</span> <span class="n">StepStyleStr</span> <span class="o">|</span> <span class="n">StepStyle</span> <span class="o">=</span> <span class="s2">&quot;pre&quot;</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="p">:</span> <span class="n">LineStyle</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">orient</span><span class="p">:</span> <span class="n">OrientationLike</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">,</span>
         <span class="n">antialias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -7336,8 +7336,7 @@ vertical orientation.,</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1560</span>
-<span class="normal">1561</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1561</span>
 <span class="normal">1562</span>
 <span class="normal">1563</span>
 <span class="normal">1564</span>
@@ -7382,7 +7381,8 @@ vertical orientation.,</p>
 <span class="normal">1603</span>
 <span class="normal">1604</span>
 <span class="normal">1605</span>
-<span class="normal">1606</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_band</span><span class="p">(</span>
+<span class="normal">1606</span>
+<span class="normal">1607</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_band</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">xdata</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="n">ylow</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
@@ -7600,8 +7600,7 @@ canvas.add_bars(..., orient="horizontal")  # horizontal bars</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1027</span>
-<span class="normal">1028</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1028</span>
 <span class="normal">1029</span>
 <span class="normal">1030</span>
 <span class="normal">1031</span>
@@ -7653,7 +7652,8 @@ canvas.add_bars(..., orient="horizontal")  # horizontal bars</p>
 <span class="normal">1077</span>
 <span class="normal">1078</span>
 <span class="normal">1079</span>
-<span class="normal">1080</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_bars</span><span class="p">(</span>
+<span class="normal">1080</span>
+<span class="normal">1081</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_bars</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
     <span class="n">bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -7890,8 +7890,7 @@ canvas.add_bars(..., orient="horizontal")  # horizontal bars</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1211</span>
-<span class="normal">1212</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1212</span>
 <span class="normal">1213</span>
 <span class="normal">1214</span>
 <span class="normal">1215</span>
@@ -7939,7 +7938,8 @@ canvas.add_bars(..., orient="horizontal")  # horizontal bars</p>
 <span class="normal">1257</span>
 <span class="normal">1258</span>
 <span class="normal">1259</span>
-<span class="normal">1260</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_cdf</span><span class="p">(</span>
+<span class="normal">1260</span>
+<span class="normal">1261</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_cdf</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -8208,8 +8208,7 @@ to the y axis.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1608</span>
-<span class="normal">1609</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1609</span>
 <span class="normal">1610</span>
 <span class="normal">1611</span>
 <span class="normal">1612</span>
@@ -8266,7 +8265,8 @@ to the y axis.</p>
 <span class="normal">1663</span>
 <span class="normal">1664</span>
 <span class="normal">1665</span>
-<span class="normal">1666</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_errorbars</span><span class="p">(</span>
+<span class="normal">1666</span>
+<span class="normal">1667</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_errorbars</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">xdata</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="n">ylow</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
@@ -8449,8 +8449,7 @@ the default behavior.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1902</span>
-<span class="normal">1903</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1903</span>
 <span class="normal">1904</span>
 <span class="normal">1905</span>
 <span class="normal">1906</span>
@@ -8488,7 +8487,8 @@ the default behavior.</p>
 <span class="normal">1938</span>
 <span class="normal">1939</span>
 <span class="normal">1940</span>
-<span class="normal">1941</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_heatmap</span><span class="p">(</span>
+<span class="normal">1941</span>
+<span class="normal">1942</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_heatmap</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">image</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -8714,8 +8714,7 @@ the line nodes.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1082</span>
-<span class="normal">1083</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1083</span>
 <span class="normal">1084</span>
 <span class="normal">1085</span>
 <span class="normal">1086</span>
@@ -8769,7 +8768,8 @@ the line nodes.</p>
 <span class="normal">1134</span>
 <span class="normal">1135</span>
 <span class="normal">1136</span>
-<span class="normal">1137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_hist</span><span class="p">(</span>
+<span class="normal">1137</span>
+<span class="normal">1138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_hist</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -9014,8 +9014,7 @@ intensity of the histogram will be 1.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1139</span>
-<span class="normal">1140</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1140</span>
 <span class="normal">1141</span>
 <span class="normal">1142</span>
 <span class="normal">1143</span>
@@ -9066,7 +9065,8 @@ intensity of the histogram will be 1.</p>
 <span class="normal">1188</span>
 <span class="normal">1189</span>
 <span class="normal">1190</span>
-<span class="normal">1191</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_hist2d</span><span class="p">(</span>
+<span class="normal">1191</span>
+<span class="normal">1192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_hist2d</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
@@ -9281,8 +9281,7 @@ intensity of the histogram will be 1.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1478</span>
-<span class="normal">1479</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1479</span>
 <span class="normal">1480</span>
 <span class="normal">1481</span>
 <span class="normal">1482</span>
@@ -9320,7 +9319,8 @@ intensity of the histogram will be 1.</p>
 <span class="normal">1514</span>
 <span class="normal">1515</span>
 <span class="normal">1516</span>
-<span class="normal">1517</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_hline</span><span class="p">(</span>
+<span class="normal">1517</span>
+<span class="normal">1518</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_hline</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -9499,8 +9499,7 @@ the default behavior.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1855</span>
-<span class="normal">1856</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1856</span>
 <span class="normal">1857</span>
 <span class="normal">1858</span>
 <span class="normal">1859</span>
@@ -9544,7 +9543,8 @@ the default behavior.</p>
 <span class="normal">1897</span>
 <span class="normal">1898</span>
 <span class="normal">1899</span>
-<span class="normal">1900</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_image</span><span class="p">(</span>
+<span class="normal">1900</span>
+<span class="normal">1901</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">image</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -9775,8 +9775,7 @@ signature as <code>scipy.optimize.curve_fit</code>.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1425</span>
-<span class="normal">1426</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1426</span>
 <span class="normal">1427</span>
 <span class="normal">1428</span>
 <span class="normal">1429</span>
@@ -9826,7 +9825,8 @@ signature as <code>scipy.optimize.curve_fit</code>.</p>
 <span class="normal">1473</span>
 <span class="normal">1474</span>
 <span class="normal">1475</span>
-<span class="normal">1476</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_infcurve</span><span class="p">(</span>
+<span class="normal">1476</span>
+<span class="normal">1477</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_infcurve</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">Concatenate</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">_P</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
@@ -10064,8 +10064,7 @@ rotation from the x axis.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1370</span>
-<span class="normal">1371</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1371</span>
 <span class="normal">1372</span>
 <span class="normal">1373</span>
 <span class="normal">1374</span>
@@ -10117,7 +10116,8 @@ rotation from the x axis.</p>
 <span class="normal">1420</span>
 <span class="normal">1421</span>
 <span class="normal">1422</span>
-<span class="normal">1423</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_infline</span><span class="p">(</span>
+<span class="normal">1423</span>
+<span class="normal">1424</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_infline</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">pos</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
     <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
@@ -10347,8 +10347,7 @@ rotation from the x axis.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1731</span>
-<span class="normal">1732</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1732</span>
 <span class="normal">1733</span>
 <span class="normal">1734</span>
 <span class="normal">1735</span>
@@ -10396,7 +10395,8 @@ rotation from the x axis.</p>
 <span class="normal">1777</span>
 <span class="normal">1778</span>
 <span class="normal">1779</span>
-<span class="normal">1780</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_kde</span><span class="p">(</span>
+<span class="normal">1780</span>
+<span class="normal">1781</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_kde</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -10470,8 +10470,7 @@ rotation from the x axis.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1943</span>
-<span class="normal">1944</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1944</span>
 <span class="normal">1945</span>
 <span class="normal">1946</span>
 <span class="normal">1947</span>
@@ -10494,7 +10493,8 @@ rotation from the x axis.</p>
 <span class="normal">1964</span>
 <span class="normal">1965</span>
 <span class="normal">1966</span>
-<span class="normal">1967</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span>
+<span class="normal">1967</span>
+<span class="normal">1968</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">layer</span><span class="p">:</span> <span class="n">_L</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -10539,7 +10539,7 @@ rotation from the x axis.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Add legend item to the canvas.</p>
+      <p>Add legend items to the canvas.</p>
 
 
 
@@ -10562,7 +10562,7 @@ rotation from the x axis.</p>
           <td>
             <div class="doc-md-description">
               <p>Which item to be added to the legend. If str is given, it will be converted
-into a title label.</p>
+into a legend title label.</p>
             </div>
           </td>
           <td>
@@ -10576,8 +10576,8 @@ into a title label.</p>
           </td>
           <td>
             <div class="doc-md-description">
-              <p>Location of the legend. Can be following strings. Combination of the
-following strings (e.g., "top_left", "center_right").</p>
+              <p>Location of the legend. Can be combination of "top", "bottom", "left",
+"right" and "center" (e.g., "top_left", "center_right").</p>
 <div class="highlight"><pre><span></span><code>       (2) left  center right
              v     v     v
   (1)     ┌─────────────────┐
@@ -10620,8 +10620,7 @@ bottom_side -&gt; └────────┘
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">739</span>
-<span class="normal">740</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">740</span>
 <span class="normal">741</span>
 <span class="normal">742</span>
 <span class="normal">743</span>
@@ -10677,7 +10676,8 @@ bottom_side -&gt; └────────┘
 <span class="normal">793</span>
 <span class="normal">794</span>
 <span class="normal">795</span>
-<span class="normal">796</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_legend</span><span class="p">(</span>
+<span class="normal">796</span>
+<span class="normal">797</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_legend</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">layers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">_l</span><span class="o">.</span><span class="n">Layer</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -10685,16 +10685,16 @@ bottom_side -&gt; └────────┘
     <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Add legend item to the canvas.</span>
+<span class="sd">    Add legend items to the canvas.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    layers : sequence of layer or str, optional</span>
 <span class="sd">        Which item to be added to the legend. If str is given, it will be converted</span>
-<span class="sd">        into a title label.</span>
+<span class="sd">        into a legend title label.</span>
 <span class="sd">    location : LegendLocation, default &quot;top_right&quot;</span>
-<span class="sd">        Location of the legend. Can be following strings. Combination of the</span>
-<span class="sd">        following strings (e.g., &quot;top_left&quot;, &quot;center_right&quot;).</span>
+<span class="sd">        Location of the legend. Can be combination of &quot;top&quot;, &quot;bottom&quot;, &quot;left&quot;,</span>
+<span class="sd">        &quot;right&quot; and &quot;center&quot; (e.g., &quot;top_left&quot;, &quot;center_right&quot;).</span>
 
 <span class="sd">        ```</span>
 <span class="sd">               (2) left  center right</span>
@@ -10724,7 +10724,7 @@ bottom_side -&gt; └────────┘
         <span class="n">layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">title</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">]</span>
-    <span class="n">location</span> <span class="o">=</span> <span class="n">Location</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">Location</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
 
     <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_legend</span><span class="o">.</span><span class="n">LegendItem</span><span class="p">]]()</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
@@ -10891,8 +10891,7 @@ canvas.add_line(x, y, ...)</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">825</span>
-<span class="normal">826</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">826</span>
 <span class="normal">827</span>
 <span class="normal">828</span>
 <span class="normal">829</span>
@@ -10936,7 +10935,8 @@ canvas.add_line(x, y, ...)</p>
 <span class="normal">867</span>
 <span class="normal">868</span>
 <span class="normal">869</span>
-<span class="normal">870</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_line</span><span class="p">(</span>
+<span class="normal">870</span>
+<span class="normal">871</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_line</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -11138,8 +11138,7 @@ canvas.add_markers(y)  # use 0, 1, ... for the x values</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">890</span>
-<span class="normal">891</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">891</span>
 <span class="normal">892</span>
 <span class="normal">893</span>
 <span class="normal">894</span>
@@ -11184,7 +11183,8 @@ canvas.add_markers(y)  # use 0, 1, ... for the x values</p>
 <span class="normal">933</span>
 <span class="normal">934</span>
 <span class="normal">935</span>
-<span class="normal">936</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_markers</span><span class="p">(</span>
+<span class="normal">936</span>
+<span class="normal">937</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_markers</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -11447,8 +11447,7 @@ to the y axis.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1668</span>
-<span class="normal">1669</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1669</span>
 <span class="normal">1670</span>
 <span class="normal">1671</span>
 <span class="normal">1672</span>
@@ -11508,7 +11507,8 @@ to the y axis.</p>
 <span class="normal">1726</span>
 <span class="normal">1727</span>
 <span class="normal">1728</span>
-<span class="normal">1729</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_rug</span><span class="p">(</span>
+<span class="normal">1729</span>
+<span class="normal">1730</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_rug</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">events</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -11751,8 +11751,7 @@ to the y axis.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1262</span>
-<span class="normal">1263</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1263</span>
 <span class="normal">1264</span>
 <span class="normal">1265</span>
 <span class="normal">1266</span>
@@ -11798,7 +11797,8 @@ to the y axis.</p>
 <span class="normal">1306</span>
 <span class="normal">1307</span>
 <span class="normal">1308</span>
-<span class="normal">1309</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_spans</span><span class="p">(</span>
+<span class="normal">1309</span>
+<span class="normal">1310</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_spans</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">spans</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -12016,8 +12016,7 @@ canvas.add_step(x, y, ...)</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 958</span>
-<span class="normal"> 959</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 959</span>
 <span class="normal"> 960</span>
 <span class="normal"> 961</span>
 <span class="normal"> 962</span>
@@ -12064,7 +12063,8 @@ canvas.add_step(x, y, ...)</p>
 <span class="normal">1003</span>
 <span class="normal">1004</span>
 <span class="normal">1005</span>
-<span class="normal">1006</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_step</span><span class="p">(</span>
+<span class="normal">1006</span>
+<span class="normal">1007</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_step</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -12299,8 +12299,7 @@ given by (x, y).</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1798</span>
-<span class="normal">1799</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1799</span>
 <span class="normal">1800</span>
 <span class="normal">1801</span>
 <span class="normal">1802</span>
@@ -12354,7 +12353,8 @@ given by (x, y).</p>
 <span class="normal">1850</span>
 <span class="normal">1851</span>
 <span class="normal">1852</span>
-<span class="normal">1853</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_text</span><span class="p">(</span>
+<span class="normal">1853</span>
+<span class="normal">1854</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_text</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">x</span><span class="p">,</span>
     <span class="n">y</span><span class="p">,</span>
@@ -12621,8 +12621,7 @@ given by (x, y).</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1311</span>
-<span class="normal">1312</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1312</span>
 <span class="normal">1313</span>
 <span class="normal">1314</span>
 <span class="normal">1315</span>
@@ -12678,7 +12677,8 @@ given by (x, y).</p>
 <span class="normal">1365</span>
 <span class="normal">1366</span>
 <span class="normal">1367</span>
-<span class="normal">1368</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_vectors</span><span class="p">(</span>
+<span class="normal">1368</span>
+<span class="normal">1369</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_vectors</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
     <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span>
@@ -12898,8 +12898,7 @@ given by (x, y).</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1519</span>
-<span class="normal">1520</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1520</span>
 <span class="normal">1521</span>
 <span class="normal">1522</span>
 <span class="normal">1523</span>
@@ -12937,7 +12936,8 @@ given by (x, y).</p>
 <span class="normal">1555</span>
 <span class="normal">1556</span>
 <span class="normal">1557</span>
-<span class="normal">1558</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_vline</span><span class="p">(</span>
+<span class="normal">1558</span>
+<span class="normal">1559</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_vline</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -13045,8 +13045,7 @@ given by (x, y).</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">347</span>
-<span class="normal">348</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">348</span>
 <span class="normal">349</span>
 <span class="normal">350</span>
 <span class="normal">351</span>
@@ -13100,7 +13099,8 @@ given by (x, y).</p>
 <span class="normal">399</span>
 <span class="normal">400</span>
 <span class="normal">401</span>
-<span class="normal">402</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">autoscale</span><span class="p">(</span>
+<span class="normal">402</span>
+<span class="normal">403</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">autoscale</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">xpad</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ypad</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -13279,8 +13279,7 @@ polars.DataFrame are supported.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">567</span>
-<span class="normal">568</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">568</span>
 <span class="normal">569</span>
 <span class="normal">570</span>
 <span class="normal">571</span>
@@ -13311,7 +13310,8 @@ polars.DataFrame are supported.</p>
 <span class="normal">596</span>
 <span class="normal">597</span>
 <span class="normal">598</span>
-<span class="normal">599</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat</span><span class="p">(</span>
+<span class="normal">599</span>
+<span class="normal">600</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">_DF</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -13481,8 +13481,7 @@ default, but if this option is True, the x coordinates will be [2, 4, 8].</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">601</span>
-<span class="normal">602</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">602</span>
 <span class="normal">603</span>
 <span class="normal">604</span>
 <span class="normal">605</span>
@@ -13514,7 +13513,8 @@ default, but if this option is True, the x coordinates will be [2, 4, 8].</p>
 <span class="normal">631</span>
 <span class="normal">632</span>
 <span class="normal">633</span>
-<span class="normal">634</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat_x</span><span class="p">(</span>
+<span class="normal">634</span>
+<span class="normal">635</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat_x</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">_DF</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -13669,8 +13669,7 @@ polars.DataFrame are supported.</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">671</span>
-<span class="normal">672</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">672</span>
 <span class="normal">673</span>
 <span class="normal">674</span>
 <span class="normal">675</span>
@@ -13697,7 +13696,8 @@ polars.DataFrame are supported.</p>
 <span class="normal">696</span>
 <span class="normal">697</span>
 <span class="normal">698</span>
-<span class="normal">699</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat_xy</span><span class="p">(</span>
+<span class="normal">699</span>
+<span class="normal">700</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat_xy</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">_DF</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -13863,8 +13863,7 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">636</span>
-<span class="normal">637</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">637</span>
 <span class="normal">638</span>
 <span class="normal">639</span>
 <span class="normal">640</span>
@@ -13896,7 +13895,8 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 <span class="normal">666</span>
 <span class="normal">667</span>
 <span class="normal">668</span>
-<span class="normal">669</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat_y</span><span class="p">(</span>
+<span class="normal">669</span>
+<span class="normal">670</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cat_y</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">_DF</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -13954,9 +13954,9 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">735</span>
-<span class="normal">736</span>
-<span class="normal">737</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_l</span><span class="o">.</span><span class="n">DataBoundLayer</span><span class="p">[</span><span class="n">_P</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">FitPlotter</span><span class="p">[</span><span class="n">Self</span><span class="p">,</span> <span class="n">_P</span><span class="p">]:</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">736</span>
+<span class="normal">737</span>
+<span class="normal">738</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_l</span><span class="o">.</span><span class="n">DataBoundLayer</span><span class="p">[</span><span class="n">_P</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">FitPlotter</span><span class="p">[</span><span class="n">Self</span><span class="p">,</span> <span class="n">_P</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The fit plotter namespace.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">FitPlotter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -14037,8 +14037,7 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1981</span>
-<span class="normal">1982</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1982</span>
 <span class="normal">1983</span>
 <span class="normal">1984</span>
 <span class="normal">1985</span>
@@ -14055,7 +14054,8 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 <span class="normal">1996</span>
 <span class="normal">1997</span>
 <span class="normal">1998</span>
-<span class="normal">1999</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">group_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="o">*</span><span class="n">more_layers</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">1999</span>
+<span class="normal">2000</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">group_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="o">*</span><span class="n">more_layers</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Group layers.</span>
 
@@ -14106,8 +14106,7 @@ canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">442</span>
-<span class="normal">443</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">443</span>
 <span class="normal">444</span>
 <span class="normal">445</span>
 <span class="normal">446</span>
@@ -14128,7 +14127,8 @@ canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence</p>
 <span class="normal">461</span>
 <span class="normal">462</span>
 <span class="normal">463</span>
-<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">install_inset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
+<span class="normal">464</span>
+<span class="normal">465</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">install_inset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Install a new canvas pointing to an inset of the current canvas.</span>
 
@@ -14175,8 +14175,7 @@ canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">404</span>
-<span class="normal">405</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">405</span>
 <span class="normal">406</span>
 <span class="normal">407</span>
 <span class="normal">408</span>
@@ -14185,7 +14184,8 @@ canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence</p>
 <span class="normal">411</span>
 <span class="normal">412</span>
 <span class="normal">413</span>
-<span class="normal">414</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">install_second_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
+<span class="normal">414</span>
+<span class="normal">415</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">install_second_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a twin canvas that has a secondary x-axis and shared y-axis.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canvas</span><span class="p">()</span><span class="o">.</span><span class="n">_plt_twiny</span><span class="p">()</span>
@@ -14220,8 +14220,7 @@ canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">416</span>
-<span class="normal">417</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">417</span>
 <span class="normal">418</span>
 <span class="normal">419</span>
 <span class="normal">420</span>
@@ -14230,7 +14229,8 @@ canvas.install_inset([0.1, 0.9, 0.1, 0.9])  # or a sequence</p>
 <span class="normal">423</span>
 <span class="normal">424</span>
 <span class="normal">425</span>
-<span class="normal">426</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">install_second_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
+<span class="normal">426</span>
+<span class="normal">427</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">install_second_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Canvas</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a twin canvas that has a secondary y-axis and shared x-axis.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canvas</span><span class="p">()</span><span class="o">.</span><span class="n">_plt_twinx</span><span class="p">()</span>
@@ -14282,8 +14282,7 @@ bars_2 = canvas.stack_over(bars_1).add(y2)</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">701</span>
-<span class="normal">702</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">702</span>
 <span class="normal">703</span>
 <span class="normal">704</span>
 <span class="normal">705</span>
@@ -14307,7 +14306,8 @@ bars_2 = canvas.stack_over(bars_1).add(y2)</p>
 <span class="normal">723</span>
 <span class="normal">724</span>
 <span class="normal">725</span>
-<span class="normal">726</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">stack_over</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_L0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StackOverPlotter</span><span class="p">[</span><span class="n">Self</span><span class="p">,</span> <span class="n">_L0</span><span class="p">]:</span>
+<span class="normal">726</span>
+<span class="normal">727</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">stack_over</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_L0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StackOverPlotter</span><span class="p">[</span><span class="n">Self</span><span class="p">,</span> <span class="n">_L0</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Stack new data over the existing layer.</span>
 
@@ -14401,8 +14401,7 @@ bars_2 = canvas.stack_over(bars_1).add(y2)</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">491</span>
-<span class="normal">492</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">492</span>
 <span class="normal">493</span>
 <span class="normal">494</span>
 <span class="normal">495</span>
@@ -14423,7 +14422,8 @@ bars_2 = canvas.stack_over(bars_1).add(y2)</p>
 <span class="normal">510</span>
 <span class="normal">511</span>
 <span class="normal">512</span>
-<span class="normal">513</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_axes</span><span class="p">(</span>
+<span class="normal">513</span>
+<span class="normal">514</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_axes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">visible</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -14528,8 +14528,7 @@ bars_2 = canvas.stack_over(bars_1).add(y2)</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">538</span>
-<span class="normal">539</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">539</span>
 <span class="normal">540</span>
 <span class="normal">541</span>
 <span class="normal">542</span>
@@ -14555,7 +14554,8 @@ bars_2 = canvas.stack_over(bars_1).add(y2)</p>
 <span class="normal">562</span>
 <span class="normal">563</span>
 <span class="normal">564</span>
-<span class="normal">565</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_font</span><span class="p">(</span>
+<span class="normal">565</span>
+<span class="normal">566</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_font</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">color</span><span class="p">:</span> <span class="n">ColorType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -14615,8 +14615,7 @@ canvas = new_canvas("matplotlib").update_labels("Title", "X", "Y")</p>
 
           <details class="quote">
             <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">515</span>
-<span class="normal">516</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">516</span>
 <span class="normal">517</span>
 <span class="normal">518</span>
 <span class="normal">519</span>
@@ -14636,7 +14635,8 @@ canvas = new_canvas("matplotlib").update_labels("Title", "X", "Y")</p>
 <span class="normal">533</span>
 <span class="normal">534</span>
 <span class="normal">535</span>
-<span class="normal">536</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_labels</span><span class="p">(</span>
+<span class="normal">536</span>
+<span class="normal">537</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_labels</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

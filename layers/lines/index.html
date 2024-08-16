@@ -617,6 +617,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#linestep" class="md-nav__link">
+    <span class="md-ellipsis">
+      LineStep
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#infline" class="md-nav__link">
     <span class="md-ellipsis">
       InfLine
@@ -1358,6 +1367,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#linestep" class="md-nav__link">
+    <span class="md-ellipsis">
+      LineStep
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#infline" class="md-nav__link">
     <span class="md-ellipsis">
       InfLine
@@ -1406,6 +1424,7 @@
 <p>There are several layers that is composed of only lines.</p>
 <ul>
 <li><code>Line</code> ... a simple line.</li>
+<li><code>LineStep</code> ... a line for the step plot</li>
 <li><code>InfLine</code> ... a straight line that extends to infinity</li>
 <li><code>InfCurve</code> ... a curve that extends to infinity</li>
 <li><code>Errorbar</code> ... lines representing error bars</li>
@@ -1457,6 +1476,23 @@ accepts several ways to define the line coordinates.</p>
 <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/line_layer_coordinates.png" width="360px" /></p>
+<h2 id="linestep">LineStep</h2>
+<p><code>LineStep</code> is a line-type layer for the step plot. It is usually created by the
+<a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas.CanvasBase.add_step"><code>add_step</code></a> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;lightgray&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;pre&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;mid&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/linestep_layer.png" width="360px" /></p>
 <h2 id="infline">InfLine</h2>
 <p><code>InfLine</code> is a straight line that extends to infinity. Practically, it is achieved by
 connecting a callback that updates the line coordinates when the canvas view range is

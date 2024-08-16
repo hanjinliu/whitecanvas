@@ -3,6 +3,7 @@
 There are several layers that is composed of only lines.
 
 - `Line` ... a simple line.
+- `LineStep` ... a line for the step plot
 - `InfLine` ... a straight line that extends to infinity
 - `InfCurve` ... a curve that extends to infinity
 - `Errorbar` ... lines representing error bars
@@ -57,6 +58,27 @@ canvas.add_line([0, 1, 0, -1, 0])  # only y values
 canvas.add_line([0, 1, 2, 3, 4], [1, 2, 1, 0, 1])  # x and y values
 canvas.add_line(np.arange(5), np.array([2, 3, 2, 1, 2]))  # numpy arrays
 canvas.add_line(np.array([[0, 3], [1, 4], [2, 3], [3, 2], [4, 3]]))  # (N, 2) array
+canvas.show()
+```
+
+## LineStep
+
+`LineStep` is a line-type layer for the step plot. It is usually created by the
+[`add_step`][whitecanvas.canvas.CanvasBase.add_step] method.
+
+``` python
+#!name: linestep_layer
+import numpy as np
+from whitecanvas import new_canvas
+
+canvas = new_canvas("matplotlib")
+
+x = np.linspace(-1, 1, 24)
+y = x ** 2
+canvas.add_line(x, y, color="lightgray", alpha=0.5)
+canvas.add_step(x, y, color="red", where="pre")
+canvas.add_step(x, y, color="orange", where="mid")
+canvas.add_step(x, y, color="blue", where="post")
 canvas.show()
 ```
 

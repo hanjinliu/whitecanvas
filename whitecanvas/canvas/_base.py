@@ -48,6 +48,7 @@ from whitecanvas.types import (
     OrientationLike,
     Rect,
     StepStyle,
+    StepStyleStr,
     Symbol,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
@@ -744,16 +745,16 @@ class CanvasBase(CanvasNDBase):
         title: str | None = None,
     ):
         """
-        Add legend item to the canvas.
+        Add legend items to the canvas.
 
         Parameters
         ----------
         layers : sequence of layer or str, optional
             Which item to be added to the legend. If str is given, it will be converted
-            into a title label.
+            into a legend title label.
         location : LegendLocation, default "top_right"
-            Location of the legend. Can be following strings. Combination of the
-            following strings (e.g., "top_left", "center_right").
+            Location of the legend. Can be combination of "top", "bottom", "left",
+            "right" and "center" (e.g., "top_left", "center_right").
 
             ```
                    (2) left  center right
@@ -783,7 +784,7 @@ class CanvasBase(CanvasNDBase):
             layers = list(self.layers)
         if title is not None:
             layers = [title, *layers]
-        location = Location(location)
+        location = Location.parse(location)
 
         items = list[tuple[str, _legend.LegendItem]]()
         for layer in layers:
@@ -938,7 +939,7 @@ class CanvasBase(CanvasNDBase):
     @overload
     def add_step(
         self, ydata: ArrayLike1D, *, name: str | None = None,
-        where: str | StepStyle = "pre", color: ColorType | None = None,
+        where: StepStyleStr | StepStyle = "pre", color: ColorType | None = None,
         width: float | None = None, style: LineStyle | str | None = None,
         alpha: float = 1.0, orient: OrientationLike = "horizontal",
         antialias: bool = True,
@@ -948,7 +949,7 @@ class CanvasBase(CanvasNDBase):
     @overload
     def add_step(
         self, xdata: ArrayLike1D, ydata: ArrayLike1D, *, name: str | None = None,
-        where: str | StepStyle = "pre", color: ColorType | None = None,
+        where: StepStyleStr | StepStyle = "pre", color: ColorType | None = None,
         width: float | None = None, style: LineStyle | str | None = None,
         alpha: float = 1.0, orient: OrientationLike = "horizontal",
         antialias: bool = True,

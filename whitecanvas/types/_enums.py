@@ -49,6 +49,9 @@ class StepStyle(_StrEnum):
     MID_T = "mid_t"
 
 
+StepStyleStr = Literal["pre", "post", "mid", "pre_t", "post_t", "mid_t"]
+
+
 class Symbol(_StrEnum):
     CIRCLE = "o"
     SQUARE = "s"
@@ -186,6 +189,14 @@ class Location(_StrEnum):
     def is_side(self) -> bool:
         """True if the location is in any of the side locations."""
         return "SIDE" in self.name
+
+    @classmethod
+    def parse(cls, value: str) -> Location:
+        if value in ("top", "bottom", "left", "right"):
+            return cls(value + "_center")
+        if "-" in value:
+            return cls(value.replace("-", "_"))
+        return cls(value)
 
 
 LocationStr = Literal[

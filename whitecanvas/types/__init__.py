@@ -21,6 +21,7 @@ from whitecanvas.types._enums import (
     OrientationLike,
     Origin,
     StepStyle,
+    StepStyleStr,
     Symbol,
 )
 from whitecanvas.types._mouse import MouseEvent, Point
@@ -56,6 +57,7 @@ __all__ = [
     "MouseEvent",
     "Point",
     "StepStyle",
+    "StepStyleStr",
     "MouseEventType",
     "Alignment",
     "XYData",

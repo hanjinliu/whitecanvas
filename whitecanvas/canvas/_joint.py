@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    Callable,
     Iterator,
     Literal,
     Sequence,
@@ -31,6 +32,7 @@ from whitecanvas.types import (
     OrientationLike,
     Symbol,
 )
+from whitecanvas.utils.predicate import not_starts_with_underscore
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -164,13 +166,15 @@ class JointGrid(CanvasGrid):
     def add_legend(
         self,
         layers: Sequence[str | _l.Layer] | None = None,
-        location: Location | LocationStr = "top_right",
         *,
+        location: Location | LocationStr = "top_right",
         title: str | None = None,
+        name_filter: Callable[[str], bool] = not_starts_with_underscore,
     ):
         """Add legend to the main canvas."""
-        self.main_canvas.add_legend(layers, location=location, title=title)
-        return None
+        return self.main_canvas.add_legend(
+            layers, location=location, title=title, name_filter=name_filter
+        )
 
     def add_markers(
         self,

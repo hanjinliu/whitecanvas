@@ -52,6 +52,7 @@ from whitecanvas.types import (
     Symbol,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
+from whitecanvas.utils.predicate import not_starts_with_underscore
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
@@ -99,7 +100,7 @@ class CanvasNDBase(ABC):
         self._canvas()._plt_draw()
         self.events.drawn.emit()
 
-    def _coerce_name(self, name: str | None, default: str = "data") -> str:
+    def _coerce_name(self, name: str | None, default: str = "_data") -> str:
         if name is None:
             basename = default
             name = f"{default}-0"
@@ -743,6 +744,7 @@ class CanvasBase(CanvasNDBase):
         *,
         location: Location | LocationStr = "top_right",
         title: str | None = None,
+        name_filter: Callable[[str], bool] = not_starts_with_underscore,
     ):
         """
         Add legend items to the canvas.
@@ -779,6 +781,8 @@ class CanvasBase(CanvasNDBase):
             ```
         title : str, optional
             If given, title label will be added as the first legend item.
+        name_filter : callable, default not_starts_with_underscore
+            A callable that returns True if the name should be included in the legend.
         """
         if layers is None:
             layers = list(self.layers)
@@ -788,6 +792,8 @@ class CanvasBase(CanvasNDBase):
 
         items = list[tuple[str, _legend.LegendItem]]()
         for layer in layers:
+            if not name_filter(layer.name):
+                continue
             if isinstance(layer, str):
                 items.append((layer, _legend.TitleItem()))
             elif isinstance(layer, _l.Layer):

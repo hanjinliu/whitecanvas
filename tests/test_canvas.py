@@ -222,7 +222,7 @@ def test_legend(backend: str):
     if backend == "vispy":
         pytest.skip("vispy does not support legend")
     canvas = new_canvas(backend=backend)
-    canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
+    canvas.add_line([0, 1, 2], [0, 1, 2])
     canvas.add_markers([0, 1, 2], [0, 1, 2], name="markers")
     canvas.add_bars([0, 1, 2], [0, 1, 2], name="bars")
     canvas.add_line([3, 4, 5], [1, 2, 1], name="plot").with_markers()

@@ -792,11 +792,11 @@ class CanvasBase(CanvasNDBase):
 
         items = list[tuple[str, _legend.LegendItem]]()
         for layer in layers:
-            if not name_filter(layer.name):
-                continue
             if isinstance(layer, str):
                 items.append((layer, _legend.TitleItem()))
             elif isinstance(layer, _l.Layer):
+                if not name_filter(layer.name):
+                    continue
                 items.append((layer.name, layer._as_legend_item()))
             else:
                 raise TypeError(f"Expected a list of layer or str, got {type(layer)}.")

@@ -309,10 +309,16 @@ class Canvas:
         if artists:
             loc, bbox_to_anchor = _LEGEND_LOC_MAP[anchor]
             font_size = self._plt_get_xticks()._plt_get_size()
-            self._axes.legend(
+            leg = self._axes.legend(
                 artists, names, loc=loc, bbox_to_anchor=bbox_to_anchor,
                 prop={"size": font_size},
             )  # fmt: skip
+            for item, text in zip(leg.legend_handles, leg.texts):
+                if isinstance(item, plt.Rectangle):
+                    extent = item.get_window_extent(leg.figure.canvas.get_renderer())
+                    width = extent.width
+                    text.set_fontweight("bold")
+                    text.set_position((-1.5 * width, 0))
             if anchor.is_side:
                 self._axes.figure.tight_layout()
 

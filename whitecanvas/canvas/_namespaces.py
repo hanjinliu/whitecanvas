@@ -312,7 +312,11 @@ class AxisNamespace(Namespace):
     @lim.setter
     def lim(self, lim: tuple[float, float]):
         low, high = lim
-        if low >= high:
+        if low is None or high is None:
+            _low, _high = self._get_object()._plt_get_limits()
+            low = low if low is not None else _low
+            high = high if high is not None else _high
+        elif low >= high:
             a = type(self).__name__[0].lower()
             raise ValueError(
                 f"low must be less than high, but got {lim!r}. If you "
@@ -322,8 +326,9 @@ class AxisNamespace(Namespace):
         # implemented in JS (such as bokeh) and the python callback is not
         # enabled. Otherwise axis linking fails.
         with self.events.blocked():
-            self._get_object()._plt_set_limits(lim)
-        self.events.lim.emit(lim)
+            self._get_object()._plt_set_limits((low, high))
+        self.events.lim.emit((low, high))
+        self._draw_canvas()
         return None
 
     @property

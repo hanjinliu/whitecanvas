@@ -56,6 +56,14 @@ def test_namespaces(backend: str):
     canvas.y.label.family = "Arial"
     assert canvas.y.label.family == "Arial"
 
+    # test lim
+    canvas.x.lim = (-1, 1)
+    assert canvas.x.lim == pytest.approx((-1, 1))
+    canvas.x.lim = (-0.4, None)
+    assert canvas.x.lim == pytest.approx((-0.4, 1))
+    canvas.x.lim = (None, 0.6)
+    assert canvas.x.lim == pytest.approx((-0.4, 0.6))
+
     # test errors
     with pytest.raises(ValueError):
         canvas.x.lim = (1, 0)

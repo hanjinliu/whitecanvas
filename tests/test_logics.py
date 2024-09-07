@@ -45,6 +45,14 @@ def test_kde():
     layer.band_width
     layer.band_width = 0.5
 
+def test_line_with_methods():
+    canvas = new_canvas(backend="mock")
+    line = canvas.add_line([1, 2], [4, 5])
+    with pytest.raises(TypeError):
+        line.with_xband([1, 1], alpha=[1, 2])
+        line.with_yfill([0, 1])
+        line.with_yfill(0.1, alpha=[1, 2])
+
 def test_hover_template():
     canvas = new_canvas(backend="mock")
     layer = canvas.add_markers([1, 2, 3], [4, 5, 6])

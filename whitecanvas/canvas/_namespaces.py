@@ -122,7 +122,7 @@ class _TextBoundNamespace(Namespace):
 
     @color.setter
     def color(self, color):
-        self._get_object()._plt_set_color(np.array(Color(color)))
+        self._get_object()._plt_set_color(np.fromiter(Color(color), dtype=np.float32))
 
     @property
     def size(self) -> float:
@@ -333,7 +333,7 @@ class AxisNamespace(Namespace):
 
     @color.setter
     def color(self, color):
-        self._get_object()._plt_set_color(np.array(Color(color)))
+        self._get_object()._plt_set_color(np.fromiter(Color(color), dtype=np.float32))
         self._draw_canvas()
 
     @property

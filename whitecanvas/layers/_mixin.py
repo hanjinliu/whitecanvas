@@ -722,7 +722,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         _is_no_width = self.edge.width == 0
         if isinstance(self._edge_namespace, MultiEdge):
             if np.any(_is_no_width):
-                ec = np.array(get_theme().foreground_color, dtype=np.float32)
+                ec = np.fromiter(get_theme().foreground_color, dtype=np.float32)
                 self.edge.width = np.where(_is_no_width, 1, self.edge.width)
                 ec_old = self.edge.color
                 ec_old[_is_no_width] = ec[np.newaxis]
@@ -848,7 +848,7 @@ class CollectionFaceEdgeMixin(AbstractFaceEdgeMixin[CollectionFace, CollectionEd
     def _make_sure_hatch_visible(self):
         _is_no_width = self.edge.width == 0
         if np.any(_is_no_width):
-            ec = np.array(get_theme().foreground_color, dtype=np.float32)
+            ec = np.fromiter(get_theme().foreground_color, dtype=np.float32)
             self.edge.width = np.where(_is_no_width, 1, self.edge.width)
             ec_old = self.edge.color
             ec_old[_is_no_width] = ec[np.newaxis]

@@ -370,10 +370,7 @@ class _SingleLine(
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if err_high is None:
-            err_high = err
-        if color is _void:
-            color = self.color
+        err, err_high, color, alpha = _norm_band_args(self, err, err_high, color, alpha)
         data = self.data
         _x, _y0 = self._data_to_backend_data(XYData(data.y, data.x - err))
         _, _y1 = self._data_to_backend_data(XYData(data.y, data.x + err_high))
@@ -413,10 +410,7 @@ class _SingleLine(
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if err_high is None:
-            err_high = err
-        if color is _void:
-            color = self.color
+        err, err_high, color, alpha = _norm_band_args(self, err, err_high, color, alpha)
         data = self.data
         _x, _y0 = self._data_to_backend_data(XYData(data.x, data.y - err))
         _, _y1 = self._data_to_backend_data(XYData(data.x, data.y + err_high))
@@ -453,10 +447,7 @@ class _SingleLine(
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if color is _void:
-            color = self.color
-        if not is_real_number(bottom):
-            raise TypeError(f"Expected `bottom` to be a number, got {type(bottom)}")
+        bottom, color, alpha = _norm_fill_args(self, bottom, color, alpha)
         data = self.data
         x0 = np.full((data.x.size,), bottom)
         band = Band(
@@ -492,10 +483,7 @@ class _SingleLine(
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if color is _void:
-            color = self.color
-        if not is_real_number(bottom):
-            raise TypeError(f"Expected `bottom` to be a number, got {type(bottom)}")
+        bottom, color, alpha = _norm_fill_args(self, bottom, color, alpha)
         data = self.data
         y0 = np.full((data.y.size,), bottom)
         band = Band(
@@ -505,6 +493,37 @@ class _SingleLine(
         old_name = self.name
         self.name = f"line-of-{self.name}"
         return LineBand(self, band, name=old_name)
+
+
+def _norm_band_args(
+    self: _SingleLine,
+    err: ArrayLike1D,
+    err_high: ArrayLike1D | None,
+    color: ColorType | _Void,
+    alpha: float,
+) -> tuple[ArrayLike1D, ArrayLike1D, ColorType, float]:
+    if err_high is None:
+        err_high = err
+    if color is _void:
+        color = self.color
+    if not is_real_number(alpha):
+        raise TypeError(f"Expected `alpha` to be a number, got {type(alpha)}")
+    return err, err_high, color, alpha
+
+
+def _norm_fill_args(
+    self: _SingleLine,
+    bottom: float,
+    color: ColorType | _Void,
+    alpha: float,
+) -> tuple[float, ColorType, float]:
+    if color is _void:
+        color = self.color
+    if not is_real_number(bottom):
+        raise TypeError(f"Expected `bottom` to be a number, got {type(bottom)}")
+    if not is_real_number(alpha):
+        raise TypeError(f"Expected `alpha` to be a number, got {type(alpha)}")
+    return bottom, color, alpha
 
 
 class Line(_SingleLine):

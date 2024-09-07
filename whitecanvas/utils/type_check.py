@@ -14,10 +14,12 @@ if TYPE_CHECKING:
 
 
 def is_not_array(x) -> bool:
+    """True if x is not an array."""
     return np.isscalar(x) or isinstance(x, Enum)
 
 
 def is_real_number(x) -> TypeGuard[float]:
+    """True if x is a real number."""
     return isinstance(x, (int, float, Real, np.number))
 
 

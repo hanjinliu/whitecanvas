@@ -245,6 +245,26 @@ class _SingleLine(
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> _lg.LabeledLine[Self]:
+        """
+        Add error bars parallel to the x-axis.
+
+        Parameters
+        ----------
+        err : array-like
+            The error values.
+        err_high : array-like, optional
+            The higher error values. If not given, use `err`.
+        color : color-like, optional
+            The error bar color. Use the line color by default.
+        width : float, optional
+            The error bar line width. Use the line width by default.
+        style : str, optional
+            The error bar line style. Use the line style by default.
+        antialias : bool, optional
+            Whether to use antialiasing. Use the line antialias by default.
+        capsize : float, default 0
+            The cap size of the error bars.
+        """
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group import LabeledLine
 
@@ -279,6 +299,26 @@ class _SingleLine(
         antialias: bool | _Void = _void,
         capsize: float = 0,
     ) -> _lg.LabeledLine[Self]:
+        """
+        Add error bars parallel to the y-axis.
+
+        Parameters
+        ----------
+        err : array-like
+            The error values.
+        err_high : array-like, optional
+            The higher error values. If not given, use `err`.
+        color : color-like, optional
+            The error bar color. Use the line color by default.
+        width : float, optional
+            The error bar line width. Use the line width by default.
+        style : str, optional
+            The error bar line style. Use the line style by default.
+        antialias : bool, optional
+            Whether to use antialiasing. Use the line antialias by default.
+        capsize : float, default 0
+            The cap size of the error bars.
+        """
         from whitecanvas.layers._primitive import Errorbars
         from whitecanvas.layers.group import LabeledLine
 
@@ -311,13 +351,26 @@ class _SingleLine(
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand[Self]:
+        """
+        Add a x-oriented band region attached to the line.
+
+        Parameters
+        ----------
+        err : array-like
+            The error values.
+        err_high : array-like, optional
+            The higher error values. If not given, use `err`.
+        color : color-like, optional
+            The band color. Use the line color by default.
+        alpha : float, optional
+            The band alpha value.
+        hatch : str or Hatch, optional
+            The band hatch pattern.
+        """
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if err_high is None:
-            err_high = err
-        if color is _void:
-            color = self.color
+        err, err_high, color, alpha = _norm_band_args(self, err, err_high, color, alpha)
         data = self.data
         _x, _y0 = self._data_to_backend_data(XYData(data.y, data.x - err))
         _, _y1 = self._data_to_backend_data(XYData(data.y, data.x + err_high))
@@ -338,13 +391,26 @@ class _SingleLine(
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand[Self]:
+        """
+        Add a y-oriented band region attached to the line.
+
+        Parameters
+        ----------
+        err : array-like
+            The error values.
+        err_high : array-like, optional
+            The higher error values. If not given, use `err`.
+        color : color-like, optional
+            The band color. Use the line color by default.
+        alpha : float, optional
+            The band alpha value.
+        hatch : str or Hatch, optional
+            The band hatch pattern.
+        """
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if err_high is None:
-            err_high = err
-        if color is _void:
-            color = self.color
+        err, err_high, color, alpha = _norm_band_args(self, err, err_high, color, alpha)
         data = self.data
         _x, _y0 = self._data_to_backend_data(XYData(data.x, data.y - err))
         _, _y1 = self._data_to_backend_data(XYData(data.x, data.y + err_high))
@@ -364,11 +430,24 @@ class _SingleLine(
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand[Self]:
+        """
+        Fill the region between line and the y-axis (x-direction).
+
+        Parameters
+        ----------
+        bottom : float, default 0.0
+            The bottom value of the fill region.
+        color : color-like, optional
+            The fill color. Use the line color by default.
+        alpha : float, optional
+            The fill alpha value.
+        hatch : str or Hatch, optional
+            The fill hatch pattern.
+        """
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if color is _void:
-            color = self.color
+        bottom, color, alpha = _norm_fill_args(self, bottom, color, alpha)
         data = self.data
         x0 = np.full((data.x.size,), bottom)
         band = Band(
@@ -387,11 +466,24 @@ class _SingleLine(
         alpha: float = 0.3,
         hatch: str | Hatch = Hatch.SOLID,
     ) -> _lg.LineBand[Self]:
+        """
+        Fill the region between line and the x-axis (y-direction).
+
+        Parameters
+        ----------
+        bottom : float, default 0.0
+            The bottom value of the fill region.
+        color : color-like, optional
+            The fill color. Use the line color by default.
+        alpha : float, optional
+            The fill alpha value.
+        hatch : str or Hatch, optional
+            The fill hatch pattern.
+        """
         from whitecanvas.layers._primitive import Band
         from whitecanvas.layers.group import LineBand
 
-        if color is _void:
-            color = self.color
+        bottom, color, alpha = _norm_fill_args(self, bottom, color, alpha)
         data = self.data
         y0 = np.full((data.y.size,), bottom)
         band = Band(
@@ -401,6 +493,37 @@ class _SingleLine(
         old_name = self.name
         self.name = f"line-of-{self.name}"
         return LineBand(self, band, name=old_name)
+
+
+def _norm_band_args(
+    self: _SingleLine,
+    err: ArrayLike1D,
+    err_high: ArrayLike1D | None,
+    color: ColorType | _Void,
+    alpha: float,
+) -> tuple[ArrayLike1D, ArrayLike1D, ColorType, float]:
+    if err_high is None:
+        err_high = err
+    if color is _void:
+        color = self.color
+    if not is_real_number(alpha):
+        raise TypeError(f"Expected `alpha` to be a number, got {type(alpha)}")
+    return err, err_high, color, alpha
+
+
+def _norm_fill_args(
+    self: _SingleLine,
+    bottom: float,
+    color: ColorType | _Void,
+    alpha: float,
+) -> tuple[float, ColorType, float]:
+    if color is _void:
+        color = self.color
+    if not is_real_number(bottom):
+        raise TypeError(f"Expected `bottom` to be a number, got {type(bottom)}")
+    if not is_real_number(alpha):
+        raise TypeError(f"Expected `alpha` to be a number, got {type(alpha)}")
+    return bottom, color, alpha
 
 
 class Line(_SingleLine):
@@ -448,6 +571,29 @@ class Line(_SingleLine):
         anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         family: str | None = None,
     ) -> _lg.LabeledLine:
+        """
+        Add texts to each data point.
+
+        Parameters
+        ----------
+        strings : list of str
+            Texts to be added.
+        color : ColorType, default "black"
+            Color of the text.
+        size : float, optional
+            Font size., by default 12
+        rotation : float, default 0.0
+            Text rotation angle in degree.
+        anchor : str or Alignment, default Alignment.BOTTOM_LEFT
+            Anchor point of the text.
+        family : str, optional
+            Font family.
+
+        Returns
+        -------
+        LabeledLine
+            The labeled line layer.
+        """
         from whitecanvas.layers import Errorbars
         from whitecanvas.layers.group import LabeledLine
 

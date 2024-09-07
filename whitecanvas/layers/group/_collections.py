@@ -79,6 +79,12 @@ class LayerContainer(LayerGroup):
     def _disconnect_canvas(self, canvas: Canvas):
         return super()._disconnect_canvas(canvas)
 
+    def _as_legend_item(self):
+        """Use the first layer as the main legend item."""
+        if len(self._children) == 0:
+            return _legend.EmptyLegendItem()
+        return self._children[0]._as_legend_item()
+
 
 class LayerTuple(LayerContainer, Sequence[Layer]):
     def __getitem__(self, key: int | str) -> Layer:
@@ -141,16 +147,10 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
         self._ordering_indices.insert(n, len(self._ordering_indices))
         return None
 
-    def _as_legend_item(self):
-        """Use the first layer as the main legend item."""
-        if len(self) == 0:
-            return _legend.EmptyLegendItem()
-        return self[0]._as_legend_item()
-
+    # fmt: off
     if TYPE_CHECKING:
-
-        def iter_children(self) -> Iterator[_L]:
-            ...
+        def iter_children(self) -> Iterator[_L]: ...
+    # fmt: on
 
 
 _L0 = TypeVar("_L0", bound=Layer)
@@ -159,16 +159,13 @@ _L1 = TypeVar("_L1", bound=Layer)
 
 class MainAndOtherLayers(LayerTuple, Generic[_L0, _L1]):
     @overload
-    def __getitem__(self, n: Literal[0]) -> _L0:
-        ...
+    def __getitem__(self, n: Literal[0]) -> _L0: ...
 
     @overload
-    def __getitem__(self, n: Literal[0]) -> _L1:
-        ...
+    def __getitem__(self, n: Literal[0]) -> _L1: ...
 
     @overload
-    def __getitem__(self, n: int) -> Layer:
-        ...
+    def __getitem__(self, n: int) -> Layer: ...
 
     def __getitem__(self, n):
         """The n-th layer."""

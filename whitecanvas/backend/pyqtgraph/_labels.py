@@ -92,7 +92,7 @@ class AxisLabel(_CanvasComponent):
         self._get_axis().setLabel(text, **self._css)
 
     def _plt_get_color(self):
-        return np.array(Color(self._css["color"]))
+        return np.fromiter(Color(self._css["color"]), dtype=np.float32)
 
     def _plt_set_color(self, color):
         css = self._css.copy()

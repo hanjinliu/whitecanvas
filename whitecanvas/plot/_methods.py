@@ -80,6 +80,8 @@ else:
     update_font = _make_method("update_font", pref="")
     legend = _make_method("legend", pref="add_")
 
+plot = line  # alias
+
 
 @overload
 def xlim() -> tuple[float, float]: ...
@@ -94,6 +96,7 @@ def xlim(minmax: tuple[float, float], /) -> tuple[float, float]: ...
 
 
 def xlim(*args):
+    """Set or get the x-axis limits."""
     if len(args) == 0:
         return current_canvas().x.lim
     elif len(args) == 1:
@@ -117,6 +120,7 @@ def ylim(minmax: tuple[float, float], /) -> tuple[float, float]: ...
 
 
 def ylim(*args):
+    """Set or get the y-axis limits."""
     if len(args) == 0:
         return current_canvas().y.lim
     elif len(args) == 1:
@@ -128,30 +132,45 @@ def ylim(*args):
 
 
 def title(title: str | None = None) -> str:
+    """Set or get the title of the current canvas."""
     if title is not None:
         current_canvas().title = title
     return current_canvas().title
 
 
 def xlabel(label: str | None = None) -> str:
+    """Set or get the x-axis label."""
     if label is not None:
         current_canvas().x.label = label
     return current_canvas().x.label
 
 
 def ylabel(label: str | None = None) -> str:
+    """Set or get the y-axis label."""
     if label is not None:
         current_canvas().y.label = label
     return current_canvas().y.label
 
 
-def xticks(ticks: list[float] | None = None) -> list[float]:
-    if ticks is not None:
-        current_canvas().x.ticks = ticks
-    return current_canvas().x.ticks
+def xticks(
+    ticks: list[float] | None = None,
+    labels: list[str] | None = None,
+) -> tuple[list[float], list[str]]:
+    """Set or get the x-axis ticks."""
+    canvas = current_canvas()
+    if ticks is not None or labels is not None:
+        canvas.x.ticks.set_labels(ticks, labels)
+    xticks = canvas.x.ticks
+    return xticks.pos, xticks.labels
 
 
-def yticks(ticks: list[float] | None = None) -> list[float]:
-    if ticks is not None:
-        current_canvas().y.ticks = ticks
-    return current_canvas().y.ticks
+def yticks(
+    ticks: list[float] | None = None,
+    labels: list[str] | None = None,
+) -> tuple[list[float], list[str]]:
+    """Set or get the y-axis ticks."""
+    canvas = current_canvas()
+    if ticks is not None or labels is not None:
+        canvas.y.ticks.set_labels(ticks, labels)
+    yticks = canvas.y.ticks
+    return yticks.pos, yticks.labels

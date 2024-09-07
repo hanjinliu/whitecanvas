@@ -202,9 +202,9 @@ class MplAxis:
         axes = self._canvas()._axes
         x0, x1 = getattr(axes, f"get_{self._axis_name}lim")()
         if getattr(axes, f"{self._axis_name}axis_inverted")():
-            return x1, x0
+            return float(x1), float(x0)
         else:
-            return x0, x1
+            return float(x0), float(x1)
 
     def _plt_set_limits(self, limits: tuple[float, float]):
         axes = self._canvas()._axes

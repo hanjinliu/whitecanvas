@@ -116,6 +116,16 @@ class _MarkerLikeMixin:
         self._color_by = color_by
         return self
 
+    def _update_color_or_colormap(self, by: str | Iterable[str]) -> Self:
+        if (
+            isinstance(by, str)
+            and by in self._source
+            and self._source[by].dtype.kind in "fiu"
+        ):
+            return self.update_colormap(by)
+        self.update_color(by)
+        return self
+
     @overload
     def update_width(self, value: float) -> Self: ...
 
@@ -175,7 +185,11 @@ class _MarkerLikeMixin:
         return self
 
     def _init_color_for_canvas(self, color, alpha, canvas: CanvasBase):
-        if color is not None and not self._color_by.is_const():
+        if (
+            color is not None
+            and not self._color_by.is_const()
+            and isinstance(self._color_by, _p.ColorPlan)
+        ):
             self.update_color(self._color_by.by, palette=canvas._color_palette)
         elif color is None:
             self.update_color(canvas._color_palette.next())
@@ -231,7 +245,7 @@ class DFMarkers(
 
         super().__init__(base, source)
         if color is not None:
-            self.update_color(color)
+            self._update_color_or_colormap(color)
         if hatch is not None:
             self.update_hatch(hatch)
         if symbol is not None:
@@ -692,7 +706,7 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
         self._scale_by = _p.WidthPlan.default()
         super().__init__(base, source)
         if color is not None:
-            self.update_color(color)
+            self._update_color_or_colormap(color)
         if isinstance(width, str):
             self.update_width(width)
         elif is_real_number(width):

@@ -42,15 +42,13 @@ class DataFrameWrapper(ABC, Generic[_T]):
         return self._data
 
     @abstractmethod
-    def __getitem__(self, item: str) -> NDArray[np.generic]:
-        ...
+    def __getitem__(self, item: str) -> NDArray[np.generic]: ...
 
     def __contains__(self, item: str) -> bool:
         return item in self.iter_keys()
 
     @abstractmethod
-    def iter_keys(self) -> Iterator[str]:
-        ...
+    def iter_keys(self) -> Iterator[str]: ...
 
     def iter_values(self) -> Iterator[NDArray[np.generic]]:
         for k in self.iter_keys():
@@ -77,20 +75,18 @@ class DataFrameWrapper(ABC, Generic[_T]):
         self,
         by: tuple[str, ...],
         values: tuple[Any, ...],
-    ) -> Self:
-        ...
+    ) -> Self: ...
 
     @abstractmethod
-    def group_by(self, by: tuple[str, ...]) -> Iterator[tuple[tuple[Any, ...], Self]]:
-        ...
+    def group_by(
+        self, by: tuple[str, ...]
+    ) -> Iterator[tuple[tuple[Any, ...], Self]]: ...
 
     @abstractmethod
-    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self:
-        ...
+    def agg_by(self, by: tuple[str, ...], on: list[str], method: str) -> Self: ...
 
     @abstractmethod
-    def melt(self, id_vars: list[str], value_vars: list[str]) -> Self:
-        ...
+    def melt(self, id_vars: list[str], value_vars: list[str]) -> Self: ...
 
     @abstractmethod
     def value_count(self, by: tuple[str, ...]) -> Self:
@@ -362,5 +358,8 @@ def parse(data: Any) -> DataFrameWrapper:
         return PandasWrapper(data)
     elif is_polars_dataframe(data):
         return PolarsWrapper(data)
+    elif hasattr(data, "__dataframe__"):
+        df_interchangable = data.__dataframe__()
+        return DictWrapper({k: np.asarray(v) for k, v in df_interchangable.items()})
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")

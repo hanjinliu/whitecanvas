@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Sequence, SupportsIndex, TypeVar, overloa
 from psygnal import Signal, SignalGroup
 
 from whitecanvas import layers as _l
+from whitecanvas import theme
 from whitecanvas._axis import DimAxis, RangeAxis
 from whitecanvas._exceptions import ReferenceDeletedError
 from whitecanvas.layers import _ndim as _ndl
@@ -529,7 +530,7 @@ class InAxes:
         image: Any,
         *,
         name: str | None = None,
-        cmap: ColormapType = "gray",
+        cmap: ColormapType | None = None,
         clim: tuple[float | None, float | None] | None = None,
         rgb: bool = False,
         flip_canvas: bool = True,
@@ -553,6 +554,7 @@ class InAxes:
         """
         canvas = self._get_canvas()
         name = canvas._coerce_name(name)
+        cmap = theme._default("colormap_image", cmap)
         stack = _ndl.ImageLayerStack.from_layer_class(
             _l.Image, image, name=name, cmap=cmap, clim=clim, rgb=rgb,
             backend=canvas._get_backend(),

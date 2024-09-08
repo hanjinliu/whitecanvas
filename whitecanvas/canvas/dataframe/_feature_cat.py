@@ -11,6 +11,7 @@ from whitecanvas import theme
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
+from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.types import HistBinType, KdeBandWidthType, Orientation
 
 if TYPE_CHECKING:
@@ -205,7 +206,11 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             self._df, xj, yj, name=name, color=color, hatch=hatch,
             size=size, symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip
-        if color is not None and not layer._color_by.is_const():
+        if (
+            color is not None
+            and not layer._color_by.is_const()
+            and isinstance(layer._color_by, _p.ColorPlan)
+        ):
             layer.update_color(layer._color_by.by, palette=canvas._color_palette)
         elif color is None:
             layer.update_color(canvas._color_palette.next())
@@ -219,7 +224,6 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         bins: HistBinType | tuple[HistBinType, HistBinType] = "auto",
         rangex: tuple[float, float] | None = None,
         rangey: tuple[float, float] | None = None,
-        cmap=None,  # deprecated
     ) -> _lt.DFMultiHeatmap[_DF]:
         """
         Add 2-D histogram of given x/y columns.

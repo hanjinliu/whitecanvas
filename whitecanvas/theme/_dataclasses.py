@@ -133,6 +133,8 @@ class Theme(_BaseModel):
     background_color: Color = _field(Color("white"))
     canvas_size: tuple[float, float] = _field((800, 600), _validate_canvas_size)
     palette: Colormap = _field(Colormap("tab10"), Colormap)
+    colormap_categorical: Colormap = _field(Colormap("viridis"), Colormap)
+    colormap_image: Colormap = _field(Colormap("gray"), Colormap)
 
 
 LIGHT_THEME = Theme()

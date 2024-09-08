@@ -225,4 +225,5 @@ exclude_lines = [
   "@abstractmethod",
   "@deprecated",
   "raise NotImplementedError",
+  "except ImportError",
 ]

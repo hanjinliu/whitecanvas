@@ -144,6 +144,8 @@ def as_color_array(color, size: int) -> NDArray[np.float32]:
                 f"Color array must have shape (3,), (4,), (N={size}, 3), or (N={size},"
                 f" 4) but got {color_repr}."
             )
+    if isinstance(color, Color):
+        return as_color_array(np.fromiter(color, dtype=np.float32), size)
     try:
         arr = np.array(color)
     except ValueError as e:

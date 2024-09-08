@@ -81,6 +81,23 @@ def test_cat_plots(backend: str, orient: str):
     cat_plt.add_heatmap_hist(bins=4)
     cat_plt.add_heatmap_hist(bins=4, color="c")
 
+def test_cat_plots_with_sequential_color():
+    df = {
+        "y": np.arange(30),
+        "label": np.repeat(["A", "B", "C"], 10),
+        "c": np.random.default_rng(1642).normal(size=30),
+        "val": np.cos(np.arange(30) / 10),
+    }
+    canvas = new_canvas(backend="mock")
+    cat_plt = canvas.cat_y(df, "y", "label")
+    cat_plt.add_stripplot(color="c", alpha=0.8)
+    cat_plt.add_swarmplot(color="c", alpha="val")
+    cat_plt.add_rugplot(color="c")
+
+    canvas = new_canvas(backend="mock")
+    cat_plt = canvas.cat(df, "y", "val")
+    cat_plt.add_markers(color="c")
+
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
     df = {

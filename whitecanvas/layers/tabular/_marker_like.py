@@ -1,13 +1,6 @@
 from __future__ import annotations
 
-from typing import (
-    TYPE_CHECKING,
-    Generic,
-    Iterable,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import TYPE_CHECKING, Generic, Iterable, TypeVar, Union, overload
 
 import numpy as np
 from cmap import Color, Colormap

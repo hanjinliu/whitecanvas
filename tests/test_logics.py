@@ -147,3 +147,15 @@ def test_matplotlib_tooltip():
     canvas.add_markers([1, 2, 3], [4, 5, 6])
     canvas._canvas()._set_tooltip((2, 5), "tooltip")
     canvas._canvas()._hide_tooltip()
+
+def test_load_dataset():
+    from whitecanvas import load_dataset
+    import pandas as pd
+    import polars as pl
+
+    df = load_dataset("iris")
+    df = load_dataset("iris", type="pandas")
+    assert isinstance(df, pd.DataFrame)
+    df = load_dataset("iris", type="polars")
+    assert isinstance(df, pl.DataFrame)
+    assert df.columns == ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]

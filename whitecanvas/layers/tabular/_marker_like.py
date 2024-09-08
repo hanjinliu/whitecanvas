@@ -122,7 +122,7 @@ class _MarkerLikeMixin:
             and by in self._source
             and self._source[by].dtype.kind in "fiu"
         ):
-            return self.update_colormap(by)
+            return self.update_colormap(by, theme._default("colormap_categorical"))
         self.update_color(by)
         return self
 

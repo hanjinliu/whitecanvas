@@ -1864,7 +1864,7 @@ class CanvasBase(CanvasNDBase):
         image: ArrayLike,
         *,
         name: str | None = None,
-        cmap: ColormapType = "gray",
+        cmap: ColormapType | None = None,
         clim: tuple[float | None, float | None] | None = None,
         flip_canvas: bool = True,
         lock_aspect: bool = True,
@@ -1880,8 +1880,9 @@ class CanvasBase(CanvasNDBase):
         image : ArrayLike
             Image data. Must be 2D or 3D array. If 3D, the last dimension must be
             RGB(A). Note that the first dimension is the vertical axis.
-        cmap : ColormapType, default "gray"
-            Colormap used for the image.
+        cmap : ColormapType, optional
+            Colormap used for the image. If None, the theme default for image colormap
+            will be used.
         clim : (float or None, float or None) or None
             Contrast limits. If None, the limits are automatically determined by min and
             max of the data. You can also pass None separately to either limit to use
@@ -1896,6 +1897,7 @@ class CanvasBase(CanvasNDBase):
         Image
             The image layer.
         """
+        cmap = theme._default("colormap_image", cmap)
         layer = _l.Image(
             image, name=name, cmap=cmap, clim=clim, backend=self._get_backend()
         )

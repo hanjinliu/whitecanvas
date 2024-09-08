@@ -27,7 +27,7 @@ def get_theme(name: str | Theme | None = None) -> Theme:
     return _EXISTING_THEMES[name]
 
 
-def _default(attr: str, value) -> Any:
+def _default(attr: str, value=None) -> Any:
     if value is not None:
         return value
     out = _DEFAULT_THEME

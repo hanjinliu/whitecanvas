@@ -3077,9 +3077,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2121</span>
-<span class="normal">2122</span>
-<span class="normal">2123</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2123</span>
 <span class="normal">2124</span>
 <span class="normal">2125</span>
 <span class="normal">2126</span>
@@ -3116,7 +3114,9 @@
 <span class="normal">2157</span>
 <span class="normal">2158</span>
 <span class="normal">2159</span>
-<span class="normal">2160</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
+<span class="normal">2160</span>
+<span class="normal">2161</span>
+<span class="normal">2162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Canvas</span><span class="p">(</span><span class="n">CanvasBase</span><span class="p">):</span>
     <span class="n">_CURRENT_INSTANCE</span><span class="p">:</span> <span class="n">Canvas</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -3190,9 +3190,7 @@
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2135</span>
-<span class="normal">2136</span>
-<span class="normal">2137</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2137</span>
 <span class="normal">2138</span>
 <span class="normal">2139</span>
 <span class="normal">2140</span>
@@ -3206,7 +3204,9 @@
 <span class="normal">2148</span>
 <span class="normal">2149</span>
 <span class="normal">2150</span>
-<span class="normal">2151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">2151</span>
+<span class="normal">2152</span>
+<span class="normal">2153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_backend</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">obj</span><span class="p">:</span> <span class="n">protocols</span><span class="o">.</span><span class="n">CanvasProtocol</span><span class="p">,</span>
@@ -5159,7 +5159,9 @@
 <span class="normal">2115</span>
 <span class="normal">2116</span>
 <span class="normal">2117</span>
-<span class="normal">2118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">CanvasNDBase</span><span class="p">):</span>
+<span class="normal">2118</span>
+<span class="normal">2119</span>
+<span class="normal">2120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CanvasBase</span><span class="p">(</span><span class="n">CanvasNDBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for any canvas object.&quot;&quot;&quot;</span>
 
     <span class="n">dims</span> <span class="o">=</span> <span class="n">Dims</span><span class="p">()</span>
@@ -6812,7 +6814,7 @@
         <span class="n">image</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">cmap</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">=</span> <span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">clim</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">flip_canvas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">lock_aspect</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -6828,8 +6830,9 @@
 <span class="sd">        image : ArrayLike</span>
 <span class="sd">            Image data. Must be 2D or 3D array. If 3D, the last dimension must be</span>
 <span class="sd">            RGB(A). Note that the first dimension is the vertical axis.</span>
-<span class="sd">        cmap : ColormapType, default &quot;gray&quot;</span>
-<span class="sd">            Colormap used for the image.</span>
+<span class="sd">        cmap : ColormapType, optional</span>
+<span class="sd">            Colormap used for the image. If None, the theme default for image colormap</span>
+<span class="sd">            will be used.</span>
 <span class="sd">        clim : (float or None, float or None) or None</span>
 <span class="sd">            Contrast limits. If None, the limits are automatically determined by min and</span>
 <span class="sd">            max of the data. You can also pass None separately to either limit to use</span>
@@ -6844,6 +6847,7 @@
 <span class="sd">        Image</span>
 <span class="sd">            The image layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;colormap_image&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span>
             <span class="n">image</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="n">clim</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">()</span>
         <span class="p">)</span>
@@ -8425,9 +8429,7 @@ the default behavior.</p>
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1909</span>
-<span class="normal">1910</span>
-<span class="normal">1911</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1911</span>
 <span class="normal">1912</span>
 <span class="normal">1913</span>
 <span class="normal">1914</span>
@@ -8464,7 +8466,9 @@ the default behavior.</p>
 <span class="normal">1945</span>
 <span class="normal">1946</span>
 <span class="normal">1947</span>
-<span class="normal">1948</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_heatmap</span><span class="p">(</span>
+<span class="normal">1948</span>
+<span class="normal">1949</span>
+<span class="normal">1950</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_heatmap</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">image</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -9331,7 +9335,7 @@ intensity of the histogram will be 1.</p>
 
 
 <h5 id="whitecanvas.canvas.CanvasBase.add_image" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">add_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flip_canvas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lock_aspect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">add_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flip_canvas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lock_aspect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
 </h5>
 
@@ -9376,11 +9380,12 @@ RGB(A). Note that the first dimension is the vertical axis.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Colormap used for the image.</p>
+                <p>Colormap used for the image. If None, the theme default for image colormap
+will be used.</p>
               </div>
             </td>
             <td>
-                  <code>&#34;gray&#34;</code>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -9500,12 +9505,14 @@ the default behavior.</p>
 <span class="normal">1904</span>
 <span class="normal">1905</span>
 <span class="normal">1906</span>
-<span class="normal">1907</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_image</span><span class="p">(</span>
+<span class="normal">1907</span>
+<span class="normal">1908</span>
+<span class="normal">1909</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">image</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">=</span> <span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="p">:</span> <span class="n">ColormapType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">clim</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">flip_canvas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">lock_aspect</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -9521,8 +9528,9 @@ the default behavior.</p>
 <span class="sd">    image : ArrayLike</span>
 <span class="sd">        Image data. Must be 2D or 3D array. If 3D, the last dimension must be</span>
 <span class="sd">        RGB(A). Note that the first dimension is the vertical axis.</span>
-<span class="sd">    cmap : ColormapType, default &quot;gray&quot;</span>
-<span class="sd">        Colormap used for the image.</span>
+<span class="sd">    cmap : ColormapType, optional</span>
+<span class="sd">        Colormap used for the image. If None, the theme default for image colormap</span>
+<span class="sd">        will be used.</span>
 <span class="sd">    clim : (float or None, float or None) or None</span>
 <span class="sd">        Contrast limits. If None, the limits are automatically determined by min and</span>
 <span class="sd">        max of the data. You can also pass None separately to either limit to use</span>
@@ -9537,6 +9545,7 @@ the default behavior.</p>
 <span class="sd">    Image</span>
 <span class="sd">        The image layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">theme</span><span class="o">.</span><span class="n">_default</span><span class="p">(</span><span class="s2">&quot;colormap_image&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
     <span class="n">layer</span> <span class="o">=</span> <span class="n">_l</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span>
         <span class="n">image</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="n">clim</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_backend</span><span class="p">()</span>
     <span class="p">)</span>
@@ -10408,9 +10417,7 @@ rotation from the x axis.</p>
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1950</span>
-<span class="normal">1951</span>
-<span class="normal">1952</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1952</span>
 <span class="normal">1953</span>
 <span class="normal">1954</span>
 <span class="normal">1955</span>
@@ -10432,7 +10439,9 @@ rotation from the x axis.</p>
 <span class="normal">1971</span>
 <span class="normal">1972</span>
 <span class="normal">1973</span>
-<span class="normal">1974</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span>
+<span class="normal">1974</span>
+<span class="normal">1975</span>
+<span class="normal">1976</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">layer</span><span class="p">:</span> <span class="n">_L</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -13923,9 +13932,7 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 
             <details class="quote">
               <summary>Source code in <code>whitecanvas\canvas\_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1988</span>
-<span class="normal">1989</span>
-<span class="normal">1990</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1990</span>
 <span class="normal">1991</span>
 <span class="normal">1992</span>
 <span class="normal">1993</span>
@@ -13941,7 +13948,9 @@ default, but if this option is True, the y coordinates will be [2, 4, 8].</p>
 <span class="normal">2003</span>
 <span class="normal">2004</span>
 <span class="normal">2005</span>
-<span class="normal">2006</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">group_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="o">*</span><span class="n">more_layers</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">2006</span>
+<span class="normal">2007</span>
+<span class="normal">2008</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">group_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="o">*</span><span class="n">more_layers</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Group layers.</span>
 

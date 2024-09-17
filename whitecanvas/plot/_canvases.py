@@ -21,17 +21,15 @@ def current_canvas() -> Canvas:
     return canvas
 
 
-def show(block: bool = False, flush: bool = True):
+def show(block: bool = False, flush: bool = True) -> None:
     """Show the current canvas."""
     current_grid().show(block=block)
     if flush:
         Canvas._CURRENT_INSTANCE = None
+    return None
 
 
-def subplots(
-    nrows: int = 1,
-    ncols: int = 1,
-) -> CanvasGrid:
+def subplots(nrows: int = 1, ncols: int = 1) -> CanvasGrid:
     """Create a new grid of subplots."""
     return new_grid(nrows, ncols).fill()
 

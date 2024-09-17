@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     rug = _CANVAS.add_rug
     text = _CANVAS.add_text
     vectors = _CANVAS.add_vectors
+    imshow = _CANVAS.add_image
     # categorical methods
     cat = _CANVAS.cat
     cat_x = _CANVAS.cat_x
@@ -71,6 +72,7 @@ else:
     rug = _make_method("rug")
     text = _make_method("text")
     vectors = _make_method("vectors")
+    imshow = _make_method("image")
     cat = _make_method("cat", pref="")
     cat_x = _make_method("cat_x", pref="")
     cat_y = _make_method("cat_y", pref="")
@@ -81,6 +83,7 @@ else:
     legend = _make_method("legend", pref="add_")
 
 plot = line  # alias
+scatter = markers  # alias
 
 
 @overload

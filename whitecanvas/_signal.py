@@ -92,7 +92,18 @@ class MouseMoveSignal(_MouseSignalMixin):
     ) -> Callable[[_G], _G]: ...
 
     def connect(self, slot=None, *, msec: int = 0, leading: bool = True):
-        """Connect a mouse move callback."""
+        """
+        Connect a mouse move callback.
+
+        >>> @canvas.mouse.moved.connect
+        >>> def on_mouse_move(ev: MouseEvent):
+        ...     print(started)
+        ...     yield
+        ...     while ev.button == "left":
+        ...         print("dragging")
+        ...         yield
+        ...     print("ended")
+        """
 
         def _inner(slot: _F) -> _F:
             if not callable(slot):
@@ -105,6 +116,7 @@ class MouseMoveSignal(_MouseSignalMixin):
     def disconnect(
         self, slot: GeneratorFunction | None = None, missing_ok: bool = True
     ) -> None:
+        """Disconnect the slot (all by default)."""
         if slot is None:
             return self._slots.clear()
         i = -1
@@ -130,6 +142,16 @@ class MouseSignal(_MouseSignalMixin, Generic[_R]):
         self._typ = typ
 
     def connect(self, slot: _F | None = None) -> _F:
+        """
+        Connect a mouse clicked callback.
+
+        >>> @canvas.mouse.clicked.connect
+        >>> def on_mouse_clicked(ev: MouseEvent):
+        ...     print(ev.pos)
+        ...     print(ev.button)
+        ...     print(ev.modifiers)
+        ...     print(ev.type)
+        """
         if not callable(slot):
             raise TypeError(f"Can only connect callable object, got {slot!r}")
         self._slots.append(slot)

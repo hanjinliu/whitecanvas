@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import (
@@ -283,36 +282,6 @@ class CanvasBase(CanvasNDBase):
         self.mouse.moved.emit(ev)
 
     @property
-    def mouse_clicked(self):
-        warnings.warn(
-            "`canvas.events.mouse_clicked` is deprecated. Use `canvas.mouse.clicked` "
-            "instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.mouse.clicked
-
-    @property
-    def mouse_moved(self):
-        warnings.warn(
-            "`canvas.events.mouse_moved` is deprecated. Use `canvas.mouse.moved` "
-            "instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.mouse.clicked
-
-    @property
-    def mouse_double_clicked(self):
-        warnings.warn(
-            "`canvas.events.mouse_double_clicked` is deprecated. Use "
-            "`canvas.mouse.double_clicked` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.mouse.clicked
-
-    @property
     def native(self) -> Any:
         """Return the native canvas object."""
         return self._canvas()._plt_get_native()
@@ -327,24 +296,6 @@ class CanvasBase(CanvasNDBase):
         if ratio is not None:
             ratio = float(ratio)
         self._canvas()._plt_set_aspect_ratio(ratio)
-
-    @property
-    def mouse_enabled(self) -> bool:
-        warnings.warn(
-            "`canvas.mouse_enabled` is deprecated. Use `canvas.mouse.enabled` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.mouse.enabled
-
-    @mouse_enabled.setter
-    def mouse_enabled(self, enabled: bool):
-        warnings.warn(
-            "`canvas.mouse_enabled` is deprecated. Use `canvas.mouse.enabled` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.mouse.enabled = enabled
 
     def autoscale(
         self,

@@ -101,8 +101,8 @@ class JointGrid(CanvasGrid):
         self._y_linker = link_axes([self._main_canvas.y, self._y_canvas.y])
 
         # joint plotter
-        self._x_plotters = []
-        self._y_plotters = []
+        self._x_plotters: list[MarginalPlotter] = []
+        self._y_plotters: list[MarginalPlotter] = []
 
     def _iter_x_plotters(self) -> Iterator[MarginalPlotter]:
         if len(self._x_plotters) == 0:

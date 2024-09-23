@@ -20,6 +20,11 @@ class XYData(NamedTuple):
         """Data as a stacked (N, 2) array."""
         return np.stack([self.x, self.y], axis=1)
 
+    @property
+    def ndata(self) -> int:
+        """Number of data points."""
+        return int(self.x.size)
+
 
 class XYYData(NamedTuple):
     """

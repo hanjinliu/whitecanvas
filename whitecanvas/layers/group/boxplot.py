@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Any, Iterable
 
 import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.layers._mixin import (
     AbstractFaceEdgeMixin,
     EnumArray,
@@ -84,6 +85,24 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
     def medians(self) -> MultiLine:
         """The median line layer (MultiLine)."""
         return self._children[2]
+
+    @classmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> BoxPlot:
+        children = construct_layers(d["children"], backend=backend)
+        return cls(
+            **children,
+            name=d.get("name"),
+            orient=d.get("orient", "vertical"),
+            capsize=d.get("capsize", 0.15),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        out = super().to_dict()
+        out["orient"] = self._orient.value
+        out["capsize"] = self._capsize
+        return out
 
     @classmethod
     def from_arrays(

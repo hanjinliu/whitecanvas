@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -23,6 +23,9 @@ from whitecanvas.types import (
 )
 from whitecanvas.utils.normalize import as_array_1d, as_color_array
 from whitecanvas.utils.type_check import is_real_number
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _void = _Void()
 _V = TypeVar("_V", bound=VectorsProtocol)
@@ -192,6 +195,28 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
         if antialias is not _void:
             self.antialias = antialias
         return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], d["data"]["vx"], d["data"]["vy"],
+            name=d["name"], color=d["color"], alpha=d["alpha"], width=d["width"],
+            style=d["style"], antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "vectors",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def _as_legend_item(self) -> _legend.LineLegendItem:
         return _legend.LineLegendItem(self.color[0], self.width, self.style)

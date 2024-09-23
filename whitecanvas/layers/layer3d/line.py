@@ -46,6 +46,35 @@ class Line3D(LineMixin[LineProtocol], DataBoundLayer3D[LineProtocol, XYZData]):
         self._x_hint, self._y_hint, self._z_hint = xyz_size_hint(xdata, ydata, zdata)
         # self._backend._plt_connect_pick_event(self.events.clicked.emit)
 
+    @classmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Line3D:
+        return cls(
+            d["data"]["x"],
+            d["data"]["y"],
+            d["data"]["z"],
+            name=d["name"],
+            color=d["color"],
+            width=d["width"],
+            alpha=d["alpha"],
+            style=d["style"],
+            antialias=d["antialias"],
+            backend=backend,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": "line3d",
+            "data": self.data.to_dict(),
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "alpha": self.alpha,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
+
     def _get_layer_data(self) -> XYZData:
         return XYZData(*self._backend._plt_get_data())
 

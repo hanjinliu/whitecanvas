@@ -13,6 +13,11 @@ if TYPE_CHECKING:
     from typing_extensions import TypeGuard
 
 
+def is_array(x) -> bool:
+    """True if x is an array that needs multi-face/edge."""
+    return not is_not_array(x)
+
+
 def is_not_array(x) -> bool:
     """True if x is not an array."""
     return np.isscalar(x) or isinstance(x, Enum)

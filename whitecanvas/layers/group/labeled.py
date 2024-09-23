@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend, _mixin, _text_utils
 from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.layers._primitive import Bars, Errorbars, Image, Line, Markers, Texts
 from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._cat_utils import check_array_input
@@ -73,6 +74,16 @@ class _LabeledLayerBase(LayerContainer):
     def _default_ordering(self, n: int) -> list[int]:
         assert n == 4
         return [2, 0, 1, 3]
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        children = construct_layers(d["children"], backend=backend)
+        return cls(*children, name=d.get("name"), offset=d.get("offset"))
+
+    def to_dict(self) -> dict[str, Any]:
+        out = super().to_dict()
+        out["offset"] = self._text_offset
+        return out
 
     @property
     def xerr(self) -> Errorbars:

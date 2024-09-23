@@ -153,7 +153,7 @@ class Band(VispyBand):
 
     ##### HasFace protocol #####
     def _plt_get_face_color(self) -> NDArray[np.float32]:
-        return np.array(self.color, dtype=np.float32)
+        return np.asarray(self.color.rgba, dtype=np.float32)
 
     def _plt_set_face_color(self, color: NDArray[np.float32]):
         self.color = color
@@ -162,7 +162,7 @@ class Band(VispyBand):
 
     ##### HasEdges protocol #####
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.array(self.border_color, dtype=np.float32)
+        return np.asarray(self.border_color.rgba, dtype=np.float32)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         self.border_color = color

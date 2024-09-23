@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 
 import numpy as np
 
@@ -22,6 +22,9 @@ from whitecanvas.types import (
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xy
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
 _Font = TypeVar("_Font", bound=FontNamespace)
@@ -39,7 +42,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
         color: ColorType = "black",
         size: float | None = None,
         rotation: float = 0.0,
-        anchor: Alignment = Alignment.BOTTOM_LEFT,
+        anchor: str | Alignment = Alignment.BOTTOM_LEFT,
         family: str | None = None,
         backend: Backend | str | None = None,
     ):
@@ -187,3 +190,31 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
             self.anchor = anchor
         self.font.update(color=color, size=size, family=family)
         return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Band from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], d["data"]["text"],
+            name=d["name"], color=d["face"]["color"], rotation=d["rotation"],
+            anchor=d["anchor"], family=d["font"]["family"],
+            hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"],
+            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+        ).with_font(
+            color=d["font"]["color"], size=d["font"]["size"], family=d["font"]["family"]
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "texts",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+            "font": self.font.to_dict(),
+            "anchor": self.anchor.value,
+            "rotation": self.rotation,
+        }

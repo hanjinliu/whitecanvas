@@ -98,6 +98,27 @@ class Rects(
         """The number of data points"""
         return self.data.shape[0]
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Rects from a dictionary."""
+        return cls(
+            d["data"], name=d["name"], color=d["face"]["color"],
+            alpha=d["face"]["alpha"],  hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"],
+            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "rects",
+            "data": self.data,
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
+
     def with_face(
         self,
         *,

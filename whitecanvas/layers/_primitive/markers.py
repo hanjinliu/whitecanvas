@@ -139,6 +139,30 @@ class Markers(
             ydata = self.data.y
         self.data = XYData(xdata, ydata)
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Band from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], size=d["size"], symbol=d["symbol"],
+            name=d["name"], color=d["face"]["color"], alpha=d["face"]["alpha"],
+            hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"],
+            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "markers",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "size": self.size,
+            "symbol": self.symbol,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
+
     @property
     def symbol(self) -> Symbol:
         """Symbol used to mark the data points."""

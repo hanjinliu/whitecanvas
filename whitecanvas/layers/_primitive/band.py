@@ -70,6 +70,42 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         """Orientation of the band."""
         return self._orient
 
+    def set_data(
+        self,
+        t: ArrayLike1D | None = None,
+        edge_low: ArrayLike1D | None = None,
+        edge_high: ArrayLike1D | None = None,
+    ):
+        self.data = t, edge_low, edge_high
+
+    def with_hover_text(self, text: str) -> Self:
+        """Add hover text to the data points."""
+        self._backend._plt_set_hover_text(str(text))
+        return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Band from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y0"], d["data"]["y1"], orient=d["orient"],
+            name=d["name"], color=d["face"]["color"], alpha=d["face"]["alpha"],
+            hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"],
+            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "band",
+            "data": self._get_layer_data().to_dict(),
+            "orient": self.orient.value,
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
+
     def _get_layer_data(self) -> XYYData:
         """Current data of the layer."""
         if self._orient.is_vertical:
@@ -101,19 +137,6 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
         else:
             self._backend._plt_set_horizontal_data(t0, y0, y1)
         self._x_hint, self._y_hint = xyy_size_hint(t0, y0, y1, self.orient)
-
-    def set_data(
-        self,
-        t: ArrayLike1D | None = None,
-        edge_low: ArrayLike1D | None = None,
-        edge_high: ArrayLike1D | None = None,
-    ):
-        self.data = t, edge_low, edge_high
-
-    def with_hover_text(self, text: str) -> Self:
-        """Add hover text to the data points."""
-        self._backend._plt_set_hover_text(str(text))
-        return self
 
     def _as_legend_item(self) -> _legend.BarLegendItem:
         face = _legend.FaceInfo(self.face.color, self.face.hatch)

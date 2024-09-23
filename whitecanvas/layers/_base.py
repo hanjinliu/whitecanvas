@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
 from whitecanvas.backend import Backend
+from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers._legend import EmptyLegendItem, LegendItem
 from whitecanvas.protocols import BaseProtocol
 
@@ -68,6 +69,23 @@ class Layer(ABC):
         """Set the name of this layer."""
         self._name = str(name)
 
+    @abstractmethod
+    def bbox_hint(self) -> NDArray[np.float64]:
+        """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
+
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Construct this layer from a dict."""
+
+    @abstractmethod
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dict representation of this layer."""
+
+    def copy(self) -> Self:
+        """Create a copy of the layer."""
+        return self.from_dict(self.to_dict())
+
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
 
@@ -90,10 +108,6 @@ class Layer(ABC):
         if canvas is None:
             raise ValueError("Layer is not in any canvas.")
         return canvas
-
-    @abstractmethod
-    def bbox_hint(self) -> NDArray[np.float64]:
-        """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
 
     def as_overlay(self) -> Self:
         """Move this layer to the overlay level."""
@@ -280,6 +294,8 @@ class LayerGroup(Layer):
 
 
 class LayerWrapper(Layer, Generic[_L]):
+    _LAYER_TYPE = "layer-wrapper"
+
     def __init__(
         self,
         base_layer: _L,
@@ -329,6 +345,19 @@ class LayerWrapper(Layer, Generic[_L]):
     @property
     def _NO_PADDING_NEEDED(self) -> bool:
         return self._base_layer._NO_PADDING_NEEDED
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a LayerWrapper from a dictionary."""
+        base = d["base"]
+        return cls(construct_layer(base, backend=backend))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": self._LAYER_TYPE,
+            "base": self._base_layer.to_dict(),
+        }
 
     def _as_legend_item(self) -> LegendItem:
         """Return the legend item for this layer."""

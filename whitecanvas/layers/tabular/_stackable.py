@@ -56,7 +56,7 @@ class AreaCollection(_lg.LayerCollectionBase[_lg.Area]):
         areas = list[_lg.Area]()
         ori = Orientation.parse(orient)
         for d in data:
-            area = _lg.Area(d.x, d.ydiff, d.y0, orient=ori, backend=backend)
+            area = _lg.Area.from_arrays(d.x, d.ydiff, d.y0, orient=ori, backend=backend)
             area.fill_alpha = fill_alpha
             areas.append(area)
         super().__init__(areas, name=name)
@@ -253,16 +253,14 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         )  # fmt: skip
 
     @overload
-    def update_color(self, value: ColorType) -> Self:
-        ...
+    def update_color(self, value: ColorType) -> Self: ...
 
     @overload
     def update_color(
         self,
         by: str | Iterable[str],
         palette: ColormapType | None = None,
-    ) -> Self:
-        ...
+    ) -> Self: ...
 
     def update_color(self, by, /, palette=None):
         """Update the color rule of the layer."""

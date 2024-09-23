@@ -215,10 +215,37 @@ class Bars(
         self._bar_width = w
         self.events.bar_width.emit(w)
 
+    extent = bar_width
+
     @property
     def orient(self) -> Orientation:
         """Orientation of the bars."""
         return self._orient
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Band from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], d["bottom"], orient=d["orient"],
+            extent=d["extent"], name=d["name"], color=d["face"]["color"],
+            alpha=d["face"]["alpha"],  hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"],
+            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "bars",
+            "data": self._get_layer_data().to_dict(),
+            "bottom": self.bottom,
+            "orient": self.orient.value,
+            "extent": self.bar_width,
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
 
     def with_err(
         self,

@@ -59,6 +59,29 @@ class Vectors3D(DataBoundLayer3D[_V, XYZVectorData]):
             np.concatenate([z, z + vz]),
         )
 
+    @classmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Vectors3D:
+        return cls(
+            d["data"]["x"], d["data"]["y"], d["data"]["z"], d["data"]["vx"],
+            d["data"]["vy"], d["data"]["vz"], name=d["name"], color=d["color"],
+            width=d["width"], alpha=d["alpha"], style=d["style"],
+            antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": "vectors3d",
+            "data": self.data.to_dict(),
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "alpha": self.alpha,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
+
     def _get_layer_data(self) -> XYZVectorData:
         x, vx, y, vy, z, vz = self._backend._plt_get_data()
         return XYZVectorData(x, y, z, vx, vy, vz)

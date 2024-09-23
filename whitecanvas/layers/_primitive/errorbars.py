@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Sequence
+from typing import TYPE_CHECKING, Any, Iterable, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -22,6 +22,9 @@ from whitecanvas.types import (
     _Void,
 )
 from whitecanvas.utils.normalize import as_any_1d_array, as_array_1d, as_color_array
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _void = _Void()
 
@@ -175,6 +178,31 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         with self.events.data.blocked():
             self.set_data(*self._data)
         self.events.capsize.emit(capsize)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create an Errorbars from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y0"], d["data"]["y1"], orient=d["orient"],
+            name=d["name"], color=d["color"], alpha=d["alpha"],
+            width=d["width"], style=d["style"], antialias=d["antialias"],
+            capsize=d["capsize"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "errorbars",
+            "data": self._get_layer_data().to_dict(),
+            "orient": self.orient.value,
+            "name": self.name,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+            "capsize": self.capsize,
+        }
 
     @property
     def color(self) -> NDArray[np.float32]:

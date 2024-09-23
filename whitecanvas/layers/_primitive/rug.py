@@ -118,6 +118,31 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
     def set_data(self, events: ArrayLike1D):
         self.data = events
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create an Errorbars from a dictionary."""
+        return cls(
+            d["data"], low=d["low"], high=d["high"], orient=d["orient"],
+            name=d["name"], color=d["color"], alpha=d["alpha"], width=d["width"],
+            style=d["style"], antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "errorbars",
+            "data": self._get_layer_data(),
+            "low": self.low,
+            "high": self.high,
+            "orient": self.orient.value,
+            "name": self.name,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
+
     @property
     def orient(self) -> Orientation:
         """Orientation of the rug plot."""

@@ -79,6 +79,30 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         """The model function of the layer."""
         return self._model
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        return cls(
+            d["model"], bounds=d["bounds"], name=d["name"], color=d["color"],
+            alpha=d["alpha"], width=d["width"], style=d["style"],
+            antialias=d["antialias"], backend=backend,
+        ).update_params(**d["params"])  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "infcurve",
+            "model": self.model,
+            "bounds": self._bounds,
+            "params": self.params,
+            "name": self.name,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
+
     def with_hover_text(self, text: str) -> Self:
         if not isinstance(text, str):
             raise TypeError(f"Hover text must be str, got {type(text)}.")
@@ -210,6 +234,29 @@ class InfLine(LineMixin[LineProtocol]):
             self._tan = math.tan(_radian)
             self._intercept = self._pos[1] - self._tan * self._pos[0]
         self._recalculate_line(self._last_rect)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        return cls(
+            d["pos"], d["angle"], name=d["name"], color=d["color"],
+            alpha=d["alpha"], width=d["width"], style=d["style"],
+            antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "line",
+            "pos": self.pos,
+            "angle": self.angle,
+            "name": self.name,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def with_hover_text(self, text: str) -> Self:
         if not isinstance(text, str):

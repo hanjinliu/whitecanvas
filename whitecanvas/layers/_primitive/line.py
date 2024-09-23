@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas import theme
@@ -561,6 +561,28 @@ class Line(_SingleLine):
         self._backend._plt_set_data(x0, y0)
         self._x_hint, self._y_hint = xy_size_hint(x0, y0)
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], name=d["name"], color=d["color"],
+            alpha=d["alpha"], width=d["width"], style=d["style"],
+            antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "line",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
+
     def with_text(
         self,
         strings: list[str],
@@ -774,6 +796,29 @@ class LineStep(_SingleLine):
         self._where = StepStyle(where)
         self._set_layer_data(data)
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a LineStep from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], name=d["name"], color=d["color"],
+            alpha=d["alpha"], width=d["width"], style=d["style"], where=d["where"],
+            antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "linestep",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "where": self.where,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
+
 
 class MultiLineEvents(LayerEvents):
     color = Signal(np.ndarray)
@@ -789,7 +834,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
 
     def __init__(
         self,
-        data: list[ArrayLike1D],
+        data: list[ArrayLike],
         *,
         name: str | None = None,
         color: ColorType = "blue",
@@ -932,6 +977,28 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         ]
         self._backend._plt_set_hover_text(texts)
         return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a LineStep from a dictionary."""
+        return cls(
+            d["data"], name=d["name"], color=d["color"],
+            alpha=d["alpha"], width=d["width"], style=d["style"], where=d["where"],
+            antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": "multiline",
+            "data": self._get_layer_data(),
+            "name": self.name,
+            "color": self.color,
+            "alpha": self.alpha,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def _as_legend_item(self) -> _legend.LineLegendItem:
         if self.nlines == 0:

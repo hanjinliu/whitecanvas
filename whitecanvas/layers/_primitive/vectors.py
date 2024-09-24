@@ -135,7 +135,7 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
     @width.setter
     def width(self, width: float):
         if not is_real_number(width):
-            raise TypeError(f"Width must be a number, got {type(width)}")
+            raise TypeError(f"Width must be a number, got {width!r}")
         if width < 0:
             raise ValueError(f"Width must be non-negative, got {width!r}")
         w = float(width)
@@ -154,8 +154,8 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
         self.events.style.emit(s.value)
 
     @property
-    def alpha(self) -> float:
-        return float(self.color[:, 3])
+    def alpha(self) -> NDArray[np.floating]:
+        return self.color[:, 3]
 
     @alpha.setter
     def alpha(self, value: float):

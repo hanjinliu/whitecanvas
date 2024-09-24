@@ -1077,6 +1077,10 @@ class CanvasBase(CanvasNDBase):
             Orientation of the bars.
         color : color-like, optional
             Color of the bars.
+        width : float, optional
+            Line width. Use the theme default if not specified.
+        style : str or LineStyle, optional
+            Line style. Use the theme default if not specified.
 
         Returns
         -------
@@ -1152,11 +1156,33 @@ class CanvasBase(CanvasNDBase):
         self,
         coords: ArrayLike,
         *,
-        name=None,
+        name: str | None = None,
         color: ColorType | None = None,
         alpha: float = 1.0,
         hatch: str | Hatch | None = None,
     ) -> _l.Rects[_mixin.ConstFace, _mixin.ConstEdge]:
+        """
+        Add rectangles.
+
+        Parameters
+        ----------
+        coords : ArrayLike
+            (N, 4) array of coordinates. Each row should contain (x0, y0, x1, y1), where
+            (x0, y0) is the bottom-left corner and (x1, y1) is the top-right corner.
+        name : str, optional
+            Name of the layer.
+        color : color-like, optional
+            Color of the bars.
+        alpha : float, default 1.0
+            Alpha channel of the rectangles.
+        hatch : str or FacePattern, default FacePattern.SOLID
+            Pattern of the rectangle faces.
+
+        Returns
+        -------
+        _l.Rects[_mixin.ConstFace, _mixin.ConstEdge]
+            _description_
+        """
         name = self._coerce_name(name)
         color = self._generate_colors(color)
         hatch = theme._default("bars.hatch", hatch)

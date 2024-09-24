@@ -90,7 +90,7 @@ class LayerContainer(LayerGroup):
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a LineStep from a dictionary."""
         children = construct_layers(d["children"], backend=backend)
-        return cls(children, name=d["name"])
+        return cls(*children, name=d["name"])
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""

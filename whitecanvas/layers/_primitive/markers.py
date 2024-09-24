@@ -525,7 +525,7 @@ class Markers(
             nodes[:, 0], nodes[:, 1], [""] * nodes.shape[0], name="texts",
             backend=self._backend_name,
         )  # fmt: skip
-        return Graph(self, edges_layer, texts, edges, name=self.name)
+        return Graph(self, edges_layer, texts, name=self.name)
 
     def with_stem(
         self,

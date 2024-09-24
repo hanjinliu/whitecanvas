@@ -66,7 +66,8 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         self._args, self._kwargs = args, kwargs
         if not self._params_ready:
             self._params_ready = True
-            self._canvas().x.events.lim.emit(self._canvas().x.lim)
+            if canvas := self._canvas_ref():
+                canvas.x.events.lim.emit(canvas.x.lim)
         return self
 
     @property
@@ -79,14 +80,18 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         """The model function of the layer."""
         return self._model
 
+    def calculate(self, xdata: np.ndarray) -> np.ndarray:
+        return self._model(xdata, *self._args, **self._kwargs)
+
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a Line from a dictionary."""
+        args, kwargs = d["params"]
         return cls(
             d["model"], bounds=d["bounds"], name=d["name"], color=d["color"],
             alpha=d["alpha"], width=d["width"], style=d["style"],
             antialias=d["antialias"], backend=backend,
-        ).update_params(**d["params"])  # fmt: skip
+        ).update_params(*args, **kwargs)  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""

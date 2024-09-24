@@ -104,7 +104,7 @@ class Vectors(pg.ItemGroup, PyQtLayer):
 
     def _plt_set_edge_style(self, style: LineStyle):
         self._arrow_tails._plt_set_edge_style(style)
-        self._pen_style = to_qt_line_style(style)
+        self._pen_style = style
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return self._arrow_tails._plt_get_edge_color()

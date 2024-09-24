@@ -43,12 +43,12 @@ class Bars(PlotlyHoverableLayer[go.Bar]):
     def _plt_get_data(self):
         half_width = self._props["width"] / 2
         x = self._props["x"]
-        yhigh = self._props["y"]
+        dy = self._props["y"]
         # for some reason, the base property is dtype=object
-        ylow = self._props["base"].astype(yhigh.dtype, copy=False)
+        ylow = self._props["base"].astype(dy.dtype, copy=False)
         xlow = x - half_width
         xhigh = x + half_width
-        return xlow, xhigh, ylow, yhigh
+        return xlow, xhigh, ylow, ylow + dy
 
     def _plt_set_data(self, x0, x1, y0, y1):
         self._props["x"] = (x0 + x1) / 2

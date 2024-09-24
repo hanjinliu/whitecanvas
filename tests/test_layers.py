@@ -43,6 +43,8 @@ def test_line(backend: str):
     canvas.add_cdf(np.sqrt(np.arange(20)))
     canvas.add_cdf(np.sqrt(np.arange(20)), orient="horizontal")
     canvas.autoscale()
+    layer_copy = layer.copy()
+    assert_color_equal(layer.color, layer_copy.color)
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
@@ -86,6 +88,9 @@ def test_markers(backend: str):
     layer.data = np.array([[0, 0], [1, 1], [2, 2]])
     canvas.autoscale()
 
+    layer_copy = layer.copy()
+    assert layer.symbol == layer_copy.symbol
+
 def test_bars(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_bars(np.arange(10), np.zeros(10), bottom=np.ones(10))
@@ -123,6 +128,9 @@ def test_bars(backend: str):
     layer.bottom = np.arange(10) / 10
     layer.top = np.arange(10) / 10 + 4
     layer.as_edge_only()
+
+    layer_copy = layer.copy()
+    assert_color_equal(layer.face.color, layer_copy.face.color)
 
 def test_step(backend: str):
     canvas = new_canvas(backend=backend)
@@ -163,6 +171,9 @@ def test_step(backend: str):
     canvas.add_step(np.arange(10), np.zeros(10), where="mid")
     canvas.add_step(np.arange(10), np.zeros(10), where="post")
 
+    layer_copy = layer.copy()
+    assert layer.where == layer_copy.where
+
 def test_infcurve(backend: str):
     canvas = new_canvas(backend=backend)
 
@@ -185,6 +196,9 @@ def test_infcurve(backend: str):
     ).update_params(a=5)
     canvas.x.lim = (-5, 5)
 
+    layer_copy = layer.copy()
+    assert_allclose(layer.calculate(np.arange(3)), layer_copy.calculate(np.arange(3)))
+
     # test ufunc
     canvas.add_infcurve(np.sin)
 
@@ -203,6 +217,9 @@ def test_infcurve(backend: str):
     canvas.layers.remove(layer)  # test disconnection
     canvas.add_hline(1)
     canvas.add_vline(1)
+
+    layer_copy = layer.copy()
+    layer.pos == layer_copy.pos
 
 def test_band(backend: str):
     canvas = new_canvas(backend=backend)
@@ -231,6 +248,9 @@ def test_band(backend: str):
     _test_visibility(layer)
     canvas.autoscale()
 
+    layer_copy = layer.copy()
+    assert_color_equal(layer.face.color, layer_copy.face.color)
+
 def test_image(backend: str):
     canvas = new_canvas(backend=backend)
 
@@ -251,6 +271,9 @@ def test_image(backend: str):
     canvas.autoscale()
     canvas.add_heatmap(rng.random((10, 10)))
     canvas.aspect_ratio = None  # reset
+
+    layer_copy = layer.copy()
+    assert layer.shift == layer_copy.shift
 
 def test_errorbars(backend: str):
     canvas = new_canvas(backend=backend)
@@ -277,6 +300,9 @@ def test_errorbars(backend: str):
     assert all(w == 3 for w in layer.width)
     _test_visibility(layer)
     canvas.autoscale()
+
+    layer_copy = layer.copy()
+    assert_color_array_equal(layer.color, layer_copy.color)
 
 def test_texts(backend: str):
     canvas = new_canvas(backend=backend)
@@ -341,28 +367,31 @@ def test_texts(backend: str):
     layer.data = np.arange(10) * 2, np.zeros(10), "single"
     layer.set_pos(x=np.arange(10) * 2)
 
+    layer_copy = layer.copy()
+    assert layer.family == layer_copy.family
+
 def test_with_text(backend: str):
     canvas = new_canvas(backend=backend)
     x = np.arange(10)
     y = np.sqrt(x)
-    canvas.add_line(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1)
-    canvas.add_markers(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1)
-    canvas.add_bars(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1)
-    canvas.add_line(x, y).with_text("x={x:.2f}, y={y:.2f}")
-    canvas.add_markers(x, y).with_text("x={x:.2f}, y={y:.2f}")
-    canvas.add_bars(x, y).with_text("x={x:.2f}, y={y:.2f}")
-    canvas.add_line(x, y).with_markers().with_text([f"{i}" for i in range(10)])
-    canvas.add_line(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)])
-    canvas.add_line(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
-    canvas.add_line(x, y).with_markers().with_text("x={x:2f}, i={i}")
-    canvas.add_line(x, y).with_xerr(y/4).with_text("x={x:2f}, i={i}")
-    canvas.add_line(x, y).with_yerr(y/4).with_text("x={x:2f}, i={i}")
-    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text([f"{i}" for i in range(10)])
-    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text("state-{i}")
-    canvas.add_bars(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)])
-    canvas.add_bars(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)])
-    canvas.add_bars(x, y).with_xerr(y/4).with_text("{x:1f}, {y:1f},")
-    canvas.add_bars(x, y).with_yerr(y/4).with_text("{x:1f}, {y:1f}")
+    canvas.add_line(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1).copy()
+    canvas.add_markers(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1).copy()
+    canvas.add_bars(x, y).with_text([f"{i}" for i in range(10)]).with_text_offset(0.1 ,0.1).copy()
+    canvas.add_line(x, y).with_text("x={x:.2f}, y={y:.2f}").copy()
+    canvas.add_markers(x, y).with_text("x={x:.2f}, y={y:.2f}").copy()
+    canvas.add_bars(x, y).with_text("x={x:.2f}, y={y:.2f}").copy()
+    canvas.add_line(x, y).with_markers().with_text([f"{i}" for i in range(10)]).copy()
+    canvas.add_line(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)]).copy()
+    canvas.add_line(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)]).copy()
+    canvas.add_line(x, y).with_markers().with_text("x={x:2f}, i={i}").copy()
+    canvas.add_line(x, y).with_xerr(y/4).with_text("x={x:2f}, i={i}").copy()
+    canvas.add_line(x, y).with_yerr(y/4).with_text("x={x:2f}, i={i}").copy()
+    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text([f"{i}" for i in range(10)]).copy()
+    canvas.add_markers(x, y).with_network([[0, 1], [4, 3]]).with_text("state-{i}").copy()
+    canvas.add_bars(x, y).with_xerr(y/4).with_text([f"{i}" for i in range(10)]).copy()
+    canvas.add_bars(x, y).with_yerr(y/4).with_text([f"{i}" for i in range(10)]).copy()
+    canvas.add_bars(x, y).with_xerr(y/4).with_text("{x:1f}, {y:1f},").copy()
+    canvas.add_bars(x, y).with_yerr(y/4).with_text("{x:1f}, {y:1f}").copy()
     canvas.autoscale()
 
 def test_rug(backend: str):
@@ -392,6 +421,8 @@ def test_rug(backend: str):
     layer.scale_by_density()
     canvas.autoscale(xpad=(0.01, 0.02), ypad=(0.01, 0.02))
 
+    layer_copy = layer.copy()
+    assert_allclose(layer.data, layer_copy.data)
 
 def test_spans(backend: str):
     canvas = new_canvas(backend=backend)
@@ -412,6 +443,8 @@ def test_spans(backend: str):
         canvas.add_legend()
     canvas.autoscale(xpad=0.01, ypad=0.01)
 
+    layer_copy = layer.copy()
+    assert_allclose(layer.data, layer_copy.data)
 
 def test_rects(backend: str):
     canvas = new_canvas(backend=backend)
@@ -425,13 +458,14 @@ def test_rects(backend: str):
     layer.as_edge_only()
     layer.with_hover_template("x={left:.2f}, y={bottom:.2f}")
 
+    layer_copy = layer.copy()
+    assert_allclose(layer.rects, layer_copy.rects)
 
 def test_vectors(backend: str):
     if backend not in ("matplotlib", "pyqtgraph", "mock"):
         pytest.skip(f"Vectors not supported by {backend}")
     canvas = new_canvas(backend=backend)
     layer = canvas.add_vectors(np.arange(10), np.zeros(10), np.ones(10), np.zeros(10))
-    layer.data
     assert_allclose(layer.data.x, np.arange(10))
     assert_allclose(layer.data.y, np.zeros(10))
     assert_allclose(layer.data.vx, np.ones(10))
@@ -442,3 +476,6 @@ def test_vectors(backend: str):
     layer.color = [1.0, 0.0, 0.0, 1.0]
     layer.width = 3
     layer.style = ":"
+
+    layer_copy = layer.copy()
+    assert_color_array_equal(layer.color, layer_copy.color)

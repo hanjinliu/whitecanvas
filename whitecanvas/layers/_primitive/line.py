@@ -933,7 +933,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
 
     @antialias.setter
     def antialias(self, antialias: bool) -> None:
-        if not isinstance(antialias, bool):
+        if not isinstance(antialias, (bool, np.bool_)):
             raise TypeError(f"Expected antialias to be bool, got {type(antialias)}")
         self._backend._plt_set_antialias(antialias)
         self.events.antialias.emit(antialias)
@@ -983,7 +983,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         """Create a LineStep from a dictionary."""
         return cls(
             d["data"], name=d["name"], color=d["color"],
-            alpha=d["alpha"], width=d["width"], style=d["style"], where=d["where"],
+            alpha=d["alpha"], width=d["width"], style=d["style"],
             antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 

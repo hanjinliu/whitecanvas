@@ -18,13 +18,11 @@ class Graph(LayerContainer):
         nodes: Markers,
         edges: MultiLine,
         texts: Texts,
-        edges_data: NDArray[np.intp],
         name: str | None = None,
         offset: TextOffset | None = None,
     ):
         if offset is None:
             offset = NoOffset()
-        self._edges_data = edges_data
         super().__init__([nodes, edges, texts], name=name)
         self._text_offset = offset
 
@@ -48,11 +46,6 @@ class Graph(LayerContainer):
         return self._children[2]
 
     @property
-    def edge_indices(self) -> NDArray[np.intp]:
-        """Current data of the edges."""
-        return self._edges_data
-
-    @property
     def text_offset(self) -> TextOffset:
         """Return the text offset."""
         return self._text_offset
@@ -67,12 +60,13 @@ class Graph(LayerContainer):
         self._text_offset = _offset
         return self
 
-    add_text_offset = with_text_offset
-
     def set_graph(self, nodes: NDArray[np.floating], edges: NDArray[np.intp]):
         """Set the graph data."""
         self.nodes.data = nodes
-        self._edges_data = edges
+        edge_data: list[np.ndarray] = []
+        for edge in edges:
+            edge_data.append(np.stack([nodes[i] for i in edge], axis=0))
+        self.edges.data = edge_data
 
     def with_text(
         self,

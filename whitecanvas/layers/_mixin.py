@@ -658,7 +658,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
-        if is_array(color) or is_array(hatch) or is_array(alpha):
+        if is_array(hatch) or is_array(alpha):
             return self.with_face_multi(color=color, hatch=hatch, alpha=alpha)
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
@@ -675,7 +675,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         alpha: float = 1,
     ) -> Self:
         """Update the edge properties."""
-        if is_array(color) or is_array(width) or is_array(style) or is_array(alpha):
+        if is_array(width) or is_array(style) or is_array(alpha):
             return self.with_edge_multi(
                 color=color, width=width, style=style, alpha=alpha
             )
@@ -1056,7 +1056,7 @@ class TextMixin(
         alpha: float = 1,
     ) -> Self:
         """Update the face properties."""
-        if is_array(color) or is_array(hatch) or is_array(alpha):
+        if is_array(hatch) or is_array(alpha):
             return self.with_face_multi(color=color, hatch=hatch, alpha=alpha)
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
@@ -1074,7 +1074,7 @@ class TextMixin(
         alpha: float = 1,
     ) -> Self:
         """Update the edge properties."""
-        if is_array(color) or is_array(width) or is_array(style) or is_array(alpha):
+        if is_array(width) or is_array(style) or is_array(alpha):
             return self.with_edge_multi(
                 color=color, width=width, style=style, alpha=alpha
             )
@@ -1127,13 +1127,13 @@ class TextMixin(
         family: str | None = None,
     ) -> Self:
         """Update the face properties."""
-        if is_array(color) or is_array(size) or is_array(family):
+        if is_array(size) or is_array(family):
             return self.with_font_multi(color=color, size=size, family=family)
         if color is None:
             color = self.font.color
-        if not isinstance(self._font_namespace, ConstFace):
+        if not isinstance(self._font_namespace, ConstFont):
             self._font_namespace.events.disconnect()
-            self._font_namespace = ConstFace(self)  # type: ignore
+            self._font_namespace = ConstFont(self)  # type: ignore
             self._font_namespace.events.connect(self.events.font.emit, max_args=None)
         self.font.update(color=color, size=size, family=family)
         return self

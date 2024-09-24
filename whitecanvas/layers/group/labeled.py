@@ -132,7 +132,7 @@ class _LabeledLayerBase(LayerContainer):
         """Return the text offset."""
         return self._text_offset
 
-    def with_text_offset(self, dx: Any, dy: Any):
+    def with_text_offset(self, dx: Any, dy: Any) -> Self:
         """Add offset to text positions."""
         _offset = self._text_offset._add(dx, dy)
         if self.texts.ndata > 0:
@@ -140,6 +140,7 @@ class _LabeledLayerBase(LayerContainer):
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(px + xoff, py + yoff)
         self._text_offset = _offset
+        return self
 
     def with_xerr(
         self,

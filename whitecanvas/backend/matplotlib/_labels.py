@@ -216,7 +216,7 @@ class MplAxis:
         return getattr(self._canvas()._axes, f"{self._axis_name}axis")
 
     def _plt_get_color(self):
-        return self._get_mpl_axis().get_tick_params()["color"]
+        return self._get_mpl_axis().get_tick_params().get("color", "black")
 
     def _plt_set_color(self, color):
         ax = self._get_mpl_axis()

@@ -11,6 +11,8 @@ from whitecanvas.utils.normalize import arr_color, as_color_array, rgba_str_colo
 
 class Mesh3D(PlotlyHoverableLayer[go.Mesh3d]):
     def __init__(self, verts: NDArray[np.floating], faces: NDArray[np.intp]):
+        verts = np.asarray(verts, dtype=np.float32)
+        faces = np.asarray(faces, dtype=np.int32)
         nfaces = faces.shape[0]
         self._props = {
             "x": verts[:, 0],

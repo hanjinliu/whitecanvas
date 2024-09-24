@@ -153,7 +153,7 @@ class Markers(
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "markers",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
             "size": self.size,

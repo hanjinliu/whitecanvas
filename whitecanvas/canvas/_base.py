@@ -2151,7 +2151,7 @@ class Canvas(CanvasBase):
         """Return a dictionary representation of the canvas."""
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "palette": self._color_palette.to_dict(),
+            "palette": self._color_palette,
             "layers": [layer.to_dict() for layer in self.layers],
             "title": self.title.to_dict(),
             "x": self.x.to_dict(),

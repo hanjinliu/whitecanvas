@@ -92,6 +92,7 @@ def test_namespaces(backend: str):
 
     canvas.x.set_gridlines()
     canvas.copy()
+    canvas.read_json(canvas.write_json(), backend=backend)
 
 def test_namespace_pointing_at_different_objects():
     c0 = new_canvas(backend="matplotlib")
@@ -157,6 +158,7 @@ def test_grid(backend: str):
     assert len(new[1, 0].layers) == 1
     assert len(new[1, 1].layers) == 1
 
+    cgrid.read_json(cgrid.write_json(), backend=backend)
 
 def test_grid_nonuniform(backend: str):
     cgrid = wc.new_grid([2, 1], [2, 1], backend=backend, size=(100, 100)).link_x().link_y()
@@ -188,6 +190,7 @@ def test_grid_nonuniform(backend: str):
     assert len(new[0, 1].layers) == 1
     assert len(new[1, 0].layers) == 1
     assert len(new[1, 1].layers) == 1
+    cgrid.read_json(cgrid.write_json(), backend=backend)
 
 
 def test_vgrid_hgrid(backend: str):
@@ -240,6 +243,7 @@ def test_jointgrid(backend: str):
     if backend != "vispy":
         joint.add_legend()
     joint.copy()
+    joint.read_json(joint.write_json(), backend=backend)
 
 def test_legend(backend: str):
     if backend == "vispy":
@@ -319,6 +323,7 @@ def test_second_x(backend: str):
     assert other.y.lim == pytest.approx((0, 2))
 
     canvas.copy()
+    canvas.read_json(canvas.write_json(), backend=backend)
 
 def test_second_y(backend: str):
     if backend in ("vispy",):
@@ -332,6 +337,7 @@ def test_second_y(backend: str):
     assert other.x.lim == pytest.approx((0, 2))
 
     canvas.copy()
+    canvas.read_json(canvas.write_json(), backend=backend)
 
 def test_inset(backend: str):
     if backend in ("vispy", "plotly", "bokeh"):
@@ -341,6 +347,7 @@ def test_inset(backend: str):
     canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
     inset.add_line([0, 1, 2], [0, 1, 2], name="line")
     canvas.copy()
+    canvas.read_json(canvas.write_json(), backend=backend)
 
 def test_to_html(backend: str):
     if backend not in ("plotly", "bokeh"):
@@ -418,3 +425,4 @@ def test_canvas_3d(backend: str):
     if backend == "matplotlib":
         canvas.add_vectors([0, 1, 2], [0, 1, 2], [0, 0, 0], [0, 1, 2], [0, 1, 2], [1, 1, 1])
     canvas.add_surface(np.array([[2,3,2], [3,2,3]]))
+    canvas.read_json(canvas.write_json(), backend=backend)

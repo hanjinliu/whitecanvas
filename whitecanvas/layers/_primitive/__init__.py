@@ -28,24 +28,3 @@ __all__ = [
     "Rects",
     "Vectors",
 ]
-
-# register layer type strings
-from whitecanvas.layers._deserialize import register_layer_type
-
-register_layer_type(Line)
-register_layer_type(LineStep)
-register_layer_type(MultiLine)
-register_layer_type(Bars)
-register_layer_type(Markers)
-register_layer_type(Band)
-register_layer_type(Spans)
-register_layer_type(Errorbars)
-register_layer_type(Rug)
-register_layer_type(InfLine)
-register_layer_type(InfCurve)
-register_layer_type(Texts)
-register_layer_type(Image)
-register_layer_type(Rects)
-register_layer_type(Vectors)
-
-del register_layer_type

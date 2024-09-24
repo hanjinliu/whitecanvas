@@ -97,7 +97,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "infcurve",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "model": self.model,
             "bounds": self._bounds,
             "params": self.params,
@@ -251,7 +251,7 @@ class InfLine(LineMixin[LineProtocol]):
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "line",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "pos": self.pos,
             "angle": self.angle,
             "name": self.name,

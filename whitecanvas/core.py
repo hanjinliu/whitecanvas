@@ -55,11 +55,22 @@ def new_canvas_3d(
     size: tuple[int, int] | None = None,
     palette: str | ColormapType | None = None,
 ):
+    """
+    Create a new 3D canvas with a single cell.
+
+    Parameters
+    ----------
+    backend : Backend or str, optional
+        Backend name.
+    size : (int, int), optional
+        Displaying size of the canvas (in pixels).
+    palette : str or ColormapType, optional
+        Color palette of the canvas. This color palette will be used to generate colors
+        for the plots.
+    """
     from whitecanvas.canvas.canvas3d._base import SingleCanvas3D
 
-    _grid = CanvasGrid([1], [1], backend=backend)
-    _grid.add_canvas_3d(0, 0, palette=palette)
-    cvs = SingleCanvas3D(_grid)
+    cvs = SingleCanvas3D._new(palette=palette, backend=backend)
     if size is not None:
         cvs.size = size
     return cvs

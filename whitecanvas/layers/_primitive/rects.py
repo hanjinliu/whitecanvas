@@ -111,7 +111,7 @@ class Rects(
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "rects",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self.data,
             "name": self.name,
             "face": self.face.to_dict(),

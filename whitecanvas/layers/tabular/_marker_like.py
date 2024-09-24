@@ -745,9 +745,6 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
     def _apply_style(self, style):
         self.base.style = style
 
-    # def update_scale(self, by: str | float, align: str = "low") -> Self:
-    #     ...
-
     def update_length(
         self,
         lengths: float | NDArray[np.number],

@@ -573,7 +573,7 @@ class Line(_SingleLine):
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "line",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
             "color": self.color,
@@ -807,7 +807,7 @@ class LineStep(_SingleLine):
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "linestep",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
             "where": self.where,
@@ -987,7 +987,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "multiline",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data(),
             "name": self.name,
             "color": self.color,

@@ -7,6 +7,8 @@ from pathlib import Path
 import numpy as np
 from cmap import Color, Colormap
 
+from whitecanvas.canvas._palette import ColorPalette
+
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -39,6 +41,8 @@ class CustomEncoder(json.JSONEncoder):
             return super().default(
                 [(float(k), Color(v).hex) for k, v in cmap_dict.items()]
             )
+        elif isinstance(obj, ColorPalette):
+            return self.default(obj._cmap)
         elif hasattr(obj, "to_dict"):
             return obj.to_dict()
         return super().default(obj)

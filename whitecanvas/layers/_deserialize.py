@@ -1,26 +1,12 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from whitecanvas.backend import Backend
     from whitecanvas.layers._base import Layer
 
-_TYPE_MAP: dict[str, Layer] = {}
 _CLASS_MAP: dict[str, type[Layer]] = {}
-
-
-def register_layer_type(cls: type[Layer], name: str | None = None) -> None:
-    """Register a layer type."""
-    if name is None:
-        name = cls.__name__.lower()
-    if name in _TYPE_MAP:
-        warnings.warn(
-            f"Layer type {name} is already registered.", RuntimeWarning, stacklevel=3
-        )
-    _TYPE_MAP[name] = cls
-    return None
 
 
 def _pick_layer_class(name: str) -> type[Layer]:
@@ -40,11 +26,7 @@ def construct_layer(d: dict[str, Any], backend: Backend | str | None = None) -> 
     typ = d["type"]
     if not isinstance(typ, str):
         raise ValueError(f"Layer type must be a string, got {typ!r}.")
-    if typ not in _TYPE_MAP:
-        layer_cls = _pick_layer_class(typ)
-    else:
-        layer_cls = _TYPE_MAP[typ]
-    return layer_cls.from_dict(d, backend=backend)
+    return _pick_layer_class(typ).from_dict(d, backend=backend)
 
 
 def construct_layers(

@@ -64,7 +64,7 @@ class Line3D(LineMixin[LineProtocol], DataBoundLayer3D[LineProtocol, XYZData]):
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "type": "line3d",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self.data.to_dict(),
             "name": self.name,
             "color": self.color,

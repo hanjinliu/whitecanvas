@@ -177,13 +177,13 @@ class JointGrid(CanvasGrid):
         if "background_color" in d:
             self.background_color = d["background_color"]
         for canvas_dict in d["canvas_array"]:
-            canvas = self.add_canvas(canvas_dict["row"], canvas_dict["col"])
+            canvas = self[canvas_dict["row"], canvas_dict["col"]]
             canvas._update_from_dict(canvas_dict["canvas"])
         return self
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "type": f"{type(self).__module__}.{type(self).__name__}",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "loc": self._loc,
             "ratio": self._ratio,
             "palette": self._main_canvas._color_palette,

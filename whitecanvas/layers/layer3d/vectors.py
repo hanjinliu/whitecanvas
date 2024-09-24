@@ -49,7 +49,7 @@ class Vectors3D(DataBoundLayer3D[_V, XYZVectorData]):
     ):
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), x, vx, y, vy, z, vz)
-        color = as_color_array(color, x.size)
+        color = as_color_array(color, len(x))
         self.update(
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
@@ -64,15 +64,19 @@ class Vectors3D(DataBoundLayer3D[_V, XYZVectorData]):
         cls, d: dict[str, Any], backend: Backend | str | None = None
     ) -> Vectors3D:
         return cls(
-            d["data"]["x"], d["data"]["y"], d["data"]["z"], d["data"]["vx"],
-            d["data"]["vy"], d["data"]["vz"], name=d["name"], color=d["color"],
-            width=d["width"], style=d["style"],
+            np.asarray(d["data"]["x"], dtype=np.float32),
+            np.asarray(d["data"]["y"], dtype=np.float32),
+            np.asarray(d["data"]["z"], dtype=np.float32),
+            np.asarray(d["data"]["vx"], dtype=np.float32),
+            np.asarray(d["data"]["vy"], dtype=np.float32),
+            np.asarray(d["data"]["vz"], dtype=np.float32),
+            name=d["name"], color=d["color"], width=d["width"], style=d["style"],
             antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "type": "vectors3d",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self.data.to_dict(),
             "name": self.name,
             "color": self.color,

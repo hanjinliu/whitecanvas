@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator, overload
 
 import numpy as np
 from cmap import Color
@@ -10,9 +12,11 @@ from psygnal import Signal, SignalGroup
 from typing_extensions import override
 
 from whitecanvas import protocols
+from whitecanvas._json_utils import CustomEncoder
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
 from whitecanvas.canvas._linker import link_axes
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.theme import get_theme
 from whitecanvas.utils.normalize import arr_color
 
@@ -26,7 +30,62 @@ class GridEvents(SignalGroup):
     drawn = Signal()
 
 
-class CanvasGrid:
+class _Serializable(ABC):
+    @abstractmethod
+    def to_dict(self) -> dict[str, Any]: ...
+    @classmethod
+    @abstractmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Self: ...
+
+    @classmethod
+    def read_json(
+        cls,
+        path_or_str: str | Path,
+        *,
+        backend: Backend | str | None = None,
+    ) -> Self:
+        """
+        Construct a canvas grid from a JSON file or string.
+
+        Parameters
+        ----------
+        path_or_str : str or Path
+            The path to the JSON file or the JSON string.
+        backend : Backend or str, optional
+            The backend of the canvas.
+        """
+
+        if isinstance(path_or_str, Path):
+            txt = path_or_str.read_text()
+        elif not isinstance(path_or_str, str):
+            raise TypeError(f"Expected a path or a string, got {path_or_str!r}")
+        else:
+            if "{" in path_or_str:
+                txt = path_or_str
+            else:
+                txt = Path(path_or_str).read_text()
+        return cls.from_dict(json.loads(txt), backend=backend)
+
+    @overload
+    def write_json(self) -> str: ...
+    @overload
+    def write_json(self, path: str | Path) -> None: ...
+
+    def write_json(self, path: str | Path | None = None) -> str | None:
+        """Return a JSON string or write to a file."""
+
+        txt = json.dumps(self.to_dict(), indent=2, cls=CustomEncoder)
+        if path is None:
+            return txt
+        if isinstance(path, str):
+            path = Path(path)
+        path.write_text(txt)
+        return None
+
+
+class CanvasGrid(_Serializable):
     _CURRENT_INSTANCE: CanvasGrid | None = None
     events: GridEvents
 
@@ -274,7 +333,10 @@ class CanvasGrid:
         if "background_color" in d:
             self.background_color = d["background_color"]
         for canvas_dict in d["canvas_array"]:
-            canvas = self.add_canvas(canvas_dict["row"], canvas_dict["col"])
+            if canvas_dict["canvas"]["type"].endswith("3D"):
+                canvas = self.add_canvas_3d(canvas_dict["row"], canvas_dict["col"])
+            else:
+                canvas = self.add_canvas(canvas_dict["row"], canvas_dict["col"])
             canvas._update_from_dict(canvas_dict["canvas"])
         return self
 
@@ -453,7 +515,7 @@ class _CanvasWithGrid(CanvasBase):
         return self._grid.to_html(file=file)
 
 
-class SingleCanvas(_CanvasWithGrid):
+class SingleCanvas(_CanvasWithGrid, _Serializable):
     """
     A canvas without other subplots.
 
@@ -492,15 +554,19 @@ class SingleCanvas(_CanvasWithGrid):
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a SingleCanvas instance from a dictionary."""
-        self = cls._new(backend=backend)
-        self._main_canvas._update_from_dict(d)
+        self = cls._new(backend=backend, palette=d.get("palette"))
+        self.layers.clear()
+        self.layers.extend(construct_layers(d["layers"], backend=backend))
+        self.x.update(d.get("x", {}))
+        self.y.update(d.get("y", {}))
+        self.title.update(d.get("title", {}))
         return self
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the canvas."""
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "palette": self._color_palette.to_dict(),
+            "palette": self._color_palette,
             "layers": [layer.to_dict() for layer in self.layers],
             "title": self.title.to_dict(),
             "x": self.x.to_dict(),

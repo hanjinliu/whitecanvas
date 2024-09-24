@@ -10,9 +10,9 @@ import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
+from whitecanvas._json_utils import CustomEncoder
 from whitecanvas.backend import Backend
 from whitecanvas.layers._deserialize import construct_layer
-from whitecanvas.layers._json_utils import CustomEncoder
 from whitecanvas.layers._legend import EmptyLegendItem, LegendItem
 from whitecanvas.protocols import BaseProtocol
 

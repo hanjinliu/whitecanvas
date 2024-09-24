@@ -48,7 +48,8 @@ class Mesh3D(
         cls, d: dict[str, Any], backend: Backend | str | None = None
     ) -> Mesh3D:
         return cls(
-            d["data"]["verts"], d["data"]["faces"], name=d["name"],
+            np.asarray(d["data"]["vertices"], dtype=np.float32),
+            np.asarray(d["data"]["faces"], dtype=np.float32), name=d["name"],
             color=d["face"]["color"], hatch=d["face"]["hatch"], backend=backend,
         ).with_edge(
             color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
@@ -56,7 +57,7 @@ class Mesh3D(
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "type": "mesh3d",
+            "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self.data.to_dict(),
             "name": self.name,
             "face": self.face.to_dict(),

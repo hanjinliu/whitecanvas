@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterator
+from typing import Any, Iterator
 
 from cmap import Color, Colormap
 
@@ -56,3 +56,15 @@ class ColorPalette:
 
     def __iter__(self) -> Iterator[Color]:
         yield from iter(self.nextn(self.ncolors, update=False))
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ColorPalette:
+        """Create a palette from a dictionary."""
+        return cls(d["cmap"])
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the palette."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "cmap": self._cmap,
+        }

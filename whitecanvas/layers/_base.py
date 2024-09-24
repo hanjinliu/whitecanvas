@@ -146,6 +146,32 @@ class Layer(ABC):
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
 
+    def _repr_any_(self, method: str, *args: Any, **kwargs: Any) -> Any:
+        from whitecanvas import new_canvas
+
+        if canvas := self._canvas_ref():
+            canvas = new_canvas(backend=canvas._get_backend(), size=(360, 240))
+            canvas.add_layer(self.copy())
+            canvas.title.text = repr(self)
+            return getattr(canvas, method)(*args, **kwargs)
+        return None
+
+    def _repr_png_(self):
+        """Return PNG representation of the layer."""
+        return self._repr_any_("_repr_png_")
+
+    def _repr_mimebundle_(self, *args: Any, **kwargs: Any) -> dict:
+        """Return MIME bundle representation of the layer."""
+        return self._repr_any_("_repr_mimebundle_", *args, **kwargs)
+
+    def _ipython_display_(self, *args: Any, **kwargs: Any) -> Any:
+        """Display the layer in IPython."""
+        return self._repr_any_("_ipython_display_", *args, **kwargs)
+
+    def _repr_html_(self, *args: Any, **kwargs: Any) -> str:
+        """Return HTML representation of the layer."""
+        return self._repr_any_("_repr_html_", *args, **kwargs)
+
     def _connect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is added to a canvas."""
         self.events._layer_grouped.connect(

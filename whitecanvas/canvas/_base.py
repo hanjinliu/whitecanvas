@@ -32,6 +32,7 @@ from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.canvas._stacked import StackOverPlotter
 from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.types import (
     Alignment,
     ArrayLike1D,
@@ -208,6 +209,10 @@ class CanvasNDBase(ABC):
             yield
         finally:
             self.autoscale_enabled = _was_enabled
+
+    @abstractmethod
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the canvas."""
 
 
 class CanvasBase(CanvasNDBase):
@@ -2128,6 +2133,30 @@ class Canvas(CanvasBase):
         self._backend_object = obj
         self._init_canvas()
         return self
+
+    def _update_from_dict(
+        self, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Self:
+        """Create a Canvas from a dictionary."""
+        if "cmap" in d:
+            self._color_palette = ColorPalette(d["cmap"])
+        self.layers.clear()
+        self.layers.extend(construct_layers(d["layers"], backend=backend))
+        self.x.update(d.get("x", {}))
+        self.y.update(d.get("y", {}))
+        self.title.update(d.get("title", {}))
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the canvas."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "palette": self._color_palette.to_dict(),
+            "layers": [layer.to_dict() for layer in self.layers],
+            "title": self.title.to_dict(),
+            "x": self.x.to_dict(),
+            "y": self.y.to_dict(),
+        }
 
     def _create_backend_object(self) -> protocols.CanvasProtocol:
         return self._backend.get("Canvas")()

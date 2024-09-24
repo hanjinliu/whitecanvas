@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterator
 
 import numpy as np
+from cmap import Color
 from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 from typing_extensions import override
@@ -265,6 +266,35 @@ class CanvasGrid:
         self._size = (int(w), int(h))
         self._backend_object._plt_set_figsize(*self._size)
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        self = cls(d["heights"], d["widths"], backend=backend)
+        self.size = d["size"]
+        self.background_color = d["background_color"]
+        for canvas_dict in d["canvas_array"]:
+            canvas = self.add_canvas(canvas_dict["row"], canvas_dict["col"])
+            canvas._update_from_dict(canvas_dict["canvas"])
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{type(self).__module__}.{type(self).__name__}",
+            "heights": self._heights,
+            "widths": self._widths,
+            "size": self.size,
+            "background_color": Color(self.background_color).hex,
+            "canvas_array": [
+                {"row": r, "col": c, "canvas": canvas.to_dict()}
+                for (r, c), canvas in self._iter_canvas()
+            ],
+        }
+
+    def copy(self, backend: Backend | str | None = None) -> Self:
+        """Make a copy of the canvas."""
+        if backend is None:
+            backend = self._backend
+        return self.from_dict(self.to_dict(), backend=backend)
+
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         from io import BytesIO
@@ -306,14 +336,14 @@ class CanvasGrid:
 
 
 class CanvasVGrid(CanvasGrid):
-    @override
-    def __init__(
-        self,
+    @classmethod
+    def _from_heights(
+        cls,
         heights: list[int],
         *,
         backend: Backend | str | None = None,
-    ) -> None:
-        super().__init__(heights, [1], backend=backend)
+    ) -> CanvasVGrid:
+        return CanvasVGrid(heights, [1], backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:
@@ -333,14 +363,14 @@ class CanvasVGrid(CanvasGrid):
 
 
 class CanvasHGrid(CanvasGrid):
-    @override
-    def __init__(
-        self,
+    @classmethod
+    def _from_widths(
+        cls,
         widths: list[int],
         *,
         backend: Backend | str | None = None,
-    ) -> None:
-        super().__init__([1], widths, backend=backend)
+    ) -> CanvasHGrid:
+        return CanvasVGrid([1], widths, backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:
@@ -364,13 +394,6 @@ class _CanvasWithGrid(CanvasBase):
         self._main_canvas = canvas
         self._grid = grid
         super().__init__(palette=canvas._color_palette)
-
-    def _get_backend(self) -> Backend:
-        """Return the backend."""
-        return self._main_canvas._backend
-
-    def _canvas(self):
-        return self._main_canvas._backend_object
 
     @property
     def native(self) -> Any:
@@ -403,6 +426,13 @@ class _CanvasWithGrid(CanvasBase):
         """Return a screenshot of the grid."""
         return self._grid.screenshot()
 
+    def _get_backend(self) -> Backend:
+        """Return the backend."""
+        return self._main_canvas._backend
+
+    def _canvas(self):
+        return self._main_canvas._backend_object
+
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         return self._grid._repr_png_()
@@ -429,15 +459,7 @@ class SingleCanvas(_CanvasWithGrid):
     with a single axes.
     """
 
-    def __init__(self, grid: CanvasGrid):
-        if grid.shape != (1, 1):
-            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
-        self._grid = grid
-        _it = grid._iter_canvas()
-        _, canvas = next(_it)
-        if next(_it, None) is not None:
-            raise ValueError("Grid must have only one canvas")
-        self._main_canvas = canvas
+    def __init__(self, canvas: Canvas, grid: CanvasGrid):
         super().__init__(canvas, grid)
 
         # NOTE: events, dims etc are not shared between the main canvas and the
@@ -448,3 +470,43 @@ class SingleCanvas(_CanvasWithGrid):
         self.events.drawn.connect(
             self._main_canvas.events.drawn.emit, unique=True, max_args=None
         )
+
+    @classmethod
+    def _new(cls, palette=None, backend=None) -> SingleCanvas:
+        _grid = CanvasGrid([1], [1], backend=backend)
+        _grid.add_canvas(0, 0, palette=palette)
+        return SingleCanvas._from_grid(_grid)
+
+    @classmethod
+    def _from_grid(cls, grid: CanvasGrid) -> SingleCanvas:
+        if grid.shape != (1, 1):
+            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
+        _it = grid._iter_canvas()
+        _, canvas = next(_it)
+        if next(_it, None) is not None:
+            raise ValueError("Grid must have only one canvas")
+        return cls(canvas, grid)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a SingleCanvas instance from a dictionary."""
+        self = cls._new(backend=backend)
+        self._main_canvas._update_from_dict(d)
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the canvas."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "palette": self._color_palette.to_dict(),
+            "layers": [layer.to_dict() for layer in self.layers],
+            "title": self.title.to_dict(),
+            "x": self.x.to_dict(),
+            "y": self.y.to_dict(),
+        }
+
+    def copy(self, backend: Backend | str | None = None) -> Self:
+        """Make a copy of the canvas."""
+        if backend is None:
+            backend = self._main_canvas._backend
+        return self.from_dict(self.to_dict(), backend=backend)

@@ -407,7 +407,7 @@ class CanvasGrid:
         self._fig.show(warn=False)
 
     def _plt_get_background_color(self):
-        return self._fig.get_facecolor()
+        return np.asarray(self._fig.get_facecolor(), dtype=np.float32)
 
     def _plt_set_background_color(self, color):
         self._fig.set_facecolor(color)

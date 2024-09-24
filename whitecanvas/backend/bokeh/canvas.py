@@ -380,7 +380,7 @@ class CanvasGrid:
 
     def _plt_get_background_color(self):
         for _, _, child in self._iter_bokeh_subplots():
-            return child.background_fill_color
+            return arr_color(child.background_fill_color)
         return np.ones(4, dtype=np.float32)
 
     def _plt_set_background_color(self, color):

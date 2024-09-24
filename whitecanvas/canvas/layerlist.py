@@ -42,17 +42,11 @@ class LayerList(EventedList[Layer]):
         return out
 
     @overload
-    def __getitem__(self, idx: int) -> Layer:
-        ...
-
+    def __getitem__(self, idx: int) -> Layer: ...
     @overload
-    def __getitem__(self, idx: slice) -> Self:
-        ...
-
+    def __getitem__(self, idx: slice) -> Self: ...
     @overload
-    def __getitem__(self, idx: str) -> Layer:
-        ...
-
+    def __getitem__(self, idx: str) -> Layer: ...
     def __getitem__(self, idx):
         if isinstance(idx, str):
             for layer in self:
@@ -75,3 +69,7 @@ class LayerList(EventedList[Layer]):
                 yield from layer.iter_primitive()
             else:
                 yield layer
+
+    def copy(self) -> Self:
+        """Deep copy the layer list."""
+        return self.__class__([layer.copy() for layer in self])

@@ -43,9 +43,7 @@ def new_canvas(
         Color palette of the canvas. This color palette will be used to generate colors
         for the plots.
     """
-    _grid = CanvasGrid([1], [1], backend=backend)
-    _grid.add_canvas(0, 0, palette=palette)
-    cvs = SingleCanvas(_grid)
+    cvs = SingleCanvas._new(palette=palette, backend=backend)
     if size is not None:
         cvs.size = size
     return cvs
@@ -117,7 +115,7 @@ def new_row(
 ) -> CanvasHGrid:
     """Create a new horizontal canvas grid with uniform or non-uniform cell sizes."""
     widths = _norm_ratio(cols)
-    grid = CanvasHGrid(widths, backend=backend)
+    grid = CanvasHGrid._from_widths(widths, backend=backend)
     if size is not None:
         grid.size = size
     return grid
@@ -131,7 +129,7 @@ def new_col(
 ) -> CanvasVGrid:
     """Create a new vertical canvas grid with uniform or non-uniform cell sizes."""
     heights = _norm_ratio(rows)
-    grid = CanvasVGrid(heights, backend=backend)
+    grid = CanvasVGrid._from_heights(heights, backend=backend)
     if size is not None:
         grid.size = size
     return grid

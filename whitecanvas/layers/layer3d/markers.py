@@ -102,10 +102,9 @@ class Markers3D(
         return cls(
             d["data"]["x"], d["data"]["y"], d["data"]["z"], name=d["name"],
             symbol=d["symbol"], size=d["size"], color=d["face"]["color"],
-            alpha=d["face"]["alpha"], hatch=d["face"]["hatch"], backend=backend,
+            hatch=d["face"]["hatch"], backend=backend,
         ).with_edge(
-            color=d["edge"]["color"], width=d["edge"]["width"],
-            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:

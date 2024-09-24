@@ -73,7 +73,7 @@ class Markers(
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 12.0,
         color: ColorType = "blue",
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
@@ -144,11 +144,10 @@ class Markers(
         """Create a Band from a dictionary."""
         return cls(
             d["data"]["x"], d["data"]["y"], size=d["size"], symbol=d["symbol"],
-            name=d["name"], color=d["face"]["color"], alpha=d["face"]["alpha"],
+            name=d["name"], color=d["face"]["color"],
             hatch=d["face"]["hatch"], backend=backend,
         ).with_edge(
-            color=d["edge"]["color"], width=d["edge"]["width"],
-            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:

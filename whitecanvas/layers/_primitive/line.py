@@ -539,7 +539,7 @@ class Line(_SingleLine):
         name: str | None = None,
         color: ColorType = "blue",
         width: float = 1.0,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
@@ -566,8 +566,8 @@ class Line(_SingleLine):
         """Create a Line from a dictionary."""
         return cls(
             d["data"]["x"], d["data"]["y"], name=d["name"], color=d["color"],
-            alpha=d["alpha"], width=d["width"], style=d["style"],
-            antialias=d["antialias"], backend=backend,
+            width=d["width"], style=d["style"], antialias=d["antialias"],
+            backend=backend,
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:
@@ -577,7 +577,6 @@ class Line(_SingleLine):
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,
@@ -698,7 +697,7 @@ class LineStep(_SingleLine):
         where: str | StepStyle = StepStyle.MID,
         color: ColorType = "blue",
         width: float = 1,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
@@ -801,7 +800,7 @@ class LineStep(_SingleLine):
         """Create a LineStep from a dictionary."""
         return cls(
             d["data"]["x"], d["data"]["y"], name=d["name"], color=d["color"],
-            alpha=d["alpha"], width=d["width"], style=d["style"], where=d["where"],
+            width=d["width"], style=d["style"], where=d["where"],
             antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 
@@ -813,7 +812,6 @@ class LineStep(_SingleLine):
             "name": self.name,
             "where": self.where,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,
@@ -841,7 +839,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         backend: Backend | str | None = None,
     ):
         data_normed, xhint, yhint = _norm_data(data)
@@ -982,9 +980,8 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a LineStep from a dictionary."""
         return cls(
-            d["data"], name=d["name"], color=d["color"],
-            alpha=d["alpha"], width=d["width"], style=d["style"],
-            antialias=d["antialias"], backend=backend,
+            d["data"], name=d["name"], color=d["color"], width=d["width"],
+            style=d["style"], antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:
@@ -994,7 +991,6 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
             "data": self._get_layer_data(),
             "name": self.name,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,

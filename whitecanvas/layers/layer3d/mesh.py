@@ -49,11 +49,9 @@ class Mesh3D(
     ) -> Mesh3D:
         return cls(
             d["data"]["verts"], d["data"]["faces"], name=d["name"],
-            color=d["face"]["color"], hatch=d["face"]["hatch"],
-            alpha=d["face"]["alpha"], backend=backend,
+            color=d["face"]["color"], hatch=d["face"]["hatch"], backend=backend,
         ).with_edge(
-            color=d["edge"]["color"], width=d["edge"]["width"],
-            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:

@@ -57,7 +57,6 @@ class Line3D(LineMixin[LineProtocol], DataBoundLayer3D[LineProtocol, XYZData]):
             name=d["name"],
             color=d["color"],
             width=d["width"],
-            alpha=d["alpha"],
             style=d["style"],
             antialias=d["antialias"],
             backend=backend,
@@ -70,7 +69,6 @@ class Line3D(LineMixin[LineProtocol], DataBoundLayer3D[LineProtocol, XYZData]):
             "name": self.name,
             "color": self.color,
             "width": self.width,
-            "alpha": self.alpha,
             "style": self.style,
             "antialias": self.antialias,
         }

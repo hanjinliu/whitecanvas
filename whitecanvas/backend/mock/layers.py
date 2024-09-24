@@ -220,7 +220,14 @@ class Texts(MockHasData, MockHasMultiFaces, MockHasMultiEdges):
 @protocols.check_protocol(protocols.VectorsProtocol)
 class Vectors(MockHasData, MockHasEdges):
     def __init__(self, x0, dx, y0, dy):
-        super().__init__((x0, dx, y0, dy))
+        super().__init__(
+            (
+                np.asarray(x0, dtype=np.float32),
+                np.asarray(dx, dtype=np.float32),
+                np.asarray(y0, dtype=np.float32),
+                np.asarray(dy, dtype=np.float32),
+            )
+        )
 
     def _plt_get_ndata(self) -> int:
         return self._plt_get_data()[0].size

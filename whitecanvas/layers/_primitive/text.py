@@ -198,10 +198,9 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
             d["data"]["x"], d["data"]["y"], d["data"]["text"], name=d["name"],
             rotation=d["rotation"], anchor=d["anchor"], backend=backend,
         ).with_face(
-            color=d["face"]["color"], hatch=d["face"]["hatch"], alpha=d["face"]["alpha"]
+            color=d["face"]["color"], hatch=d["face"]["hatch"]
         ).with_edge(
-            color=d["edge"]["color"], width=d["edge"]["width"],
-            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
         ).with_font(
             color=d["font"]["color"], size=d["font"]["size"], family=d["font"]["family"]
         )  # fmt: skip

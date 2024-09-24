@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import weakref
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,6 +12,7 @@ from psygnal import Signal, SignalGroup
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._deserialize import construct_layer
+from whitecanvas.layers._json_utils import CustomEncoder
 from whitecanvas.layers._legend import EmptyLegendItem, LegendItem
 from whitecanvas.protocols import BaseProtocol
 
@@ -82,9 +85,63 @@ class Layer(ABC):
     def to_dict(self) -> dict[str, Any]:
         """Return a dict representation of this layer."""
 
-    def copy(self) -> Self:
+    def copy(self, *, backend: Backend | str | None = None) -> Self:
         """Create a copy of the layer."""
-        return self.from_dict(self.to_dict())
+        return self.from_dict(self.to_dict(), backend=backend)
+
+    @classmethod
+    def read_json(
+        cls,
+        path_or_str: str | Path,
+        *,
+        backend: Backend | str | None = None,
+    ) -> Self:
+        """
+        Construct a layer from a JSON file or string.
+
+        Parameters
+        ----------
+        path_or_str : str or Path
+            The path to the JSON file or the JSON string.
+        backend : Backend or str, optional
+            The backend of the layer.
+        """
+
+        if isinstance(path_or_str, Path):
+            txt = path_or_str.read_text()
+        elif not isinstance(path_or_str, str):
+            raise TypeError(f"Expected a path or a string, got {path_or_str!r}")
+        else:
+            if "{" in path_or_str:
+                txt = path_or_str
+            else:
+                txt = Path(path_or_str).read_text()
+        return cls.from_dict(cls._pre_from_dict(json.loads(txt)), backend=backend)
+
+    @overload
+    def write_json(self) -> str: ...
+    @overload
+    def write_json(self, path: str | Path) -> None: ...
+
+    def write_json(self, path: str | Path | None = None) -> str | None:
+        """Return a JSON string or write to a file."""
+
+        _dict = self._post_to_dict(self.to_dict())
+        txt = json.dumps(_dict, indent=2, cls=CustomEncoder)
+        if path is None:
+            return txt
+        if isinstance(path, str):
+            path = Path(path)
+        path.write_text(txt)
+        return None
+
+    @classmethod
+    def _post_to_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        return d
+
+    @classmethod
+    def _pre_from_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        return d
 
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"

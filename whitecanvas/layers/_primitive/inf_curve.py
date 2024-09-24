@@ -10,7 +10,7 @@ from typing_extensions import Concatenate, ParamSpec
 from whitecanvas.backend import Backend
 from whitecanvas.layers._primitive.line import LineMixin
 from whitecanvas.protocols import LineProtocol
-from whitecanvas.types import ColorType, LineStyle, Rect
+from whitecanvas.types import ColorType, LineStyle, Rect, _Void
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
 
 _P = ParamSpec("_P")
+_void = _Void()
 
 
 class InfCurve(LineMixin[LineProtocol], Generic[_P]):
@@ -31,7 +32,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
         color: ColorType = "blue",
-        alpha: float = 1,
+        alpha: float | _Void = _void,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
@@ -89,7 +90,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         args, kwargs = d["params"]
         return cls(
             d["model"], bounds=d["bounds"], name=d["name"], color=d["color"],
-            alpha=d["alpha"], width=d["width"], style=d["style"],
+            width=d["width"], style=d["style"],
             antialias=d["antialias"], backend=backend,
         ).update_params(*args, **kwargs)  # fmt: skip
 
@@ -102,7 +103,6 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
             "params": self.params,
             "name": self.name,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,
@@ -187,7 +187,7 @@ class InfLine(LineMixin[LineProtocol]):
         *,
         name: str | None = None,
         color: ColorType = "blue",
-        alpha: float = 1,
+        alpha: float | _Void = _void,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
@@ -244,9 +244,8 @@ class InfLine(LineMixin[LineProtocol]):
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a Line from a dictionary."""
         return cls(
-            d["pos"], d["angle"], name=d["name"], color=d["color"],
-            alpha=d["alpha"], width=d["width"], style=d["style"],
-            antialias=d["antialias"], backend=backend,
+            d["pos"], d["angle"], name=d["name"], color=d["color"], width=d["width"],
+            style=d["style"], antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:
@@ -257,7 +256,6 @@ class InfLine(LineMixin[LineProtocol]):
             "angle": self.angle,
             "name": self.name,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,

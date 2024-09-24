@@ -48,7 +48,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         *,
         name: str | None = None,
         color: ColorType = "black",
-        alpha: float = 1,
+        alpha: float | _Void = _void,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
@@ -184,9 +184,8 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         """Create an Errorbars from a dictionary."""
         return cls(
             d["data"]["x"], d["data"]["y0"], d["data"]["y1"], orient=d["orient"],
-            name=d["name"], color=d["color"], alpha=d["alpha"],
-            width=d["width"], style=d["style"], antialias=d["antialias"],
-            capsize=d["capsize"], backend=backend,
+            name=d["name"], color=d["color"], width=d["width"], style=d["style"],
+            antialias=d["antialias"], capsize=d["capsize"], backend=backend,
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:
@@ -197,7 +196,6 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
             "orient": self.orient.value,
             "name": self.name,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,

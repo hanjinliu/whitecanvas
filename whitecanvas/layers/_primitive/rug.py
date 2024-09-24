@@ -22,12 +22,15 @@ from whitecanvas.types import (
     Orientation,
     OrientationLike,
     XYYData,
+    _Void,
 )
 from whitecanvas.utils.normalize import as_array_1d
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
+_void = _Void()
 
 
 class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.number]]):
@@ -52,7 +55,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
         color: ColorType = "black",
         width: float = 1.0,
         style: str | LineStyle = LineStyle.SOLID,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         antialias: bool = True,
         orient: OrientationLike = "vertical",
         backend: str | Backend | None = None,
@@ -123,7 +126,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
         """Create an Errorbars from a dictionary."""
         return cls(
             d["data"], low=d["low"], high=d["high"], orient=d["orient"],
-            name=d["name"], color=d["color"], alpha=d["alpha"], width=d["width"],
+            name=d["name"], color=d["color"], width=d["width"],
             style=d["style"], antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 
@@ -137,7 +140,6 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
             "orient": self.orient.value,
             "name": self.name,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,

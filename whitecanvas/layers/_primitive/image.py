@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from typing import TYPE_CHECKING, Any, Callable, overload
 
 import numpy as np
@@ -258,6 +259,22 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             "shift": self.shift,
             "scale": self.scale,
         }
+
+    @classmethod
+    def _post_to_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        d["data"] = {
+            "image": base64.b64encode(d["data"]).decode("ascii"),
+            "shape": d["data"].shape,
+            "dtype": d["data"].dtype.str,
+        }
+        return d
+
+    @classmethod
+    def _pre_from_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        d["data"] = np.frombuffer(
+            base64.b64decode(d["data"]["image"]), dtype=d["data"]["dtype"]
+        ).reshape(d["data"]["shape"])
+        return d
 
     @overload
     def fit_to(self, bbox: Rect | tuple[float, float, float, float], /) -> Image: ...

@@ -64,7 +64,7 @@ class Spans(
         name: str | None = None,
         orient: OrientationLike = "vertical",
         color: ColorType = "blue",
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
@@ -135,10 +135,9 @@ class Spans(
         """Create a Band from a dictionary."""
         return cls(
             d["data"], orient=d["orient"], name=d["name"], color=d["face"]["color"],
-            alpha=d["face"]["alpha"], hatch=d["face"]["hatch"], backend=backend,
+            hatch=d["face"]["hatch"], backend=backend,
         ).with_edge(
-            color=d["edge"]["color"], width=d["edge"]["width"],
-            style=d["edge"]["style"], alpha=d["edge"]["alpha"],
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
         )  # fmt: skip
 
     def to_dict(self) -> dict[str, Any]:

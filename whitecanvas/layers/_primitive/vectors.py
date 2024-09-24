@@ -53,14 +53,14 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
         name: str | None = None,
         color: ColorType = "blue",
         width: float = 1,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
     ):
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), x, vx, y, vy)
-        color = as_color_array(color, x.size)
+        color = as_color_array(color, len(x))
         self.update(
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
@@ -201,7 +201,7 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
         """Create a Line from a dictionary."""
         return cls(
             d["data"]["x"], d["data"]["y"], d["data"]["vx"], d["data"]["vy"],
-            name=d["name"], color=d["color"], alpha=d["alpha"], width=d["width"],
+            name=d["name"], color=d["color"], width=d["width"],
             style=d["style"], antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 
@@ -212,7 +212,6 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
             "color": self.color,
-            "alpha": self.alpha,
             "width": self.width,
             "style": self.style,
             "antialias": self.antialias,

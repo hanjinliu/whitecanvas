@@ -31,7 +31,7 @@ class TextLabel(scene.Label):
         self.text = text
 
     def _plt_get_color(self):
-        return np.array(self._text_visual.color).ravel()
+        return np.array(self._text_visual.color.rgba).ravel()
 
     def _plt_set_color(self, color):
         self._text_visual.color = color
@@ -138,7 +138,7 @@ class Ticks:
         self._get_ticker()._categorical_labels = None
 
     def _plt_get_color(self):
-        return np.array(self._text.color)
+        return np.array(self._text.color.rgba).ravel()
 
     def _plt_set_color(self, color):
         self._text.color = color

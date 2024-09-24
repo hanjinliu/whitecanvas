@@ -106,7 +106,6 @@ class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
         return {
             "color": self.color,
             "hatch": self.hatch,
-            "alpha": self.alpha,
         }
 
 
@@ -135,7 +134,6 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
             "color": self.color,
             "width": self.width,
             "style": self.style,
-            "alpha": self.alpha,
         }
 
 

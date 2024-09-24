@@ -66,7 +66,7 @@ class Vectors3D(DataBoundLayer3D[_V, XYZVectorData]):
         return cls(
             d["data"]["x"], d["data"]["y"], d["data"]["z"], d["data"]["vx"],
             d["data"]["vy"], d["data"]["vz"], name=d["name"], color=d["color"],
-            width=d["width"], alpha=d["alpha"], style=d["style"],
+            width=d["width"], style=d["style"],
             antialias=d["antialias"], backend=backend,
         )  # fmt: skip
 
@@ -77,7 +77,6 @@ class Vectors3D(DataBoundLayer3D[_V, XYZVectorData]):
             "name": self.name,
             "color": self.color,
             "width": self.width,
-            "alpha": self.alpha,
             "style": self.style,
             "antialias": self.antialias,
         }

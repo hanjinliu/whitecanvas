@@ -61,7 +61,7 @@ class ArrowHeads(pg.ItemGroup):
 class Vectors(pg.ItemGroup, PyQtLayer):
     def __init__(self, x0, dx, y0, dy):
         super().__init__()
-        angles = np.degrees(np.arctan2(dy, -dx))
+        angles = np.degrees(np.arctan2(dy, -np.asarray(dx, dtype=np.float32)))
         start = np.column_stack([x0, y0])
         vec = np.column_stack([dx, dy])
         stop = start + vec

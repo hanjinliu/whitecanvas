@@ -45,6 +45,7 @@ def test_line(backend: str):
     canvas.autoscale()
     layer_copy = layer.copy()
     assert_color_equal(layer.color, layer_copy.color)
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
@@ -90,6 +91,7 @@ def test_markers(backend: str):
 
     layer_copy = layer.copy()
     assert layer.symbol == layer_copy.symbol
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_bars(backend: str):
     canvas = new_canvas(backend=backend)
@@ -131,6 +133,7 @@ def test_bars(backend: str):
 
     layer_copy = layer.copy()
     assert_color_equal(layer.face.color, layer_copy.face.color)
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_step(backend: str):
     canvas = new_canvas(backend=backend)
@@ -173,6 +176,7 @@ def test_step(backend: str):
 
     layer_copy = layer.copy()
     assert layer.where == layer_copy.where
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_infcurve(backend: str):
     canvas = new_canvas(backend=backend)
@@ -220,6 +224,7 @@ def test_infcurve(backend: str):
 
     layer_copy = layer.copy()
     layer.pos == layer_copy.pos
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_band(backend: str):
     canvas = new_canvas(backend=backend)
@@ -250,6 +255,7 @@ def test_band(backend: str):
 
     layer_copy = layer.copy()
     assert_color_equal(layer.face.color, layer_copy.face.color)
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_image(backend: str):
     canvas = new_canvas(backend=backend)
@@ -274,6 +280,7 @@ def test_image(backend: str):
 
     layer_copy = layer.copy()
     assert layer.shift == layer_copy.shift
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_errorbars(backend: str):
     canvas = new_canvas(backend=backend)
@@ -303,6 +310,7 @@ def test_errorbars(backend: str):
 
     layer_copy = layer.copy()
     assert_color_array_equal(layer.color, layer_copy.color)
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_texts(backend: str):
     canvas = new_canvas(backend=backend)
@@ -423,6 +431,7 @@ def test_rug(backend: str):
 
     layer_copy = layer.copy()
     assert_allclose(layer.data, layer_copy.data)
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_spans(backend: str):
     canvas = new_canvas(backend=backend)
@@ -445,6 +454,7 @@ def test_spans(backend: str):
 
     layer_copy = layer.copy()
     assert_allclose(layer.data, layer_copy.data)
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_rects(backend: str):
     canvas = new_canvas(backend=backend)
@@ -460,6 +470,7 @@ def test_rects(backend: str):
 
     layer_copy = layer.copy()
     assert_allclose(layer.rects, layer_copy.rects)
+    layer.read_json(layer.write_json(), backend=backend)
 
 def test_vectors(backend: str):
     if backend not in ("matplotlib", "pyqtgraph", "mock"):
@@ -479,3 +490,4 @@ def test_vectors(backend: str):
 
     layer_copy = layer.copy()
     assert_color_array_equal(layer.color, layer_copy.color)
+    layer.read_json(layer.write_json(), backend=backend)

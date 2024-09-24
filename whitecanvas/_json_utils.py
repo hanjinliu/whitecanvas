@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from cmap import Color, Colormap
@@ -46,3 +47,19 @@ class CustomEncoder(json.JSONEncoder):
         elif hasattr(obj, "to_dict"):
             return obj.to_dict()
         return super().default(obj)
+
+
+def color_to_hex(d: dict[str, Any]) -> dict[str, Any]:
+    to_update = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            to_update[k] = color_to_hex(v)
+        elif isinstance(v, list):
+            to_update[k] = [color_to_hex(e) if isinstance(e, dict) else e for e in v]
+        elif k == "color" and isinstance(v, np.ndarray):
+            if v.ndim == 1:
+                to_update[k] = Color(v).hex
+            else:
+                to_update[k] = [Color(c).hex for c in v]
+    d.update(to_update)
+    return d

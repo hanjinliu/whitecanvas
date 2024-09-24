@@ -3,6 +3,8 @@ from __future__ import annotations
 import weakref
 from typing import TYPE_CHECKING
 
+import numpy as np
+from cmap import Color
 from matplotlib import pyplot as plt
 from matplotlib.ticker import AutoLocator, AutoMinorLocator
 
@@ -26,7 +28,7 @@ class SupportsText:
         }
 
     def _plt_get_color(self):
-        return self._fontdict["color"]
+        return np.fromiter(Color(self._fontdict["color"]), dtype=np.float32)
 
     def _plt_get_size(self) -> str:
         return self._fontdict["fontsize"]
@@ -216,7 +218,8 @@ class MplAxis:
         return getattr(self._canvas()._axes, f"{self._axis_name}axis")
 
     def _plt_get_color(self):
-        return self._get_mpl_axis().get_tick_params().get("color", "black")
+        color = self._get_mpl_axis().get_tick_params().get("color", "black")
+        return np.fromiter(Color(color), dtype=np.float32)
 
     def _plt_set_color(self, color):
         ax = self._get_mpl_axis()

@@ -667,6 +667,9 @@ class SingleCanvas3D(_Canvas3DWithGrid, _Serializable):
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a SingleCanvas instance from a dictionary."""
+        _type_expected = f"{cls.__module__}.{cls.__name__}"
+        if (_type := d.get("type")) and _type != _type_expected:
+            raise ValueError(f"Expected type {_type_expected!r}, got {_type!r}")
         self = cls._new(backend=backend, palette=d.get("palette"))
         self.layers.clear()
         self.layers.extend(construct_layers(d["layers"], backend=backend))

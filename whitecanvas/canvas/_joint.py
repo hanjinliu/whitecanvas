@@ -166,6 +166,9 @@ class JointGrid(CanvasGrid):
 
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        _type_expected = f"{cls.__module__}.{cls.__name__}"
+        if (_type := d.get("type")) and _type != _type_expected:
+            raise ValueError(f"Expected type {_type_expected!r}, got {_type!r}")
         self = cls(
             loc=d.get("loc", (1, 0)),
             palette=d.get("palette", None),

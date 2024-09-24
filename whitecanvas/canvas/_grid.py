@@ -12,7 +12,7 @@ from psygnal import Signal, SignalGroup
 from typing_extensions import override
 
 from whitecanvas import protocols
-from whitecanvas._json_utils import CustomEncoder
+from whitecanvas._json_utils import CustomEncoder, color_to_hex
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
 from whitecanvas.canvas._linker import link_axes
@@ -76,7 +76,7 @@ class _Serializable(ABC):
     def write_json(self, path: str | Path | None = None) -> str | None:
         """Return a JSON string or write to a file."""
 
-        txt = json.dumps(self.to_dict(), indent=2, cls=CustomEncoder)
+        txt = json.dumps(color_to_hex(self.to_dict()), indent=2, cls=CustomEncoder)
         if path is None:
             return txt
         if isinstance(path, str):
@@ -327,6 +327,9 @@ class CanvasGrid(_Serializable):
 
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        _type_expected = f"{cls.__module__}.{cls.__name__}"
+        if (_type := d.get("type")) and _type != _type_expected:
+            raise ValueError(f"Expected type {_type_expected!r}, got {_type!r}")
         self = cls(d["heights"], d["widths"], backend=backend)
         if "size" in d:
             self.size = d["size"]
@@ -554,6 +557,9 @@ class SingleCanvas(_CanvasWithGrid, _Serializable):
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a SingleCanvas instance from a dictionary."""
+        _type_expected = f"{cls.__module__}.{cls.__name__}"
+        if (_type := d.get("type")) and _type != _type_expected:
+            raise ValueError(f"Expected type {_type_expected!r}, got {_type!r}")
         self = cls._new(backend=backend, palette=d.get("palette"))
         self.layers.clear()
         self.layers.extend(construct_layers(d["layers"], backend=backend))

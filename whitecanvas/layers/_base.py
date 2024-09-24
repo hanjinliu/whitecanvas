@@ -10,7 +10,7 @@ import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
-from whitecanvas._json_utils import CustomEncoder
+from whitecanvas._json_utils import CustomEncoder, color_to_hex
 from whitecanvas.backend import Backend
 from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers._legend import EmptyLegendItem, LegendItem
@@ -137,7 +137,7 @@ class Layer(ABC):
 
     @classmethod
     def _post_to_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
-        return d
+        return color_to_hex(d)
 
     @classmethod
     def _pre_from_dict(cls, d: dict[str, Any]) -> dict[str, Any]:

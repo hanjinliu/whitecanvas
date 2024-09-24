@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     import pandas as pd
     import polars as pl
 
+    from whitecanvas.canvas.canvas3d._base import SingleCanvas3D
+
     _0_or_1 = Literal[0, 1]
 
 
@@ -54,7 +56,7 @@ def new_canvas_3d(
     *,
     size: tuple[int, int] | None = None,
     palette: str | ColormapType | None = None,
-):
+) -> SingleCanvas3D:
     """
     Create a new 3D canvas with a single cell.
 
@@ -176,6 +178,110 @@ def new_jointgrid(
     if size is not None:
         joint.size = size
     return joint
+
+
+def read_canvas(path: str | Path) -> SingleCanvas:
+    """
+    Read a canvas from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    SingleCanvas
+        Canvas object.
+    """
+    return SingleCanvas.read_json(path)
+
+
+def read_canvas_3d(path: str | Path) -> SingleCanvas3D:
+    """
+    Read a 3D canvas from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    SingleCanvas
+        Canvas object.
+    """
+    from whitecanvas.canvas.canvas3d._base import SingleCanvas3D
+
+    return SingleCanvas3D.read_json(path)
+
+
+def read_grid(path: str | Path) -> CanvasGrid:
+    """
+    Read a grid from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    CanvasGrid
+        Grid object.
+    """
+    return CanvasGrid.read_json(path)
+
+
+def read_jointgrid(path: str | Path) -> JointGrid:
+    """
+    Read a joint grid from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    JointGrid
+        Joint grid object.
+    """
+    return JointGrid.read_json(path)
+
+
+def read_row(path: str | Path) -> CanvasHGrid:
+    """
+    Read a row from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    CanvasHGrid
+        Row object.
+    """
+    return CanvasHGrid.read_json(path)
+
+
+def read_col(path: str | Path) -> CanvasVGrid:
+    """
+    Read a column from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    CanvasVGrid
+        Column object.
+    """
+    return CanvasVGrid.read_json(path)
 
 
 @overload

@@ -91,6 +91,7 @@ def test_namespaces(backend: str):
     canvas.x.ticks.reset_labels()
 
     canvas.x.set_gridlines()
+    canvas.copy()
 
 def test_namespace_pointing_at_different_objects():
     c0 = new_canvas(backend="matplotlib")
@@ -150,6 +151,12 @@ def test_grid(backend: str):
     assert len(c10.layers) == 1
     assert len(c11.layers) == 1
 
+    new = cgrid.copy()
+    assert len(new[0, 0].layers) == 1
+    assert len(new[0, 1].layers) == 1
+    assert len(new[1, 0].layers) == 1
+    assert len(new[1, 1].layers) == 1
+
 
 def test_grid_nonuniform(backend: str):
     cgrid = wc.new_grid([2, 1], [2, 1], backend=backend, size=(100, 100)).link_x().link_y()
@@ -175,6 +182,13 @@ def test_grid_nonuniform(backend: str):
     assert len(c01.layers) == 1
     assert len(c10.layers) == 1
     assert len(c11.layers) == 1
+
+    new = cgrid.copy()
+    assert len(new[0, 0].layers) == 1
+    assert len(new[0, 1].layers) == 1
+    assert len(new[1, 0].layers) == 1
+    assert len(new[1, 1].layers) == 1
+
 
 def test_vgrid_hgrid(backend: str):
     cgrid = wc.new_col(2, backend=backend, size=(100, 100)).link_x().link_y()
@@ -225,6 +239,7 @@ def test_jointgrid(backend: str):
     joint.add_markers(rng.random(100), rng.random(100), color="red")
     if backend != "vispy":
         joint.add_legend()
+    joint.copy()
 
 def test_legend(backend: str):
     if backend == "vispy":
@@ -303,6 +318,8 @@ def test_second_x(backend: str):
     assert canvas.y.lim == pytest.approx((0, 2))
     assert other.y.lim == pytest.approx((0, 2))
 
+    canvas.copy()
+
 def test_second_y(backend: str):
     if backend in ("vispy",):
         pytest.skip(f"{backend} does not support second_y")
@@ -314,6 +331,8 @@ def test_second_y(backend: str):
     assert canvas.x.lim == pytest.approx((0, 2))
     assert other.x.lim == pytest.approx((0, 2))
 
+    canvas.copy()
+
 def test_inset(backend: str):
     if backend in ("vispy", "plotly", "bokeh"):
         pytest.skip(f"{backend} does not support inset")
@@ -321,6 +340,7 @@ def test_inset(backend: str):
     inset = canvas.install_inset((0.5, 0.96, 0.6, 0.96))
     canvas.add_line([0, 1, 2], [0, 1, 2], name="line")
     inset.add_line([0, 1, 2], [0, 1, 2], name="line")
+    canvas.copy()
 
 def test_to_html(backend: str):
     if backend not in ("plotly", "bokeh"):

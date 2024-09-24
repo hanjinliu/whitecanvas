@@ -118,13 +118,13 @@ class Histogram(LineFillBase[Line]):
 
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
-        data = d.pop("data")
-        edges = d.pop("edges")
-        limits = d.pop("limits")
+        data = d["data"]
+        edges = d["edges"]
+        limits = d.get("limits")
         children = construct_layers(d["children"], backend=backend)
-        shape = HistogramShape(d.pop("shape"))
-        kind = HistogramKind(d.pop("kind"))
-        return cls(data, edges, limits, *children, shape, kind, **d)
+        shape = HistogramShape(d.get("shape", "bars"))
+        kind = HistogramKind(d.get("kind", "count"))
+        return cls(data, edges, limits, *children, shape, kind, name=d.get("name"))
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -337,7 +337,11 @@ class Kde(LineFillBase[Line]):
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         children = construct_layers(d["children"], backend=backend)
         return cls(
-            d["data"], d["band_width"], *children, bottom=d["bottom"], scale=d["scale"]
+            d["data"],
+            d["band_width"],
+            *children,
+            bottom=d.get("bottom", 0.0),
+            scale=d.get("scale", 1.0),
         )
 
     def to_dict(self) -> dict[str, Any]:

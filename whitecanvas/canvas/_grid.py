@@ -269,8 +269,10 @@ class CanvasGrid:
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         self = cls(d["heights"], d["widths"], backend=backend)
-        self.size = d["size"]
-        self.background_color = d["background_color"]
+        if "size" in d:
+            self.size = d["size"]
+        if "background_color" in d:
+            self.background_color = d["background_color"]
         for canvas_dict in d["canvas_array"]:
             canvas = self.add_canvas(canvas_dict["row"], canvas_dict["col"])
             canvas._update_from_dict(canvas_dict["canvas"])
@@ -370,7 +372,7 @@ class CanvasHGrid(CanvasGrid):
         *,
         backend: Backend | str | None = None,
     ) -> CanvasHGrid:
-        return CanvasVGrid([1], widths, backend=backend)
+        return CanvasHGrid([1], widths, backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:

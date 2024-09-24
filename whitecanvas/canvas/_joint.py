@@ -3,12 +3,15 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Iterator,
     Literal,
     Sequence,
     TypeVar,
 )
+
+from cmap import Color
 
 from whitecanvas import layers as _l
 from whitecanvas import theme
@@ -72,6 +75,8 @@ class JointGrid(CanvasGrid):
             raise ValueError(f"Invalid location {loc!r}.")
         widths[rloc] = heights[cloc] = ratio
         super().__init__(widths, heights, backend=Backend(backend))
+        self._loc = loc
+        self._ratio = ratio
         self._main_canvas = self.add_canvas(rloc, cloc, palette=palette)
         self._x_canvas = self.add_canvas(1 - rloc, cloc)
         self._y_canvas = self.add_canvas(rloc, 1 - cloc)
@@ -158,6 +163,37 @@ class JointGrid(CanvasGrid):
         from whitecanvas.canvas.dataframe import JointCatPlotter
 
         return JointCatPlotter(self, data, x, y, update_labels=update_labels)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        self = cls(
+            loc=d.get("loc", (1, 0)),
+            palette=d.get("palette", None),
+            ratio=d.get("ratio", 4),
+            backend=backend,
+        )
+        if "size" in d:
+            self.size = d["size"]
+        if "background_color" in d:
+            self.background_color = d["background_color"]
+        for canvas_dict in d["canvas_array"]:
+            canvas = self.add_canvas(canvas_dict["row"], canvas_dict["col"])
+            canvas._update_from_dict(canvas_dict["canvas"])
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{type(self).__module__}.{type(self).__name__}",
+            "loc": self._loc,
+            "ratio": self._ratio,
+            "palette": self._main_canvas._color_palette,
+            "size": self.size,
+            "background_color": Color(self.background_color).hex,
+            "canvas_array": [
+                {"row": r, "col": c, "canvas": canvas.to_dict()}
+                for (r, c), canvas in self._iter_canvas()
+            ],
+        }
 
     def _link_marginal_to_main(self, layer: _l.Layer, main: _l.Layer) -> None:
         # TODO: this is not the only thing to be done

@@ -94,7 +94,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         self.events.data.emit(data)
 
     @classmethod
-    def empty(
+    def _empty(
         cls,
         orient: OrientationLike = Orientation.VERTICAL,
         name: str | None = None,
@@ -104,20 +104,20 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         return Errorbars([], [], [], name=name, orient=orient, backend=backend)
 
     @classmethod
-    def empty_v(
+    def _empty_v(
         cls,
         name: str | None = None,
         backend: Backend | str | None = None,
     ) -> Errorbars:
         """Return a vertical Errorbars instance with no component."""
-        return cls.empty(Orientation.VERTICAL, name=name, backend=backend)
+        return cls._empty(Orientation.VERTICAL, name=name, backend=backend)
 
     @classmethod
-    def empty_h(
+    def _empty_h(
         cls, name: str | None = None, backend: Backend | str | None = None
     ) -> Errorbars:
         """Return a horizontal Errorbars instance with no component."""
-        return cls.empty(Orientation.HORIZONTAL, name=name, backend=backend)
+        return cls._empty(Orientation.HORIZONTAL, name=name, backend=backend)
 
     def _get_layer_data(self) -> XYYData:
         """Current data of the layer."""

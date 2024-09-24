@@ -133,7 +133,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
         return {
-            "type": "errorbars",
+            "type": "rug",
             "data": self._get_layer_data(),
             "low": self.low,
             "high": self.high,

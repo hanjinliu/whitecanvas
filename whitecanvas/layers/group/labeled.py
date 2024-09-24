@@ -329,11 +329,11 @@ def _init_error_bars(
         x, est - err, est + err, orient=ori, backend=backend, capsize=capsize,
     )  # fmt: skip
     if ori.is_vertical:
-        xerr = Errorbars.empty_h(backend=backend)
+        xerr = Errorbars._empty_h(backend=backend)
         yerr = errorbar
     else:
         xerr = errorbar
-        yerr = Errorbars.empty_v(backend=backend)
+        yerr = Errorbars._empty_v(backend=backend)
     return xerr, yerr
 
 

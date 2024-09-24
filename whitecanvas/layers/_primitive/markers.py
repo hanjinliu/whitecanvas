@@ -357,7 +357,7 @@ class Markers(
             width=width, style=style, antialias=antialias, capsize=capsize,
             orient=Orientation.HORIZONTAL, backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars.empty_v(f"xerr-of-{self.name}", backend=self._backend_name)
+        yerr = Errorbars._empty_v(f"xerr-of-{self.name}", backend=self._backend_name)
         return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_yerr(
@@ -412,7 +412,7 @@ class Markers(
             width=width, style=style, antialias=antialias, capsize=capsize,
             orient=Orientation.VERTICAL, backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars.empty_h(f"yerr-of-{self.name}", backend=self._backend_name)
+        xerr = Errorbars._empty_h(f"yerr-of-{self.name}", backend=self._backend_name)
         return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_text(
@@ -463,8 +463,8 @@ class Markers(
         self.name = f"markers-of-{old_name}"
         return LabeledMarkers(
             self,
-            Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name),
-            Errorbars.empty_v(f"yerr-of-{old_name}", backend=self._backend_name),
+            Errorbars._empty_h(f"xerr-of-{old_name}", backend=self._backend_name),
+            Errorbars._empty_v(f"yerr-of-{old_name}", backend=self._backend_name),
             texts=texts,
             name=old_name,
         )

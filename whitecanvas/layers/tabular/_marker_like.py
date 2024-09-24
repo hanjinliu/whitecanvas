@@ -252,7 +252,7 @@ class DFMarkers(
         self.with_hover_template(default_template(source.iter_items()))
 
     def _apply_color(self, color):
-        self.base.face.color = color
+        self.base.face.color = np.asarray(color, dtype=np.float32)
 
     def _apply_width(self, width):
         self.base.with_edge(color=_void, width=width, style=_void)
@@ -605,7 +605,7 @@ class DFBars(
         )  # fmt: skip
 
     def _apply_color(self, color):
-        self.base.face.color = color
+        self.base.face.color = np.asarray(color, dtype=np.float32)
 
     def _apply_width(self, width):
         self._base_layer.with_edge_multi(color=_void, width=width, style=_void)
@@ -734,7 +734,7 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
         return self.base.orient
 
     def _apply_color(self, color):
-        self.base.color = color
+        self.base.color = np.asarray(color, dtype=np.float32)
 
     def _apply_alpha(self, alpha):
         self.base.alpha = alpha

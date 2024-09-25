@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.canvas import CanvasBase
+    from whitecanvas.layers.group._collections import LayerCollection
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
@@ -146,6 +147,18 @@ class Layer(ABC):
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
 
+    def __add__(self, other: Layer) -> LayerCollection[Layer]:
+        from whitecanvas.layers.group._collections import LayerCollection
+
+        if isinstance(other, LayerCollection):
+            out = LayerCollection(self.copy(), *other.to_list(), name=self.name)
+        else:
+            out = LayerCollection(self.copy(), other.copy(), name=self.name)
+        canvas = self._canvas_ref() or other._canvas_ref()
+        if canvas is not None:
+            out._canvas_ref = weakref.ref(canvas)
+        return out
+
     def _repr_any_(self, method: str, *args: Any, **kwargs: Any) -> Any:
         from whitecanvas import new_canvas
 
@@ -154,7 +167,7 @@ class Layer(ABC):
             canvas.add_layer(self.copy())
             canvas.title.text = repr(self)
             return getattr(canvas, method)(*args, **kwargs)
-        return None
+        raise NotImplementedError("Cannot render without a canvas")
 
     def _repr_png_(self):
         """Return PNG representation of the layer."""

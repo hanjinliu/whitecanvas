@@ -159,3 +159,14 @@ def test_load_dataset():
     df = load_dataset("iris", type="polars")
     assert isinstance(df, pl.DataFrame)
     assert df.columns == ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]
+
+def test_add_operation():
+    canvas = new_canvas(backend="matplotlib")
+    l = canvas.add_line([1, 2, 3], [4, 5, 6])
+    m = canvas.add_markers([1, 2, 3], [4, 5, 6])
+    b = canvas.add_bars([1, 2, 3], [4, 5, 6])
+    lm = l + m
+    lmb = l + m + b
+    l_mb = l + (m + b)
+    lm._repr_png_()
+    lmb._repr_png_()

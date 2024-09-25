@@ -138,7 +138,7 @@ class LayerTuple(LayerContainer, Sequence[Layer]):
         return _legend.LegendItemCollection(items)
 
 
-class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
+class LayerCollection(LayerContainer, MutableSequence[_L]):
     _children: list[_L]
 
     def __getitem__(self, n: int) -> _L:
@@ -166,7 +166,25 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
     def __len__(self):
         return len(self._children)
 
+    def __add__(self, other: Layer) -> LayerCollection[Layer]:
+        if isinstance(other, LayerCollection):
+            out = LayerCollection(*self.to_list(), *other.to_list(), name=self.name)
+        else:
+            out = LayerCollection(*self.to_list(), other.copy(), name=self.name)
+        canvas = self._canvas_ref() or other._canvas_ref()
+        if canvas is not None:
+            out._canvas_ref = weakref.ref(canvas)
+        return out
+
+    def to_list(self, copy: bool = True) -> list[_L]:
+        """Return the list of layers."""
+        if copy:
+            return [l.copy() for l in self._children]
+        else:
+            return self._children.copy()
+
     def insert(self, n: int, layer: _L):
+        """Insert a layer at position n."""
         if _canvas := self._canvas_ref():
             _canvas._canvas()._plt_add_layer(layer._backend)
             layer._connect_canvas(_canvas)

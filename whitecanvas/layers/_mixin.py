@@ -37,7 +37,7 @@ from whitecanvas.utils.type_check import is_array, is_real_number
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    from whitecanvas.layers.group._collections import LayerCollectionBase
+    from whitecanvas.layers.group._collections import LayerCollection
 
 _L = TypeVar("_L", bound=PrimitiveLayer)
 _void = _Void()
@@ -735,7 +735,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
 
 
 class CollectionFace(MultiPropertyFaceBase):
-    _layer: LayerCollectionBase
+    _layer: LayerCollection
 
     def _iter_children(self) -> Iterator[FaceEdgeMixin]:
         yield from iter(self._layer)
@@ -783,7 +783,7 @@ class CollectionFace(MultiPropertyFaceBase):
 
 
 class CollectionEdge(MultiPropertyEdgeBase):
-    _layer: LayerCollectionBase
+    _layer: LayerCollection
 
     def _iter_children(self) -> Iterator[FaceEdgeMixin]:
         yield from iter(self._layer)

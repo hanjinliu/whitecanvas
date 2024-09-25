@@ -293,14 +293,14 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_lg.LabeledImage, _DF], Generic[_D
 
 
 class DFMultiHeatmap(
-    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_l.Image], _DF],
+    _shared.DataFrameLayerWrapper[_lg.LayerCollection[_l.Image], _DF],
     Generic[_DF],
 ):
     _NO_PADDING_NEEDED = True
 
     def __init__(
         self,
-        base: _lg.LayerCollectionBase[_l.Image],
+        base: _lg.LayerCollection[_l.Image],
         source: DataFrameWrapper[_DF],
         color_by: _p.ColorPlan,
         categories: list[tuple],
@@ -350,7 +350,7 @@ class DFMultiHeatmap(
                 backend=backend,
             )  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers, name=name)
+        base = _lg.LayerCollection(image_layers, name=name)
         return cls(base, src, color_by, categories)
 
     @classmethod
@@ -381,7 +381,7 @@ class DFMultiHeatmap(
                 range=(xrange, yrange), backend=backend,
             )  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers, name=name)
+        base = _lg.LayerCollection(image_layers, name=name)
         return cls(base, src, color_by, categories)
 
     @classmethod
@@ -425,7 +425,7 @@ class DFMultiHeatmap(
                     dens.reshape(1, -1), cmap=cmap, clim=clim, backend=backend,
                 ).fit_to(ymin, ymax, x - extent / 2, x + extent / 2)  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers, name=name)
+        base = _lg.LayerCollection(image_layers, name=name)
         return cls(base, src, color_by, categories)
 
     @staticmethod
@@ -496,14 +496,14 @@ _L = TypeVar("_L", bound=_lg.LineFillBase)
 
 
 class DFLineFillBase(
-    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_L], _DF],
+    _shared.DataFrameLayerWrapper[_lg.LayerCollection[_L], _DF],
     Generic[_L, _DF],
 ):
     _ATTACH_TO_AXIS = True
 
     def __init__(
         self,
-        base: _lg.LayerCollectionBase[_L],
+        base: _lg.LayerCollection[_L],
         source: DataFrameWrapper[_DF],
         categories: list[tuple[Any, ...]],
         splitby: tuple[str, ...],
@@ -606,7 +606,7 @@ class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
-        base: _lg.LayerCollectionBase[_lg.Histogram],
+        base: _lg.LayerCollection[_lg.Histogram],
         labels: list[tuple[Any, ...]],
         color: str | tuple[str, ...] | None = None,
         width: str | None = None,
@@ -663,7 +663,7 @@ class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
                 orient=ori, shape=shape, backend=backend,
             )  # fmt: skip
             layers.append(each_layer)
-        base = _lg.LayerCollectionBase(layers, name=name)
+        base = _lg.LayerCollection(layers, name=name)
         return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
 
 
@@ -671,7 +671,7 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
     def __init__(
         self,
         source: DataFrameWrapper[_DF],
-        base: _lg.LayerCollectionBase[_lg.Kde],
+        base: _lg.LayerCollection[_lg.Kde],
         labels: list[tuple[Any, ...]],
         color: str | tuple[str, ...] | None = None,
         width: str | None = None,
@@ -722,5 +722,5 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
                 arr, width=width, band_width=band_width, orient=ori, backend=backend,
             )  # fmt: skip
             layers.append(each_layer)
-        base = _lg.LayerCollectionBase(layers, name=name)
+        base = _lg.LayerCollection(layers, name=name)
         return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)

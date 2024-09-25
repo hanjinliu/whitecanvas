@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 _DF = TypeVar("_DF")
 
 
-class AreaCollection(_lg.LayerCollectionBase[_lg.Area]):
+class AreaCollection(_lg.LayerCollection[_lg.Area]):
     """Collection of lines."""
 
     _ATTACH_TO_AXIS = True

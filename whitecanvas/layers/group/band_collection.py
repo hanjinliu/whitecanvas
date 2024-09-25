@@ -10,7 +10,7 @@ from whitecanvas.layers._mixin import CollectionFaceEdgeMixin
 from whitecanvas.layers._primitive import Band
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import (
-    LayerCollectionBase,
+    LayerCollection,
     RichContainerEvents,
 )
 from whitecanvas.types import Orientation, XYYData
@@ -18,7 +18,7 @@ from whitecanvas.utils.normalize import as_array_1d, parse_texts
 
 
 class BandCollection(
-    LayerCollectionBase[Band],
+    LayerCollection[Band],
     CollectionFaceEdgeMixin,
 ):
     events: RichContainerEvents
@@ -31,7 +31,7 @@ class BandCollection(
         orient: Orientation = Orientation.VERTICAL,
         name: str | None = None,
     ):
-        LayerCollectionBase.__init__(self, bands, name=name)
+        LayerCollection.__init__(self, bands, name=name)
         CollectionFaceEdgeMixin.__init__(self)
         self._orient = orient
         self._init_events()

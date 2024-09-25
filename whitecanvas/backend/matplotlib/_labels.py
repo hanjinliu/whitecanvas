@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from cmap import Color
 from matplotlib import pyplot as plt
-from matplotlib.ticker import AutoLocator, AutoMinorLocator
+from matplotlib.ticker import AutoLocator, AutoMinorLocator, NullLocator
 
 from whitecanvas.types import LineStyle
 
@@ -149,11 +149,24 @@ class MplTicks(SupportsText):
     def _plt_override_labels(self, pos: list[float], labels: list[str]):
         axes = self._canvas()._axes
         getattr(axes, f"set_{self._axis_name}ticks")(pos, labels)
+        axis = getattr(self._canvas()._axes, f"get_{self._axis_name}axis")()
+        axis.set_minor_locator(NullLocator())
 
     def _plt_reset_override(self):
         # FIXME: This is not a perfect solution. It will update the x-axis scale.
         axis = getattr(self._canvas()._axes, f"get_{self._axis_name}axis")()
+        fontdict = self._fontdict
+        label_fontprops = axis.get_label().get_font_properties()
+        label_text = axis.get_label().get_text()
         axis.clear()
+        axis.set_major_locator(AutoLocator())
+        axis.set_minor_locator(AutoMinorLocator())
+        for x in self._get_tick_labels():
+            x.set_fontsize(fontdict["fontsize"])
+            x.set_color(fontdict["color"])
+            x.set_fontfamily(fontdict["family"])
+        axis.get_label().set_text(label_text)
+        axis.get_label().set_font_properties(label_fontprops)
 
     def _plt_set_color(self, color):
         d = self._fontdict.copy()

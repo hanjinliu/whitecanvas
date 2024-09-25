@@ -656,7 +656,7 @@ class LabeledImage(LayerContainer):
                 [], [], [], name="texts", backend=layer._backend_name
             ).with_font_multi()
         if colorbar is None:
-            colorbar = Colorbar(layer.cmap)
+            colorbar = Colorbar.from_cmap(layer.cmap)
             colorbar.visible = False
         layer.events.cmap.connect_setattr(colorbar, "cmap", maxargs=1)
         super().__init__([layer, texts, colorbar], name=name)

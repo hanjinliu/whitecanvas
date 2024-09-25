@@ -7,7 +7,7 @@ from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas.backend import Backend
-from whitecanvas.layers import Layer, _legend
+from whitecanvas.layers import _legend
 from whitecanvas.layers._mixin import (
     EnumArray,
     MultiEdge,
@@ -247,13 +247,13 @@ class MarkerCollection(LayerCollection[_Markers]):
 
     def __init__(
         self,
-        layers: list[_Markers],
-        *more_layers: _Markers,
+        *layers: list[_Markers],
         name: str | None = None,
     ):
-        if isinstance(layers, Layer):
-            layers = [layers]
-        layers = list(layers) + list(more_layers)
+        if len(layers) == 1 and isinstance(layers[0], (list, tuple)):
+            layers = layers[0]
+        else:
+            layers = list(layers)
         super().__init__(layers, name=name)
         self._face_namespace = MarkerCollectionFace(self)
         self._edge_namespace = MarkerCollectionEdge(self)

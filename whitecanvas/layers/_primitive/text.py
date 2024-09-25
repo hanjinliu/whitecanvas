@@ -159,7 +159,10 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
     @property
     def rotation(self) -> float:
         """Rotation of the text."""
-        return self._backend._plt_get_text_rotation()[0]
+        rot = self._backend._plt_get_text_rotation()
+        if len(rot) > 0:
+            return self._backend._plt_get_text_rotation()[0]
+        return 0.0
 
     @rotation.setter
     def rotation(self, rotation: float):

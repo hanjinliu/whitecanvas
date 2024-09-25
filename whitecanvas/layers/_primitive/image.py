@@ -460,7 +460,9 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         from whitecanvas.layers.group import Colorbar
 
         orient = Orientation.parse(orient)
-        cbar = Colorbar(self.cmap, name=f"colorbar<{self.name}>", orient=orient)
+        cbar = Colorbar.from_cmap(
+            self.cmap, name=f"{self.name}:colorbar", orient=orient
+        )
         if bbox is None:
             img_bbox = self.bbox
             if orient.is_vertical:

@@ -70,7 +70,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         backend: str | Backend | None = None,
     ) -> Self:
         splitby = _shared.join_columns(color, style, source=source)
-        base = _lg.LineCollection(segs, name=name, backend=backend)
+        base = _lg.LineCollection.from_segments(segs, name=name, backend=backend)
         self = cls(
             base, source, categories=categories, splitby=splitby,
             color_by=_p.ColorPlan.default(), style_by=_p.StylePlan.default(),

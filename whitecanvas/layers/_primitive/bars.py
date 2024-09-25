@@ -227,8 +227,9 @@ class Bars(
         """Create a Band from a dictionary."""
         return cls(
             d["data"]["x"], d["data"]["y"], d["bottom"], orient=d["orient"],
-            extent=d["extent"], name=d["name"], color=d["face"]["color"],
-            hatch=d["face"]["hatch"], backend=backend,
+            extent=d["extent"], name=d["name"], backend=backend,
+        ).with_face(
+            color=d["face"]["color"], hatch=d["face"]["hatch"],
         ).with_edge(
             color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
         )  # fmt: skip

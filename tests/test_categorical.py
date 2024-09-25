@@ -1,6 +1,6 @@
 import numpy as np
 
-from whitecanvas import new_canvas
+from whitecanvas import new_canvas, read_canvas
 from whitecanvas.core import new_jointgrid
 from ._utils import assert_color_array_equal, filter_warning
 import pytest
@@ -46,7 +46,7 @@ def test_cat(backend: str):
     kde.update_hatch("/").copy()
     with filter_warning(backend, "vispy"):
         canvas.add_legend()
-    canvas.write_json()
+    read_canvas(canvas.write_json())
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_cat_plots(backend: str, orient: str):
@@ -81,7 +81,7 @@ def test_cat_plots(backend: str, orient: str):
         cat_plt.add_rugplot(color="c").scale_by_density().move(0.1).copy()
     cat_plt.add_heatmap_hist(bins=4).copy()
     cat_plt.add_heatmap_hist(bins=4, color="c").copy()
-    canvas.write_json()
+    read_canvas(canvas.write_json())
 
 def test_cat_plots_with_sequential_color():
     df = {
@@ -164,7 +164,7 @@ def test_cat_xy(backend: str):
 
     if backend != "vispy":
         canvas.add_legend()
-
+    read_canvas(canvas.write_json())
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_agg(backend: str, orient: str):

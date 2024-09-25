@@ -92,7 +92,7 @@ class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):
     ) -> BoxPlot:
         children = construct_layers(d["children"], backend=backend)
         return cls(
-            **children,
+            *children,
             name=d.get("name"),
             orient=d.get("orient", "vertical"),
             capsize=d.get("capsize", 0.15),

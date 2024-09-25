@@ -36,7 +36,7 @@ class DataFrameLayerWrapper(LayerWrapper[_L], Generic[_L, _DF]):
         if isinstance(base, dict):
             base = construct_layer(base, backend=backend)
         if isinstance(source, dict):
-            source = from_dict(source, backend=backend)
+            source = from_dict(source)
         return cls(base=base, source=source)
 
     def to_dict(self) -> dict[str, Any]:

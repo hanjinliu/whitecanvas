@@ -182,11 +182,15 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create an Errorbars from a dictionary."""
-        return cls(
+        self = cls(
             d["data"]["x"], d["data"]["y0"], d["data"]["y1"], orient=d["orient"],
-            name=d["name"], color=d["color"], width=d["width"], style=d["style"],
-            antialias=d["antialias"], capsize=d["capsize"], backend=backend,
+            name=d["name"], antialias=d["antialias"], capsize=d["capsize"],
+            backend=backend,
         )  # fmt: skip
+        self.color = d["color"]
+        self.width = d["width"]
+        self.style = d["style"]
+        return self
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""

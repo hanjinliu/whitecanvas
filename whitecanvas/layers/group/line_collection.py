@@ -20,16 +20,18 @@ if TYPE_CHECKING:
 class LineCollection(LayerCollection[Line]):
     """Collection of lines."""
 
-    def __init__(
-        self,
+    @classmethod
+    def from_segments(
+        cls,
         segments: list[Any],
+        *,
         name: str | None = None,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         lines = [Line([], [], backend=backend) for _ in segments]
         for line, seg in zip(lines, segments):
             line.data = seg
-        super().__init__(lines, name=name)
+        return cls(lines, name=name)
 
     @property
     def data(self) -> list[XYData]:

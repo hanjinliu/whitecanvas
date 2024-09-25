@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
+
 from whitecanvas.utils.normalize import as_array_1d
 from whitecanvas.utils.type_check import is_real_number
 
@@ -29,6 +31,13 @@ class NoOffset(TextOffset):
     def __repr__(self) -> str:
         return "<NoOffset>"
 
+    @classmethod
+    def from_dict(cls, _: dict[str, Any]) -> NoOffset:
+        return cls()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "no"}
+
 
 class ConstantOffset(TextOffset):
     def __init__(self, x: float, y: float):
@@ -46,6 +55,13 @@ class ConstantOffset(TextOffset):
     def __repr__(self) -> str:
         return f"<ConstantOffset({self._x}, {self._y})>"
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ConstantOffset:
+        return cls(d["x"], d["y"])
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "constant", "x": self._x, "y": self._y}
+
 
 class CustomOffset(TextOffset):
     def __init__(self, x: Any, y: Any):
@@ -59,3 +75,23 @@ class CustomOffset(TextOffset):
 
     def __repr__(self) -> str:
         return f"<CustomOffset({self._x}, {self._y})>"
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> CustomOffset:
+        return cls(
+            np.asarray(d["x"], dtype=np.float32), np.asarray(d["y"], dtype=np.float32)
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "custom", "x": self._x, "y": self._y}
+
+
+def parse_offset_dict(d: dict[str, Any]) -> TextOffset:
+    if d["type"] == "no":
+        return NoOffset.from_dict(d)
+    elif d["type"] == "constant":
+        return ConstantOffset.from_dict(d)
+    elif d["type"] == "custom":
+        return CustomOffset.from_dict(d)
+    else:
+        raise ValueError(f"Unknown offset type: {d['type']}")

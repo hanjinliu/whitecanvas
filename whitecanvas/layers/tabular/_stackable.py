@@ -182,7 +182,6 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         self._width_by = width_by
         self._style_by = style_by
         self._hatch_by = hatch_by
-        self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._stackby))
 
     @classmethod
     def from_table(

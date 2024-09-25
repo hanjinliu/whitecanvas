@@ -163,7 +163,18 @@ class Layer(ABC):
         from whitecanvas import new_canvas
 
         if canvas := self._canvas_ref():
-            canvas = new_canvas(backend=canvas._get_backend(), size=(360, 240))
+            backend = canvas._get_backend()
+            if backend.name == "matplotlib":
+                import matplotlib.pyplot as plt
+
+                _old_mpl_backend = plt.get_backend()
+                plt.switch_backend("Agg")
+                try:
+                    canvas = new_canvas(backend=backend, size=(360, 240))
+                finally:
+                    plt.switch_backend(_old_mpl_backend)
+            else:
+                canvas = new_canvas(backend=backend, size=(360, 240))
             canvas.add_layer(self.copy())
             canvas.title.text = repr(self)
             return getattr(canvas, method)(*args, **kwargs)

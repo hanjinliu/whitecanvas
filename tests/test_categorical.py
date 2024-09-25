@@ -46,6 +46,7 @@ def test_cat(backend: str):
     kde.update_hatch("/").copy()
     with filter_warning(backend, "vispy"):
         canvas.add_legend()
+    canvas.write_json()
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_cat_plots(backend: str, orient: str):
@@ -80,6 +81,7 @@ def test_cat_plots(backend: str, orient: str):
         cat_plt.add_rugplot(color="c").scale_by_density().move(0.1).copy()
     cat_plt.add_heatmap_hist(bins=4).copy()
     cat_plt.add_heatmap_hist(bins=4, color="c").copy()
+    canvas.write_json()
 
 def test_cat_plots_with_sequential_color():
     df = {

@@ -107,7 +107,8 @@ class DataFrameWrapper(ABC, Generic[_T]):
         """Create a DataFrameWrapper from a dictionary."""
 
     def to_dict(self) -> dict[str, np.ndarray]:
-        return {k: self[k] for k in self.iter_keys()}
+        df_dict = {k: self[k] for k in self.iter_keys()}
+        return {"df_type": self.wrapper_type(), "data": df_dict}
 
     @staticmethod
     @abstractmethod
@@ -405,15 +406,15 @@ def parse(data: Any) -> DataFrameWrapper:
         raise TypeError(f"Unsupported data type: {type(data)}")
 
 
-def from_dict(data: dict[str, Any], typ: str | None = None) -> DataFrameWrapper:
+def from_dict(data: dict[str, Any]) -> DataFrameWrapper:
     """Create a DataFrameWrapper from a dictionary."""
-    if typ is None:
-        typ = data["df_type"]
+    df = data["data"]
+    typ = data["df_type"]
     if typ == "dict":
-        return DictWrapper.from_dict(data)
+        return DictWrapper.from_dict(df)
     elif typ == "pandas":
-        return PandasWrapper.from_dict(data)
+        return PandasWrapper.from_dict(df)
     elif typ == "polars":
-        return PolarsWrapper.from_dict(data)
+        return PolarsWrapper.from_dict(df)
     else:
         raise ValueError(f"Unsupported DataFrameWrapper type: {typ}")

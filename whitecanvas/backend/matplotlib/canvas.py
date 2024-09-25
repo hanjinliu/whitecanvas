@@ -428,6 +428,8 @@ class CanvasGrid:
         width = int(round(wmax / fig.canvas.device_pixel_ratio))
         height = int(round(hmax / fig.canvas.device_pixel_ratio))
         img = data.reshape((height, width, -1))
+
+        # TODO: trim image background
         return img
 
     def _plt_set_figsize(self, width: int, height: int):

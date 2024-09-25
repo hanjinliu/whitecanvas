@@ -16,6 +16,7 @@ from typing import (
 import numpy as np
 
 from whitecanvas._exceptions import ReferenceDeletedError
+from whitecanvas.canvas.dataframe._sorter import IdentitySorter
 from whitecanvas.layers.tabular import parse
 from whitecanvas.utils.collections import OrderedSet
 
@@ -66,7 +67,7 @@ class CatIterator(Generic[_DF]):
         self._cat_map_cache = {}
         self._numeric = numeric
         if sort_func is None:
-            sort_func = lambda x: x  # noqa: E731
+            sort_func = IdentitySorter()
         elif numeric:
             raise ValueError("sort_func is not allowed for numeric data.")
         self._sort_func = sort_func
@@ -83,7 +84,7 @@ class CatIterator(Generic[_DF]):
     def from_dict(cls, d: dict[str, Any]) -> CatIterator[_DF]:
         from whitecanvas.layers.tabular._df_compat import from_dict
 
-        df = from_dict(d["df"], d["df_type"])
+        df = from_dict(d["df"])
         return cls(
             df,
             d["offsets"],
@@ -93,8 +94,7 @@ class CatIterator(Generic[_DF]):
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "df": self._df,
-            "df_type": self._df.wrapper_type(),
+            "df": self._df.to_dict(),
             "offsets": self._offsets,
             "numeric": self._numeric,
             "sort_func": self._sort_func,

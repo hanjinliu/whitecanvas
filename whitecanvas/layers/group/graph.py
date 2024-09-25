@@ -1,15 +1,20 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from numpy.typing import NDArray
 
+from whitecanvas.backend._instance import Backend
 from whitecanvas.layers import _legend, _text_utils
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.layers._primitive import Markers, MultiLine, Texts
 from whitecanvas.layers.group._collections import LayerContainer
-from whitecanvas.layers.group._offsets import NoOffset, TextOffset
+from whitecanvas.layers.group._offsets import NoOffset, TextOffset, parse_offset_dict
 from whitecanvas.types import Alignment, ColorType
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class Graph(LayerContainer):
@@ -24,7 +29,7 @@ class Graph(LayerContainer):
         if offset is None:
             offset = NoOffset()
         super().__init__([nodes, edges, texts], name=name)
-        self._text_offset = offset
+        self._text_offset: TextOffset = offset
 
     def _default_ordering(self, n: int) -> list[int]:
         assert n == 3
@@ -99,6 +104,19 @@ class Graph(LayerContainer):
             family=fontfamily,
         )
         return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        children = construct_layers(d["children"], backend=backend)
+        if (offset := d.get("offset")) is not None:
+            offset = parse_offset_dict(offset)
+        return cls(*children, name=d.get("name"), offset=offset)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "offset": self._text_offset.to_dict(),
+        }
 
     def _as_legend_item(self):
         line = self.edges._as_legend_item()

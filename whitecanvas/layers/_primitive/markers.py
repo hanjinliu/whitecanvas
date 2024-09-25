@@ -142,14 +142,16 @@ class Markers(
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a Band from a dictionary."""
-        return cls(
-            d["data"]["x"], d["data"]["y"], size=d["size"], symbol=d["symbol"],
+        self = cls(
+            d["data"]["x"], d["data"]["y"], symbol=d["symbol"],
             name=d["name"], backend=backend,
         ).with_face(
             color=d["face"]["color"], hatch=d["face"]["hatch"]
         ).with_edge(
             color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
         )  # fmt: skip
+        self.size = d["size"]
+        return self
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the layer."""
@@ -192,10 +194,7 @@ class Markers(
         ndata = self.ndata
         if not isinstance(size, (float, int, np.number)):
             if not self._size_is_array:
-                raise ValueError(
-                    "Expected size to be a scalar. Use with_size_multi() to "
-                    "set multiple sizes."
-                )
+                return self.with_size_multi(size)
             size = as_array_1d(size)
             if size.size != ndata:
                 raise ValueError(

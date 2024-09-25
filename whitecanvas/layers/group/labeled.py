@@ -14,7 +14,7 @@ from whitecanvas.layers._primitive import Bars, Errorbars, Image, Line, Markers,
 from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import LayerContainer, RichContainerEvents
-from whitecanvas.layers.group._offsets import NoOffset, TextOffset
+from whitecanvas.layers.group._offsets import NoOffset, TextOffset, parse_offset_dict
 from whitecanvas.layers.group.colorbar import Colorbar
 from whitecanvas.layers.group.line_markers import Plot
 from whitecanvas.types import (
@@ -78,12 +78,15 @@ class _LabeledLayerBase(LayerContainer):
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         children = construct_layers(d["children"], backend=backend)
-        return cls(*children, name=d.get("name"), offset=d.get("offset"))
+        if (offset := d.get("offset")) is not None:
+            offset = parse_offset_dict(offset)
+        return cls(*children, name=d.get("name"), offset=offset)
 
     def to_dict(self) -> dict[str, Any]:
-        out = super().to_dict()
-        out["offset"] = self._text_offset
-        return out
+        return {
+            **super().to_dict(),
+            "offset": self._text_offset,
+        }
 
     @property
     def xerr(self) -> Errorbars:

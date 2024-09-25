@@ -277,7 +277,7 @@ class MapPlan(ABC, Generic[_V]):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
-        mapper = data.get["mapper"]
+        mapper = data.get("mapper")
         if isinstance(mapper, dict):
             if mapper["type"] == "const":
                 mapper = ConstMap(mapper["value"])

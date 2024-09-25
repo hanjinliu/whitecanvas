@@ -16,6 +16,18 @@ class _SerializableSorter(ABC, Generic[_T]):
     def to_dict(self) -> dict[str, str]: ...
 
 
+class IdentitySorter(_SerializableSorter[_T]):
+    def __call__(self, x: Sequence[_T]) -> Sequence[_T]:
+        return x
+
+    @classmethod
+    def from_dict(cls, *_) -> IdentitySorter[_T]:
+        return cls()
+
+    def to_dict(self) -> dict[str, str]:
+        return {"type": "identity"}
+
+
 class SimpleSorter(_SerializableSorter[_T]):
     def __init__(self, ascending: bool) -> None:
         self._ascending = ascending
@@ -66,7 +78,9 @@ class ManualSorter(_SerializableSorter[_T]):
 
 
 def construct_sorter(d: dict[str, str]) -> _SerializableSorter[_T]:
-    if d["type"] == "ascending" or d["type"] == "descending":
+    if d["type"] == "identity":
+        return IdentitySorter.from_dict(d)
+    elif d["type"] == "ascending" or d["type"] == "descending":
         return SimpleSorter.from_dict(d)
     elif d["type"] == "manual":
         return ManualSorter.from_dict(d)

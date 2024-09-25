@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,11 @@ import numpy as np
 from cmap import Color, Colormap
 
 from whitecanvas.canvas._palette import ColorPalette
+
+
+@lru_cache(maxsize=1)
+def catalog_names():
+    return set(Colormap.catalog().keys())
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -36,16 +42,15 @@ class CustomEncoder(json.JSONEncoder):
         elif isinstance(obj, Color):
             return obj.hex
         elif isinstance(obj, Colormap):
-            if obj.name in Colormap.catalog():
+            if obj.name in catalog_names():
                 return obj.name
-            cmap_dict = obj.as_dict()
-            return super().default(
-                [(float(k), Color(v).hex) for k, v in cmap_dict.items()]
-            )
+            return [(float(k), v.hex) for k, v in obj.color_stops]
         elif isinstance(obj, ColorPalette):
             return self.default(obj._cmap)
         elif hasattr(obj, "to_dict"):
-            return obj.to_dict()
+            return color_to_hex(obj.to_dict())
+        elif callable(obj):
+            raise TypeError(f"Function {obj!r} is not JSON serializable")
         return super().default(obj)
 
 
@@ -54,7 +59,7 @@ def color_to_hex(d: dict[str, Any]) -> dict[str, Any]:
     for k, v in d.items():
         if isinstance(v, dict):
             to_update[k] = color_to_hex(v)
-        elif isinstance(v, list):
+        elif isinstance(v, (tuple, list)):
             to_update[k] = [color_to_hex(e) if isinstance(e, dict) else e for e in v]
         elif k == "color" and isinstance(v, np.ndarray):
             if v.ndim == 1:

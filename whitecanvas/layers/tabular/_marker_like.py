@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, overload
 
 import numpy as np
 from cmap import Color, Colormap
@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     from whitecanvas.canvas import CanvasBase
 
 _DF = TypeVar("_DF")
-_Cols = Union[str, "tuple[str, ...]"]
 _void = _Void()
 
 
@@ -276,8 +275,7 @@ class DFMarkers(
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a DFViolinPlot from a dictionary."""
-        base = d["base"]
-        source = d["source"]
+        base, source = d["base"], d["source"]
         if isinstance(base, dict):
             base = construct_layer(base, backend=backend)
         if isinstance(source, dict):
@@ -707,8 +705,7 @@ class DFBars(
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a DFViolinPlot from a dictionary."""
-        base = d["base"]
-        source = d["source"]
+        base, source = d["base"], d["source"]
         if isinstance(base, dict):
             base = construct_layer(base, backend=backend)
         if isinstance(source, dict):
@@ -872,8 +869,7 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a DFViolinPlot from a dictionary."""
-        base = d["base"]
-        source = d["source"]
+        base, source = d["base"], d["source"]
         if isinstance(base, dict):
             base = construct_layer(base, backend=backend)
         if isinstance(source, dict):
@@ -976,8 +972,7 @@ class DFRugGroups(DFRug[_DF]):
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a DFRugGroups from a dictionary."""
-        base = d["base"]
-        source = d["source"]
+        base, source = d["base"], d["source"]
         if isinstance(base, dict):
             base = construct_layer(base, backend=backend)
         if isinstance(source, dict):

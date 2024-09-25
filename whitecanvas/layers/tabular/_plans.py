@@ -182,6 +182,16 @@ class CyclicPlan(CategoricalPlan[_V]):
             entries = [("", values[0])]
         return entries
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls(tuple(data["by"]), [cls._norm_value(v) for v in data["values"]])
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "by": self.by,
+            "values": self.values,
+        }
+
 
 class MapPlan(ABC, Generic[_V]):
     def __init__(
@@ -252,6 +262,23 @@ class MapPlan(ABC, Generic[_V]):
             except StopIteration:
                 input_dict = {}
         return self._mapper(input_dict)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        mapper = data.get["mapper"]
+        if isinstance(mapper, dict):
+            if mapper["type"] == "const":
+                mapper = ConstMap(mapper["value"])
+            elif mapper["type"] == "ranged":
+                mapper = RangedMap.from_dict(mapper)
+            elif mapper["type"] == "colormap":
+                mapper = ColormapMap.from_dict(mapper)
+            else:
+                raise ValueError(f"Unknown mapper type: {mapper['type']}")
+        return cls(data["on"], mapper)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"on": self._on, "mapper": self._mapper}
 
 
 class ScalarMapPlan(MapPlan[float]):
@@ -394,22 +421,30 @@ class ColormapPlan(MapPlan[NDArray[np.float32]]):
 class WidthPlan(ScalarMapPlan):
     @classmethod
     def _default_mapper(cls):
-        return lambda _: 1.0
+        return ConstMap(1.0)
 
 
 class SizePlan(ScalarMapPlan):
     @classmethod
     def _default_mapper(cls):
-        return lambda _: 12.0
+        return ConstMap(12.0)
 
 
 class AlphaPlan(ScalarMapPlan):
     @classmethod
     def _default_mapper(cls):
-        return lambda _: 1.0
+        return ConstMap(1.0)
 
 
-class ConstMap:
+class _SerializableMap(ABC):
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self: ...
+    @abstractmethod
+    def to_dict(self) -> dict[str, Any]: ...
+
+
+class ConstMap(_SerializableMap):
     def __init__(self, value):
         self._value = value
 
@@ -420,8 +455,15 @@ class ConstMap:
         series = next(iter(values.values()), np.zeros(0))
         return [self._value] * series.size
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls(data["value"])
 
-class RangedMap:
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "const", "value": self._value}
+
+
+class RangedMap(_SerializableMap):
     def __init__(self, on, range=None, domain=None):
         _check_min_max(range)
         _check_min_max(domain)
@@ -468,6 +510,18 @@ class RangedMap:
             xs = np.linspace(0, 1, 3)
             return [((x * (w1 - w0) + w0), x * (amax - amin) + amin) for x in xs]
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls(data["on"], data.get("range"), data.get("domain"))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": "ranged",
+            "on": self._on,
+            "range": self._range,
+            "domain": self._domain,
+        }
+
 
 class ColormapMap:
     def __init__(self, on, cmap: Colormap, clim=None):
@@ -506,6 +560,18 @@ class ColormapMap:
         else:
             xs = self._cmap.color_stops
         return [(self._cmap(x), amin * (1 - x) + amax * x) for x in xs]
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls(data["on"], Colormap(data["cmap"]), data.get("clim"))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": "colormap",
+            "on": self._on,
+            "cmap": self._cmap,
+            "clim": self._clim,
+        }
 
 
 def _check_min_max(val: tuple[float, float] | None = None):

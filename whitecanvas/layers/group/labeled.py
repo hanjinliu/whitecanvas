@@ -397,9 +397,9 @@ class LabeledBars(
         backend: str | Backend | None = None,
     ) -> LabeledBars[_mixin.MultiFace, _mixin.MonoEdge]:
         x, height, err_data = _init_mean_sd(x, data, color)
-        bars = Bars(x, height, extent=extent, backend=backend).with_face_multi(
-            color=color, hatch=hatch, alpha=alpha
-        )
+        bars = Bars(
+            x, height, orient=orient, extent=extent, backend=backend
+        ).with_face_multi(color=color, hatch=hatch, alpha=alpha)
         xerr, yerr = _init_error_bars(x, height, err_data, orient, capsize, backend)
         return cls(bars, xerr=xerr, yerr=yerr, name=name)
 

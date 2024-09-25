@@ -202,7 +202,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         canvas = self._canvas()
         xj = _jitter.IdentityJitter(self._get_x())
         yj = _jitter.IdentityJitter(self._get_y())
-        layer = _lt.DFMarkers(
+        layer = _lt.DFMarkers.from_jitters(
             self._df, xj, yj, name=name, color=color, hatch=hatch,
             size=size, symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip

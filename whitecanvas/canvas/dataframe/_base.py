@@ -3,6 +3,7 @@ from __future__ import annotations
 import weakref
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Generic,
     Iterator,
@@ -77,6 +78,27 @@ class CatIterator(Generic[_DF]):
     @property
     def offsets(self) -> tuple[str, ...]:
         return self._offsets
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> CatIterator[_DF]:
+        from whitecanvas.layers.tabular._df_compat import from_dict
+
+        df = from_dict(d["df"], d["df_type"])
+        return cls(
+            df,
+            d["offsets"],
+            d.get("numeric", False),
+            d.get("sort_func", None),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "df": self._df,
+            "df_type": self._df.wrapper_type(),
+            "offsets": self._offsets,
+            "numeric": self._numeric,
+            "sort_func": self._sort_func,
+        }
 
     def category_map(self, columns: tuple[str, ...]) -> dict[tuple, int]:
         """Calculate how to map category columns to integers."""

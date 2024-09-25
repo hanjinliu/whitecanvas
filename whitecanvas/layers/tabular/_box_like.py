@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generic, Literal, Sequence, TypeVar
+from abc import abstractmethod
+from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, Sequence, TypeVar
 
 import numpy as np
 from cmap import Color
@@ -11,6 +12,7 @@ from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import Layer, _legend, _mixin
 from whitecanvas.layers import group as _lg
+from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
@@ -249,13 +251,64 @@ class _BoxLikeMixin:
         return _shared.list_to_df(self._categories, self._splitby)
 
 
-class DFViolinPlot(
-    _shared.DataFrameLayerWrapper[_lg.ViolinPlot, _DF],
-    _BoxLikeMixin,
-    Generic[_DF],
-):
+class _BoxLikeWrapper(_shared.DataFrameLayerWrapper[_L, _DF], _BoxLikeMixin):
     def __init__(
         self,
+        base: _L,
+        cat: CatIterator[_DF],
+        categories: list[tuple],
+        value: str,
+        dodge: tuple[str, ...],
+        splitby: tuple[str, ...],
+        color_by: _p.ColorPlan,
+        hatch_by: _p.HatchPlan,
+    ):
+        self._value = value
+        self._dodge = dodge
+        self._cat_iter = cat
+        super().__init__(base, cat.df)
+        _BoxLikeMixin.__init__(self, categories, splitby, color_by, hatch_by)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a DFViolinPlot from a dictionary."""
+        from whitecanvas.canvas.dataframe._base import CatIterator
+
+        base = d["base"]
+        cat_iter = d["cat_iter"]
+        if isinstance(base, dict):
+            base = construct_layer(base, backend=backend)
+        if isinstance(cat_iter, dict):
+            cat_iter = CatIterator.from_dict(cat_iter)
+        return cls(
+            base,
+            cat_iter,
+            categories=d["categories"],
+            value=d["value"],
+            dodge=d["dodge"],
+            splitby=d["split_by"],
+            color_by=d["color_by"],
+            hatch_by=d["hatch_by"],
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "cat_iter": self._cat_iter,
+            "categories": self._categories,
+            "value": self._value,
+            "dodge": self._dodge,
+            "split_by": self._splitby,
+            "color_by": self._color_by,
+            "hatch_by": self._hatch_by,
+        }
+
+
+class DFViolinPlot(_BoxLikeWrapper[_lg.ViolinPlot, _DF], Generic[_DF]):
+    @classmethod
+    def from_cat_iter(
+        cls,
         cat: CatIterator[_DF],
         value: str,
         color: str | tuple[str, ...] | None = None,
@@ -266,7 +319,7 @@ class DFViolinPlot(
         extent: float = 0.8,
         shape: Literal["both", "left", "right"] = "both",
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         _splitby, dodge = _shared.norm_dodge(
             cat.df, cat.offsets, color, hatch, dodge=dodge
         )  # fmt: skip
@@ -277,18 +330,35 @@ class DFViolinPlot(
             x, arr, name=name, orient=orient, shape=shape, extent=_extent,
             backend=backend,
         )  # fmt: skip
-        super().__init__(base, cat.df)
-        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
-        self._offsets = cat.offsets
-        self._value = value
-        self._dodge = dodge
-        self._numeric = cat._numeric
+        self = cls(base, cat, categories, value, dodge, _splitby, color_by, hatch_by)
         self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
+        return self
 
     @property
     def orient(self) -> Orientation:
         """Orientation of the violins."""
         return self._base_layer.orient
+
+    @property
+    def shape(self) -> Literal["both", "left", "right"]:
+        """Shape of the violins."""
+        return self._base_layer._shape
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a DFViolinPlot from a dictionary."""
+        return cls(
+            d["cat_iter"],
+            d["value"],
+            color=d["color"],
+            hatch=d["hatch"],
+            dodge=d["dodge"],
+            name=d["name"],
+            orient=Orientation.parse(d["orient"]),
+            extent=d["extent"],
+            shape=d["shape"],
+            backend=backend,
+        )
 
     def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Move the layer by the given shift."""
@@ -332,8 +402,7 @@ class DFViolinPlot(
         else:
             colors = Color("#1F1F1F")
         jitter = _jitter.CategoricalJitter(
-            self._splitby,
-            self._make_cat_iterator().prep_position_map(self._splitby, self._dodge),
+            self._splitby, self._cat_iter.prep_position_map(self._splitby, self._dodge)
         )
         if self.base._shape == "both":
             align = "center"
@@ -391,12 +460,12 @@ class DFViolinPlot(
                 colors = Color("#1F1F1F")
         if width is None:
             width = self.base.edge.width.mean()
-        box = DFBoxPlot(
-            self._make_cat_iterator(), self._value, name=f"boxplot-of-{self.name}",
-            color=None, hatch=Hatch.SOLID, dodge=self._dodge, width=width,
-            orient=self.orient, capsize=capsize, extent=extent,
-            backend=canvas._get_backend(),
+        box = DFBoxPlot.from_cat_iter(
+            self._cat_iter, self._value, name=f"{self.name}:boxplot",
+            color=None, hatch=Hatch.SOLID, dodge=self._dodge, orient=self.orient,
+            capsize=capsize, extent=extent, backend=canvas._get_backend(),
         )  # fmt: skip
+        box.base.edge.width = width
         box.base.boxes.face.color = colors
         box.base.edge.color = colors
         box.base.medians.color = Color(median_color)
@@ -448,7 +517,7 @@ class DFViolinPlot(
         is_edge_only = self._is_edge_only()
 
         # category iterator is used to calculate positions and indices
-        _cat_self = self._make_cat_iterator()
+        _cat_self = self._cat_iter
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
 
@@ -474,8 +543,8 @@ class DFViolinPlot(
         df_outliers = parse(df_outliers)
         xj = _jitter.UniformJitter(self._splitby, _pos_map, extent=_extent, seed=seed)
         yj = _jitter.IdentityJitter(self._value).check(df_outliers)
-        new = DFMarkerGroups(
-            df_outliers, xj, yj, name=f"outliers-of-{self.name}", color=Color("black"),
+        new = DFMarkerGroups.from_jitters(
+            df_outliers, xj, yj, name=f"{self.name}:outliers", color=Color("black"),
             orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is None:
@@ -524,14 +593,14 @@ class DFViolinPlot(
             color = Color(color)
 
         # category iterator is used to calculate positions and indices
-        _cat_self = self._make_cat_iterator()
+        _cat_self = self._cat_iter
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
         df = self._source
         xj = _jitter.UniformJitter(self._splitby, _pos_map, extent=_extent, seed=seed)
         yj = _jitter.IdentityJitter(self._value).check(df)
-        new = DFMarkerGroups(
-            df, xj, yj, name=f"outliers-of-{self.name}", color=color,
+        new = DFMarkerGroups.from_jitters(
+            df, xj, yj, name=f"{self.name}:strip", color=color,
             orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
         if self._is_edge_only():
@@ -578,7 +647,7 @@ class DFViolinPlot(
             color = Color(color)
 
         # category iterator is used to calculate positions and indices
-        _cat_self = self._make_cat_iterator()
+        _cat_self = self._cat_iter
         _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
         _extent = _cat_self.zoom_factor(self._dodge) * extent
         df = self._source
@@ -590,8 +659,8 @@ class DFViolinPlot(
             self._splitby, _pos_map, self._value, lims, extent=_extent
         )
         yj = _jitter.IdentityJitter(self._value).check(df)
-        new = DFMarkerGroups(
-            df, xj, yj, name=f"outliers-of-{self.name}", color=color,
+        new = DFMarkerGroups.from_jitters(
+            df, xj, yj, name=f"{self.name}:swarm", color=color,
             orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
         if self._is_edge_only():
@@ -620,32 +689,25 @@ class DFViolinPlot(
     def _as_legend_item(self) -> _legend.LegendItemCollection:
         return _BoxLikeMixin._as_legend_item(self)
 
-    def _make_cat_iterator(self) -> CatIterator[_DF]:
-        from whitecanvas.canvas.dataframe._base import CatIterator
-
-        return CatIterator(self._source, offsets=self._offsets, numeric=self._numeric)
-
     def _is_edge_only(self) -> bool:
         return np.all(self.base.face.alpha < 1e-6)
 
 
-class DFBoxPlot(
-    _shared.DataFrameLayerWrapper[_lg.BoxPlot, _DF], _BoxLikeMixin, Generic[_DF]
-):
-    def __init__(
-        self,
+class DFBoxPlot(_BoxLikeWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
+    @classmethod
+    def from_cat_iter(
+        cls,
         cat: CatIterator[_DF],
         value: str,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
-        width: float = 1.0,
         dodge: str | tuple[str, ...] | bool | None = None,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         capsize: float = 0.1,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         _splitby, dodge = _shared.norm_dodge(
             cat.df, cat.offsets, color, hatch, dodge=dodge,
         )  # fmt: skip
@@ -657,13 +719,7 @@ class DFBoxPlot(
             x, arr, name=name, orient=orient, capsize=_capsize, extent=_extent,
             backend=backend,
         )  # fmt: skip
-        base.edge.width = width
-        super().__init__(base, cat.df)
-        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
-        self._offsets = cat.offsets
-        self._value = value
-        self._dodge = dodge
-        self._numeric = cat._numeric
+        return cls(base, cat, categories, value, dodge, _splitby, color_by, hatch_by)
 
     @property
     def orient(self) -> Orientation:
@@ -728,7 +784,7 @@ class DFBoxPlot(
             If True, the whiskers of the box plot will be updated to exclude the
             outliers.
         """
-        from whitecanvas.canvas.dataframe._base import CatIterator
+        from whitecanvas.canvas.dataframe._base import CatIterator  # noqa: F401
         from whitecanvas.layers.tabular import DFMarkerGroups
 
         canvas = self._canvas_ref()
@@ -739,9 +795,8 @@ class DFBoxPlot(
         is_edge_only = np.all(self.base.boxes.face.alpha < 1e-6)
 
         # category iterator is used to calculate positions and indices
-        _cat_self = CatIterator(self._source, self._offsets, self._numeric)
-        _pos_map = _cat_self.prep_position_map(self._splitby, self._dodge)
-        _extent = _cat_self.zoom_factor(self._dodge) * extent
+        _pos_map = self._cat_iter.prep_position_map(self._splitby, self._dodge)
+        _extent = self._cat_iter.zoom_factor(self._dodge) * extent
 
         # calculate outliers and update the separators
         df_outliers = {c: [] for c in (*self._splitby, self._value)}
@@ -770,8 +825,8 @@ class DFBoxPlot(
         df_outliers = parse(df_outliers)
         xj = _jitter.UniformJitter(self._splitby, _pos_map, extent=_extent, seed=seed)
         yj = _jitter.IdentityJitter(self._value).check(df_outliers)
-        new = DFMarkerGroups(
-            df_outliers, xj, yj, name=f"outliers-of-{self.name}", color=Color("black"),
+        new = DFMarkerGroups.from_jitters(
+            df_outliers, xj, yj, name=f"{self.name}:outliers", color=Color("black"),
             orient=self.orient, symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
         if color is None:
@@ -805,9 +860,7 @@ class DFBoxPlot(
         return _BoxLikeMixin._as_legend_item(self)
 
 
-class _EstimatorMixin(_BoxLikeMixin):
-    orient: Orientation
-
+class _EstimatorWrapper(_BoxLikeWrapper[_L, _DF]):
     def est_by_mean(self) -> Self:
         """Set estimator to mean."""
 
@@ -879,12 +932,35 @@ class _EstimatorMixin(_BoxLikeMixin):
         self._set_error_values(err_low, err_high)
         return self
 
+    @abstractmethod
+    def _get_arrays(self) -> list[np.ndarray]: ...
+    @abstractmethod
+    def _set_estimation_values(self, est): ...
+    @abstractmethod
+    def _set_error_values(self, err_low, err_high): ...
 
-class DFPointPlot(
-    _shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], _EstimatorMixin, Generic[_DF]
-):
+
+class DFPointPlot(_EstimatorWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):
     def __init__(
         self,
+        base: _lg.LabeledPlot,
+        cat: CatIterator[_DF],
+        categories: list[tuple],
+        value: str,
+        dodge: tuple[str, ...],
+        splitby: tuple[str, ...],
+        color_by: _p.ColorPlan,
+        hatch_by: _p.HatchPlan,
+    ):
+        super().__init__(
+            base, cat, categories, value, dodge, splitby, color_by, hatch_by
+        )
+        self._arrays: list[np.ndarray] | None = None  # cache of the arrays
+        self._orient = Orientation.VERTICAL
+
+    @classmethod
+    def from_cat_iter(
+        cls,
         cat: CatIterator[_DF],
         value: str,
         color: str | tuple[str, ...] | None = None,
@@ -894,7 +970,7 @@ class DFPointPlot(
         orient: Orientation = Orientation.VERTICAL,
         capsize: float = 0.1,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         _splitby, dodge = _shared.norm_dodge(
             cat.df, cat.offsets, color, hatch, dodge=dodge,
         )  # fmt: skip
@@ -904,12 +980,11 @@ class DFPointPlot(
         base = _lg.LabeledPlot.from_arrays(
             x, arr, name=name, orient=orient, capsize=_capsize, backend=backend,
         )  # fmt: skip
-        self._arrays = arr
-        super().__init__(base, cat.df)
-        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
+        self = cls(base, cat, categories, value, dodge, _splitby, color_by, hatch_by)
         base.with_edge(color=theme.get_theme().foreground_color)
-        self._orient = orient
-        self._numeric = cat._numeric
+        self._arrays = arr
+        self._orient = Orientation.parse(orient)
+        return self
 
     @property
     def orient(self) -> Orientation:
@@ -929,6 +1004,10 @@ class DFPointPlot(
         return self
 
     def _get_arrays(self) -> list[np.ndarray]:
+        if self._arrays is None:
+            self._arrays = self._cat_iter.prep_arrays(
+                self._splitby, self._value, dodge=self._dodge
+            )[1]
         return self._arrays
 
     def _set_estimation_values(self, est):
@@ -961,11 +1040,26 @@ class DFPointPlot(
         return _BoxLikeMixin._as_legend_item(self)
 
 
-class DFBarPlot(
-    _shared.DataFrameLayerWrapper[_lg.LabeledBars, _DF], _EstimatorMixin, Generic[_DF]
-):
+class DFBarPlot(_EstimatorWrapper[_lg.LabeledBars, _DF], Generic[_DF]):
     def __init__(
         self,
+        base: _lg.LabeledBars,
+        cat: CatIterator[_DF],
+        categories: list[tuple],
+        value: str,
+        dodge: tuple[str, ...],
+        splitby: tuple[str, ...],
+        color_by: _p.ColorPlan,
+        hatch_by: _p.HatchPlan,
+    ):
+        super().__init__(
+            base, cat, categories, value, dodge, splitby, color_by, hatch_by
+        )
+        self._arrays: list[np.ndarray] | None = None  # cache of the arrays
+
+    @classmethod
+    def from_cat_iter(
+        cls,
         cat: CatIterator[_DF],
         value: str,
         color: str | tuple[str, ...] | None = None,
@@ -976,7 +1070,7 @@ class DFBarPlot(
         capsize: float = 0.1,
         extent: float = 0.8,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         _splitby, dodge = _shared.norm_dodge(
             cat.df, cat.offsets, color, hatch, dodge=dodge,
         )  # fmt: skip
@@ -988,18 +1082,20 @@ class DFBarPlot(
             x, arr, name=name, orient=orient, capsize=_capsize, extent=_extent,
             backend=backend,
         )  # fmt: skip
-        self._arrays = arr
-        super().__init__(base, cat.df)
-        _BoxLikeMixin.__init__(self, categories, _splitby, color_by, hatch_by)
+        self = cls(base, cat, categories, value, dodge, _splitby, color_by, hatch_by)
         base.with_edge(color=theme.get_theme().foreground_color)
-        self._orient = orient
-        self._numeric = cat._numeric
+        self._arrays = arr
+        return self
 
     @property
     def orient(self) -> Orientation:
         return self._base_layer.bars.orient
 
     def _get_arrays(self) -> list[np.ndarray]:
+        if self._arrays is None:
+            self._arrays = self._cat_iter.prep_arrays(
+                self._splitby, self._value, dodge=self._dodge
+            )[1]
         return self._arrays
 
     def _set_estimation_values(self, est):
@@ -1019,7 +1115,7 @@ class DFBarPlot(
         """Move the layer by the given shift."""
         base = self._base_layer
         data = base.data
-        if self._orient.is_vertical:
+        if self.orient.is_vertical:
             base.set_data(data.x + shift, data.y)
         else:
             base.set_data(data.x, data.y + shift)

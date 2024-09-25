@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 import numpy as np
 
 from whitecanvas import theme
-from whitecanvas.canvas.dataframe import _misc
+from whitecanvas.canvas.dataframe import _sorter
 from whitecanvas.canvas.dataframe._base import AggMethods, BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter, _shared
@@ -261,10 +261,9 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         order : sequence of any
             The order to sort the data.
         """
-        order_normed = tuple(u if isinstance(u, tuple) else (u,) for u in order)
         return type(self)(
             self._canvas(), self._df, self._offset, self._value, self._update_labels,
-            sort_func=_misc.make_sorter_manual(order_normed)
+            sort_func=_sorter.ManualSorter.norm_tuple(order)
         )  # fmt: skip
 
     def sort(self, *, ascending: bool = True) -> Self:
@@ -282,7 +281,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             self._offset,
             self._value,
             self._update_labels,
-            sort_func=_misc.sorter_ascending if ascending else _misc.sorter_descending,
+            sort_func=_sorter.SimpleSorter(ascending),
         )
 
     ### 1-D categorical ###
@@ -333,7 +332,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Violin plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.DFViolinPlot(
+        layer = _lt.DFViolinPlot.from_cat_iter(
             self._cat_iter, self._get_value(), name=name, color=color, hatch=hatch,
             dodge=dodge, extent=extent, shape=shape, orient=self._orient,
             backend=canvas._get_backend(),
@@ -387,7 +386,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Box plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.DFBoxPlot(
+        layer = _lt.DFBoxPlot.from_cat_iter(
             self._cat_iter, self._get_value(), name=name, color=color, hatch=hatch,
             dodge=dodge, orient=self._orient, capsize=capsize, extent=extent,
             backend=canvas._get_backend(),
@@ -444,7 +443,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Point plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.DFPointPlot(
+        layer = _lt.DFPointPlot.from_cat_iter(
             self._cat_iter, self._get_value(), name=name, color=color, hatch=hatch,
             dodge=dodge, orient=self._orient, capsize=capsize,
             backend=canvas._get_backend(),
@@ -504,7 +503,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
             Bar plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.DFBarPlot(
+        layer = _lt.DFBarPlot.from_cat_iter(
             self._cat_iter, self._get_value(), name=name, color=color, hatch=hatch,
             dodge=dodge, orient=self._orient, capsize=capsize, extent=extent,
             backend=canvas._get_backend(),
@@ -586,7 +585,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         yj = _jitter.IdentityJitter(self._get_value()).check(df)
         if not self._orient.is_vertical:
             xj, yj = yj, xj
-        layer = _lt.DFMarkerGroups(
+        layer = _lt.DFMarkerGroups.from_jitters(
             df, xj, yj, name=name, color=color, hatch=hatch, orient=self._orient,
             symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -679,7 +678,7 @@ class OneAxisCatPlotter(BaseCatPlotter[_C, _DF]):
         yj = _jitter.IdentityJitter(val).check(df)
         if not self._orient.is_vertical:
             xj, yj = yj, xj
-        layer = _lt.DFMarkerGroups(
+        layer = _lt.DFMarkerGroups.from_jitters(
             df, xj, yj, name=name, color=color, hatch=hatch, orient=self._orient,
             symbol=symbol, size=size, backend=canvas._get_backend(),
         )  # fmt: skip
@@ -938,7 +937,7 @@ class OneAxisCatAggPlotter(BaseCatPlotter[_C, _DF]):
         yj = _jitter.IdentityJitter(self._value).check(df_agg)
         if not self._orient.is_vertical:
             xj, yj = yj, xj
-        layer = _lt.DFMarkers(
+        layer = _lt.DFMarkers.from_jitters(
             df_agg, xj, yj, name=name, color=color, hatch=hatch, size=size,
             symbol=symbol, backend=canvas._get_backend(),
         )  # fmt: skip

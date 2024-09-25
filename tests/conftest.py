@@ -23,8 +23,11 @@ def backend(request: pytest.FixtureRequest):
             pytest.fail("Failed in mock backend")
     yield request.param
 
-    if request.node.rep_call.failed:
-        request.function.failed = request.param
+    try:
+        if request.node.rep_call.failed:
+            request.function.failed = request.param
+    except AttributeError:
+        pass
     _cleanup(request)
 
 def _cleanup(request: pytest.FixtureRequest):

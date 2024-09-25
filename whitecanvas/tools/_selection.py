@@ -25,6 +25,8 @@ from whitecanvas.tools._selection_types import (
     RectSelection,
     SelectionMode,
     SpanSelection,
+    XSpanSelection,
+    YSpanSelection,
 )
 from whitecanvas.types import (
     ColorType,
@@ -315,9 +317,8 @@ class LineSelectionTool(SelectionToolBase[Line]):
 
 class _SpanSelectionTool(SelectionToolBase[Spans]):
     @property
-    def selection(self) -> SpanSelection:
-        span = self._layer.data[0]
-        return SpanSelection(*sorted(span))
+    @abstractmethod
+    def selection(self) -> SpanSelection: ...
 
     @property
     def face(self) -> ConstFace:
@@ -342,6 +343,11 @@ class _SpanSelectionTool(SelectionToolBase[Spans]):
 
 
 class XSpanSelectionTool(_SpanSelectionTool):
+    @property
+    def selection(self) -> XSpanSelection:
+        span = self._layer.data[0]
+        return XSpanSelection(*sorted(span))
+
     def _create_layer(self) -> Spans:
         layer = Spans([[0, 1]], orient="vertical", color="red", alpha=0.25)
         layer.visible = False
@@ -359,6 +365,11 @@ class XSpanSelectionTool(_SpanSelectionTool):
 
 
 class YSpanSelectionTool(_SpanSelectionTool):
+    @property
+    def selection(self) -> YSpanSelection:
+        span = self._layer.data[0]
+        return YSpanSelection(*sorted(span))
+
     def _create_layer(self) -> Spans:
         layer = Spans([[0, 1]], orient="horizontal", color="red", alpha=0.25)
         layer.visible = False

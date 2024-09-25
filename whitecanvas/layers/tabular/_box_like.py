@@ -285,10 +285,10 @@ class _BoxLikeWrapper(_shared.DataFrameLayerWrapper[_L, _DF], _BoxLikeMixin):
             cat_iter,
             categories=d["categories"],
             value=d["value"],
-            dodge=d["dodge"],
-            splitby=d["split_by"],
-            color_by=d["color_by"],
-            hatch_by=d["hatch_by"],
+            dodge=tuple(d["dodge"]),
+            splitby=tuple(d["split_by"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            hatch_by=_p.HatchPlan.from_dict_or_plan(d["hatch_by"]),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -343,22 +343,6 @@ class DFViolinPlot(_BoxLikeWrapper[_lg.ViolinPlot, _DF], Generic[_DF]):
     def shape(self) -> Literal["both", "left", "right"]:
         """Shape of the violins."""
         return self._base_layer._shape
-
-    @classmethod
-    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
-        """Create a DFViolinPlot from a dictionary."""
-        return cls(
-            d["cat_iter"],
-            d["value"],
-            color=d["color"],
-            hatch=d["hatch"],
-            dodge=d["dodge"],
-            name=d["name"],
-            orient=Orientation.parse(d["orient"]),
-            extent=d["extent"],
-            shape=d["shape"],
-            backend=backend,
-        )
 
     def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Move the layer by the given shift."""
@@ -784,7 +768,6 @@ class DFBoxPlot(_BoxLikeWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
             If True, the whiskers of the box plot will be updated to exclude the
             outliers.
         """
-        from whitecanvas.canvas.dataframe._base import CatIterator  # noqa: F401
         from whitecanvas.layers.tabular import DFMarkerGroups
 
         canvas = self._canvas_ref()

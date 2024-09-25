@@ -183,6 +183,12 @@ class CyclicPlan(CategoricalPlan[_V]):
         return entries
 
     @classmethod
+    def from_dict_or_plan(cls, value: dict[str, Any] | Self) -> Self:
+        if isinstance(value, dict):
+            return cls.from_dict(value)
+        return value
+
+    @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         return cls(tuple(data["by"]), [cls._norm_value(v) for v in data["values"]])
 
@@ -262,6 +268,12 @@ class MapPlan(ABC, Generic[_V]):
             except StopIteration:
                 input_dict = {}
         return self._mapper(input_dict)
+
+    @classmethod
+    def from_dict_or_plan(cls, value: dict[str, Any] | Self) -> Self:
+        if isinstance(value, dict):
+            return cls.from_dict(value)
+        return value
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:

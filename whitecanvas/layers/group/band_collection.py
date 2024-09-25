@@ -126,7 +126,10 @@ class ViolinPlot(BandCollection):
             x, data, shape=shape, extent=extent, kde_band_width=kde_band_width
         )
         return cls(
-            [Band(*each, orient=orient, backend=backend) for each in new_vals],
+            [
+                Band(*each, orient=orient.transpose(), backend=backend)
+                for each in new_vals
+            ],
             name=name,
             shape=shape,
             extent=extent,

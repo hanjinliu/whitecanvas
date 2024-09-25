@@ -18,6 +18,7 @@ from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
 from whitecanvas.layers import group as _lg
+from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
@@ -47,21 +48,31 @@ class AreaCollection(_lg.LayerCollection[_lg.Area]):
 
     def __init__(
         self,
+        areas: list[_lg.Area],
+        name: str | None = None,
+        orient: Orientation = Orientation.VERTICAL,
+        fill_alpha: float = 0.2,
+    ):
+        super().__init__(areas, name=name)
+        self._orient = Orientation.parse(orient)
+        self._fill_alpha = fill_alpha
+
+    @classmethod
+    def from_arrays(
+        cls,
         data: list[XYYData],
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         fill_alpha: float = 0.2,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         areas = list[_lg.Area]()
         ori = Orientation.parse(orient)
         for d in data:
             area = _lg.Area.from_arrays(d.x, d.ydiff, d.y0, orient=ori, backend=backend)
             area.fill_alpha = fill_alpha
             areas.append(area)
-        super().__init__(areas, name=name)
-        self._orient = ori
-        self._fill_alpha = fill_alpha
+        return cls(areas, name=name, orient=ori)
 
     @property
     def fill_alpha(self) -> float:
@@ -153,6 +164,29 @@ class AreaCollection(_lg.LayerCollection[_lg.Area]):
 class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
     def __init__(
         self,
+        base: AreaCollection,
+        source: DataFrameWrapper[_DF],
+        categories: list[tuple[Any, ...]],
+        stackby: tuple[str, ...],
+        splitby: tuple[str, ...],
+        color_by: _p.ColorPlan,
+        width_by: _p.WidthPlan,
+        style_by: _p.StylePlan,
+        hatch_by: _p.HatchPlan,
+    ):
+        super().__init__(base, source)
+        self._categories = categories
+        self._stackby = stackby
+        self._splitby = splitby
+        self._color_by = color_by
+        self._width_by = width_by
+        self._style_by = style_by
+        self._hatch_by = hatch_by
+        self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._stackby))
+
+    @classmethod
+    def from_table(
+        cls,
         source: DataFrameWrapper[_DF],
         data: list[XYYData],
         categories: list[tuple[Any, ...]],
@@ -167,15 +201,20 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         backend: str | Backend | None = None,
     ):
         splitby = _shared.join_columns(color, style, hatch, source=source)
-        self._color_by = _p.ColorPlan.default()
-        self._style_by = _p.StylePlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._categories = categories
-        self._splitby = splitby
-        base = AreaCollection(
+        base = AreaCollection.from_arrays(
             data, name=name, orient=orient, fill_alpha=fill_alpha, backend=backend
         )
-        super().__init__(base, source)
+        self = cls(
+            base,
+            source,
+            categories,
+            stackby,
+            splitby,
+            color_by=_p.ColorPlan.default(),
+            width_by=_p.WidthPlan.default(),
+            style_by=_p.StylePlan.default(),
+            hatch_by=_p.HatchPlan.default(),
+        )
         if color is not None:
             self.update_color(color)
         self.update_width(width)
@@ -184,7 +223,39 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         if hatch is not None:
             self.update_hatch(hatch)
         self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
-        self._stackby = stackby
+        return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: str | Backend | None = None) -> Self:
+        """Create a layer from a dictionary."""
+        base = d["base"]
+        if isinstance(base, dict):
+            base = construct_layer(base, backend=backend)
+        return cls(
+            base=base,
+            source=d["source"],
+            categories=d["categories"],
+            stackby=tuple(d["stackby"]),
+            splitby=tuple(d["splitby"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            hatch_by=_p.HatchPlan.from_dict_or_plan(d["hatch_by"]),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "source": self._source,
+            "base": self.base,
+            "categories": self._categories,
+            "stackby": self._stackby,
+            "splitby": self._splitby,
+            "color_by": self._color_by,
+            "width_by": self._width_by,
+            "style_by": self._style_by,
+            "hatch_by": self._hatch_by,
+        }
 
     @property
     def orient(self) -> Orientation:
@@ -246,7 +317,7 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
                 ycumsum[(_x_hash, *_stack_cat)] += _h
             categories.append(sl)
             data.append(XYYData(all_x, bottom, this_h + bottom))
-        return DFArea(
+        return DFArea.from_table(
             df, data, categories=categories, color=color, hatch=hatch, width=width,
             stackby=stackby, name=name, orient=orient, fill_alpha=fill_alpha,
             backend=backend,

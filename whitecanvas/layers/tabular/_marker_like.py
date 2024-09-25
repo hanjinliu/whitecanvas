@@ -285,12 +285,12 @@ class DFMarkers(
         return cls(
             base,
             source,
-            color_by=d["color_by"],
-            edge_color_by=d["edge_color_by"],
-            hatch_by=d["hatch_by"],
-            size_by=d["size_by"],
-            symbol_by=d["symbol_by"],
-            width_by=d["width_by"],
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            edge_color_by=_p.ColorPlan.from_dict_or_plan(d["edge_color_by"]),
+            hatch_by=_p.HatchPlan.from_dict_or_plan(d["hatch_by"]),
+            size_by=_p.SizePlan.from_dict_or_plan(d["size_by"]),
+            symbol_by=_p.SymbolPlan.from_dict_or_plan(d["symbol_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -707,14 +707,6 @@ class DFBars(
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         """Create a DFViolinPlot from a dictionary."""
-
-        # base: _l.Bars[_mixin.MultiFace, _mixin.MultiEdge],
-        # source: DataFrameWrapper[_DF],
-        # stackby: tuple[str, ...],
-        # splitby: tuple[str, ...],
-        # color_by: _p.ColorPlan | _p.ColormapPlan,
-        # hatch_by: _p.HatchPlan,
-        # style_by: _p.StylePlan,
         base = d["base"]
         source = d["source"]
         if isinstance(base, dict):
@@ -724,13 +716,13 @@ class DFBars(
         return cls(
             base,
             source,
-            stackby=d["stack_by"],
-            splitby=d["split_by"],
-            color_by=d["color_by"],
-            edge_color_by=d["edge_color_by"],
-            hatch_by=d["hatch_by"],
-            style_by=d["style_by"],
-            width_by=d["width_by"],
+            stackby=tuple(d["stack_by"]),
+            splitby=tuple(d["split_by"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            edge_color_by=_p.ColorPlan.from_dict_or_plan(d["edge_color_by"]),
+            hatch_by=_p.HatchPlan.from_dict_or_plan(d["hatch_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -889,10 +881,10 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
         return cls(
             base,
             source,
-            color_by=d["color_by"],
-            width_by=d["width_by"],
-            style_by=d["style_by"],
-            scale_by=d["scale_by"],
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            scale_by=_p.WidthPlan.from_dict_or_plan(d["scale_by"]),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -994,11 +986,11 @@ class DFRugGroups(DFRug[_DF]):
             base,
             source,
             value=d["value"],
-            splitby=d["split_by"],
-            color_by=d["color_by"],
-            width_by=d["width_by"],
-            style_by=d["style_by"],
-            scale_by=d["scale_by"],
+            splitby=tuple(d["split_by"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            scale_by=_p.WidthPlan.from_dict_or_plan(d["scale_by"]),
         )
 
     def to_dict(self) -> dict[str, Any]:

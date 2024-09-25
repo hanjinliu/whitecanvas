@@ -333,7 +333,7 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
             Point plot layer.
         """
         canvas = self._canvas()
-        layer = _lt.DFPointPlot2D(
+        layer = _lt.DFPointPlot2D.from_arrays(
             self._df, self._get_x(), self._get_y(), name=name, color=color,
             hatch=hatch, size=size, capsize=capsize, backend=canvas._get_backend(),
         )  # fmt: skip

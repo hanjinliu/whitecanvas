@@ -32,12 +32,12 @@ from whitecanvas.types import (
     _Void,
 )
 from whitecanvas.utils.normalize import arr_color, as_any_1d_array, as_color_array
-from whitecanvas.utils.type_check import is_real_number
+from whitecanvas.utils.type_check import is_array, is_real_number
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    from whitecanvas.layers.group._collections import LayerCollectionBase
+    from whitecanvas.layers.group._collections import LayerCollection
 
 _L = TypeVar("_L", bound=PrimitiveLayer)
 _void = _Void()
@@ -92,21 +92,21 @@ class FaceNamespace(LayerNamespace[PrimitiveLayer[_lp.HasFaces]]):
 
     @property
     @abstractmethod
-    def color(self) -> NDArray[np.floating]:
-        raise NotImplementedError
-
+    def color(self) -> NDArray[np.floating]: ...
     @property
     @abstractmethod
-    def hatch(self) -> Hatch | EnumArray[Hatch]:
-        raise NotImplementedError
-
+    def hatch(self) -> Hatch | EnumArray[Hatch]: ...
     @property
     @abstractmethod
-    def alpha(self) -> float | NDArray[np.floating]:
-        raise NotImplementedError
-
+    def alpha(self) -> float | NDArray[np.floating]: ...
     @abstractmethod
     def update(self, color=None, hatch=None, alpha=1.0): ...
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "color": self.color,
+            "hatch": self.hatch,
+        }
 
 
 class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
@@ -116,26 +116,25 @@ class EdgeNamespace(LayerNamespace[PrimitiveLayer[_lp.HasEdges]]):
 
     @property
     @abstractmethod
-    def color(self) -> NDArray[np.floating]:
-        raise NotImplementedError
-
+    def color(self) -> NDArray[np.floating]: ...
     @property
     @abstractmethod
-    def width(self) -> float | NDArray[np.floating]:
-        raise NotImplementedError
-
+    def width(self) -> float | NDArray[np.floating]: ...
     @property
     @abstractmethod
-    def style(self) -> LineStyle | EnumArray[LineStyle]:
-        raise NotImplementedError
-
+    def style(self) -> LineStyle | EnumArray[LineStyle]: ...
     @property
     @abstractmethod
-    def alpha(self) -> float | NDArray[np.floating]:
-        raise NotImplementedError
-
+    def alpha(self) -> float | NDArray[np.floating]: ...
     @abstractmethod
     def update(self, color=None, width=None, style=None, alpha=1.0): ...
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+        }
 
 
 class SinglePropertyFaceBase(FaceNamespace):
@@ -654,9 +653,11 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         self,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the face properties."""
+        if is_array(hatch) or is_array(alpha):
+            return self.with_face_multi(color=color, hatch=hatch, alpha=alpha)
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
@@ -669,9 +670,13 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
+        if is_array(width) or is_array(style) or is_array(alpha):
+            return self.with_edge_multi(
+                color=color, width=width, style=style, alpha=alpha
+            )
         if color is None:
             color = get_theme().foreground_color
         if not isinstance(self._edge_namespace, ConstEdge):
@@ -685,7 +690,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         self,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
@@ -699,7 +704,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
         if color is None:
@@ -730,7 +735,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
 
 
 class CollectionFace(MultiPropertyFaceBase):
-    _layer: LayerCollectionBase
+    _layer: LayerCollection
 
     def _iter_children(self) -> Iterator[FaceEdgeMixin]:
         yield from iter(self._layer)
@@ -778,7 +783,7 @@ class CollectionFace(MultiPropertyFaceBase):
 
 
 class CollectionEdge(MultiPropertyEdgeBase):
-    _layer: LayerCollectionBase
+    _layer: LayerCollection
 
     def _iter_children(self) -> Iterator[FaceEdgeMixin]:
         yield from iter(self._layer)
@@ -880,13 +885,10 @@ class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
 
     @property
     @abstractmethod
-    def color(self):
-        raise NotImplementedError
-
+    def color(self): ...
     @property
     @abstractmethod
-    def size(self):
-        raise NotImplementedError
+    def size(self): ...
 
     @property
     def family(self):
@@ -902,8 +904,14 @@ class FontNamespace(LayerNamespace[PrimitiveLayer[_lp.HasText]]):
         self.events.family.emit(value)
 
     @abstractmethod
-    def update(self, *, color=_void, size=_void, family=_void):
-        raise NotImplementedError
+    def update(self, *, color=_void, size=_void, family=_void): ...
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "color": self.color,
+            "size": self.size,
+            "family": self.family,
+        }
 
     def _as_legend_info(self):
         raise NotImplementedError
@@ -1043,9 +1051,11 @@ class TextMixin(
         *,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the face properties."""
+        if is_array(hatch) or is_array(alpha):
+            return self.with_face_multi(color=color, hatch=hatch, alpha=alpha)
         if not isinstance(self._face_namespace, ConstFace):
             self._face_namespace.events.disconnect()
             self._face_namespace = ConstFace(self)  # type: ignore
@@ -1059,9 +1069,13 @@ class TextMixin(
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
+        if is_array(width) or is_array(style) or is_array(alpha):
+            return self.with_edge_multi(
+                color=color, width=width, style=style, alpha=alpha
+            )
         if color is None:
             color = get_theme().foreground_color
         if not isinstance(self._edge_namespace, ConstEdge):
@@ -1076,7 +1090,7 @@ class TextMixin(
         *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
@@ -1091,7 +1105,7 @@ class TextMixin(
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
         if color is None:
@@ -1111,11 +1125,13 @@ class TextMixin(
         family: str | None = None,
     ) -> Self:
         """Update the face properties."""
+        if is_array(size) or is_array(family):
+            return self.with_font_multi(color=color, size=size, family=family)
         if color is None:
             color = self.font.color
-        if not isinstance(self._font_namespace, ConstFace):
+        if not isinstance(self._font_namespace, ConstFont):
             self._font_namespace.events.disconnect()
-            self._font_namespace = ConstFace(self)  # type: ignore
+            self._font_namespace = ConstFont(self)  # type: ignore
             self._font_namespace.events.connect(self.events.font.emit, max_args=None)
         self.font.update(color=color, size=size, family=family)
         return self

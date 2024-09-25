@@ -9,11 +9,12 @@ from numpy.typing import NDArray
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend, _mixin, _text_utils
 from whitecanvas.layers._base import PrimitiveLayer
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.layers._primitive import Bars, Errorbars, Image, Line, Markers, Texts
 from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import LayerContainer, RichContainerEvents
-from whitecanvas.layers.group._offsets import NoOffset, TextOffset
+from whitecanvas.layers.group._offsets import NoOffset, TextOffset, parse_offset_dict
 from whitecanvas.layers.group.colorbar import Colorbar
 from whitecanvas.layers.group.line_markers import Plot
 from whitecanvas.types import (
@@ -74,6 +75,19 @@ class _LabeledLayerBase(LayerContainer):
         assert n == 4
         return [2, 0, 1, 3]
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        children = construct_layers(d["children"], backend=backend)
+        if isinstance(offset := d.get("offset"), dict):
+            offset = parse_offset_dict(offset)
+        return cls(*children, name=d.get("name"), offset=offset)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "offset": self._text_offset,
+        }
+
     @property
     def xerr(self) -> Errorbars:
         """The errorbars layer for x."""
@@ -121,7 +135,7 @@ class _LabeledLayerBase(LayerContainer):
         """Return the text offset."""
         return self._text_offset
 
-    def with_text_offset(self, dx: Any, dy: Any):
+    def with_text_offset(self, dx: Any, dy: Any) -> Self:
         """Add offset to text positions."""
         _offset = self._text_offset._add(dx, dy)
         if self.texts.ndata > 0:
@@ -129,6 +143,7 @@ class _LabeledLayerBase(LayerContainer):
             xoff, yoff = _offset._asarray()
             self.texts.set_pos(px + xoff, py + yoff)
         self._text_offset = _offset
+        return self
 
     def with_xerr(
         self,
@@ -317,11 +332,11 @@ def _init_error_bars(
         x, est - err, est + err, orient=ori, backend=backend, capsize=capsize,
     )  # fmt: skip
     if ori.is_vertical:
-        xerr = Errorbars.empty_h(backend=backend)
+        xerr = Errorbars._empty_h(backend=backend)
         yerr = errorbar
     else:
         xerr = errorbar
-        yerr = Errorbars.empty_v(backend=backend)
+        yerr = Errorbars._empty_v(backend=backend)
     return xerr, yerr
 
 
@@ -385,9 +400,9 @@ class LabeledBars(
         backend: str | Backend | None = None,
     ) -> LabeledBars[_mixin.MultiFace, _mixin.MonoEdge]:
         x, height, err_data = _init_mean_sd(x, data, color)
-        bars = Bars(x, height, extent=extent, backend=backend).with_face_multi(
-            color=color, hatch=hatch, alpha=alpha
-        )
+        bars = Bars(
+            x, height, orient=orient, extent=extent, backend=backend
+        ).with_face_multi(color=color, hatch=hatch, alpha=alpha)
         xerr, yerr = _init_error_bars(x, height, err_data, orient, capsize, backend)
         return cls(bars, xerr=xerr, yerr=yerr, name=name)
 
@@ -641,7 +656,7 @@ class LabeledImage(LayerContainer):
                 [], [], [], name="texts", backend=layer._backend_name
             ).with_font_multi()
         if colorbar is None:
-            colorbar = Colorbar(layer.cmap)
+            colorbar = Colorbar.from_cmap(layer.cmap)
             colorbar.visible = False
         layer.events.cmap.connect_setattr(colorbar, "cmap", maxargs=1)
         super().__init__([layer, texts, colorbar], name=name)

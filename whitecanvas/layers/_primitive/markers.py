@@ -73,7 +73,7 @@ class Markers(
         symbol: Symbol | str = Symbol.CIRCLE,
         size: float = 12.0,
         color: ColorType = "blue",
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
@@ -139,6 +139,32 @@ class Markers(
             ydata = self.data.y
         self.data = XYData(xdata, ydata)
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Band from a dictionary."""
+        self = cls(
+            d["data"]["x"], d["data"]["y"], symbol=d["symbol"],
+            name=d["name"], backend=backend,
+        ).with_face(
+            color=d["face"]["color"], hatch=d["face"]["hatch"]
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
+        )  # fmt: skip
+        self.size = d["size"]
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "size": self.size,
+            "symbol": self.symbol,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
+
     @property
     def symbol(self) -> Symbol:
         """Symbol used to mark the data points."""
@@ -168,10 +194,7 @@ class Markers(
         ndata = self.ndata
         if not isinstance(size, (float, int, np.number)):
             if not self._size_is_array:
-                raise ValueError(
-                    "Expected size to be a scalar. Use with_size_multi() to "
-                    "set multiple sizes."
-                )
+                return self.with_size_multi(size)
             size = as_array_1d(size)
             if size.size != ndata:
                 raise ValueError(
@@ -334,7 +357,7 @@ class Markers(
             width=width, style=style, antialias=antialias, capsize=capsize,
             orient=Orientation.HORIZONTAL, backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars.empty_v(f"xerr-of-{self.name}", backend=self._backend_name)
+        yerr = Errorbars._empty_v(f"xerr-of-{self.name}", backend=self._backend_name)
         return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_yerr(
@@ -389,7 +412,7 @@ class Markers(
             width=width, style=style, antialias=antialias, capsize=capsize,
             orient=Orientation.VERTICAL, backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars.empty_h(f"yerr-of-{self.name}", backend=self._backend_name)
+        xerr = Errorbars._empty_h(f"yerr-of-{self.name}", backend=self._backend_name)
         return LabeledMarkers(self, xerr, yerr, name=self.name)
 
     def with_text(
@@ -440,8 +463,8 @@ class Markers(
         self.name = f"markers-of-{old_name}"
         return LabeledMarkers(
             self,
-            Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name),
-            Errorbars.empty_v(f"yerr-of-{old_name}", backend=self._backend_name),
+            Errorbars._empty_h(f"xerr-of-{old_name}", backend=self._backend_name),
+            Errorbars._empty_v(f"yerr-of-{old_name}", backend=self._backend_name),
             texts=texts,
             name=old_name,
         )
@@ -501,7 +524,7 @@ class Markers(
             nodes[:, 0], nodes[:, 1], [""] * nodes.shape[0], name="texts",
             backend=self._backend_name,
         )  # fmt: skip
-        return Graph(self, edges_layer, texts, edges, name=self.name)
+        return Graph(self, edges_layer, texts, name=self.name)
 
     def with_stem(
         self,

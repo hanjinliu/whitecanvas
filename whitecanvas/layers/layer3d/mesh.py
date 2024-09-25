@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers._mixin import AbstractFaceEdgeMixin, MonoEdge, MultiFace
@@ -43,10 +43,31 @@ class Mesh3D(
         # self._backend._plt_connect_pick_event(self.events.clicked.emit)
         self.face.update(color=color, hatch=hatch, alpha=alpha)
 
+    @classmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Mesh3D:
+        return cls(
+            np.asarray(d["data"]["vertices"], dtype=np.float32),
+            np.asarray(d["data"]["faces"], dtype=np.float32), name=d["name"],
+            color=d["face"]["color"], hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self.data.to_dict(),
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
+
     def _get_layer_data(self) -> MeshData:
         return MeshData(*self._backend._plt_get_data())
 
-    def _norm_layer_data(self, data: Any) -> MeshData:
+    def _norm_layer_data(self, data: tuple[ArrayLike, ArrayLike]) -> MeshData:
         verts, faces = data
         verts = np.atleast_2d(verts)
         faces = np.atleast_2d(faces)

@@ -164,6 +164,8 @@ class MultiLine(PlotlyHoverableLayer[go.Scatter]):
         return np.stack([col] * self._plt_get_ndata(), axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
+        if color.size == 0:
+            return
         if color.ndim == 1:
             self._props["line"]["color"] = rgba_str_color(color)
         else:

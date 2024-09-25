@@ -20,6 +20,7 @@ class Vectors(Quiver, MplLayer):
         super().__init__(
             FakeAxes(), x0, y0, dx, dy, angles="xy", scale_units="xy", scale=1
         )
+        self._plt_linestyle = LineStyle.SOLID
 
     def _plt_get_data(self):
         return self.X, self.U, self.Y, self.V
@@ -37,16 +38,17 @@ class Vectors(Quiver, MplLayer):
 
     ##### HasEdges #####
     def _plt_get_edge_width(self) -> float:
-        return self.get_linewidth()
+        return float(self.get_linewidth()[0])
 
     def _plt_set_edge_width(self, width: float):
         self.set_linewidth(width)
 
     def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle(self.get_linestyle())
+        return self._plt_linestyle
 
     def _plt_set_edge_style(self, style: LineStyle):
         self.set_linestyle(style.value)
+        self._plt_linestyle = style
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return self.get_edgecolor()
@@ -55,7 +57,7 @@ class Vectors(Quiver, MplLayer):
         self.set_color(color)
 
     def _plt_get_antialias(self) -> bool:
-        return self.get_antialiased()
+        return bool(self.get_antialiased()[0])
 
     def _plt_set_antialias(self, antialias: bool):
         self.set_antialiased(antialias)

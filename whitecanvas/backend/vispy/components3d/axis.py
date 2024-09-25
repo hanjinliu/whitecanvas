@@ -81,7 +81,7 @@ class Axis3D(Compound):
         return self._line.color
 
     def _plt_set_color(self, color):
-        self._line.color = color
+        self._line.set_data(color=color)
 
     def _plt_flip(self) -> None:
         camera = self._plt_camera()

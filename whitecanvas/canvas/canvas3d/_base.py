@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import Any, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,8 +10,11 @@ from whitecanvas import protocols, theme
 from whitecanvas.backend import Backend, patch_dummy_backend
 from whitecanvas.canvas import _namespaces as _ns
 from whitecanvas.canvas._base import CanvasNDBase
+from whitecanvas.canvas._grid import CanvasGrid, _Serializable
+from whitecanvas.canvas._palette import ColorPalette
 from whitecanvas.layers import layer3d
 from whitecanvas.layers._base import Layer
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.types import (
     ArrayLike1D,
     ColormapType,
@@ -21,9 +24,6 @@ from whitecanvas.types import (
     Orientation,
 )
 from whitecanvas.utils.normalize import as_array_1d, normalize_xyz
-
-if TYPE_CHECKING:
-    from whitecanvas.canvas import CanvasGrid
 
 _L3D = TypeVar("_L3D", bound=layer3d.Layer3D)
 
@@ -539,6 +539,32 @@ class Canvas3D(Canvas3DBase):
     def _canvas(self) -> protocols.CanvasProtocol:
         return self._backend_object
 
+    def _update_from_dict(
+        self, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Self:
+        """Create a Canvas from a dictionary."""
+        if "palette" in d:
+            self._color_palette = ColorPalette(d["palette"])
+        self.layers.clear()
+        self.layers.extend(construct_layers(d["layers"], backend=backend))
+        self.x.update(d.get("x", {}))
+        self.y.update(d.get("y", {}))
+        self.z.update(d.get("z", {}))
+        self.title.update(d.get("title", {}))
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the canvas."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "palette": self._color_palette,
+            "layers": [layer.to_dict() for layer in self.layers],
+            "title": self.title.to_dict(),
+            "x": self.x.to_dict(),
+            "y": self.y.to_dict(),
+            "z": self.z.to_dict(),
+        }
+
 
 class _Canvas3DWithGrid(Canvas3DBase):
     def __init__(self, canvas: Canvas3D, grid: CanvasGrid):
@@ -602,7 +628,7 @@ class _Canvas3DWithGrid(Canvas3DBase):
         return self._grid.to_html(file=file)
 
 
-class SingleCanvas3D(_Canvas3DWithGrid):
+class SingleCanvas3D(_Canvas3DWithGrid, _Serializable):
     """
     A canvas without other subplots.
 
@@ -610,15 +636,7 @@ class SingleCanvas3D(_Canvas3DWithGrid):
     with a single axes.
     """
 
-    def __init__(self, grid: CanvasGrid):
-        if grid.shape != (1, 1):
-            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
-        self._grid = grid
-        _it = grid._iter_canvas()
-        _, canvas = next(_it)
-        if next(_it, None) is not None:
-            raise ValueError("Grid must have only one canvas")
-        self._main_canvas = canvas
+    def __init__(self, canvas: Canvas3DBase, grid: CanvasGrid):
         super().__init__(canvas, grid)
 
         # NOTE: events, dims etc are not shared between the main canvas and the
@@ -629,3 +647,46 @@ class SingleCanvas3D(_Canvas3DWithGrid):
         # self.events.drawn.connect(
         #     self._main_canvas.events.drawn.emit, unique=True, max_args=None
         # )
+
+    @classmethod
+    def _new(cls, palette=None, backend=None) -> SingleCanvas3D:
+        _grid = CanvasGrid([1], [1], backend=backend)
+        _grid.add_canvas_3d(0, 0, palette=palette)
+        return SingleCanvas3D._from_grid(_grid)
+
+    @classmethod
+    def _from_grid(cls, grid: CanvasGrid) -> SingleCanvas3D:
+        if grid.shape != (1, 1):
+            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
+        _it = grid._iter_canvas()
+        _, canvas = next(_it)
+        if next(_it, None) is not None:
+            raise ValueError("Grid must have only one canvas")
+        return SingleCanvas3D(canvas, grid)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a SingleCanvas instance from a dictionary."""
+        _type_expected = f"{cls.__module__}.{cls.__name__}"
+        if (_type := d.get("type")) and _type != _type_expected:
+            raise ValueError(f"Expected type {_type_expected!r}, got {_type!r}")
+        self = cls._new(backend=backend, palette=d.get("palette"))
+        self.layers.clear()
+        self.layers.extend(construct_layers(d["layers"], backend=backend))
+        self.x.update(d.get("x", {}))
+        self.y.update(d.get("y", {}))
+        self.z.update(d.get("z", {}))
+        self.title.update(d.get("title", {}))
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the canvas."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "palette": self._color_palette,
+            "layers": [layer.to_dict() for layer in self.layers],
+            "title": self.title.to_dict(),
+            "x": self.x.to_dict(),
+            "y": self.y.to_dict(),
+            "z": self.z.to_dict(),
+        }

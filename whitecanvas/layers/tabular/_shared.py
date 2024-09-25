@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Iterable, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
+from whitecanvas.backend import Backend
 from whitecanvas.layers._base import Layer, LayerWrapper
+from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers.tabular import _jitter
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, parse
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _L = TypeVar("_L", bound="Layer")
 _DF = TypeVar("_DF")
@@ -22,6 +27,24 @@ class DataFrameLayerWrapper(LayerWrapper[_L], Generic[_L, _DF]):
     def data(self) -> _DF:
         """The internal dataframe."""
         return self._source.get_native()
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        from whitecanvas.layers.tabular._df_compat import from_dict
+
+        base, source = d["base"], d["source"]
+        if isinstance(base, dict):
+            base = construct_layer(base, backend=backend)
+        if isinstance(source, dict):
+            source = from_dict(source)
+        return cls(base=base, source=source)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "source": self._source,
+        }
 
 
 class ColumnOrValue:

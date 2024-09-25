@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
 from whitecanvas import theme
@@ -284,7 +284,7 @@ class _SingleLine(
             name=f"xerr-of-{self.name}", orient=Orientation.HORIZONTAL,
             backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars.empty_v(f"yerr-of-{self.name}", backend=self._backend_name)
+        yerr = Errorbars._empty_v(f"yerr-of-{self.name}", backend=self._backend_name)
         old_name = self.name
         self.name = f"line-of-{self.name}"
         return LabeledLine(self, xerr, yerr, name=old_name)
@@ -337,7 +337,7 @@ class _SingleLine(
             width=width, style=style, antialias=antialias, capsize=capsize,
             name=f"yerr-of-{self.name}", backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars.empty_h(f"xerr-of-{self.name}", backend=self._backend_name)
+        xerr = Errorbars._empty_h(f"xerr-of-{self.name}", backend=self._backend_name)
         old_name = self.name
         self.name = f"line-of-{self.name}"
         return LabeledLine(self, xerr, yerr, name=old_name)
@@ -539,7 +539,7 @@ class Line(_SingleLine):
         name: str | None = None,
         color: ColorType = "blue",
         width: float = 1.0,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
@@ -560,6 +560,27 @@ class Line(_SingleLine):
         x0, y0 = data
         self._backend._plt_set_data(x0, y0)
         self._x_hint, self._y_hint = xy_size_hint(x0, y0)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], name=d["name"], color=d["color"],
+            width=d["width"], style=d["style"], antialias=d["antialias"],
+            backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def with_text(
         self,
@@ -606,8 +627,8 @@ class Line(_SingleLine):
         self.name = f"line-of-{self.name}"
         return LabeledLine(
             self,
-            Errorbars.empty_h(name=f"xerr-of-{self.name}", backend=self._backend_name),
-            Errorbars.empty_v(name=f"yerr-of-{self.name}", backend=self._backend_name),
+            Errorbars._empty_h(name=f"xerr-of-{self.name}", backend=self._backend_name),
+            Errorbars._empty_v(name=f"yerr-of-{self.name}", backend=self._backend_name),
             texts=texts,
             name=old_name,
         )
@@ -676,7 +697,7 @@ class LineStep(_SingleLine):
         where: str | StepStyle = StepStyle.MID,
         color: ColorType = "blue",
         width: float = 1,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
@@ -774,6 +795,28 @@ class LineStep(_SingleLine):
         self._where = StepStyle(where)
         self._set_layer_data(data)
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a LineStep from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], name=d["name"], color=d["color"],
+            width=d["width"], style=d["style"], where=d["where"],
+            antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "where": self.where,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
+
 
 class MultiLineEvents(LayerEvents):
     color = Signal(np.ndarray)
@@ -789,14 +832,14 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
 
     def __init__(
         self,
-        data: list[ArrayLike1D],
+        data: list[ArrayLike],
         *,
         name: str | None = None,
         color: ColorType = "blue",
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         backend: Backend | str | None = None,
     ):
         data_normed, xhint, yhint = _norm_data(data)
@@ -888,7 +931,7 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
 
     @antialias.setter
     def antialias(self, antialias: bool) -> None:
-        if not isinstance(antialias, bool):
+        if not isinstance(antialias, (bool, np.bool_)):
             raise TypeError(f"Expected antialias to be bool, got {type(antialias)}")
         self._backend._plt_set_antialias(antialias)
         self.events.antialias.emit(antialias)
@@ -932,6 +975,26 @@ class MultiLine(HoverableDataBoundLayer[MultiLineProtocol, "list[NDArray[np.numb
         ]
         self._backend._plt_set_hover_text(texts)
         return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a LineStep from a dictionary."""
+        return cls(
+            d["data"], name=d["name"], color=d["color"], width=d["width"],
+            style=d["style"], antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data(),
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def _as_legend_item(self) -> _legend.LineLegendItem:
         if self.nlines == 0:

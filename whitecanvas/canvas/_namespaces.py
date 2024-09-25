@@ -106,7 +106,21 @@ class Namespace:
         if invalid_args:
             raise TypeError(f"Cannot set {invalid_args!r} on {type(self).__name__}")
         for k, v in values.items():
-            setattr(self, k, v)
+            if isinstance(ns := getattr(self, k), Namespace):
+                ns.update(v)
+            else:
+                setattr(self, k, v)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the namespace."""
+        out = {}
+        for k in self._attrs:
+            val = getattr(self, k)
+            if isinstance(val, Namespace):
+                out[k] = val.to_dict()
+            else:
+                out[k] = val
+        return out
 
 
 class _TextBoundNamespace(Namespace):
@@ -391,7 +405,7 @@ class ZAxisNamespace(AxisNamespace):
         return self._get_canvas()._plt_get_zaxis()
 
 
-class MouseNamespace(AxisNamespace):
+class MouseNamespace(Namespace):
     """Namespace that contains the mouse events."""
 
     clicked = MouseSignal(object)

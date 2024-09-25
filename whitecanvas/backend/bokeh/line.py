@@ -181,6 +181,8 @@ class MultiLine(BokehLayer[bk_models.MultiLine], SupportsMouseEvents):
         return np.stack([arr_color(c) for c in self._data.data["edge_color"]], axis=0)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
+        if color.size == 0:
+            return
         if color.ndim == 1:
             color = [hex_color(color)] * self._plt_get_ndata()
         else:

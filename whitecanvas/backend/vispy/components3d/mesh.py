@@ -36,7 +36,7 @@ class Mesh3D(visuals.Mesh):
     _plt_get_face_hatch, _plt_set_face_hatch = _not_implemented.face_hatches()
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
-        return np.array(self.wireframe_filter.color)
+        return np.asarray(self.wireframe_filter.color.rgba, dtype=np.float32)
 
     def _plt_set_edge_color(self, color: NDArray[np.float32]):
         self.wireframe_filter.color = color

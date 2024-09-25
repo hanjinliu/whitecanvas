@@ -25,6 +25,7 @@ class Vectors3D(Quiver, MplLayer):
         self._3d_u = dx
         self._3d_v = dy
         self._3d_w = dz
+        self._plt_linestyle = LineStyle.SOLID
 
     def do_3d_projection(self, renderer=None):
         x0, y0, z0 = proj3d.proj_transform(
@@ -62,16 +63,17 @@ class Vectors3D(Quiver, MplLayer):
 
     ##### HasEdges #####
     def _plt_get_edge_width(self) -> float:
-        return self.get_linewidth()
+        return float(self.get_linewidth()[0])
 
     def _plt_set_edge_width(self, width: float):
         self.set_linewidth(width)
 
     def _plt_get_edge_style(self) -> LineStyle:
-        return LineStyle(self.get_linestyle())
+        return self._plt_linestyle
 
     def _plt_set_edge_style(self, style: LineStyle):
         self.set_linestyle(style.value)
+        self._plt_linestyle = style
 
     def _plt_get_edge_color(self) -> NDArray[np.float32]:
         return self.get_edgecolor()
@@ -80,7 +82,7 @@ class Vectors3D(Quiver, MplLayer):
         self.set_color(color)
 
     def _plt_get_antialias(self) -> bool:
-        return self.get_antialiased()
+        return bool(self.get_antialiased()[0])
 
     def _plt_set_antialias(self, antialias: bool):
         self.set_antialiased(antialias)

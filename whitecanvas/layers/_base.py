@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import json
 import weakref
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 
+from whitecanvas._json_utils import CustomEncoder, color_to_hex
 from whitecanvas.backend import Backend
+from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers._legend import EmptyLegendItem, LegendItem
 from whitecanvas.protocols import BaseProtocol
 
@@ -16,6 +20,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from whitecanvas.canvas import CanvasBase
+    from whitecanvas.layers.group._collections import LayerCollection
 
 _P = TypeVar("_P", bound=BaseProtocol)
 _L = TypeVar("_L", bound="Layer")
@@ -68,8 +73,128 @@ class Layer(ABC):
         """Set the name of this layer."""
         self._name = str(name)
 
+    @abstractmethod
+    def bbox_hint(self) -> NDArray[np.float64]:
+        """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
+
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Construct this layer from a dict."""
+
+    @abstractmethod
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dict representation of this layer."""
+
+    def copy(self, *, backend: Backend | str | None = None) -> Self:
+        """Create a copy of the layer."""
+        return self.from_dict(self.to_dict(), backend=backend)
+
+    @classmethod
+    def read_json(
+        cls,
+        path_or_str: str | Path,
+        *,
+        backend: Backend | str | None = None,
+    ) -> Self:
+        """
+        Construct a layer from a JSON file or string.
+
+        Parameters
+        ----------
+        path_or_str : str or Path
+            The path to the JSON file or the JSON string.
+        backend : Backend or str, optional
+            The backend of the layer.
+        """
+
+        if isinstance(path_or_str, Path):
+            txt = path_or_str.read_text()
+        elif not isinstance(path_or_str, str):
+            raise TypeError(f"Expected a path or a string, got {path_or_str!r}")
+        else:
+            if "{" in path_or_str:
+                txt = path_or_str
+            else:
+                txt = Path(path_or_str).read_text()
+        return cls.from_dict(cls._pre_from_dict(json.loads(txt)), backend=backend)
+
+    @overload
+    def write_json(self) -> str: ...
+    @overload
+    def write_json(self, path: str | Path) -> None: ...
+
+    def write_json(self, path: str | Path | None = None) -> str | None:
+        """Return a JSON string or write to a file."""
+
+        _dict = self._post_to_dict(self.to_dict())
+        txt = json.dumps(_dict, indent=2, cls=CustomEncoder)
+        if path is None:
+            return txt
+        if isinstance(path, str):
+            path = Path(path)
+        path.write_text(txt)
+        return None
+
+    @classmethod
+    def _post_to_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        return color_to_hex(d)
+
+    @classmethod
+    def _pre_from_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        return d
+
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.name!r}>"
+
+    def __add__(self, other: Layer) -> LayerCollection[Layer]:
+        from whitecanvas.layers.group._collections import LayerCollection
+
+        if isinstance(other, LayerCollection):
+            out = LayerCollection(self.copy(), *other.to_list(), name=self.name)
+        else:
+            out = LayerCollection(self.copy(), other.copy(), name=self.name)
+        canvas = self._canvas_ref() or other._canvas_ref()
+        if canvas is not None:
+            out._canvas_ref = weakref.ref(canvas)
+        return out
+
+    def _repr_any_(self, method: str, *args: Any, **kwargs: Any) -> Any:
+        from whitecanvas import new_canvas
+
+        if canvas := self._canvas_ref():
+            backend = canvas._get_backend()
+            if backend.name == "matplotlib":
+                import matplotlib.pyplot as plt
+
+                _old_mpl_backend = plt.get_backend()
+                plt.switch_backend("Agg")
+                try:
+                    canvas = new_canvas(backend=backend, size=(360, 240))
+                finally:
+                    plt.switch_backend(_old_mpl_backend)
+            else:
+                canvas = new_canvas(backend=backend, size=(360, 240))
+            canvas.add_layer(self.copy())
+            canvas.title.text = repr(self)
+            return getattr(canvas, method)(*args, **kwargs)
+        raise NotImplementedError("Cannot render without a canvas")
+
+    def _repr_png_(self):
+        """Return PNG representation of the layer."""
+        return self._repr_any_("_repr_png_")
+
+    def _repr_mimebundle_(self, *args: Any, **kwargs: Any) -> dict:
+        """Return MIME bundle representation of the layer."""
+        return self._repr_any_("_repr_mimebundle_", *args, **kwargs)
+
+    def _ipython_display_(self, *args: Any, **kwargs: Any) -> Any:
+        """Display the layer in IPython."""
+        return self._repr_any_("_ipython_display_", *args, **kwargs)
+
+    def _repr_html_(self, *args: Any, **kwargs: Any) -> str:
+        """Return HTML representation of the layer."""
+        return self._repr_any_("_repr_html_", *args, **kwargs)
 
     def _connect_canvas(self, canvas: CanvasBase):
         """If needed, do something when layer is added to a canvas."""
@@ -90,10 +215,6 @@ class Layer(ABC):
         if canvas is None:
             raise ValueError("Layer is not in any canvas.")
         return canvas
-
-    @abstractmethod
-    def bbox_hint(self) -> NDArray[np.float64]:
-        """Return the bounding box hint (xmin, xmax, ymin, ymax) of this layer."""
 
     def as_overlay(self) -> Self:
         """Move this layer to the overlay level."""
@@ -280,6 +401,8 @@ class LayerGroup(Layer):
 
 
 class LayerWrapper(Layer, Generic[_L]):
+    _LAYER_TYPE = "layer-wrapper"
+
     def __init__(
         self,
         base_layer: _L,
@@ -329,6 +452,19 @@ class LayerWrapper(Layer, Generic[_L]):
     @property
     def _NO_PADDING_NEEDED(self) -> bool:
         return self._base_layer._NO_PADDING_NEEDED
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a LayerWrapper from a dictionary."""
+        base = d["base"]
+        return cls(construct_layer(base, backend=backend))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": self._LAYER_TYPE,
+            "base": self._base_layer.to_dict(),
+        }
 
     def _as_legend_item(self) -> LegendItem:
         """Return the legend item for this layer."""

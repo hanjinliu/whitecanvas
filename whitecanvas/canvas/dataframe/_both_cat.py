@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, TypeVar
 
 import numpy as np
 
-from whitecanvas.canvas.dataframe import _misc
+from whitecanvas.canvas.dataframe import _sorter
 from whitecanvas.canvas.dataframe._base import BaseCatPlotter, CatIterator
 from whitecanvas.layers import tabular as _lt
 from whitecanvas.layers.tabular import _jitter
@@ -101,15 +101,11 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
             The order to sort the y-axis data.
         """
         if x is not None:
-            x_sorter = _misc.make_sorter_manual(
-                [u if isinstance(u, tuple) else (u,) for u in x]
-            )
+            x_sorter = _sorter.ManualSorter.norm_tuple(x)
         else:
             x_sorter = None
         if y is not None:
-            y_sorter = _misc.make_sorter_manual(
-                [u if isinstance(u, tuple) else (u,) for u in y]
-            )
+            y_sorter = _sorter.ManualSorter.norm_tuple(y)
         else:
             y_sorter = None
 
@@ -140,8 +136,8 @@ class XYCatPlotter(BaseCatPlotter[_C, _DF]):
             x=self._x,
             y=self._y,
             update_labels=self._update_label,
-            x_sorter=_misc.sorter_ascending if x_ascending else _misc.sorter_descending,
-            y_sorter=_misc.sorter_ascending if y_ascending else _misc.sorter_descending,
+            x_sorter=_sorter.SimpleSorter(x_ascending),
+            y_sorter=_sorter.SimpleSorter(y_ascending),
         )
 
     def _update_xy_label(
@@ -255,7 +251,7 @@ class XYCatAggPlotter(BaseCatPlotter[_C, _DF]):
         name: str | None = None,
         map_from: tuple[float, float] | None = None,
         map_to: tuple[float, float] = (3, 18),
-    ) -> _lt.DFMarkerGroups[_DF]:
+    ) -> _lt.DFMarkers[_DF]:
         """
         Add markers at the grid positions with the size representing the value.
 
@@ -286,9 +282,9 @@ class XYCatAggPlotter(BaseCatPlotter[_C, _DF]):
         xj = _jitter.CategoricalJitter(x, self._cat_iter_x.prep_position_map(x))
         yj = _jitter.CategoricalJitter(y, self._cat_iter_y.prep_position_map(y))
         return canvas.add_layer(
-            _lt.DFMarkers(self._df, xj, yj, color=color, name=name).update_size(
-                value, map_from=map_from, map_to=map_to
-            )
+            _lt.DFMarkers.from_jitters(
+                self._df, xj, yj, color=color, name=name
+            ).update_size(value, map_from=map_from, map_to=map_to)
         )
 
     def _aggregate(

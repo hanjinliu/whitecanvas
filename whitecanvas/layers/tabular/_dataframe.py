@@ -43,6 +43,23 @@ _DF = TypeVar("_DF")
 class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_DF]):
     def __init__(
         self,
+        base: _lg.LineCollection,
+        source: DataFrameWrapper[_DF],
+        categories: list[tuple[Any, ...]],
+        splitby: tuple[str, ...],
+        color_by: _p.ColorPlan,
+        style_by: _p.StylePlan,
+    ):
+        self._color_by = color_by
+        self._style_by = style_by
+        self._categories = categories
+        self._splitby = splitby
+        super().__init__(base, source)
+        self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
+
+    @classmethod
+    def from_arrays(
+        cls,
         source: DataFrameWrapper[_DF],
         segs: list[np.ndarray],
         categories: list[tuple[Any, ...]],
@@ -51,20 +68,19 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         style: str | tuple[str, ...] | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         splitby = _shared.join_columns(color, style, source=source)
-        self._color_by = _p.ColorPlan.default()
-        self._style_by = _p.StylePlan.default()
-        self._categories = categories
-        self._splitby = splitby
-        base = _lg.LineCollection(segs, name=name, backend=backend)
-        super().__init__(base, source)
+        base = _lg.LineCollection.from_segments(segs, name=name, backend=backend)
+        self = cls(
+            base, source, categories=categories, splitby=splitby,
+            color_by=_p.ColorPlan.default(), style_by=_p.StylePlan.default(),
+        )  # fmt: skip
         if color is not None:
             self.update_color(color)
         self.update_width(width)
         if style is not None:
             self.update_style(style)
-        self.with_hover_template("\n".join(f"{k}: {{{k}!r}}" for k in self._splitby))
+        return self
 
     @classmethod
     def from_table(
@@ -92,14 +108,38 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
         for sl, sub in df.group_by(splitby):
             labels.append(sl)
             segs.append(np.column_stack([xj.map(sub), yj.map(sub)]))
-        return DFLines(
+        return DFLines.from_arrays(
             df, segs, labels, name=name, color=color, width=width, style=style,
             backend=backend,
         )  # fmt: skip
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: str | Backend | None = None) -> Self:
+        base = d["base"]
+        if isinstance(base, dict):
+            base = _lg.LineCollection.from_dict(base, backend=backend)
+        return cls(
+            base=base,
+            source=d["source"],
+            categories=[tuple(category) for category in d["categories"]],
+            splitby=tuple(d["splitby"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "source": self._source,
+            "categories": self._categories,
+            "splitby": self._splitby,
+            "color_by": self._color_by,
+            "style_by": self._style_by,
+        }
+
     @overload
     def update_color(self, value: ColorType) -> Self: ...
-
     @overload
     def update_color(
         self,
@@ -293,14 +333,14 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_lg.LabeledImage, _DF], Generic[_D
 
 
 class DFMultiHeatmap(
-    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_l.Image], _DF],
+    _shared.DataFrameLayerWrapper[_lg.LayerCollection[_l.Image], _DF],
     Generic[_DF],
 ):
     _NO_PADDING_NEEDED = True
 
     def __init__(
         self,
-        base: _lg.LayerCollectionBase[_l.Image],
+        base: _lg.LayerCollection[_l.Image],
         source: DataFrameWrapper[_DF],
         color_by: _p.ColorPlan,
         categories: list[tuple],
@@ -350,7 +390,7 @@ class DFMultiHeatmap(
                 backend=backend,
             )  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers, name=name)
+        base = _lg.LayerCollection(image_layers, name=name)
         return cls(base, src, color_by, categories)
 
     @classmethod
@@ -381,7 +421,7 @@ class DFMultiHeatmap(
                 range=(xrange, yrange), backend=backend,
             )  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers, name=name)
+        base = _lg.LayerCollection(image_layers, name=name)
         return cls(base, src, color_by, categories)
 
     @classmethod
@@ -425,8 +465,29 @@ class DFMultiHeatmap(
                     dens.reshape(1, -1), cmap=cmap, clim=clim, backend=backend,
                 ).fit_to(ymin, ymax, x - extent / 2, x + extent / 2)  # fmt: skip
             image_layers.append(img)
-        base = _lg.LayerCollectionBase(image_layers, name=name)
+        base = _lg.LayerCollection(image_layers, name=name)
         return cls(base, src, color_by, categories)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        base = d["base"]
+        if isinstance(base, dict):
+            base = _lg.LayerCollection.from_dict(base, backend=backend)
+        return cls(
+            base=base,
+            source=d["source"],
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            categories=[tuple(category) for category in d["categories"]],
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "source": self._source,
+            "color_by": self._color_by,
+            "categories": self._categories,
+        }
 
     @staticmethod
     def _norm_df_xy_color(df, cols: list[str], color):
@@ -465,8 +526,9 @@ def _gen_cmap_from_color(next_color: Color):
 
 
 class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):
-    def __init__(
-        self,
+    @classmethod
+    def from_arrays(
+        cls,
         source: DataFrameWrapper[_DF],
         x: str,
         y: str,
@@ -489,32 +551,97 @@ class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic
         )
         if size is not None:
             base.markers.size = size
-        super().__init__(base, source)
+        return cls(base, source)
 
 
 _L = TypeVar("_L", bound=_lg.LineFillBase)
 
 
 class DFLineFillBase(
-    _shared.DataFrameLayerWrapper[_lg.LayerCollectionBase[_L], _DF],
+    _shared.DataFrameLayerWrapper[_lg.LayerCollection[_L], _DF],
     Generic[_L, _DF],
 ):
     _ATTACH_TO_AXIS = True
 
     def __init__(
         self,
-        base: _lg.LayerCollectionBase[_L],
+        base: _lg.LayerCollection[_L],
         source: DataFrameWrapper[_DF],
         categories: list[tuple[Any, ...]],
         splitby: tuple[str, ...],
+        color_by: _p.ColorPlan,
+        width_by: _p.WidthPlan,
+        style_by: _p.StylePlan,
+        hatch_by: _p.HatchPlan,
     ):
         self._categories = categories
         self._splitby = splitby
         super().__init__(base, source)
-        self._color_by = _p.ColorPlan.default()
-        self._width_by = _p.WidthPlan.default()
-        self._style_by = _p.StylePlan.default()
-        self._hatch_by = _p.HatchPlan.default()
+        self._color_by = color_by
+        self._width_by = width_by
+        self._style_by = style_by
+        self._hatch_by = hatch_by
+
+    @classmethod
+    def from_params(
+        cls,
+        base: _lg.LayerCollection[_L],
+        source: DataFrameWrapper[_DF],
+        categories: list[tuple[Any, ...]],
+        splitby: tuple[str, ...],
+        color: str | None = None,
+        width: float = 1.0,
+        style: str | None = None,
+        hatch: str | None = None,
+    ) -> Self:
+        self = cls(
+            base,
+            source,
+            categories,
+            splitby,
+            color_by=_p.ColorPlan.default(),
+            width_by=_p.WidthPlan.default(),
+            style_by=_p.StylePlan.default(),
+            hatch_by=_p.HatchPlan.default(),
+        )
+        if color is not None:
+            self.update_color(color)
+        if isinstance(width, str):
+            self.update_width(width)
+        if style is not None:
+            self.update_style(style)
+        if hatch is not None:
+            self.update_hatch(hatch)
+        return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        base = d["base"]
+        if isinstance(base, dict):
+            base = _lg.LayerCollection.from_dict(base, backend=backend)
+        return cls(
+            base=base,
+            source=d["source"],
+            categories=[tuple(category) for category in d["categories"]],
+            splitby=tuple(d["splitby"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            hatch_by=_p.HatchPlan.from_dict_or_plan(d["hatch_by"]),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "source": self._source,
+            "categories": self._categories,
+            "splitby": self._splitby,
+            "color_by": self._color_by,
+            "width_by": self._width_by,
+            "style_by": self._style_by,
+            "hatch_by": self._hatch_by,
+        }
 
     @overload
     def update_color(self, value: ColorType) -> Self: ...
@@ -603,27 +730,6 @@ class DFLineFillBase(
 
 
 class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
-    def __init__(
-        self,
-        source: DataFrameWrapper[_DF],
-        base: _lg.LayerCollectionBase[_lg.Histogram],
-        labels: list[tuple[Any, ...]],
-        color: str | tuple[str, ...] | None = None,
-        width: str | None = None,
-        style: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-    ):
-        splitby = _shared.join_columns(color, style, source=source)
-        super().__init__(base, source, labels, splitby)
-        if color is not None:
-            self.update_color(color)
-        if isinstance(width, str):
-            self.update_width(width)
-        if style is not None:
-            self.update_style(style)
-        if hatch is not None:
-            self.update_hatch(hatch)
-
     @property
     def orient(self) -> Orientation:
         if len(self.base) > 0:
@@ -650,9 +756,9 @@ class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
         splitby = _shared.join_columns(color, style, source=df)
         ori = Orientation.parse(orient)
         arrays: list[np.ndarray] = []
-        labels: list[tuple] = []
+        categories: list[tuple] = []
         for sl, sub in df.group_by(splitby):
-            labels.append(sl)
+            categories.append(sl)
             arrays.append(sub[value])
         hist = histograms(arrays, bins, limits)
 
@@ -663,32 +769,14 @@ class DFHistograms(DFLineFillBase[_lg.Histogram, _DF], Generic[_DF]):
                 orient=ori, shape=shape, backend=backend,
             )  # fmt: skip
             layers.append(each_layer)
-        base = _lg.LayerCollectionBase(layers, name=name)
-        return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
+        base = _lg.LayerCollection(layers, name=name)
+        return cls.from_params(
+            base, df, categories, splitby, color=color, width=width, style=style,
+            hatch=hatch,
+        )  # fmt: skip
 
 
 class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
-    def __init__(
-        self,
-        source: DataFrameWrapper[_DF],
-        base: _lg.LayerCollectionBase[_lg.Kde],
-        labels: list[tuple[Any, ...]],
-        color: str | tuple[str, ...] | None = None,
-        width: str | None = None,
-        style: str | tuple[str, ...] | None = None,
-        hatch: str | tuple[str, ...] | None = None,
-    ):
-        splitby = _shared.join_columns(color, style, source=source)
-        super().__init__(base, source, labels, splitby)
-        if color is not None:
-            self.update_color(color)
-        if isinstance(width, str):
-            self.update_width(width)
-        if style is not None:
-            self.update_style(style)
-        if hatch is not None:
-            self.update_hatch(hatch)
-
     @property
     def orient(self) -> Orientation:
         if len(self.base) > 0:
@@ -712,9 +800,9 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
         splitby = _shared.join_columns(color, style, source=df)
         ori = Orientation.parse(orient)
         arrays: list[np.ndarray] = []
-        labels: list[tuple] = []
+        categories: list[tuple] = []
         for sl, sub in df.group_by(splitby):
-            labels.append(sl)
+            categories.append(sl)
             arrays.append(sub[value])
         layers = []
         for arr in arrays:
@@ -722,5 +810,8 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
                 arr, width=width, band_width=band_width, orient=ori, backend=backend,
             )  # fmt: skip
             layers.append(each_layer)
-        base = _lg.LayerCollectionBase(layers, name=name)
-        return cls(df, base, labels, color=color, width=width, style=style, hatch=hatch)
+        base = _lg.LayerCollection(layers, name=name)
+        return cls.from_params(
+            base, df, categories, splitby, color=color, width=width, style=style,
+            hatch=hatch,
+        )  # fmt: skip

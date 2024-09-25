@@ -95,6 +95,29 @@ class Markers3D(
         """Number of data points."""
         return self.data.x.size
 
+    @classmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Markers3D:
+        return cls(
+            d["data"]["x"], d["data"]["y"], d["data"]["z"], name=d["name"],
+            symbol=d["symbol"], size=d["size"], color=d["face"]["color"],
+            hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self.data.to_dict(),
+            "name": self.name,
+            "symbol": self.symbol,
+            "size": self.size,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
+
     def _get_layer_data(self) -> XYZData:
         return XYZData(*self._backend._plt_get_data())
 

@@ -33,11 +33,12 @@ class MonoLine3D(PlotlyHoverableLayer[go.Scatter3d]):
         PlotlyHoverableLayer.__init__(self)
 
     def _plt_get_data(self):
-        return self._props["x"], self._props["y"]
+        return self._props["x"], self._props["y"], self._props["z"]
 
-    def _plt_set_data(self, xdata, ydata):
+    def _plt_set_data(self, xdata, ydata, zdata):
         self._props["x"] = xdata
         self._props["y"] = ydata
+        self._props["z"] = zdata
 
     def _plt_get_ndata(self) -> int:
         return len(self._props["x"])

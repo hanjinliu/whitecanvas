@@ -10,7 +10,7 @@ from whitecanvas.layers._mixin import CollectionFaceEdgeMixin
 from whitecanvas.layers._primitive import Band
 from whitecanvas.layers.group._cat_utils import check_array_input
 from whitecanvas.layers.group._collections import (
-    LayerCollectionBase,
+    LayerCollection,
     RichContainerEvents,
 )
 from whitecanvas.types import Orientation, XYYData
@@ -18,7 +18,7 @@ from whitecanvas.utils.normalize import as_array_1d, parse_texts
 
 
 class BandCollection(
-    LayerCollectionBase[Band],
+    LayerCollection[Band],
     CollectionFaceEdgeMixin,
 ):
     events: RichContainerEvents
@@ -26,6 +26,19 @@ class BandCollection(
 
     def __init__(
         self,
+        bands: list[Band],
+        *,
+        orient: Orientation = Orientation.VERTICAL,
+        name: str | None = None,
+    ):
+        LayerCollection.__init__(self, bands, name=name)
+        CollectionFaceEdgeMixin.__init__(self)
+        self._orient = orient
+        self._init_events()
+
+    @classmethod
+    def from_data_list(
+        cls,
         data: list[XYYData],
         *,
         orient: Orientation = Orientation.VERTICAL,
@@ -33,10 +46,7 @@ class BandCollection(
         backend: str | Backend | None = None,
     ):
         bands = [Band(*each, orient=orient, backend=backend) for each in data]
-        LayerCollectionBase.__init__(self, bands, name=name)
-        CollectionFaceEdgeMixin.__init__(self)
-        self._orient = orient
-        self._init_events()
+        return cls(bands, orient=orient, name=name)
 
     @property
     def data(self) -> list[XYYData]:
@@ -87,15 +97,14 @@ class BandCollection(
 class ViolinPlot(BandCollection):
     def __init__(
         self,
-        data: list[XYYData],
+        bands: list[Band],
         *,
         name: str | None = None,
         shape: Literal["both", "left", "right"] = "both",
         extent: float = 0.5,
         orient: Orientation = Orientation.VERTICAL,
-        backend: str | Backend | None = None,
     ):
-        super().__init__(data, name=name, orient=orient, backend=backend)
+        super().__init__(bands, name=name, orient=orient)
         self._shape = shape
         self._extent = extent
 
@@ -117,13 +126,36 @@ class ViolinPlot(BandCollection):
             x, data, shape=shape, extent=extent, kde_band_width=kde_band_width
         )
         return cls(
-            new_vals,
+            [
+                Band(*each, orient=orient.transpose(), backend=backend)
+                for each in new_vals
+            ],
             name=name,
             shape=shape,
             extent=extent,
             orient=ori.transpose(),
-            backend=backend,
         )
+
+    @classmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> ViolinPlot:
+        """Create a ViolinPlot from a dictionary."""
+        return cls(
+            [Band.from_dict(b, backend=backend) for b in d["children"]],
+            name=d["name"],
+            shape=d["shape"],
+            extent=d["extent"],
+            orient=d["orient"],
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "shape": self._shape,
+            "extent": self._extent,
+            "orient": self._orient.value,
+        }
 
     @property
     def orient(self) -> Orientation:

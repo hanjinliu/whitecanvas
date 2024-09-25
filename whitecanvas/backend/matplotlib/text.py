@@ -22,8 +22,12 @@ class Texts(Artist, MplLayer):
         for x0, y0, text0 in zip(x, y, text):
             self._children.append(
                 mplText(
-                    x0, y0, text0, verticalalignment="baseline",
-                    horizontalalignment="left", clip_on=True,
+                    x0,
+                    y0,
+                    text0,
+                    verticalalignment="baseline",
+                    horizontalalignment="left",
+                    clip_on=True,
                     color=np.array([0, 0, 0, 1], dtype=np.float32),
                 )  # fmt: skip
             )
@@ -56,7 +60,11 @@ class Texts(Artist, MplLayer):
             child.set_text(str(text0))
 
     def _plt_get_text_color(self):
-        return np.stack([child.get_color() for child in self.get_children()], axis=0)
+        return np.stack(
+            [child.get_color() for child in self.get_children()],
+            axis=0,
+            dtype=np.float32,
+        )
 
     def _plt_set_text_color(self, color):
         color = as_color_array(color, len(self.get_children()))
@@ -90,8 +98,12 @@ class Texts(Artist, MplLayer):
             for _ in range(x.size - len(self._children)):
                 self._children.append(
                     mplText(
-                        0, 0, "", verticalalignment="baseline",
-                        horizontalalignment="left", clip_on=True,
+                        0,
+                        0,
+                        "",
+                        verticalalignment="baseline",
+                        horizontalalignment="left",
+                        clip_on=True,
                         color=np.array([0, 0, 0, 1], dtype=np.float32),
                     )  # fmt: skip
                 )
@@ -146,9 +158,9 @@ class Texts(Artist, MplLayer):
         for child in self.get_children():
             patch = child.get_bbox_patch()
             if patch is None:
-                out.append(np.array([0, 0, 0, 0]))
+                out.append(np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32))
             else:
-                out.append(np.asarray(patch.get_facecolor()))
+                out.append(np.asarray(patch.get_facecolor(), dtype=np.float32))
         return np.stack(out, axis=0)
 
     def _plt_set_face_color(self, color):
@@ -166,7 +178,7 @@ class Texts(Artist, MplLayer):
                 out.append(Hatch(patch.get_hatch() or ""))
         return out
 
-    def _plt_set_face_hatch(self, pattern: Hatch):
+    def _plt_set_face_hatch(self, pattern: Hatch | list[Hatch]):
         if isinstance(pattern, Hatch):
             if pattern is Hatch.SOLID:
                 ptn = [None] * len(self.get_children())
@@ -182,9 +194,9 @@ class Texts(Artist, MplLayer):
         for child in self.get_children():
             patch = child.get_bbox_patch()
             if patch is None:
-                out.append(np.array([0, 0, 0, 0]))
+                out.append(np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32))
             else:
-                out.append(np.asarray(patch.get_edgecolor()))
+                out.append(np.asarray(patch.get_edgecolor(), dtype=np.float32))
         return np.stack(out, axis=0)
 
     def _plt_set_edge_color(self, color):

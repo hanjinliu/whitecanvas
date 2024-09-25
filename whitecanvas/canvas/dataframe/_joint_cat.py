@@ -88,7 +88,7 @@ class JointCatPlotter(BaseCatPlotter[_C, _DF]):
         main = grid.main_canvas
         xj = _jitter.IdentityJitter(self._get_x())
         yj = _jitter.IdentityJitter(self._get_y())
-        layer = _lt.DFMarkers(
+        layer = _lt.DFMarkers.from_jitters(
             self._df, xj, yj, name=name, color=color, hatch=hatch,
             size=size, symbol=symbol, backend=grid._backend,
         )  # fmt: skip

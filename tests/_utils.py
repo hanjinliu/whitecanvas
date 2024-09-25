@@ -3,7 +3,8 @@ import warnings
 from cmap import Color
 
 def assert_color_equal(a, b):
-    assert Color(a) == Color(b)
+    if Color(a) != Color(b):
+        raise AssertionError(f"Color {a} != {b}")
 
 def assert_color_array_equal(arr, b):
     cols = [Color(a) for a in arr]

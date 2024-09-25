@@ -17,7 +17,7 @@ from whitecanvas.layers._mixin import (
 )
 from whitecanvas.layers._primitive import Markers
 from whitecanvas.layers.group._collections import (
-    LayerCollectionBase,
+    LayerCollection,
     LayerContainerEvents,
 )
 from whitecanvas.theme import get_theme
@@ -241,16 +241,20 @@ class MarkerCollectionEdge(SinglePropertyEdgeBase):
         return _legend.EdgeInfo(color, width, style)
 
 
-class MarkerCollection(LayerCollectionBase[_Markers]):
+class MarkerCollection(LayerCollection[_Markers]):
     events: MarkerCollectionEvents
     _events_class = MarkerCollectionEvents
 
     def __init__(
         self,
-        layers: list[_Markers],
+        *layers: list[_Markers],
         name: str | None = None,
     ):
-        super().__init__(layers, name)
+        if len(layers) == 1 and isinstance(layers[0], (list, tuple)):
+            layers = layers[0]
+        else:
+            layers = list(layers)
+        super().__init__(layers, name=name)
         self._face_namespace = MarkerCollectionFace(self)
         self._edge_namespace = MarkerCollectionEdge(self)
         sizes = [layer.ndata for layer in layers]

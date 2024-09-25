@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Generic, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
 
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.layers._primitive import Band, Line
 from whitecanvas.layers._primitive.line import _SingleLine
 from whitecanvas.layers.group._collections import LayerContainer
@@ -24,6 +25,9 @@ from whitecanvas.types import (
 )
 from whitecanvas.utils.hist import get_hist_edges, histograms
 from whitecanvas.utils.normalize import as_array_1d
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _L = TypeVar("_L", bound=_SingleLine)
 
@@ -111,6 +115,26 @@ class Histogram(LineFillBase[Line]):
         )  # fmt: skip
         self._update_internal(xdata, ydata)
         self._data = data
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        data = d["data"]
+        edges = d["edges"]
+        limits = d.get("limits")
+        children = construct_layers(d["children"], backend=backend)
+        shape = HistogramShape(d.get("shape", "bars"))
+        kind = HistogramKind(d.get("kind", "count"))
+        return cls(data, edges, limits, *children, shape, kind, name=d.get("name"))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "data": self.data,
+            "edges": self.edges,
+            "limits": self.limits,
+            "shape": self.shape.value,
+            "kind": self.kind.value,
+        }
 
     def _update_internal(self, xdata: NDArray[np.number], ydata: NDArray[np.number]):
         if self.orient.is_vertical:
@@ -309,6 +333,26 @@ class Kde(LineFillBase[Line]):
         self._update_internal(xdata, ydata, self._bottom)
         self._data = data
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        children = construct_layers(d["children"], backend=backend)
+        return cls(
+            d["data"],
+            d["band_width"],
+            *children,
+            bottom=d.get("bottom", 0.0),
+            scale=d.get("scale", 1.0),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "data": self.data,
+            "band_width": self.band_width,
+            "bottom": self.bottom,
+            "scale": self.scale,
+        }
+
     def _update_internal(
         self, xdata: NDArray[np.number], ydata: NDArray[np.number], bottom: float
     ):
@@ -405,21 +449,22 @@ class Kde(LineFillBase[Line]):
 
 
 class Area(LineFillBase[Line]):
-    def __init__(
-        self,
+    @classmethod
+    def from_arrays(
+        cls,
         x: ArrayLike1D,
         y: ArrayLike1D,
         bottom: ArrayLike1D | float = 0.0,
         orient: OrientationLike = "vertical",
         name: str | None = None,
         backend: Backend | str | None = None,
-    ):
+    ) -> Area:
         if name is None:
-            name = "kde"
+            name = "area"
         ori = Orientation.parse(orient)
         line = Line(x, y + bottom, name="line", backend=backend)
         fill = Band(x, bottom, y + bottom, name="fill", orient=ori, backend=backend)
-        super().__init__(line, fill, name=name)
+        return cls(line, fill, name=name)
 
     @property
     def data(self) -> XYData:
@@ -433,6 +478,11 @@ class Area(LineFillBase[Line]):
         bottom = self.fill.data.y0
         self.line.data = x, y + bottom
         self.fill.data = x, bottom, y + bottom
+
+    @property
+    def bottom(self) -> ArrayLike1D:
+        """The bottom value of the fill."""
+        return self.fill.data.y0
 
     @property
     def orient(self) -> Orientation:

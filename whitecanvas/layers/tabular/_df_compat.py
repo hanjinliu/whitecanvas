@@ -101,6 +101,19 @@ class DataFrameWrapper(ABC, Generic[_T]):
         """Column names of the data frame."""
         return list(self.iter_keys())
 
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, data: dict[str, np.ndarray]) -> Self:
+        """Create a DataFrameWrapper from a dictionary."""
+
+    def to_dict(self) -> dict[str, np.ndarray]:
+        df_dict = {k: self[k] for k in self.iter_keys()}
+        return {"df_type": self.wrapper_type(), "data": df_dict}
+
+    @staticmethod
+    @abstractmethod
+    def wrapper_type() -> str: ...
+
 
 class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
     def __getitem__(self, item: str) -> np.ndarray:
@@ -197,6 +210,14 @@ class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
             out[on].append(sub[on][0])
         return DictWrapper({k: np.array(v) for k, v in out.items()})
 
+    @classmethod
+    def from_dict(cls, data: dict[str, np.ndarray]) -> Self:
+        return cls(data)
+
+    @staticmethod
+    def wrapper_type() -> str:
+        return "dict"
+
 
 class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def __getitem__(self, item: str) -> np.ndarray:
@@ -269,6 +290,16 @@ class PandasWrapper(DataFrameWrapper["pd.DataFrame"]):
     def value_first(self, by: tuple[str, ...], on: str) -> Self:
         return PandasWrapper(self._data.groupby(list(by)).first().reset_index())
 
+    @classmethod
+    def from_dict(cls, data: dict[str, np.ndarray]) -> Self:
+        import pandas as pd  # noqa: F811, RUF100
+
+        return cls(pd.DataFrame(data))
+
+    @staticmethod
+    def wrapper_type() -> str:
+        return "pandas"
+
 
 class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
     def __getitem__(self, item: str) -> np.ndarray:
@@ -325,10 +356,10 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
         value_name: str | None = None,
     ) -> Self:
         return PolarsWrapper(
-            self._data.melt(
-                id_vars=id_vars,
-                value_vars=value_vars,
-                var_name=var_name,
+            self._data.unpivot(
+                index=id_vars,
+                on=value_vars,
+                variable_name=var_name,
                 value_name=value_name,
             )
         )
@@ -342,6 +373,16 @@ class PolarsWrapper(DataFrameWrapper["pl.DataFrame"]):
 
     def value_first(self, by: tuple[str, ...], on: str) -> Self:
         return PolarsWrapper(self._data.group_by(by, maintain_order=True).first())
+
+    @classmethod
+    def from_dict(cls, data: dict[str, np.ndarray]) -> Self:
+        import polars as pl  # noqa: F811, RUF100
+
+        return cls(pl.DataFrame(data))
+
+    @staticmethod
+    def wrapper_type() -> str:
+        return "polars"
 
 
 def parse(data: Any) -> DataFrameWrapper:
@@ -363,3 +404,17 @@ def parse(data: Any) -> DataFrameWrapper:
         return DictWrapper({k: np.asarray(v) for k, v in df_interchangable.items()})
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")
+
+
+def from_dict(data: dict[str, Any]) -> DataFrameWrapper:
+    """Create a DataFrameWrapper from a dictionary."""
+    df = data["data"]
+    typ = data["df_type"]
+    if typ == "dict":
+        return DictWrapper.from_dict(df)
+    elif typ == "pandas":
+        return PandasWrapper.from_dict(df)
+    elif typ == "polars":
+        return PolarsWrapper.from_dict(df)
+    else:
+        raise ValueError(f"Unsupported DataFrameWrapper type: {typ}")

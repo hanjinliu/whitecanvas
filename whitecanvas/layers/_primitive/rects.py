@@ -60,7 +60,7 @@ class Rects(
         *,
         name: str | None = None,
         color: ColorType = "blue",
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
@@ -97,6 +97,26 @@ class Rects(
     def ndata(self) -> int:
         """The number of data points"""
         return self.data.shape[0]
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Rects from a dictionary."""
+        return cls(
+            d["data"], name=d["name"], color=d["face"]["color"],
+            hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self.data,
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
 
     def with_face(
         self,

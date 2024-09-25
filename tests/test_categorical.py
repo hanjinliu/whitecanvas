@@ -1,6 +1,6 @@
 import numpy as np
 
-from whitecanvas import new_canvas
+from whitecanvas import new_canvas, read_canvas
 from whitecanvas.core import new_jointgrid
 from ._utils import assert_color_array_equal, filter_warning
 import pytest
@@ -14,38 +14,39 @@ def test_cat(backend: str):
         "label": np.repeat(["A", "B", "C"], 10),
     }
     cplt = canvas.cat(df, "x", "y")
-    cplt.add_line().update_style("--")
-    cplt.add_line(color="label").update_style("label").with_markers()
-    cplt.add_markers()
-    cplt.add_markers(color="label")
-    cplt.add_markers(hatch="label")
-    cplt.add_pointplot(color="label")
-    cplt.add_hist2d(bins=5)
-    cplt.add_hist2d(bins=(5, 4))
-    cplt.add_hist2d(bins="auto")
-    cplt.add_hist2d(bins=(5, 4), color="label")
-    cplt.add_hist2d(bins=("auto", 5))
-    cplt.add_kde2d()
-    cplt.add_kde2d(color="label")
-    cplt.along_x().add_hist(bins=5)
-    cplt.along_x().add_hist(bins=5, color="label")
-    cplt.along_y().add_hist(bins=6)
-    hist = cplt.along_y().add_hist(bins=6, color="label")
-    cplt.along_x().add_kde()
-    kde = cplt.along_x().add_kde(color="label")
-    cplt.along_x().add_rug()
+    cplt.add_line().update_style("--").copy()
+    cplt.add_line(color="label").update_style("label").with_markers().copy()
+    cplt.add_markers().copy()
+    cplt.add_markers(color="label").copy()
+    cplt.add_markers(hatch="label").copy()
+    cplt.add_pointplot(color="label").copy()
+    cplt.add_hist2d(bins=5).copy()
+    cplt.add_hist2d(bins=(5, 4)).copy()
+    cplt.add_hist2d(bins="auto").copy()
+    cplt.add_hist2d(bins=(5, 4), color="label").copy()
+    cplt.add_hist2d(bins=("auto", 5)).copy()
+    cplt.add_kde2d().copy()
+    cplt.add_kde2d(color="label").copy()
+    cplt.along_x().add_hist(bins=5).copy()
+    cplt.along_x().add_hist(bins=5, color="label").copy()
+    cplt.along_y().add_hist(bins=6).copy()
+    hist = cplt.along_y().add_hist(bins=6, color="label").copy()
+    cplt.along_x().add_kde().copy()
+    kde = cplt.along_x().add_kde(color="label").copy()
+    cplt.along_x().add_rug().copy()
     with filter_warning(backend, "plotly"):
-        cplt.along_x().add_rug(color="label")
-    hist.update_color("black")
-    kde.update_color("label")
-    hist.update_width(1.5)
-    kde.update_width(1.5)
-    hist.update_style(":")
-    kde.update_style("label")
-    hist.update_hatch("label")
-    kde.update_hatch("/")
+        cplt.along_x().add_rug(color="label").copy()
+    hist.update_color("black").copy()
+    kde.update_color("label").copy()
+    hist.update_width(1.5).copy()
+    kde.update_width(1.5).copy()
+    hist.update_style(":").copy()
+    kde.update_style("label").copy()
+    hist.update_hatch("label").copy()
+    kde.update_hatch("/").copy()
     with filter_warning(backend, "vispy"):
         canvas.add_legend()
+    read_canvas(canvas.write_json())
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_cat_plots(backend: str, orient: str):
@@ -60,26 +61,27 @@ def test_cat_plots(backend: str, orient: str):
         cat_plt = canvas.cat_x(df, "label", "y")
     else:
         cat_plt = canvas.cat_y(df, "y", "label")
-    cat_plt.add_stripplot(color="c", alpha=0.8).move(0.1)
-    cat_plt.add_swarmplot(color="c", alpha="val").move(0.1)
-    cat_plt.add_boxplot(color="c").with_edge().with_outliers(ratio=0.5)
+    cat_plt.add_stripplot(color="c", alpha=0.8).move(0.1).copy()
+    cat_plt.add_swarmplot(color="c", alpha="val").move(0.1).copy()
+    cat_plt.add_boxplot(color="c").with_edge().with_outliers(ratio=0.5).copy()
     with filter_warning(backend, "plotly"):
-        box = cat_plt.add_boxplot(color="c").as_edge_only().move(0.1)
+        box = cat_plt.add_boxplot(color="c").as_edge_only().move(0.1).copy()
         box.update_color_palette(["blue", "red"], alpha=0.9, cycle_by="c")
-        box = cat_plt.add_boxplot(hatch="c").as_edge_only().move(0.1)
+        box = cat_plt.add_boxplot(hatch="c").as_edge_only().move(0.1).copy()
         box.update_hatch_palette(["/", "x"])
         box.update_const(color="black", hatch="+")
-    cat_plt.add_violinplot(color="c").with_rug()
-    cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5)
-    cat_plt.add_violinplot(color="c").with_box()
-    cat_plt.add_violinplot(color="c").as_edge_only().move(0.1).with_strip()
-    cat_plt.add_violinplot(color="c").with_swarm()
-    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1)
-    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1)
+    cat_plt.add_violinplot(color="c").with_rug().copy()
+    cat_plt.add_violinplot(color="c").with_outliers(ratio=0.5).copy()
+    cat_plt.add_violinplot(color="c").with_box().copy()
+    cat_plt.add_violinplot(color="c").as_edge_only().move(0.1).with_strip().copy()
+    cat_plt.add_violinplot(color="c").with_swarm().copy()
+    cat_plt.add_pointplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1).copy()
+    cat_plt.add_barplot(color="c").err_by_se().err_by_sd().err_by_quantile().est_by_mean().est_by_median().move(0.1).copy()
     with filter_warning(backend, "plotly"):
-        cat_plt.add_rugplot(color="c").scale_by_density().move(0.1)
-    cat_plt.add_heatmap_hist(bins=4)
-    cat_plt.add_heatmap_hist(bins=4, color="c")
+        cat_plt.add_rugplot(color="c").scale_by_density().move(0.1).copy()
+    cat_plt.add_heatmap_hist(bins=4).copy()
+    cat_plt.add_heatmap_hist(bins=4, color="c").copy()
+    read_canvas(canvas.write_json())
 
 def test_cat_plots_with_sequential_color():
     df = {
@@ -90,13 +92,13 @@ def test_cat_plots_with_sequential_color():
     }
     canvas = new_canvas(backend="mock")
     cat_plt = canvas.cat_y(df, "y", "label")
-    cat_plt.add_stripplot(color="c", alpha=0.8)
-    cat_plt.add_swarmplot(color="c", alpha="val")
-    cat_plt.add_rugplot(color="c")
+    cat_plt.add_stripplot(color="c", alpha=0.8).copy()
+    cat_plt.add_swarmplot(color="c", alpha="val").copy()
+    cat_plt.add_rugplot(color="c").copy()
 
     canvas = new_canvas(backend="mock")
     cat_plt = canvas.cat(df, "y", "val")
-    cat_plt.add_markers(color="c")
+    cat_plt.add_markers(color="c").copy()
 
 def test_markers(backend: str):
     canvas = new_canvas(backend=backend)
@@ -109,26 +111,26 @@ def test_markers(backend: str):
     }
 
     _c = canvas.cat(df, "x", "y")
-    out = _c.add_markers(color="label0", size="size", symbol="label1")
+    out = _c.add_markers(color="label0", size="size", symbol="label1").copy()
     assert len(set(out._base_layer.symbol[:10])) == 1
     assert len(set(out._base_layer.symbol[10:])) == 1
 
-    out = _c.add_markers(color="label1", size="size", hatch="label0")
+    out = _c.add_markers(color="label1", size="size", hatch="label0").copy()
     assert len(set(out._base_layer.face.hatch[:10])) == 1
     assert len(set(out._base_layer.face.hatch[10:20])) == 1
     assert len(set(out._base_layer.face.hatch[20:])) == 1
 
-    out = _c.add_markers(color="label1").with_edge(color="label0")
+    out = _c.add_markers(color="label1").with_edge(color="label0").copy()
     assert len(np.unique(out._base_layer.edge.color[:10], axis=0)) == 1
     assert len(np.unique(out._base_layer.edge.color[10:20], axis=0)) == 1
     assert len(np.unique(out._base_layer.edge.color[20:], axis=0)) == 1
 
     # test scalar color
-    out = _c.add_markers(color="black")
+    out = _c.add_markers(color="black").copy()
     assert_color_array_equal(out._base_layer.face.color, "black")
 
-    out = _c.add_markers(color="transparent").update_edge_colormap("size")
-    _c.mean_for_each("label0").add_markers(symbol="D")
+    out = _c.add_markers(color="transparent").update_edge_colormap("size").copy()
+    _c.mean_for_each("label0").add_markers(symbol="D").copy()
 
 def test_cat_xy(backend: str):
     canvas = new_canvas(backend=backend)
@@ -162,7 +164,7 @@ def test_cat_xy(backend: str):
 
     if backend != "vispy":
         canvas.add_legend()
-
+    read_canvas(canvas.write_json())
 
 @pytest.mark.parametrize("orient", ["v", "h"])
 def test_agg(backend: str, orient: str):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,6 +12,9 @@ from whitecanvas.layers._primitive import Markers, MultiLine
 from whitecanvas.layers.group._collections import LayerContainer
 from whitecanvas.types import ArrayLike1D, Orientation, XYData
 from whitecanvas.utils.normalize import normalize_xy
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _Face = TypeVar("_Face", bound=FaceNamespace)
 _Edge = TypeVar("_Edge", bound=EdgeNamespace)
@@ -78,6 +81,12 @@ class StemPlot(LayerContainer, Generic[_Face, _Edge, _Size]):
     def orient(self) -> Orientation:
         """Orientation of the stem plot."""
         return self._orient
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        self = super().from_dict(d, backend=backend)
+        self._orient = Orientation.parse(d["orient"])
+        return self
 
     def bbox_hint(self) -> NDArray[np.float64]:
         xmin, xmax, ymin, ymax = self.markers.bbox_hint()

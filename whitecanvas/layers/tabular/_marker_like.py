@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Iterable, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, overload
 
 import numpy as np
 from cmap import Color, Colormap
@@ -11,11 +11,13 @@ from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
+from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers._legend import LegendItem
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
-from whitecanvas.layers.tabular._df_compat import DataFrameWrapper
+from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, from_dict
 from whitecanvas.types import (
+    ArrayLike1D,
     ColormapType,
     ColorType,
     Hatch,
@@ -33,7 +35,6 @@ if TYPE_CHECKING:
     from whitecanvas.canvas import CanvasBase
 
 _DF = TypeVar("_DF")
-_Cols = Union[str, "tuple[str, ...]"]
 _void = _Void()
 
 
@@ -212,6 +213,26 @@ class DFMarkers(
 ):
     def __init__(
         self,
+        base: _lg.MarkerCollection,
+        source: DataFrameWrapper[_DF],
+        color_by: _p.ColorPlan | _p.ColormapPlan,
+        edge_color_by: _p.ColorPlan | _p.ColormapPlan,
+        hatch_by: _p.HatchPlan,
+        size_by: _p.SizePlan,
+        symbol_by: _p.SymbolPlan,
+        width_by: _p.WidthPlan,
+    ):
+        self._color_by = color_by
+        self._edge_color_by = edge_color_by
+        self._hatch_by = hatch_by
+        self._size_by = size_by
+        self._symbol_by = symbol_by
+        self._width_by = width_by
+        super().__init__(base, source)
+
+    @classmethod
+    def from_jitters(
+        cls,
         source: DataFrameWrapper[_DF],
         x: _jitter.JitterBase,
         y: _jitter.JitterBase,
@@ -222,21 +243,20 @@ class DFMarkers(
         size: str | None = None,
         name: str | None = None,
         backend: str | Backend | None = None,
-    ):
-        self._x = x
-        self._y = y
-        self._color_by: _p.ColorPlan | _p.ColormapPlan = _p.ColorPlan.default()
-        self._edge_color_by: _p.ColorPlan | _p.ColormapPlan = _p.ColorPlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._size_by = _p.SizePlan.default()
-        self._symbol_by = _p.SymbolPlan.default()
-        self._width_by = _p.WidthPlan.default()
-
+    ) -> Self:
         base = _lg.MarkerCollection.from_arrays(
             x.map(source), y.map(source), name=name, backend=backend
         )
-
-        super().__init__(base, source)
+        self = cls(
+            base,
+            source,
+            color_by=_p.ColorPlan.default(),
+            edge_color_by=_p.ColorPlan.default(),
+            hatch_by=_p.HatchPlan.default(),
+            size_by=_p.SizePlan.default(),
+            symbol_by=_p.SymbolPlan.default(),
+            width_by=_p.WidthPlan.default(),
+        )
         if color is not None:
             self._update_color_or_colormap(color)
         if hatch is not None:
@@ -250,9 +270,42 @@ class DFMarkers(
 
         # set default hover text
         self.with_hover_template(default_template(source.iter_items()))
+        return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a DFViolinPlot from a dictionary."""
+        base, source = d["base"], d["source"]
+        if isinstance(base, dict):
+            base = construct_layer(base, backend=backend)
+        if isinstance(source, dict):
+            source = from_dict(source)
+        return cls(
+            base,
+            source,
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            edge_color_by=_p.ColorPlan.from_dict_or_plan(d["edge_color_by"]),
+            hatch_by=_p.HatchPlan.from_dict_or_plan(d["hatch_by"]),
+            size_by=_p.SizePlan.from_dict_or_plan(d["size_by"]),
+            symbol_by=_p.SymbolPlan.from_dict_or_plan(d["symbol_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "source": self._source,
+            "color_by": self._color_by,
+            "edge_color_by": self._edge_color_by,
+            "hatch_by": self._hatch_by,
+            "size_by": self._size_by,
+            "symbol_by": self._symbol_by,
+            "width_by": self._width_by,
+        }
 
     def _apply_color(self, color):
-        self.base.face.color = color
+        self.base.face.color = np.asarray(color, dtype=np.float32)
 
     def _apply_width(self, width):
         self.base.with_edge(color=_void, width=width, style=_void)
@@ -493,6 +546,29 @@ class DFMarkerGroups(DFMarkers):
         super().__init__(*args, **kwargs)
         self._orient = Orientation.parse(orient)
 
+    @classmethod
+    def from_jitters(
+        cls,
+        *args,
+        orient: str | Orientation = Orientation.VERTICAL,
+        **kwargs,
+    ) -> Self:
+        self = super().from_jitters(*args, **kwargs)
+        self._orient = Orientation.parse(orient)
+        return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        self = super().from_dict(d, backend)
+        self._orient = Orientation.parse(d["orient"])
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "orient": self._orient.value,
+        }
+
     @property
     def orient(self) -> Orientation:
         """Orientation of the plot."""
@@ -517,10 +593,32 @@ class DFBars(
 ):
     def __init__(
         self,
+        base: _l.Bars[_mixin.MultiFace, _mixin.MultiEdge],
         source: DataFrameWrapper[_DF],
-        x,
-        y,
-        bottom=None,
+        stackby: tuple[str, ...],
+        splitby: tuple[str, ...],
+        color_by: _p.ColorPlan | _p.ColormapPlan,
+        edge_color_by: _p.ColorPlan | _p.ColormapPlan,
+        hatch_by: _p.HatchPlan,
+        style_by: _p.StylePlan,
+        width_by: _p.WidthPlan,
+    ):
+        self._color_by = color_by
+        self._edge_color_by = edge_color_by
+        self._hatch_by = hatch_by
+        self._style_by = style_by
+        self._splitby = splitby
+        self._stackby = stackby
+        self._width_by = width_by
+        super().__init__(base, source)
+
+    @classmethod
+    def from_arrays(
+        cls,
+        source: DataFrameWrapper[_DF],
+        x: ArrayLike1D,
+        y: ArrayLike1D,
+        bottom: ArrayLike1D | None = None,
         color: str | tuple[str, ...] | None = None,
         hatch: str | tuple[str, ...] | None = None,
         stackby: tuple[str, ...] = (),
@@ -528,24 +626,24 @@ class DFBars(
         orient: Orientation = Orientation.VERTICAL,
         extent: float = 0.8,
         backend: str | Backend | None = None,
-    ):
+    ) -> Self:
         splitby = _shared.join_columns(color, hatch, stackby, source=source)
-        self._color_by = _p.ColorPlan.default()
-        self._hatch_by = _p.HatchPlan.default()
-        self._style_by = _p.StylePlan.default()
-        self._splitby = splitby
-        self._stackby = stackby
-
         base = _l.Bars(
             x, y, bottom=bottom, name=name, orient=orient, extent=extent,
             backend=backend
         ).with_face_multi().with_edge_multi()  # fmt: skip
-        super().__init__(base, source)
+        self = cls(
+            base, source, stackby=stackby, splitby=splitby,
+            color_by=_p.ColorPlan.default(), edge_color_by=_p.ColorPlan.default(),
+            hatch_by=_p.HatchPlan.default(), style_by=_p.StylePlan.default(),
+            width_by=_p.WidthPlan.default(),
+        )  # fmt: skip
         if color is not None:
             self.update_color(color)
         if hatch is not None:
             self.update_hatch(hatch)
         self.with_hover_template(default_template(source.iter_items()))
+        return self
 
     @property
     def orient(self) -> Orientation:
@@ -576,7 +674,7 @@ class DFBars(
             yj = _jitter.IdentityJitter(y)
         x0 = xj.map(df)
         y0 = yj.map(df)
-        return DFBars(
+        return DFBars.from_arrays(
             df, x0, y0, name=name, color=color, hatch=hatch, extent=extent,
             orient=orient, backend=backend,
         )  # fmt: skip
@@ -599,13 +697,47 @@ class DFBars(
         if stackby is None:
             stackby = _shared.join_columns(color, hatch, source=df)
         x0, y0, b0 = _shared.resolve_stacking(df, x, y, stackby)
-        return DFBars(
+        return DFBars.from_arrays(
             df, x0, y0, b0, color=color, hatch=hatch, stackby=stackby, name=name,
             extent=extent, orient=orient, backend=backend,
         )  # fmt: skip
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a DFViolinPlot from a dictionary."""
+        base, source = d["base"], d["source"]
+        if isinstance(base, dict):
+            base = construct_layer(base, backend=backend)
+        if isinstance(source, dict):
+            source = from_dict(source)
+        return cls(
+            base,
+            source,
+            stackby=tuple(d["stack_by"]),
+            splitby=tuple(d["split_by"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            edge_color_by=_p.ColorPlan.from_dict_or_plan(d["edge_color_by"]),
+            hatch_by=_p.HatchPlan.from_dict_or_plan(d["hatch_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "source": self._source,
+            "stack_by": self._stackby,
+            "split_by": self._splitby,
+            "color_by": self._color_by,
+            "edge_color_by": self._edge_color_by,
+            "hatch_by": self._hatch_by,
+            "style_by": self._style_by,
+            "width_by": self._width_by,
+        }
+
     def _apply_color(self, color):
-        self.base.face.color = color
+        self.base.face.color = np.asarray(color, dtype=np.float32)
 
     def _apply_width(self, width):
         self._base_layer.with_edge_multi(color=_void, width=width, style=_void)
@@ -687,26 +819,18 @@ class DFBars(
 class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generic[_DF]):
     def __init__(
         self,
-        source: DataFrameWrapper[_DF],
         base: _l.Rug,
-        color: _Cols | None = None,
-        width: str | float | None = None,
-        style: str | Iterable[str] | None = None,
+        source: DataFrameWrapper[_DF],
+        color_by: _p.ColorPlan | _p.ColormapPlan,
+        width_by: _p.WidthPlan,
+        style_by: _p.StylePlan,
+        scale_by: _p.WidthPlan,
     ):
-        self._color_by = _p.ColorPlan.default()
-        self._width_by = _p.WidthPlan.default()
-        self._style_by = _p.StylePlan.default()
-        self._scale_by = _p.WidthPlan.default()
+        self._color_by = color_by
+        self._width_by = width_by
+        self._style_by = style_by
+        self._scale_by = scale_by
         super().__init__(base, source)
-        if color is not None:
-            self._update_color_or_colormap(color)
-        if isinstance(width, str):
-            self.update_width(width)
-        elif is_real_number(width):
-            self.base.width = width
-        if style is not None:
-            self.update_style(style)
-        self.with_hover_template(default_template(source.iter_items()))
 
     @classmethod
     def from_table(
@@ -726,7 +850,49 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
         base = _l.Rug(
             df[value], name=name, orient=ori, low=low, high=high, backend=backend,
         )  # fmt: skip
-        return cls(df, base, color=color, width=width, style=style)
+        self = cls(
+            base, df,
+            color_by=_p.ColorPlan.default(), width_by=_p.WidthPlan.default(),
+            style_by=_p.StylePlan.default(), scale_by=_p.WidthPlan.default(),
+        )  # fmt: skip
+        if color is not None:
+            self._update_color_or_colormap(color)
+        if isinstance(width, str):
+            self.update_width(width)
+        elif is_real_number(width):
+            self.base.width = width
+        if style is not None:
+            self.update_style(style)
+        self.with_hover_template(default_template(df.iter_items()))
+        return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a DFViolinPlot from a dictionary."""
+        base, source = d["base"], d["source"]
+        if isinstance(base, dict):
+            base = construct_layer(base, backend=backend)
+        if isinstance(source, dict):
+            source = from_dict(source)
+        return cls(
+            base,
+            source,
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            scale_by=_p.WidthPlan.from_dict_or_plan(d["scale_by"]),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "base": self._base_layer,
+            "source": self._source,
+            "color_by": self._color_by,
+            "width_by": self._width_by,
+            "style_by": self._style_by,
+            "scale_by": self._scale_by,
+        }
 
     @property
     def orient(self) -> Orientation:
@@ -734,7 +900,7 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
         return self.base.orient
 
     def _apply_color(self, color):
-        self.base.color = color
+        self.base.color = np.asarray(color, dtype=np.float32)
 
     def _apply_alpha(self, alpha):
         self.base.alpha = alpha
@@ -744,9 +910,6 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
 
     def _apply_style(self, style):
         self.base.style = style
-
-    # def update_scale(self, by: str | float, align: str = "low") -> Self:
-    #     ...
 
     def update_length(
         self,
@@ -788,24 +951,49 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
 class DFRugGroups(DFRug[_DF]):
     def __init__(
         self,
-        source: DataFrameWrapper[_DF],
         base: _l.Rug,
+        source: DataFrameWrapper[_DF],
         value: str,
         splitby: tuple[str, ...],
-        color: str | tuple[str, ...] | None = None,
-        width: str | None = None,
-        style: str | tuple[str, ...] | None = None,
-        extent: float = 0.8,
+        color_by: _p.ColorPlan | _p.ColormapPlan,
+        width_by: _p.WidthPlan,
+        style_by: _p.StylePlan,
+        scale_by: _p.WidthPlan,
     ):
-        super().__init__(source, base, color=color, width=width, style=style)
+        super().__init__(base, source, color_by, width_by, style_by, scale_by)
         self._splitby = splitby
         self._value = value
-        self._extent = extent
 
     @property
     def orient(self) -> Orientation:
         """Orientation of the plot."""
         return self.base.orient.transpose()
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a DFRugGroups from a dictionary."""
+        base, source = d["base"], d["source"]
+        if isinstance(base, dict):
+            base = construct_layer(base, backend=backend)
+        if isinstance(source, dict):
+            source = from_dict(source)
+        return cls(
+            base,
+            source,
+            value=d["value"],
+            splitby=tuple(d["split_by"]),
+            color_by=_p.ColorPlan.from_dict_or_plan(d["color_by"]),
+            width_by=_p.WidthPlan.from_dict_or_plan(d["width_by"]),
+            style_by=_p.StylePlan.from_dict_or_plan(d["style_by"]),
+            scale_by=_p.WidthPlan.from_dict_or_plan(d["scale_by"]),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "value": self._value,
+            "split_by": self._splitby,
+        }
 
     def move(self, shift: float = 0.0, autoscale: bool = True) -> Self:
         """Add a constant shift to the layer."""
@@ -836,10 +1024,21 @@ class DFRugGroups(DFRug[_DF]):
         base = _l.Rug(
             df[value], orient=ori, low=x - dx, high=x + dx, name=name, backend=backend,
         )  # fmt: skip
-        return cls(
-            df, base, value, jitter.by, color=color, width=width, style=style,
-            extent=extent,
+        self = cls(
+            base, df, value, jitter.by,
+            color_by=_p.ColorPlan.default(), width_by=_p.WidthPlan.default(),
+            style_by=_p.StylePlan.default(), scale_by=_p.WidthPlan.default(),
         )  # fmt: skip
+        if color is not None:
+            self._update_color_or_colormap(color)
+        if isinstance(width, str):
+            self.update_width(width)
+        elif is_real_number(width):
+            self.base.width = width
+        if style is not None:
+            self.update_style(style)
+        self.with_hover_template(default_template(df.iter_items()))
+        return self
 
     def scale_by_density(
         self,
@@ -879,7 +1078,12 @@ class DFRugGroups(DFRug[_DF]):
             slices.append(_ar_bool)
             offsets.append(data_full.ycenter[_ar_bool].mean())
         density_max = max(d.max() for d in densities)
-        normed = [d / density_max * self._extent / 2 for d in densities]
+        diff = np.unique(self.base.high - self.base.low)
+        if diff.size == 0:
+            extent = 0.8
+        else:
+            extent = diff.max()
+        normed = [d / density_max * extent / 2 for d in densities]
 
         # sort densities
         normed_sorted = np.empty(self._source.shape[0], dtype=np.float32)

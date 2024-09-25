@@ -1,17 +1,22 @@
 from __future__ import annotations
 
+import json
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator, overload
 
 import numpy as np
+from cmap import Color
 from numpy.typing import NDArray
 from psygnal import Signal, SignalGroup
 from typing_extensions import override
 
 from whitecanvas import protocols
+from whitecanvas._json_utils import CustomEncoder, color_to_hex
 from whitecanvas.backend import Backend
 from whitecanvas.canvas import Canvas, CanvasBase
 from whitecanvas.canvas._linker import link_axes
+from whitecanvas.layers._deserialize import construct_layers
 from whitecanvas.theme import get_theme
 from whitecanvas.utils.normalize import arr_color
 
@@ -25,7 +30,62 @@ class GridEvents(SignalGroup):
     drawn = Signal()
 
 
-class CanvasGrid:
+class _Serializable(ABC):
+    @abstractmethod
+    def to_dict(self) -> dict[str, Any]: ...
+    @classmethod
+    @abstractmethod
+    def from_dict(
+        cls, d: dict[str, Any], backend: Backend | str | None = None
+    ) -> Self: ...
+
+    @classmethod
+    def read_json(
+        cls,
+        path_or_str: str | Path,
+        *,
+        backend: Backend | str | None = None,
+    ) -> Self:
+        """
+        Construct a canvas grid from a JSON file or string.
+
+        Parameters
+        ----------
+        path_or_str : str or Path
+            The path to the JSON file or the JSON string.
+        backend : Backend or str, optional
+            The backend of the canvas.
+        """
+
+        if isinstance(path_or_str, Path):
+            txt = path_or_str.read_text()
+        elif not isinstance(path_or_str, str):
+            raise TypeError(f"Expected a path or a string, got {path_or_str!r}")
+        else:
+            if "{" in path_or_str:
+                txt = path_or_str
+            else:
+                txt = Path(path_or_str).read_text()
+        return cls.from_dict(json.loads(txt), backend=backend)
+
+    @overload
+    def write_json(self) -> str: ...
+    @overload
+    def write_json(self, path: str | Path) -> None: ...
+
+    def write_json(self, path: str | Path | None = None) -> str | None:
+        """Return a JSON string or write to a file."""
+
+        txt = json.dumps(color_to_hex(self.to_dict()), indent=2, cls=CustomEncoder)
+        if path is None:
+            return txt
+        if isinstance(path, str):
+            path = Path(path)
+        path.write_text(txt)
+        return None
+
+
+class CanvasGrid(_Serializable):
     _CURRENT_INSTANCE: CanvasGrid | None = None
     events: GridEvents
 
@@ -265,6 +325,43 @@ class CanvasGrid:
         self._size = (int(w), int(h))
         self._backend_object._plt_set_figsize(*self._size)
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        _type_expected = f"{cls.__module__}.{cls.__name__}"
+        if (_type := d.get("type")) and _type != _type_expected:
+            raise ValueError(f"Expected type {_type_expected!r}, got {_type!r}")
+        self = cls(d["heights"], d["widths"], backend=backend)
+        if "size" in d:
+            self.size = d["size"]
+        if "background_color" in d:
+            self.background_color = d["background_color"]
+        for canvas_dict in d["canvas_array"]:
+            if canvas_dict["canvas"]["type"].endswith("3D"):
+                canvas = self.add_canvas_3d(canvas_dict["row"], canvas_dict["col"])
+            else:
+                canvas = self.add_canvas(canvas_dict["row"], canvas_dict["col"])
+            canvas._update_from_dict(canvas_dict["canvas"])
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": f"{type(self).__module__}.{type(self).__name__}",
+            "heights": self._heights,
+            "widths": self._widths,
+            "size": self.size,
+            "background_color": Color(self.background_color).hex,
+            "canvas_array": [
+                {"row": r, "col": c, "canvas": canvas.to_dict()}
+                for (r, c), canvas in self._iter_canvas()
+            ],
+        }
+
+    def copy(self, backend: Backend | str | None = None) -> Self:
+        """Make a copy of the canvas."""
+        if backend is None:
+            backend = self._backend
+        return self.from_dict(self.to_dict(), backend=backend)
+
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         from io import BytesIO
@@ -306,14 +403,14 @@ class CanvasGrid:
 
 
 class CanvasVGrid(CanvasGrid):
-    @override
-    def __init__(
-        self,
+    @classmethod
+    def _from_heights(
+        cls,
         heights: list[int],
         *,
         backend: Backend | str | None = None,
-    ) -> None:
-        super().__init__(heights, [1], backend=backend)
+    ) -> CanvasVGrid:
+        return CanvasVGrid(heights, [1], backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:
@@ -333,14 +430,14 @@ class CanvasVGrid(CanvasGrid):
 
 
 class CanvasHGrid(CanvasGrid):
-    @override
-    def __init__(
-        self,
+    @classmethod
+    def _from_widths(
+        cls,
         widths: list[int],
         *,
         backend: Backend | str | None = None,
-    ) -> None:
-        super().__init__([1], widths, backend=backend)
+    ) -> CanvasHGrid:
+        return CanvasHGrid([1], widths, backend=backend)
 
     @override
     def __getitem__(self, key: int) -> Canvas:
@@ -364,13 +461,6 @@ class _CanvasWithGrid(CanvasBase):
         self._main_canvas = canvas
         self._grid = grid
         super().__init__(palette=canvas._color_palette)
-
-    def _get_backend(self) -> Backend:
-        """Return the backend."""
-        return self._main_canvas._backend
-
-    def _canvas(self):
-        return self._main_canvas._backend_object
 
     @property
     def native(self) -> Any:
@@ -403,6 +493,13 @@ class _CanvasWithGrid(CanvasBase):
         """Return a screenshot of the grid."""
         return self._grid.screenshot()
 
+    def _get_backend(self) -> Backend:
+        """Return the backend."""
+        return self._main_canvas._backend
+
+    def _canvas(self):
+        return self._main_canvas._backend_object
+
     def _repr_png_(self):
         """Return PNG representation of the widget for QtConsole."""
         return self._grid._repr_png_()
@@ -421,7 +518,7 @@ class _CanvasWithGrid(CanvasBase):
         return self._grid.to_html(file=file)
 
 
-class SingleCanvas(_CanvasWithGrid):
+class SingleCanvas(_CanvasWithGrid, _Serializable):
     """
     A canvas without other subplots.
 
@@ -429,15 +526,7 @@ class SingleCanvas(_CanvasWithGrid):
     with a single axes.
     """
 
-    def __init__(self, grid: CanvasGrid):
-        if grid.shape != (1, 1):
-            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
-        self._grid = grid
-        _it = grid._iter_canvas()
-        _, canvas = next(_it)
-        if next(_it, None) is not None:
-            raise ValueError("Grid must have only one canvas")
-        self._main_canvas = canvas
+    def __init__(self, canvas: Canvas, grid: CanvasGrid):
         super().__init__(canvas, grid)
 
         # NOTE: events, dims etc are not shared between the main canvas and the
@@ -448,3 +537,50 @@ class SingleCanvas(_CanvasWithGrid):
         self.events.drawn.connect(
             self._main_canvas.events.drawn.emit, unique=True, max_args=None
         )
+
+    @classmethod
+    def _new(cls, palette=None, backend=None) -> SingleCanvas:
+        _grid = CanvasGrid([1], [1], backend=backend)
+        _grid.add_canvas(0, 0, palette=palette)
+        return SingleCanvas._from_grid(_grid)
+
+    @classmethod
+    def _from_grid(cls, grid: CanvasGrid) -> SingleCanvas:
+        if grid.shape != (1, 1):
+            raise ValueError(f"Grid shape must be (1, 1), got {grid.shape}")
+        _it = grid._iter_canvas()
+        _, canvas = next(_it)
+        if next(_it, None) is not None:
+            raise ValueError("Grid must have only one canvas")
+        return cls(canvas, grid)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a SingleCanvas instance from a dictionary."""
+        _type_expected = f"{cls.__module__}.{cls.__name__}"
+        if (_type := d.get("type")) and _type != _type_expected:
+            raise ValueError(f"Expected type {_type_expected!r}, got {_type!r}")
+        self = cls._new(backend=backend, palette=d.get("palette"))
+        self.layers.clear()
+        self.layers.extend(construct_layers(d["layers"], backend=backend))
+        self.x.update(d.get("x", {}))
+        self.y.update(d.get("y", {}))
+        self.title.update(d.get("title", {}))
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the canvas."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "palette": self._color_palette,
+            "layers": [layer.to_dict() for layer in self.layers],
+            "title": self.title.to_dict(),
+            "x": self.x.to_dict(),
+            "y": self.y.to_dict(),
+        }
+
+    def copy(self, backend: Backend | str | None = None) -> Self:
+        """Make a copy of the canvas."""
+        if backend is None:
+            backend = self._main_canvas._backend
+        return self.from_dict(self.to_dict(), backend=backend)

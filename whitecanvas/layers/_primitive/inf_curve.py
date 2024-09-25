@@ -10,7 +10,7 @@ from typing_extensions import Concatenate, ParamSpec
 from whitecanvas.backend import Backend
 from whitecanvas.layers._primitive.line import LineMixin
 from whitecanvas.protocols import LineProtocol
-from whitecanvas.types import ColorType, LineStyle, Rect
+from whitecanvas.types import ColorType, LineStyle, Rect, _Void
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from whitecanvas.canvas import Canvas
 
 _P = ParamSpec("_P")
+_void = _Void()
 
 
 class InfCurve(LineMixin[LineProtocol], Generic[_P]):
@@ -31,7 +32,7 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         bounds: tuple[float, float] = (-np.inf, np.inf),
         name: str | None = None,
         color: ColorType = "blue",
-        alpha: float = 1,
+        alpha: float | _Void = _void,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
@@ -66,7 +67,8 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
         self._args, self._kwargs = args, kwargs
         if not self._params_ready:
             self._params_ready = True
-            self._canvas().x.events.lim.emit(self._canvas().x.lim)
+            if canvas := self._canvas_ref():
+                canvas.x.events.lim.emit(canvas.x.lim)
         return self
 
     @property
@@ -78,6 +80,33 @@ class InfCurve(LineMixin[LineProtocol], Generic[_P]):
     def model(self) -> Callable[[Concatenate[np.ndarray, _P]], np.ndarray]:
         """The model function of the layer."""
         return self._model
+
+    def calculate(self, xdata: np.ndarray) -> np.ndarray:
+        return self._model(xdata, *self._args, **self._kwargs)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        args, kwargs = d["params"]
+        return cls(
+            d["model"], bounds=d["bounds"], name=d["name"], color=d["color"],
+            width=d["width"], style=d["style"],
+            antialias=d["antialias"], backend=backend,
+        ).update_params(*args, **kwargs)  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "model": self.model,
+            "bounds": self._bounds,
+            "params": self.params,
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def with_hover_text(self, text: str) -> Self:
         if not isinstance(text, str):
@@ -158,7 +187,7 @@ class InfLine(LineMixin[LineProtocol]):
         *,
         name: str | None = None,
         color: ColorType = "blue",
-        alpha: float = 1,
+        alpha: float | _Void = _void,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
@@ -210,6 +239,27 @@ class InfLine(LineMixin[LineProtocol]):
             self._tan = math.tan(_radian)
             self._intercept = self._pos[1] - self._tan * self._pos[0]
         self._recalculate_line(self._last_rect)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        return cls(
+            d["pos"], d["angle"], name=d["name"], color=d["color"], width=d["width"],
+            style=d["style"], antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "pos": self.pos,
+            "angle": self.angle,
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def with_hover_text(self, text: str) -> Self:
         if not isinstance(text, str):

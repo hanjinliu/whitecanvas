@@ -25,6 +25,15 @@ class XYData(NamedTuple):
         """Number of data points."""
         return int(self.x.size)
 
+    @classmethod
+    def from_dict(cls, data: dict[str, NDArray[np.floating]]) -> XYData:
+        """Create XYData from a dictionary."""
+        return cls(data["x"], data["y"])
+
+    def to_dict(self) -> dict[str, NDArray[np.floating]]:
+        """Data as a dictionary."""
+        return {"x": self.x, "y": self.y}
+
 
 class XYYData(NamedTuple):
     """
@@ -45,11 +54,29 @@ class XYYData(NamedTuple):
     def ydiff(self) -> NDArray[np.floating]:
         return self.y1 - self.y0
 
+    @classmethod
+    def from_dict(cls, data: dict[str, NDArray[np.floating]]) -> XYYData:
+        """Create XYYData from a dictionary."""
+        return cls(data["x"], data["y0"], data["y1"])
+
+    def to_dict(self) -> dict[str, NDArray[np.floating]]:
+        """Data as a dictionary."""
+        return {"x": self.x, "y0": self.y0, "y1": self.y1}
+
 
 class XYTextData(NamedTuple):
     x: NDArray[np.floating]
     y: NDArray[np.floating]
     text: NDArray[np.object_]
+
+    @classmethod
+    def from_dict(cls, data: dict[str, NDArray[np.floating]]) -> XYTextData:
+        """Create XYTextData from a dictionary."""
+        return cls(data["x"], data["y"], data["text"])
+
+    def to_dict(self) -> dict[str, NDArray[np.floating]]:
+        """Data as a dictionary."""
+        return {"x": self.x, "y": self.y, "text": self.text}
 
 
 class XYZData(NamedTuple):
@@ -67,12 +94,30 @@ class XYZData(NamedTuple):
         """Data as a stacked (N, 3) array."""
         return np.stack([self.x, self.y, self.z], axis=1)
 
+    @classmethod
+    def from_dict(cls, data: dict[str, NDArray[np.floating]]) -> XYZData:
+        """Create XYZData from a dictionary."""
+        return cls(data["x"], data["y"], data["z"])
+
+    def to_dict(self) -> dict[str, NDArray[np.floating]]:
+        """Data as a dictionary."""
+        return {"x": self.x, "y": self.y, "z": self.z}
+
 
 class XYVectorData(NamedTuple):
     x: NDArray[np.floating]
     y: NDArray[np.floating]
     vx: NDArray[np.floating]
     vy: NDArray[np.floating]
+
+    @classmethod
+    def from_dict(cls, data: dict[str, NDArray[np.floating]]) -> XYVectorData:
+        """Create XYVectorData from a dictionary."""
+        return cls(data["x"], data["y"], data["vx"], data["vy"])
+
+    def to_dict(self) -> dict[str, NDArray[np.floating]]:
+        """Data as a dictionary."""
+        return {"x": self.x, "y": self.y, "vx": self.vx, "vy": self.vy}
 
 
 class XYZVectorData(NamedTuple):
@@ -83,10 +128,31 @@ class XYZVectorData(NamedTuple):
     vy: NDArray[np.floating]
     vz: NDArray[np.floating]
 
+    @classmethod
+    def from_dict(cls, data: dict[str, NDArray[np.floating]]) -> XYZVectorData:
+        """Create XYZVectorData from a dictionary."""
+        return cls(data["x"], data["y"], data["z"], data["vx"], data["vy"], data["vz"])
+
+    def to_dict(self) -> dict[str, NDArray[np.floating]]:
+        """Data as a dictionary."""
+        return {
+            "x": self.x, "y": self.y, "z": self.z,
+            "vx": self.vx, "vy": self.vy, "vz": self.vz
+        }  # fmt: skip
+
 
 class MeshData(NamedTuple):
     vertices: NDArray[np.floating]
     faces: NDArray[np.intp]
+
+    @classmethod
+    def from_dict(cls, data: dict[str, NDArray[np.floating]]) -> MeshData:
+        """Create MeshData from a dictionary."""
+        return cls(data["vertices"], data["faces"])
+
+    def to_dict(self) -> dict[str, NDArray[np.floating]]:
+        """Data as a dictionary."""
+        return {"vertices": self.vertices, "faces": self.faces}
 
 
 class Rect(NamedTuple):
@@ -136,3 +202,17 @@ class Rect(NamedTuple):
     def center(self) -> tuple[float, float]:
         """Center of the range."""
         return (self.left + self.right) / 2, (self.top + self.bottom) / 2
+
+    @classmethod
+    def from_dict(cls, data: dict[str, float]) -> Rect:
+        """Create Rect from a dictionary."""
+        return cls(data["left"], data["right"], data["bottom"], data["top"])
+
+    def to_dict(self) -> dict[str, float]:
+        """Data as a dictionary."""
+        return {
+            "left": self.left,
+            "right": self.right,
+            "bottom": self.bottom,
+            "top": self.top,
+        }

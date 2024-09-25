@@ -4,6 +4,7 @@ import weakref
 from typing import TYPE_CHECKING
 
 import numpy as np
+from cmap import Color
 
 from whitecanvas.types import LineStyle
 from whitecanvas.utils.normalize import rgba_str_color
@@ -112,7 +113,7 @@ class Axis(_CanvasComponent):
 
     def _plt_get_color(self):
         # color of the axis itself
-        return np.array(self._plt_get_axis().linecolor)
+        return np.fromiter(Color(self._plt_get_axis().linecolor), dtype=np.float32)
 
     def _plt_set_color(self, color):
         self._plt_get_axis().linecolor = rgba_str_color(color)
@@ -179,7 +180,7 @@ class Ticks(_CanvasComponent):
         self._plt_get_axis().tickfont.family = font
 
     def _plt_get_color(self):
-        return np.array(self._plt_get_axis().tickfont.color)
+        return np.fromiter(Color(self._plt_get_axis().tickfont.color), dtype=np.float32)
 
     def _plt_set_color(self, color):
         self._plt_get_axis().tickfont.color = rgba_str_color(color)

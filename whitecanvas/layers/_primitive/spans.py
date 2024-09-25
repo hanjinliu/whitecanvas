@@ -29,6 +29,8 @@ from whitecanvas.types import (
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.canvas import Canvas
 
 _Face = TypeVar("_Face", bound=FaceNamespace)
@@ -62,7 +64,7 @@ class Spans(
         name: str | None = None,
         orient: OrientationLike = "vertical",
         color: ColorType = "blue",
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
@@ -127,6 +129,27 @@ class Spans(
     def ndata(self) -> int:
         """The number of data points"""
         return self._backend._plt_get_data()[0].size
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Band from a dictionary."""
+        return cls(
+            d["data"], orient=d["orient"], name=d["name"], color=d["face"]["color"],
+            hatch=d["face"]["hatch"], backend=backend,
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data(),
+            "orient": self.orient.value,
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
 
     def _connect_canvas(self, canvas: Canvas):
         canvas.events.lims.connect(self._recalculate_spans, max_args=1)

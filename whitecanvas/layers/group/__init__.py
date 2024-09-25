@@ -1,5 +1,5 @@
 from whitecanvas.layers.group._collections import (
-    LayerCollectionBase,
+    LayerCollection,
     LayerTuple,
     MainAndOtherLayers,
 )
@@ -46,5 +46,5 @@ __all__ = [
     "LayerTuple",
     "Histogram",
     "Kde",
-    "LayerCollectionBase",
+    "LayerCollection",
 ]

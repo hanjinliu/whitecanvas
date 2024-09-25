@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     import pandas as pd
     import polars as pl
 
+    from whitecanvas.canvas.canvas3d._base import SingleCanvas3D
+
     _0_or_1 = Literal[0, 1]
 
 
@@ -43,9 +45,7 @@ def new_canvas(
         Color palette of the canvas. This color palette will be used to generate colors
         for the plots.
     """
-    _grid = CanvasGrid([1], [1], backend=backend)
-    _grid.add_canvas(0, 0, palette=palette)
-    cvs = SingleCanvas(_grid)
+    cvs = SingleCanvas._new(palette=palette, backend=backend)
     if size is not None:
         cvs.size = size
     return cvs
@@ -56,12 +56,23 @@ def new_canvas_3d(
     *,
     size: tuple[int, int] | None = None,
     palette: str | ColormapType | None = None,
-):
+) -> SingleCanvas3D:
+    """
+    Create a new 3D canvas with a single cell.
+
+    Parameters
+    ----------
+    backend : Backend or str, optional
+        Backend name.
+    size : (int, int), optional
+        Displaying size of the canvas (in pixels).
+    palette : str or ColormapType, optional
+        Color palette of the canvas. This color palette will be used to generate colors
+        for the plots.
+    """
     from whitecanvas.canvas.canvas3d._base import SingleCanvas3D
 
-    _grid = CanvasGrid([1], [1], backend=backend)
-    _grid.add_canvas_3d(0, 0, palette=palette)
-    cvs = SingleCanvas3D(_grid)
+    cvs = SingleCanvas3D._new(palette=palette, backend=backend)
     if size is not None:
         cvs.size = size
     return cvs
@@ -117,7 +128,7 @@ def new_row(
 ) -> CanvasHGrid:
     """Create a new horizontal canvas grid with uniform or non-uniform cell sizes."""
     widths = _norm_ratio(cols)
-    grid = CanvasHGrid(widths, backend=backend)
+    grid = CanvasHGrid._from_widths(widths, backend=backend)
     if size is not None:
         grid.size = size
     return grid
@@ -131,7 +142,7 @@ def new_col(
 ) -> CanvasVGrid:
     """Create a new vertical canvas grid with uniform or non-uniform cell sizes."""
     heights = _norm_ratio(rows)
-    grid = CanvasVGrid(heights, backend=backend)
+    grid = CanvasVGrid._from_heights(heights, backend=backend)
     if size is not None:
         grid.size = size
     return grid
@@ -167,6 +178,110 @@ def new_jointgrid(
     if size is not None:
         joint.size = size
     return joint
+
+
+def read_canvas(path: str | Path) -> SingleCanvas:
+    """
+    Read a canvas from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    SingleCanvas
+        Canvas object.
+    """
+    return SingleCanvas.read_json(path)
+
+
+def read_canvas_3d(path: str | Path) -> SingleCanvas3D:
+    """
+    Read a 3D canvas from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    SingleCanvas
+        Canvas object.
+    """
+    from whitecanvas.canvas.canvas3d._base import SingleCanvas3D
+
+    return SingleCanvas3D.read_json(path)
+
+
+def read_grid(path: str | Path) -> CanvasGrid:
+    """
+    Read a grid from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    CanvasGrid
+        Grid object.
+    """
+    return CanvasGrid.read_json(path)
+
+
+def read_jointgrid(path: str | Path) -> JointGrid:
+    """
+    Read a joint grid from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    JointGrid
+        Joint grid object.
+    """
+    return JointGrid.read_json(path)
+
+
+def read_row(path: str | Path) -> CanvasHGrid:
+    """
+    Read a row from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    CanvasHGrid
+        Row object.
+    """
+    return CanvasHGrid.read_json(path)
+
+
+def read_col(path: str | Path) -> CanvasVGrid:
+    """
+    Read a column from a file.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the file.
+
+    Returns
+    -------
+    CanvasVGrid
+        Column object.
+    """
+    return CanvasVGrid.read_json(path)
 
 
 @overload

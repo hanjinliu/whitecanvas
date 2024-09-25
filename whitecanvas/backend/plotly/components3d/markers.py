@@ -75,7 +75,7 @@ class Markers3D(PlotlyHoverableLayer[go.Scatter3d]):
         self._props["marker"]["size"] = size
 
     def _plt_get_edge_width(self) -> NDArray[np.floating]:
-        return np.full(self._plt_get_ndata, self._props["marker"]["line"]["width"])
+        return np.full(self._plt_get_ndata(), self._props["marker"]["line"]["width"])
 
     def _plt_set_edge_width(self, width: float):
         if is_real_number(width):

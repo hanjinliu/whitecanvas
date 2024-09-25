@@ -47,7 +47,10 @@ class Title(_CanvasComponent):
         self._plot.title.text_color = Color(color).hex
 
     def _plt_get_size(self) -> int:
-        return int(self._plot.title.text_font_size.rstrip("pt"))
+        size = self._plot.title.text_font_size
+        if size.endswith(("pt", "px")):
+            size = size[:-2]
+        return int(size)
 
     def _plt_set_size(self, size: int):
         self._plot.title.text_font_size = f"{size}pt"
@@ -129,7 +132,10 @@ class Label(_CanvasComponent):
         self._plt_get_axis().axis_label_text_color = Color(color).hex
 
     def _plt_get_size(self) -> int:
-        return int(self._plt_get_axis().axis_label_text_font_size.rstrip("pt"))
+        size = self._plt_get_axis().axis_label_text_font_size
+        if size.endswith(("pt", "px")):
+            size = size[:-2]
+        return int(size)
 
     def _plt_set_size(self, size: int):
         self._plt_get_axis().axis_label_text_font_size = f"{size}pt"

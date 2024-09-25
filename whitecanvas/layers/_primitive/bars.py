@@ -81,7 +81,7 @@ class Bars(
         extent: float = 0.8,
         name: str | None = None,
         color: ColorType = "blue",
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         hatch: str | Hatch = Hatch.SOLID,
         backend: Backend | str | None = None,
     ):
@@ -215,10 +215,37 @@ class Bars(
         self._bar_width = w
         self.events.bar_width.emit(w)
 
+    extent = bar_width
+
     @property
     def orient(self) -> Orientation:
         """Orientation of the bars."""
         return self._orient
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Band from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], d["bottom"], orient=d["orient"],
+            extent=d["extent"], name=d["name"], backend=backend,
+        ).with_face(
+            color=d["face"]["color"], hatch=d["face"]["hatch"],
+        ).with_edge(
+            color=d["edge"]["color"], width=d["edge"]["width"], style=d["edge"]["style"]
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data().to_dict(),
+            "bottom": self.bottom,
+            "orient": self.orient.value,
+            "extent": self.bar_width,
+            "name": self.name,
+            "face": self.face.to_dict(),
+            "edge": self.edge.to_dict(),
+        }
 
     def with_err(
         self,
@@ -261,7 +288,7 @@ class Bars(
             err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient=Orientation.HORIZONTAL,
         )  # fmt: skip
-        yerr = Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
+        yerr = Errorbars._empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
         self.name = old_name
         return LabeledBars(self, xerr, yerr, name=old_name)
 
@@ -284,7 +311,9 @@ class Bars(
             err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient="vertical",
         )  # fmt: skip
-        xerr = Errorbars.empty_v(name=f"yerr-of-{old_name}", backend=self._backend_name)
+        xerr = Errorbars._empty_v(
+            name=f"yerr-of-{old_name}", backend=self._backend_name
+        )
         self.name = old_name
         return LabeledBars(self, xerr, yerr, name=old_name)
 
@@ -308,8 +337,8 @@ class Bars(
         )  # fmt: skip
         return LabeledBars(
             self,
-            Errorbars.empty_h(name=f"xerr-of-{self.name}", backend=self._backend_name),
-            Errorbars.empty_v(name=f"xerr-of-{self.name}", backend=self._backend_name),
+            Errorbars._empty_h(name=f"xerr-of-{self.name}", backend=self._backend_name),
+            Errorbars._empty_v(name=f"xerr-of-{self.name}", backend=self._backend_name),
             texts=texts,
             name=self.name,
         )
@@ -356,7 +385,7 @@ class Bars(
         *,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Bars[ConstFace, _Edge]:
         return super().with_face(color=color, hatch=hatch, alpha=alpha)
 
@@ -365,7 +394,7 @@ class Bars(
         *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Bars[MultiFace, _Edge]:
         return super().with_face_multi(color=color, hatch=hatch, alpha=alpha)
 
@@ -375,7 +404,7 @@ class Bars(
         color: ColorType | None = None,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Bars[_Face, ConstEdge]:
         return super().with_edge(color=color, width=width, style=style, alpha=alpha)
 
@@ -385,7 +414,7 @@ class Bars(
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Bars[_Face, MultiEdge]:
         return super().with_edge_multi(
             color=color, width=width, style=style, alpha=alpha

@@ -109,18 +109,22 @@ class Texts(visuals.Text):
         self._alignment = anc
 
     def _plt_get_text_rotation(self) -> NDArray[np.floating]:
-        return -self.rotation  # the +/- is reversed compared to other backends
+        # the +/- is reversed compared to other backends
+        rot = -self.rotation
+        if is_real_number(rot):
+            return np.full(self._plt_get_ndata(), rot)
+        return rot
 
     def _plt_set_text_rotation(self, rotation: float | NDArray[np.floating]):
         if self._is_empty:
             if is_real_number(rotation):
-                self.rotation = np.array([-rotation])
+                self.rotation = np.array([-rotation], dtype=np.float32)
             else:
                 if rotation.size != 0:
                     raise ValueError(f"zero text but got {rotation.size} inputs.")
         else:
             if is_real_number(rotation):
-                rotation = np.full(self._plt_get_ndata(), rotation)
+                rotation = np.full(self._plt_get_ndata(), rotation, dtype=np.float32)
             self.rotation = -rotation
 
     def _plt_get_text_fontfamily(self) -> str:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from typing import TYPE_CHECKING, Any, Callable, overload
 
 import numpy as np
@@ -27,6 +28,8 @@ from whitecanvas.utils.normalize import as_array_1d
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.layers import Texts, _mixin
     from whitecanvas.layers.group import Colorbar, LabeledImage
 
@@ -237,13 +240,49 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             self.scale = scale
         return self
 
-    @overload
-    def fit_to(self, bbox: Rect | tuple[float, float, float, float], /) -> Image:
-        ...
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create an Image from a dictionary."""
+        return cls(
+            d["data"], name=d["name"], cmap=d["cmap"], clim=d["clim"], shift=d["shift"],
+            scale=d["scale"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data(),
+            "name": self.name,
+            "cmap": self.cmap,
+            "clim": self.clim,
+            "shift": self.shift,
+            "scale": self.scale,
+        }
+
+    @classmethod
+    def _post_to_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        d["data"] = {
+            "image": base64.b64encode(d["data"]).decode("ascii"),
+            "shape": d["data"].shape,
+            "dtype": d["data"].dtype.str,
+        }
+        return d
+
+    @classmethod
+    def _pre_from_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        d["data"] = np.frombuffer(
+            base64.b64decode(d["data"]["image"]), dtype=d["data"]["dtype"]
+        ).reshape(d["data"]["shape"])
+        return d
 
     @overload
-    def fit_to(self, left: float, right: float, bottom: float, top: float, /) -> Image:
-        ...
+    def fit_to(self, bbox: Rect | tuple[float, float, float, float], /) -> Image: ...
+
+    @overload
+    def fit_to(
+        self, left: float, right: float, bottom: float, top: float, /
+    ) -> Image: ...
 
     def fit_to(self, *args) -> Image:
         """Fit the image to the given bounding box."""
@@ -421,7 +460,9 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
         from whitecanvas.layers.group import Colorbar
 
         orient = Orientation.parse(orient)
-        cbar = Colorbar(self.cmap, name=f"colorbar<{self.name}>", orient=orient)
+        cbar = Colorbar.from_cmap(
+            self.cmap, name=f"{self.name}:colorbar", orient=orient
+        )
         if bbox is None:
             img_bbox = self.bbox
             if orient.is_vertical:

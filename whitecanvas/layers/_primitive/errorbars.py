@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Sequence
+from typing import TYPE_CHECKING, Any, Iterable, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -22,6 +22,9 @@ from whitecanvas.types import (
     _Void,
 )
 from whitecanvas.utils.normalize import as_any_1d_array, as_array_1d, as_color_array
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _void = _Void()
 
@@ -45,7 +48,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         *,
         name: str | None = None,
         color: ColorType = "black",
-        alpha: float = 1,
+        alpha: float | _Void = _void,
         width: float = 1,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
@@ -91,7 +94,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         self.events.data.emit(data)
 
     @classmethod
-    def empty(
+    def _empty(
         cls,
         orient: OrientationLike = Orientation.VERTICAL,
         name: str | None = None,
@@ -101,20 +104,20 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         return Errorbars([], [], [], name=name, orient=orient, backend=backend)
 
     @classmethod
-    def empty_v(
+    def _empty_v(
         cls,
         name: str | None = None,
         backend: Backend | str | None = None,
     ) -> Errorbars:
         """Return a vertical Errorbars instance with no component."""
-        return cls.empty(Orientation.VERTICAL, name=name, backend=backend)
+        return cls._empty(Orientation.VERTICAL, name=name, backend=backend)
 
     @classmethod
-    def empty_h(
+    def _empty_h(
         cls, name: str | None = None, backend: Backend | str | None = None
     ) -> Errorbars:
         """Return a horizontal Errorbars instance with no component."""
-        return cls.empty(Orientation.HORIZONTAL, name=name, backend=backend)
+        return cls._empty(Orientation.HORIZONTAL, name=name, backend=backend)
 
     def _get_layer_data(self) -> XYYData:
         """Current data of the layer."""
@@ -175,6 +178,33 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
         with self.events.data.blocked():
             self.set_data(*self._data)
         self.events.capsize.emit(capsize)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create an Errorbars from a dictionary."""
+        self = cls(
+            d["data"]["x"], d["data"]["y0"], d["data"]["y1"], orient=d["orient"],
+            name=d["name"], antialias=d["antialias"], capsize=d["capsize"],
+            backend=backend,
+        )  # fmt: skip
+        self.color = d["color"]
+        self.width = d["width"]
+        self.style = d["style"]
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data().to_dict(),
+            "orient": self.orient.value,
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+            "capsize": self.capsize,
+        }
 
     @property
     def color(self) -> NDArray[np.float32]:

@@ -18,7 +18,7 @@ from whitecanvas.backend.plotly._labels import Axis, AxisLabel, Ticks, Title
 from whitecanvas.backend.plotly._legend import make_sample_item
 from whitecanvas.layers._legend import LegendItem, LegendItemCollection
 from whitecanvas.types import Location, MouseEvent
-from whitecanvas.utils.normalize import rgba_str_color
+from whitecanvas.utils.normalize import arr_color, rgba_str_color
 
 if TYPE_CHECKING:
     from plotly._subplots import SubplotXY
@@ -407,7 +407,7 @@ class CanvasGrid:
         self._figs.show(renderer="browser")
 
     def _plt_get_background_color(self):
-        return self._figs.layout.paper_bgcolor
+        return arr_color(self._figs.layout.paper_bgcolor)
 
     def _plt_set_background_color(self, color):
         self._figs.layout.paper_bgcolor = rgba_str_color(color)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import weakref
 from typing import TYPE_CHECKING
 
@@ -34,13 +35,15 @@ class Title(_CanvasComponent):
         self._canvas()._plot_item.titleLabel.setVisible(visible)
 
     def _plt_get_text(self) -> str:
-        return self._canvas()._plot_item.titleLabel.text
+        return html.unescape(self._canvas()._plot_item.titleLabel.text)
 
     def _plt_set_text(self, text: str):
-        self._canvas()._plot_item.setTitle(text)
+        self._canvas()._plot_item.setTitle(html.escape(text))
 
     def _plt_get_color(self):
         qcolor = self._canvas()._plot_item.titleLabel.opts["color"]
+        if qcolor is None:
+            return np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)
         return np.array(qcolor.getRgbF(), dtype=np.float32)
 
     def _plt_set_color(self, color):

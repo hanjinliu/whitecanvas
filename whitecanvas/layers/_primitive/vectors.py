@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -23,6 +23,9 @@ from whitecanvas.types import (
 )
 from whitecanvas.utils.normalize import as_array_1d, as_color_array
 from whitecanvas.utils.type_check import is_real_number
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _void = _Void()
 _V = TypeVar("_V", bound=VectorsProtocol)
@@ -50,14 +53,14 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
         name: str | None = None,
         color: ColorType = "blue",
         width: float = 1,
-        alpha: float = 1.0,
+        alpha: float | _Void = _void,
         style: LineStyle | str = LineStyle.SOLID,
         antialias: bool = True,
         backend: Backend | str | None = None,
     ):
         super().__init__(name=name)
         self._backend = self._create_backend(Backend(backend), x, vx, y, vy)
-        color = as_color_array(color, x.size)
+        color = as_color_array(color, len(x))
         self.update(
             color=color, width=width, style=style, alpha=alpha, antialias=antialias
         )
@@ -132,7 +135,7 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
     @width.setter
     def width(self, width: float):
         if not is_real_number(width):
-            raise TypeError(f"Width must be a number, got {type(width)}")
+            raise TypeError(f"Width must be a number, got {width!r}")
         if width < 0:
             raise ValueError(f"Width must be non-negative, got {width!r}")
         w = float(width)
@@ -151,8 +154,8 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
         self.events.style.emit(s.value)
 
     @property
-    def alpha(self) -> float:
-        return float(self.color[:, 3])
+    def alpha(self) -> NDArray[np.floating]:
+        return self.color[:, 3]
 
     @alpha.setter
     def alpha(self, value: float):
@@ -192,6 +195,27 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
         if antialias is not _void:
             self.antialias = antialias
         return self
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a Line from a dictionary."""
+        return cls(
+            d["data"]["x"], d["data"]["y"], d["data"]["vx"], d["data"]["vy"],
+            name=d["name"], color=d["color"], width=d["width"],
+            style=d["style"], antialias=d["antialias"], backend=backend,
+        )  # fmt: skip
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "data": self._get_layer_data().to_dict(),
+            "name": self.name,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+            "antialias": self.antialias,
+        }
 
     def _as_legend_item(self) -> _legend.LineLegendItem:
         return _legend.LineLegendItem(self.color[0], self.width, self.style)

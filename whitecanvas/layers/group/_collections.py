@@ -3,6 +3,7 @@ from __future__ import annotations
 import weakref
 from typing import (
     TYPE_CHECKING,
+    Any,
     Generic,
     Iterable,
     Iterator,
@@ -15,10 +16,14 @@ from typing import (
 
 from psygnal import Signal
 
+from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend
 from whitecanvas.layers._base import Layer, LayerEvents, LayerGroup, PrimitiveLayer
+from whitecanvas.layers._deserialize import construct_layers
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.canvas import Canvas
 
 _L = TypeVar("_L", bound=PrimitiveLayer)
@@ -39,7 +44,16 @@ class LayerContainer(LayerGroup):
     events: LayerContainerEvents
     _events_class = LayerContainerEvents
 
-    def __init__(self, children: Iterable[Layer], name: str | None = None):
+    def __init__(
+        self,
+        children: Layer | Iterable[Layer],
+        *more_children,
+        name: str | None = None,
+    ):
+        if isinstance(children, Layer):
+            children = [children]
+        if more_children:
+            children = list(children) + list(more_children)
         super().__init__(name=name)
         self._children = [_process_grouping(c, self) for c in children]
         self._ordering_indices = self._default_ordering(len(self._children))
@@ -71,6 +85,20 @@ class LayerContainer(LayerGroup):
             )
         self._ordering_indices = zorders
         self.events.reordered.emit(zorders)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        """Create a LineStep from a dictionary."""
+        children = construct_layers(d["children"], backend=backend)
+        return cls(*children, name=d["name"])
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the layer."""
+        return {
+            "type": f"{self.__module__}.{self.__class__.__name__}",
+            "children": [child.to_dict() for child in self._children],
+            "name": self.name,
+        }
 
     def _connect_canvas(self, canvas: Canvas):
         # TODO: connect plt.draw
@@ -110,7 +138,7 @@ class LayerTuple(LayerContainer, Sequence[Layer]):
         return _legend.LegendItemCollection(items)
 
 
-class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
+class LayerCollection(LayerContainer, MutableSequence[_L]):
     _children: list[_L]
 
     def __getitem__(self, n: int) -> _L:
@@ -138,7 +166,25 @@ class LayerCollectionBase(LayerContainer, MutableSequence[_L]):
     def __len__(self):
         return len(self._children)
 
+    def __add__(self, other: Layer) -> LayerCollection[Layer]:
+        if isinstance(other, LayerCollection):
+            out = LayerCollection(*self.to_list(), *other.to_list(), name=self.name)
+        else:
+            out = LayerCollection(*self.to_list(), other.copy(), name=self.name)
+        canvas = self._canvas_ref() or other._canvas_ref()
+        if canvas is not None:
+            out._canvas_ref = weakref.ref(canvas)
+        return out
+
+    def to_list(self, copy: bool = True) -> list[_L]:
+        """Return the list of layers."""
+        if copy:
+            return [l.copy() for l in self._children]
+        else:
+            return self._children.copy()
+
     def insert(self, n: int, layer: _L):
+        """Insert a layer at position n."""
         if _canvas := self._canvas_ref():
             _canvas._canvas()._plt_add_layer(layer._backend)
             layer._connect_canvas(_canvas)

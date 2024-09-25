@@ -116,8 +116,8 @@ class Plot(LayerContainer, Generic[_L]):
         )
         old_name = self.name
         self.name = f"plot-of-{old_name}"
-        xerr = Errorbars.empty_v(f"xerr-of-{old_name}", backend=self._backend_name)
-        yerr = Errorbars.empty_h(f"yerr-of-{old_name}", backend=self._backend_name)
+        xerr = Errorbars._empty_v(f"xerr-of-{old_name}", backend=self._backend_name)
+        yerr = Errorbars._empty_h(f"yerr-of-{old_name}", backend=self._backend_name)
         return LabeledPlot(self, xerr, yerr, texts, name=old_name)
 
     def with_xerr(
@@ -177,7 +177,7 @@ class Plot(LayerContainer, Generic[_L]):
             orient=Orientation.HORIZONTAL, name=f"xerr-of-{old_name}",
             backend=self._backend_name,
         )  # fmt: skip
-        yerr = Errorbars.empty_v(f"yerr-of-{old_name}", backend=self._backend_name)
+        yerr = Errorbars._empty_v(f"yerr-of-{old_name}", backend=self._backend_name)
         return LabeledPlot(self, xerr, yerr, name=old_name)
 
     def with_yerr(
@@ -236,7 +236,7 @@ class Plot(LayerContainer, Generic[_L]):
             width=width, style=style, antialias=antialias, capsize=capsize,
             name=f"yerr-of-{old_name}", backend=self._backend_name,
         )  # fmt: skip
-        xerr = Errorbars.empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
+        xerr = Errorbars._empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
         return LabeledPlot(self, xerr, yerr, name=old_name)
 
     @property

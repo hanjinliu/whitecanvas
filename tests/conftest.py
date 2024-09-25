@@ -17,8 +17,20 @@ def backend(request: pytest.FixtureRequest):
         else:
             backend = list(backend)
             request.param.param = backend
+    else:
+        if getattr(request.function, "failed", None) == "mock":
+            _cleanup(request)
+            pytest.fail("Failed in mock backend")
     yield request.param
-    # TODO: how to skip tests if failed in mock backend?
+
+    try:
+        if request.node.rep_call.failed:
+            request.function.failed = request.param
+    except AttributeError:
+        pass
+    _cleanup(request)
+
+def _cleanup(request: pytest.FixtureRequest):
     if request.param == "matplotlib":
         plt.close("all")
     elif request.param == "pyqtgraph":

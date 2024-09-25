@@ -108,7 +108,7 @@ class Graph(LayerContainer):
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
         children = construct_layers(d["children"], backend=backend)
-        if (offset := d.get("offset")) is not None:
+        if isinstance(offset := d.get("offset"), dict):
             offset = parse_offset_dict(offset)
         return cls(*children, name=d.get("name"), offset=offset)
 

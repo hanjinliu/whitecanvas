@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from whitecanvas.types import _Void
+
 if TYPE_CHECKING:
     import pandas as pd
     import polars as pl
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
 
 def is_array(x) -> bool:
     """True if x is an array that needs multi-face/edge."""
-    return not is_not_array(x)
+    return not (is_not_array(x) or isinstance(x, _Void))
 
 
 def is_not_array(x) -> bool:

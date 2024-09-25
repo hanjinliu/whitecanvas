@@ -653,7 +653,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         self,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the face properties."""
         if is_array(hatch) or is_array(alpha):
@@ -670,7 +670,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
         if is_array(width) or is_array(style) or is_array(alpha):
@@ -690,7 +690,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         self,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] | _Void = _void,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
@@ -704,7 +704,7 @@ class MultiFaceEdgeMixin(AbstractFaceEdgeMixin[_NFace, _NEdge]):
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
         if color is None:
@@ -1051,7 +1051,7 @@ class TextMixin(
         *,
         color: ColorType | _Void = _void,
         hatch: Hatch | str = Hatch.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the face properties."""
         if is_array(hatch) or is_array(alpha):
@@ -1069,7 +1069,7 @@ class TextMixin(
         color: ColorType | None = None,
         width: float = 1.0,
         style: LineStyle | str = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
         if is_array(width) or is_array(style) or is_array(alpha):
@@ -1090,7 +1090,7 @@ class TextMixin(
         *,
         color: ColorType | Sequence[ColorType] | _Void = _void,
         hatch: str | Hatch | Sequence[str | Hatch] = Hatch.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         if not isinstance(self._face_namespace, MultiFace):
             self._face_namespace.events.disconnect()
@@ -1105,7 +1105,7 @@ class TextMixin(
         color: ColorType | Sequence[ColorType] | None = None,
         width: float | Sequence[float] = 1,
         style: str | LineStyle | list[str | LineStyle] = LineStyle.SOLID,
-        alpha: float = 1,
+        alpha: float | _Void = _void,
     ) -> Self:
         """Update the edge properties."""
         if color is None:

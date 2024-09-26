@@ -294,7 +294,7 @@ class _BoxLikeWrapper(_shared.DataFrameLayerWrapper[_L, _DF], _BoxLikeMixin):
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "cat_iter": self._cat_iter,
             "categories": self._categories,
             "value": self._value,

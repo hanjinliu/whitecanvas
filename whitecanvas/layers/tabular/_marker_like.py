@@ -294,7 +294,7 @@ class DFMarkers(
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "source": self._source,
             "color_by": self._color_by,
             "edge_color_by": self._edge_color_by,
@@ -725,7 +725,7 @@ class DFBars(
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "source": self._source,
             "stack_by": self._stackby,
             "split_by": self._splitby,
@@ -886,7 +886,7 @@ class DFRug(_shared.DataFrameLayerWrapper[_l.Rug, _DF], _MarkerLikeMixin, Generi
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "source": self._source,
             "color_by": self._color_by,
             "width_by": self._width_by,

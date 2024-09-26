@@ -42,7 +42,7 @@ class DataFrameLayerWrapper(LayerWrapper[_L], Generic[_L, _DF]):
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "source": self._source,
         }
 

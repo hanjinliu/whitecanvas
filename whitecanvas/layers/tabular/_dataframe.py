@@ -130,7 +130,7 @@ class DFLines(_shared.DataFrameLayerWrapper[_lg.LineCollection, _DF], Generic[_D
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "source": self._source,
             "categories": self._categories,
             "splitby": self._splitby,
@@ -481,7 +481,7 @@ class DFMultiHeatmap(
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "source": self._source,
             "color_by": self._color_by,
             "categories": self._categories,
@@ -631,7 +631,7 @@ class DFLineFillBase(
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
-            "base": self._base_layer,
+            "base": self._base_layer.to_dict(),
             "source": self._source,
             "categories": self._categories,
             "splitby": self._splitby,

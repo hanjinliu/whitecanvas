@@ -285,9 +285,7 @@ class DFHeatmap(_shared.DataFrameLayerWrapper[_lg.LabeledImage, _DF], Generic[_D
         backend: Backend | str | None = None,
     ) -> DFHeatmap[_DF]:
         base = _lg.LabeledImage(
-            _l.Image(
-                arr, name=f"image-of-{name}", cmap=cmap, clim=clim, backend=backend
-            ),
+            _l.Image(arr, name=f"{name}:image", cmap=cmap, clim=clim, backend=backend),
             name=name,
         )
         return cls(base, src)

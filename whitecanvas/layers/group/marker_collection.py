@@ -30,6 +30,7 @@ from whitecanvas.types import (
     XYData,
     _Void,
 )
+from whitecanvas.utils.collections import OrderedSet
 from whitecanvas.utils.normalize import (
     as_any_1d_array,
     as_array_1d,
@@ -362,9 +363,9 @@ class MarkerCollection(LayerCollection[_Markers]):
             for i, layer in enumerate(markers):
                 sl = self._slices[i]
                 _sym = _symbols[sl]
-                _sym_unique = list(set(_sym))
+                _sym_unique = OrderedSet(_sym)
                 if len(_sym_unique) == 1:
-                    layer.symbol = _sym_unique[0]
+                    layer.symbol = _sym_unique.pop()
                 else:
                     new_mks = self._split_markers(i, _sym, _sym_unique)
                     for mk, each in zip(new_mks, _sym_unique):

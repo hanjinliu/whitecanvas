@@ -4,7 +4,16 @@ import json
 import weakref
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, TypeVar, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Iterator,
+    TypeVar,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
@@ -52,7 +61,7 @@ class Layer(ABC):
         self._name = name if name is not None else self.__class__.__name__
         self._x_hint = self._y_hint = None
         self._group_layer_ref: weakref.ReferenceType[LayerGroup] | None = None
-        self._canvas_ref = _no_ref
+        self._canvas_ref: Callable[[], CanvasBase | None] = _no_ref
 
     @property
     @abstractmethod
@@ -88,7 +97,14 @@ class Layer(ABC):
 
     def copy(self, *, backend: Backend | str | None = None) -> Self:
         """Create a copy of the layer."""
-        return self.from_dict(self.to_dict(), backend=backend)
+        out = self.from_dict(self.to_dict(), backend=backend)
+        out._copy_canvas_ref_from(self)
+        return out
+
+    def _copy_canvas_ref_from(self, other: Layer):
+        if self._canvas_ref is _no_ref:
+            self._canvas_ref = other._canvas_ref
+        return None
 
     @classmethod
     def read_json(
@@ -379,6 +395,13 @@ class LayerGroup(Layer):
             return child._backend_name
         raise RuntimeError(f"No backend name found for {self!r}")
 
+    def _copy_canvas_ref_from(self, other: Layer):
+        if self._canvas_ref is _no_ref:
+            self._canvas_ref = other._canvas_ref
+            for child in self.iter_children():
+                child._copy_canvas_ref_from(other)
+        return None
+
     def bbox_hint(self) -> NDArray[np.float64]:
         """
         Return the bounding box hint (xmin, xmax, ymin, ymax) of this group.
@@ -465,6 +488,12 @@ class LayerWrapper(Layer, Generic[_L]):
             "type": self._LAYER_TYPE,
             "base": self._base_layer.to_dict(),
         }
+
+    def _copy_canvas_ref_from(self, other: Layer):
+        if self._canvas_ref is _no_ref:
+            self._canvas_ref = other._canvas_ref
+            self.base._copy_canvas_ref_from(other)
+        return None
 
     def _as_legend_item(self) -> LegendItem:
         """Return the legend item for this layer."""

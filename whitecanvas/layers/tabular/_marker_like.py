@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Iterable, Sequence, TypeVar, overload
 
 import numpy as np
 from cmap import Color, Colormap
@@ -396,8 +396,10 @@ class DFMarkers(
 
     @overload
     def update_symbol(
-        self, by: str | Iterable[str] | None = None, symbols=None
-    ) -> Self: ...
+        self,
+        by: str | Iterable[str] | None = None,
+        symbols: Sequence[Symbol] | None = None,
+    ) -> Self: ...  # fmt: skip
 
     def update_symbol(self, by, /, symbols=None) -> Self:
         cov = _shared.ColumnOrValue(by, self._source)

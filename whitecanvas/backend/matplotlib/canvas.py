@@ -12,6 +12,7 @@ from matplotlib.backend_bases import MouseButton as mplMouseButton
 from matplotlib.backend_bases import MouseEvent as mplMouseEvent
 from matplotlib.collections import Collection
 from matplotlib.lines import Line2D
+from matplotlib.ticker import AutoMinorLocator
 
 from whitecanvas import protocols
 from whitecanvas.backend.matplotlib._base import MplLayer, MplMouseEventsMixin
@@ -63,6 +64,8 @@ class Canvas:
             return
         fig.canvas.mpl_connect("motion_notify_event", self._on_hover)
         fig.canvas.mpl_connect("figure_leave_event", self._hide_tooltip)
+        self._axes.xaxis.set_minor_locator(AutoMinorLocator())
+        self._axes.yaxis.set_minor_locator(AutoMinorLocator())
 
     def _on_hover(self, event: mplMouseEvent):
         if default_timer() - self._last_hover < 0.1:
@@ -362,6 +365,10 @@ _LEGEND_LOC_MAP = {
 }
 
 
+def _is_inline():
+    return mpl.get_backend() in ("inline", "module://matplotlib_inline.backend_inline")
+
+
 @protocols.check_protocol(protocols.CanvasGridProtocol)
 class CanvasGrid:
     def __init__(self, heights: list[float], widths: list[float], app: str = "default"):
@@ -382,6 +389,9 @@ class CanvasGrid:
         if app != "default":
             mpl.use(app)
         self._fig = plt.figure()
+        self._app = app
+        if _is_inline():
+            plt.close(self._fig)
 
     def _plt_add_canvas(self, row: int, col: int, rowspan: int, colspan: int) -> Canvas:
         r1 = row + rowspan
@@ -403,8 +413,14 @@ class CanvasGrid:
         return self._fig.get_visible()
 
     def _plt_show(self):
-        # TODO: show the inline plot again
         self._fig.show(warn=False)
+        if _is_inline():
+            from IPython.display import display
+
+            plt.close(self._fig)
+            display(self._fig)
+        else:
+            self._fig.tight_layout()
 
     def _plt_get_background_color(self):
         return np.asarray(self._fig.get_facecolor(), dtype=np.float32)

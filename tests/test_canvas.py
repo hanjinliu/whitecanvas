@@ -300,6 +300,8 @@ def test_multidim():
     canvas.dims.add_image(img).copy().write_json()
     canvas.dims.set_indices(1)
     canvas.dims.set_indices({"T": 0})
+    canvas.dims.set_values({"T": 1})
+    canvas._repr_png_()
 
 def test_multidim_slider():
     # TODO: how to test other app backends?

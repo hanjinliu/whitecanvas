@@ -1940,6 +1940,8 @@ class CanvasBase(CanvasNDBase):
     ) -> _L:
         """Add a layer to the canvas."""
         if over is None and under is None:
+            if isinstance(layer, _l.LayerStack):
+                self.dims.in_axes(layer.axis_names)  # add multidims
             self.layers.append(layer)
         elif over is not None:
             if under is not None:

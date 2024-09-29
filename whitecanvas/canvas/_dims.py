@@ -119,10 +119,7 @@ class Dims:
     def set_indices(self, arg: dict[str, SupportsIndex]): ...
 
     @overload
-    def set_indices(self, arg: Sequence[SupportsIndex]): ...
-
-    @overload
-    def set_indices(self, arg: SupportsIndex): ...
+    def set_indices(self, arg: SupportsIndex | Sequence[SupportsIndex]): ...
 
     @overload
     def set_indices(self, **kwargs: SupportsIndex): ...
@@ -141,6 +138,15 @@ class Dims:
         for k, v in kwargs.items():
             self.axis(k).set_index(v)
         self.events.indices.emit(self.indices)
+
+    @overload
+    def set_values(self, arg: dict[str, Any]): ...
+
+    @overload
+    def set_values(self, arg: Any | Sequence[Any]): ...
+
+    @overload
+    def set_values(self, **kwargs: Any): ...
 
     def set_values(self, arg=None, **kwargs) -> None:
         kwargs = self._norm_kwargs(arg, kwargs)
@@ -653,7 +659,7 @@ class DimIndices(_DimInterface[SupportsIndex]):
         for axis in self.dims.axes:
             if axis.name == key:
                 return axis.current_index()
-        raise KeyError(key)
+        raise KeyError(f"{key!r}. Existing axis names are {self.dims.names!r}.")
 
     def __setitem__(self, key: str, value: SupportsIndex) -> None:
         return self.dims.set_indices({key: value})

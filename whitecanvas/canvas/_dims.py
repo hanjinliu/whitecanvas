@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Any, Sequence, SupportsIndex, TypeVar, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterator,
+    Mapping,
+    Sequence,
+    SupportsIndex,
+    TypeVar,
+    overload,
+)
 
 from psygnal import Signal, SignalGroup
 
@@ -46,12 +55,17 @@ class Dims:
     def __init__(self, canvas: CanvasBase | None = None):
         self._instances: dict[int, Self] = {}
         self._axes: list[DimAxis] = []
+        self._dim_indices = DimIndices(self)
+        self._dim_values = DimValues(self)
         self.events = DimsEvents()
         if canvas is not None:
             self._canvas_ref = weakref.ref(canvas)
             self.events.indices.connect(canvas._draw_canvas, unique=True, max_args=0)
         else:
             self._canvas_ref = lambda: None
+
+    def __repr__(self) -> str:
+        return f"Dims(values={self.values!r}, axes={self._axes!r})"
 
     def __get__(self, canvas, owner) -> Self:
         if canvas is None:
@@ -88,9 +102,18 @@ class Dims:
         return default
 
     @property
-    def indices(self) -> dict[str, SupportsIndex]:
+    def axes(self) -> list[DimAxis]:
+        return self._axes.copy()
+
+    @property
+    def indices(self) -> DimIndices:
         """Current indices for each dimension."""
-        return {a.name: a.value() for a in self._axes}
+        return self._dim_indices
+
+    @property
+    def values(self) -> DimValues:
+        """Current values of each dimension."""
+        return self._dim_values
 
     @overload
     def set_indices(self, arg: dict[str, SupportsIndex]): ...
@@ -114,30 +137,13 @@ class Dims:
         >>> canvas.dims.set_indices([3, 4])
         >>> canvas.dims.set_indices(1)
         """
-        if isinstance(arg, dict):
-            if kwargs:
-                raise TypeError("Cannot specify both positional and keyword arguments.")
-            kwargs = arg
-        elif isinstance(arg, (list, tuple)):
-            names = self.names
-            if len(names) < len(arg):
-                raise ValueError(
-                    f"Number of indices ({len(arg)}) exceeds number of dimensions "
-                    f"({len(names)})."
-                )
-            if kwargs:
-                raise TypeError("Cannot specify both positional and keyword arguments.")
-            kwargs = dict(zip(names, arg))
-        elif arg is None:
-            pass
-        elif hasattr(arg, "__index__"):
-            if kwargs:
-                raise TypeError("Cannot specify both positional and keyword arguments.")
-            kwargs = {self.names[0]: arg}
-        else:
-            raise TypeError(
-                f"Argument must be dict, list, tuple, or None but got {arg!r}."
-            )
+        kwargs = self._norm_kwargs(arg, kwargs)
+        for k, v in kwargs.items():
+            self.axis(k).set_index(v)
+        self.events.indices.emit(self.indices)
+
+    def set_values(self, arg=None, **kwargs) -> None:
+        kwargs = self._norm_kwargs(arg, kwargs)
         for k, v in kwargs.items():
             self.axis(k).set_value(v)
         self.events.indices.emit(self.indices)
@@ -305,6 +311,33 @@ class Dims:
             image, name=name, cmap=cmap, clim=clim, rgb=rgb,
             flip_canvas=flip_canvas, lock_aspect=lock_aspect,
         )  # fmt: skip
+
+    def _norm_kwargs(self, arg, kwargs) -> dict[str, Any]:
+        if isinstance(arg, dict):
+            if kwargs:
+                raise TypeError("Cannot specify both positional and keyword arguments.")
+            kwargs = arg
+        elif isinstance(arg, (list, tuple)):
+            names = self.names
+            if len(names) < len(arg):
+                raise ValueError(
+                    f"Number of indices ({len(arg)}) exceeds number of dimensions "
+                    f"({len(names)})."
+                )
+            if kwargs:
+                raise TypeError("Cannot specify both positional and keyword arguments.")
+            kwargs = dict(zip(names, arg))
+        elif arg is None:
+            pass
+        elif hasattr(arg, "__index__"):
+            if kwargs:
+                raise TypeError("Cannot specify both positional and keyword arguments.")
+            kwargs = {self.names[0]: arg}
+        else:
+            raise TypeError(
+                f"Argument must be dict, list, tuple, or None but got {arg!r}."
+            )
+        return kwargs
 
 
 class InAxes:
@@ -576,7 +609,7 @@ class InAxes:
             axis = self._dims.axis(a, default=None)
             if axis is None:
                 new_axes.append(RangeAxis(a, s))
-            elif axis.value() < s:
+            elif axis.current_index() < s:
                 if isinstance(axis, RangeAxis):
                     axis.set_size(s)
                 else:
@@ -591,3 +624,47 @@ for meth in dir(InAxes):
     if meth.startswith("add_"):
         doc = getattr(InAxes, meth).__doc__
         getattr(Dims, meth).__doc__ = doc
+
+
+class _DimInterface(Mapping[str, _T]):
+    def __init__(self, dims: Dims):
+        self._dims = weakref.ref(dims)
+
+    @property
+    def dims(self) -> Dims:
+        dims = self._dims()
+        if dims is None:
+            raise ReferenceDeletedError(f"Dims of {self!r} is deleted.")
+        return dims
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(axis.name for axis in self.dims.axes)
+
+    def __len__(self) -> int:
+        return len(self.dims.axes)
+
+    def __repr__(self) -> str:
+        content = ", ".join(f"{k}={v!r}" for k, v in self.items())
+        return f"{type(self).__name__}({content})"
+
+
+class DimIndices(_DimInterface[SupportsIndex]):
+    def __getitem__(self, key: str) -> SupportsIndex:
+        for axis in self.dims.axes:
+            if axis.name == key:
+                return axis.current_index()
+        raise KeyError(key)
+
+    def __setitem__(self, key: str, value: SupportsIndex) -> None:
+        return self.dims.set_indices({key: value})
+
+
+class DimValues(_DimInterface[Any]):
+    def __getitem__(self, key: str) -> Any:
+        for axis in self.dims.axes:
+            if axis.name == key:
+                return axis.current_value()
+        raise KeyError(key)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        return self.dims.set_values({key: value})

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 from typing import TYPE_CHECKING, Any, Callable, overload
 
 import numpy as np
@@ -24,7 +23,7 @@ from whitecanvas.types import (
     Rect,
     _Void,
 )
-from whitecanvas.utils.normalize import as_array_1d
+from whitecanvas.utils.normalize import as_array_1d, decode_array, encode_array
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
@@ -262,18 +261,12 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
 
     @classmethod
     def _post_to_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
-        d["data"] = {
-            "image": base64.b64encode(d["data"]).decode("ascii"),
-            "shape": d["data"].shape,
-            "dtype": d["data"].dtype.str,
-        }
+        d["data"] = encode_array(d["data"], "image")
         return d
 
     @classmethod
     def _pre_from_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
-        d["data"] = np.frombuffer(
-            base64.b64decode(d["data"]["image"]), dtype=d["data"]["dtype"]
-        ).reshape(d["data"]["shape"])
+        d["data"] = decode_array(d["data"], "image")
         return d
 
     @overload

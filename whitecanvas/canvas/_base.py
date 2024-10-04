@@ -153,6 +153,9 @@ class CanvasNDBase(ABC):
         for l in _iter_layers(layer):
             _canvas._plt_remove_layer(l._backend)
             l._disconnect_canvas(self)
+        if len(self.layers) == 0:
+            self.x._lim_updated_by_user = False
+            self.y._lim_updated_by_user = False
 
     def _cb_layer_grouped(self, group: _l.LayerGroup):
         indices: list[int] = []  # layers to remove
@@ -2003,15 +2006,19 @@ class CanvasBase(CanvasNDBase):
         if pad_rel is None:
             pad_rel = 0 if layer._NO_PADDING_NEEDED else 0.025
         xmin, xmax, ymin, ymax = layer.bbox_hint()
-        if len(self.layers) > 1 or not maybe_empty:
-            # NOTE: if there was no layer, so backend may not have xlim/ylim,
-            # or they may be set to a default value.
+
+        _force_calc = len(self.layers) > 1 or not maybe_empty
+        # NOTE: if there was no layer, so backend may not have xlim/ylim,
+        # or they may be set to a default value.
+        if _force_calc or self.x._lim_updated_by_user:
             _xmin, _xmax = self.x.lim
             _ymin, _ymax = self.y.lim
             _dx = (_xmax - _xmin) * pad_rel
-            _dy = (_ymax - _ymin) * pad_rel
             xmin = np.min([xmin, _xmin + _dx])
             xmax = np.max([xmax, _xmax - _dx])
+        if _force_calc or self.y._lim_updated_by_user:
+            _ymin, _ymax = self.y.lim
+            _dy = (_ymax - _ymin) * pad_rel
             ymin = np.min([ymin, _ymin + _dy])
             ymax = np.max([ymax, _ymax - _dy])
 

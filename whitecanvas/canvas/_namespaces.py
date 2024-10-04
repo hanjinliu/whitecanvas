@@ -314,6 +314,7 @@ class AxisNamespace(Namespace):
         super().__init__(canvas)
         self.events = AxisSignals()
         self._flipped = False
+        self._lim_updated_by_user = False
 
     def _get_object(self) -> protocols.AxisProtocol:
         raise NotImplementedError
@@ -343,6 +344,7 @@ class AxisNamespace(Namespace):
             self._get_object()._plt_set_limits((low, high))
         self.events.lim.emit((low, high))
         self._draw_canvas()
+        self._lim_updated_by_user = True
         return None
 
     @property

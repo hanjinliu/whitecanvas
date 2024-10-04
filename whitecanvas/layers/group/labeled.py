@@ -644,6 +644,8 @@ class LabeledImage(LayerContainer):
     Layer group for an image with texts and colorbar.
     """
 
+    _NO_PADDING_NEEDED = True
+
     def __init__(
         self,
         layer: Image,
@@ -660,6 +662,9 @@ class LabeledImage(LayerContainer):
             colorbar.visible = False
         layer.events.cmap.connect_setattr(colorbar, "cmap", maxargs=1)
         super().__init__([layer, texts, colorbar], name=name)
+
+    def bbox_hint(self) -> NDArray[np.float32]:
+        return self.image.bbox_hint()
 
     @property
     def image(self) -> Image:

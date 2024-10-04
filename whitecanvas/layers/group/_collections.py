@@ -46,14 +46,11 @@ class LayerContainer(LayerGroup):
 
     def __init__(
         self,
-        children: Layer | Iterable[Layer],
-        *more_children,
+        *children: Layer | Iterable[Layer],
         name: str | None = None,
     ):
-        if isinstance(children, Layer):
-            children = [children]
-        if more_children:
-            children = list(children) + list(more_children)
+        if len(children) == 1 and isinstance(children[0], Iterable):
+            children = list(children[0])
         super().__init__(name=name)
         self._children = [_process_grouping(c, self) for c in children]
         self._ordering_indices = self._default_ordering(len(self._children))

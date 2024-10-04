@@ -229,10 +229,10 @@ class _SingleLine(
         size = theme._default("markers.size", size)
         markers = Markers(
             *self.data, symbol=symbol, size=size, color=color, alpha=alpha,
-            hatch=hatch, name=f"markers-of-{self.name}", backend=self._backend_name,
+            hatch=hatch, name=f"{self.name}:markers", backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return Plot(self, markers, name=old_name)
 
     def with_xerr(
@@ -281,12 +281,12 @@ class _SingleLine(
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            name=f"xerr-of-{self.name}", orient=Orientation.HORIZONTAL,
+            name=f"{self.name}:xerr", orient=Orientation.HORIZONTAL,
             backend=self._backend_name
         )  # fmt: skip
-        yerr = Errorbars._empty_v(f"yerr-of-{self.name}", backend=self._backend_name)
+        yerr = Errorbars._empty_v(f"{self.name}:yerr", backend=self._backend_name)
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return LabeledLine(self, xerr, yerr, name=old_name)
 
     def with_yerr(
@@ -335,11 +335,11 @@ class _SingleLine(
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            name=f"yerr-of-{self.name}", backend=self._backend_name
+            name=f"{self.name}:yerr", backend=self._backend_name
         )  # fmt: skip
-        xerr = Errorbars._empty_h(f"xerr-of-{self.name}", backend=self._backend_name)
+        xerr = Errorbars._empty_h(f"{self.name}:xerr", backend=self._backend_name)
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return LabeledLine(self, xerr, yerr, name=old_name)
 
     def with_xband(
@@ -376,10 +376,10 @@ class _SingleLine(
         _, _y1 = self._data_to_backend_data(XYData(data.y, data.x + err_high))
         band = Band(
             _x, _y0, _y1, orient=Orientation.HORIZONTAL, color=color, alpha=alpha,
-            hatch=hatch, name=f"xband-of-{self.name}", backend=self._backend_name,
+            hatch=hatch, name=f"{self.name}:xband", backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return LineBand(self, band, name=old_name)
 
     def with_yband(
@@ -416,10 +416,10 @@ class _SingleLine(
         _, _y1 = self._data_to_backend_data(XYData(data.x, data.y + err_high))
         band = Band(
             _x, _y0, _y1, orient=Orientation.VERTICAL, color=color, alpha=alpha,
-            hatch=hatch, name=f"yband-of-{self.name}", backend=self._backend_name,
+            hatch=hatch, name=f"{self.name}:yband", backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return LineBand(self, band, name=old_name)
 
     def with_xfill(
@@ -452,10 +452,10 @@ class _SingleLine(
         x0 = np.full((data.x.size,), bottom)
         band = Band(
             data.y, x0, data.x, orient=Orientation.HORIZONTAL, color=color, alpha=alpha,
-            hatch=hatch, name=f"xfill-of-{self.name}", backend=self._backend_name,
+            hatch=hatch, name=f"{self.name}:xfill", backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return LineBand(self, band, name=old_name)
 
     def with_yfill(
@@ -488,10 +488,10 @@ class _SingleLine(
         y0 = np.full((data.y.size,), bottom)
         band = Band(
             data.x, y0, data.y, orient=Orientation.VERTICAL, color=color, alpha=alpha,
-            hatch=hatch, name=f"yfill-of-{self.name}", backend=self._backend_name,
+            hatch=hatch, name=f"{self.name}:yfill", backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return LineBand(self, band, name=old_name)
 
 
@@ -624,11 +624,11 @@ class Line(_SingleLine):
             anchor=anchor, family=family, backend=self._backend_name,
         )  # fmt: skip
         old_name = self.name
-        self.name = f"line-of-{self.name}"
+        self.name = f"{self.name}:line"
         return LabeledLine(
             self,
-            Errorbars._empty_h(name=f"xerr-of-{self.name}", backend=self._backend_name),
-            Errorbars._empty_v(name=f"yerr-of-{self.name}", backend=self._backend_name),
+            Errorbars._empty_h(name=f"{self.name}:xerr", backend=self._backend_name),
+            Errorbars._empty_v(name=f"{self.name}:yerr", backend=self._backend_name),
             texts=texts,
             name=old_name,
         )

@@ -83,11 +83,11 @@ class QtDimSliders(QtW.QWidget):
         for ax in axes:
             if isinstance(ax, RangeAxis):
                 widget = QtW.QSlider(QtCore.Qt.Orientation.Horizontal)
-                widget.setRange(0, ax.size() - 1)
+                widget.setRange(0, ax.size - 1)
                 widget.valueChanged.connect(self._emit_changed)
             elif isinstance(ax, CategoricalAxis):
                 widget = QtW.QComboBox()
-                widget.addItems(ax.categories())
+                widget.addItems(ax.categories)
                 widget.currentIndexChanged.connect(self._emit_changed)
             else:
                 raise NotImplementedError

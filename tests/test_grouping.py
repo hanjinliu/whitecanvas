@@ -19,6 +19,12 @@ def test_line_marker_text(backend: str):
     assert_array_equal(layer.data.y, np.arange(10) * 2)
     assert len(canvas.layers) == 1
 
+    layer = canvas.add_line(
+        np.arange(10), np.arange(10) * 2
+    ).with_markers(
+        symbol="s", size=10, color="red"
+    ).with_edge(color="black").with_yerr(np.ones(10))
+
 
 def test_marker_err(backend: str):
     canvas = new_canvas(backend=backend)

@@ -48,12 +48,12 @@ class AreaCollection(_lg.LayerCollection[_lg.Area]):
 
     def __init__(
         self,
-        areas: list[_lg.Area],
+        *areas: _lg.Area,
         name: str | None = None,
         orient: Orientation = Orientation.VERTICAL,
         fill_alpha: float = 0.2,
     ):
-        super().__init__(areas, name=name)
+        super().__init__(*areas, name=name)
         self._orient = Orientation.parse(orient)
         self._fill_alpha = fill_alpha
 
@@ -246,7 +246,7 @@ class DFArea(_shared.DataFrameLayerWrapper[AreaCollection, _DF], Generic[_DF]):
         return {
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "source": self._source,
-            "base": self.base,
+            "base": self.base.to_dict(),
             "categories": self._categories,
             "stackby": self._stackby,
             "splitby": self._splitby,

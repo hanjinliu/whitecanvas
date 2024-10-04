@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from typing import Any, Mapping
 
 import numpy as np
@@ -186,3 +187,21 @@ def parse_texts(template: str, ndata: int, extra: Any | None = None) -> dict[str
             raise ValueError(f"Expected {_v.size} elements, got {ndata} for {k!r}.")
         params[k] = v
     return params
+
+
+def encode_array(arr: np.ndarray, key: str) -> dict[str, Any]:
+    """Encode nD array."""
+    return {
+        key: base64.b64encode(arr).decode("ascii"),
+        "shape": arr.shape,
+        "dtype": arr.dtype.str,
+    }
+
+
+def decode_array(data: dict, key: str):
+    """Decode base64 array if it is dict."""
+    if isinstance(data, dict):
+        data = np.frombuffer(base64.b64decode(data[key]), dtype=data["dtype"]).reshape(
+            data["shape"]
+        )
+    return np.array(data)

@@ -80,17 +80,17 @@ class TkDimSliders(ttk.Frame):
                 slider = TkSlider(
                     self._layout,
                     from_=0,
-                    to=axis.size(),
-                    value=axis.value(),
+                    to=axis.size,
+                    value=axis.current_index(),
                     orient="horizontal",
                 )
                 slider.pack(fill="both", expand=True)
             elif isinstance(axis, CategoricalAxis):
                 slider = TkComboBox(
                     self._layout,
-                    values=axis.categories(),
+                    values=axis.categories,
                     # state="readonly",
-                    textvariable=axis.value(),
+                    textvariable=axis.current_index(),
                 )
                 slider.pack(fill="both", expand=True)
             else:

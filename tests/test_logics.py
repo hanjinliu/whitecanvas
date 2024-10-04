@@ -1,7 +1,9 @@
+from pathlib import Path
+import tempfile
 import pytest
 from whitecanvas import new_canvas
 import numpy as np
-
+from numpy.testing import assert_allclose
 
 def test_hist():
     canvas = new_canvas(backend="mock")
@@ -170,3 +172,13 @@ def test_add_operation():
     l_mb = l + (m + b)
     lm._repr_png_()
     lmb._repr_png_()
+
+def test_read_write_json_file():
+    from whitecanvas.layers import Markers
+    layer = new_canvas(backend="matplotlib").add_markers([1, 2, 3], [4, 5, 6])
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+        layer.write_json(tmpdir / "layer.json")
+        markers = Markers.read_json(tmpdir / "layer.json")
+    assert_allclose(markers.data.x, [1, 2, 3])
+    assert_allclose(markers.data.y, [4, 5, 6])

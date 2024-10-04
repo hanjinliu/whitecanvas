@@ -135,8 +135,8 @@ class LineCollection(LayerCollection[Line]):
             color = layer.color
             mk = Markers(
                 *layer.data, symbol=symbol, size=size, color=color, alpha=alpha,
-                hatch=hatch, name=f"markers-of-{layer.name}", backend=self._backend_name
+                hatch=hatch, name=f"{layer.name}:markers", backend=self._backend_name
             )  # fmt: skip
             markers.append(mk)
-        mcol = MarkerCollection(markers, name=f"markers-of-{self.name}")
+        mcol = MarkerCollection(markers, name=f"{self.name}:markers")
         return mcol

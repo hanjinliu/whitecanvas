@@ -111,23 +111,25 @@ def test_markers(backend: str):
     }
 
     _c = canvas.cat(df, "x", "y")
-    out = _c.add_markers(color="label0", size="size", symbol="label1").copy()
-    assert len(set(out._base_layer.symbol[:10])) == 1
-    assert len(set(out._base_layer.symbol[10:])) == 1
+    out = _c.add_markers(color="label0", size="size", symbol="label1")
+    out_copy = out.copy()
+    assert all(out.base.symbol == out_copy.base.symbol)
+    assert len(set(out.base.symbol[:10])) == 1
+    assert len(set(out.base.symbol[10:])) == 1
 
     out = _c.add_markers(color="label1", size="size", hatch="label0").copy()
-    assert len(set(out._base_layer.face.hatch[:10])) == 1
-    assert len(set(out._base_layer.face.hatch[10:20])) == 1
-    assert len(set(out._base_layer.face.hatch[20:])) == 1
+    assert len(set(out.base.face.hatch[:10])) == 1
+    assert len(set(out.base.face.hatch[10:20])) == 1
+    assert len(set(out.base.face.hatch[20:])) == 1
 
     out = _c.add_markers(color="label1").with_edge(color="label0").copy()
-    assert len(np.unique(out._base_layer.edge.color[:10], axis=0)) == 1
-    assert len(np.unique(out._base_layer.edge.color[10:20], axis=0)) == 1
-    assert len(np.unique(out._base_layer.edge.color[20:], axis=0)) == 1
+    assert len(np.unique(out.base.edge.color[:10], axis=0)) == 1
+    assert len(np.unique(out.base.edge.color[10:20], axis=0)) == 1
+    assert len(np.unique(out.base.edge.color[20:], axis=0)) == 1
 
     # test scalar color
     out = _c.add_markers(color="black").copy()
-    assert_color_array_equal(out._base_layer.face.color, "black")
+    assert_color_array_equal(out.base.face.color, "black")
 
     out = _c.add_markers(color="transparent").update_edge_colormap("size").copy()
     _c.mean_for_each("label0").add_markers(symbol="D").copy()

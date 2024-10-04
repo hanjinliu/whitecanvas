@@ -115,9 +115,9 @@ class Plot(LayerContainer, Generic[_L]):
             backend=self._backend_name,
         )
         old_name = self.name
-        self.name = f"plot-of-{old_name}"
-        xerr = Errorbars._empty_v(f"xerr-of-{old_name}", backend=self._backend_name)
-        yerr = Errorbars._empty_h(f"yerr-of-{old_name}", backend=self._backend_name)
+        self.name = f"{old_name}:plot"
+        xerr = Errorbars._empty_v(f"{old_name}:xerr", backend=self._backend_name)
+        yerr = Errorbars._empty_h(f"{old_name}:yerr", backend=self._backend_name)
         return LabeledPlot(self, xerr, yerr, texts, name=old_name)
 
     def with_xerr(
@@ -170,14 +170,14 @@ class Plot(LayerContainer, Generic[_L]):
         if antialias is _void:
             antialias = self.line.antialias
         old_name = self.name
-        self.name = f"plot-of-{old_name}"
+        self.name = f"{old_name}:plot"
         xerr = Errorbars(
             self.data.y, self.data.x - err, self.data.x + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            orient=Orientation.HORIZONTAL, name=f"xerr-of-{old_name}",
+            orient=Orientation.HORIZONTAL, name=f"{old_name}:xerr",
             backend=self._backend_name,
         )  # fmt: skip
-        yerr = Errorbars._empty_v(f"yerr-of-{old_name}", backend=self._backend_name)
+        yerr = Errorbars._empty_v(f"{old_name}:yerr", backend=self._backend_name)
         return LabeledPlot(self, xerr, yerr, name=old_name)
 
     def with_yerr(
@@ -230,13 +230,13 @@ class Plot(LayerContainer, Generic[_L]):
         if antialias is _void:
             antialias = self.line.antialias
         old_name = self.name
-        self.name = f"plot-of-{old_name}"
+        self.name = f"{old_name}:plot"
         yerr = Errorbars(
             self.data.x, self.data.y - err, self.data.y + err_high, color=color,
             width=width, style=style, antialias=antialias, capsize=capsize,
-            name=f"yerr-of-{old_name}", backend=self._backend_name,
+            name=f"{old_name}:yerr", backend=self._backend_name,
         )  # fmt: skip
-        xerr = Errorbars._empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
+        xerr = Errorbars._empty_h(f"{old_name}:xerr", backend=self._backend_name)
         return LabeledPlot(self, xerr, yerr, name=old_name)
 
     @property

@@ -288,7 +288,7 @@ class Bars(
             err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient=Orientation.HORIZONTAL,
         )  # fmt: skip
-        yerr = Errorbars._empty_h(f"xerr-of-{old_name}", backend=self._backend_name)
+        yerr = Errorbars._empty_h(f"{old_name}:xerr", backend=self._backend_name)
         self.name = old_name
         return LabeledBars(self, xerr, yerr, name=old_name)
 
@@ -311,9 +311,7 @@ class Bars(
             err, err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient="vertical",
         )  # fmt: skip
-        xerr = Errorbars._empty_v(
-            name=f"yerr-of-{old_name}", backend=self._backend_name
-        )
+        xerr = Errorbars._empty_v(name=f"{old_name}:xerr", backend=self._backend_name)
         self.name = old_name
         return LabeledBars(self, xerr, yerr, name=old_name)
 
@@ -337,8 +335,8 @@ class Bars(
         )  # fmt: skip
         return LabeledBars(
             self,
-            Errorbars._empty_h(name=f"xerr-of-{self.name}", backend=self._backend_name),
-            Errorbars._empty_v(name=f"xerr-of-{self.name}", backend=self._backend_name),
+            Errorbars._empty_h(name=f"{self.name}:xerr", backend=self._backend_name),
+            Errorbars._empty_v(name=f"{self.name}:yerr", backend=self._backend_name),
             texts=texts,
             name=self.name,
         )
@@ -371,9 +369,9 @@ class Bars(
         if orient is not self.orient:
             x, y = y, x
         if orient.is_vertical:
-            name = f"yerr-of-{self.name}"
+            name = f"{self.name}:yerr"
         else:
-            name = f"xerr-of-{self.name}"
+            name = f"{self.name}:xerr"
         return Errorbars(
             x, y - err, y + err_high, color=color, width=width, style=style,
             antialias=antialias, capsize=capsize, orient=orient, name=name,

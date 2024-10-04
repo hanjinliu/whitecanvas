@@ -9,11 +9,16 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Concatenate, ParamSpec
 
+from whitecanvas.backend._instance import Backend
 from whitecanvas.layers import _primitive
 from whitecanvas.layers._base import DataBoundLayer, LayerWrapper
+from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.types import XYData, XYTextData, XYYData
+from whitecanvas.utils.normalize import decode_array, encode_array
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from whitecanvas.canvas import Canvas
 
 _T = TypeVar("_T")
@@ -36,6 +41,25 @@ class LayerStack(LayerWrapper["DataBoundLayer[_T]"], Generic[_T]):
             axis_names = list(axis_names)
         self._axis_names = axis_names
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
+        base = construct_layer(d["base"], backend=backend)
+        data = _parse_slicable(d["data"])
+        axis_names = d["axis_names"]
+        return cls(base, data, axis_names=axis_names)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "data": self._data_stack.to_dict(),
+            "axis_names": self._axis_names,
+        }
+
+    @classmethod
+    def _post_to_dict(cls, d: dict[str, Any]) -> dict[str, Any]:
+        d["data"] = _encode_ndarray(d["data"])
+        return d
+
     @property
     def axis_names(self) -> list[str]:
         """List of axis names."""
@@ -54,6 +78,7 @@ class LayerStack(LayerWrapper["DataBoundLayer[_T]"], Generic[_T]):
         canvas.dims.events.indices.connect(
             self._update_layer_data, unique=True, max_args=1
         )
+        self._update_layer_data(canvas.dims.indices)
         return super()._connect_canvas(canvas)
 
     def _disconnect_canvas(self, canvas: Canvas):
@@ -217,6 +242,15 @@ class Slicable(ABC, Generic[_T]):
     def shape(self) -> tuple[int, ...]:
         """The shape of the data."""
 
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, d: dict[str, Any]) -> Self:
+        """Create an instance from a dictionary."""
+
+    @abstractmethod
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the instance to a dictionary."""
+
     @property
     def ndim(self) -> int:
         """The number of dimensions of the data."""
@@ -234,6 +268,13 @@ class ConstArray(Slicable[_T]):
     def shape(self):
         return ()
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> Self:
+        return cls(decode_array(d["data"], "values"))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "const", "data": self._obj}
+
 
 class GridArray(Slicable[NDArray[np.number]]):
     def __init__(self, obj: NDArray[np.number], dim: int = 1):
@@ -247,6 +288,17 @@ class GridArray(Slicable[NDArray[np.number]]):
     def shape(self):
         return self._obj.shape[: -self._dim]
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> Self:
+        return cls(decode_array(d["data"], "values"), dim=d["dim"])
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": "grid",
+            "data": self._obj,
+            "dim": self._dim,
+        }
+
 
 class NonuniformArray(Slicable[_T]):
     def __init__(self, obj: NDArray[np.object_]):
@@ -259,13 +311,19 @@ class NonuniformArray(Slicable[_T]):
     def shape(self):
         return self._obj.shape
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> Self:
+        return cls(decode_array(d["data"], "values"))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "nonuniform", "data": self._obj}
+
 
 # TODO: multidimensional stripplot etc.
-class TableArray(Slicable[NDArray[np.number]]):
-    def __init__(self, obj: dict[Any, dict[str, NDArray[np.number]]]):
-        self._obj = obj
-
-    def slice_at(self, index: tuple[int, ...]): ...
+# class TableArray(Slicable[NDArray[np.number]]):
+#     def __init__(self, obj: dict[Any, dict[str, NDArray[np.number]]]):
+#         self._obj = obj
+#     def slice_at(self, index: tuple[int, ...]): ...
 
 
 class StackedArray(Slicable[_T]):
@@ -292,3 +350,34 @@ class StackedArray(Slicable[_T]):
     @property
     def shape(self):
         return self._shape
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> Self:
+        return cls([_parse_slicable(o) for o in d["objs"]])
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "stacked", "objs": [o.to_dict() for o in self._objs]}
+
+
+_SLICABLE_TYPE_MAP: dict[str, Slicable[Any]] = {
+    "const": ConstArray,
+    "grid": GridArray,
+    "nonuniform": NonuniformArray,
+    "stacked": StackedArray,
+}
+
+
+def _parse_slicable(d: dict[str, Any]) -> Slicable[Any]:
+    if cls := _SLICABLE_TYPE_MAP.get(d["type"]):
+        return cls.from_dict(d)
+    raise ValueError(f"Unknown slicable type: {d['type']}")
+
+
+def _encode_ndarray(d):
+    if isinstance(d, dict):
+        _type = d.get("type")
+        if _type == "stacked":
+            d["objs"] = [_encode_ndarray(obj) for obj in d["objs"]]
+        elif _type == "grid":
+            d["data"] = encode_array(d["data"], "values")
+    return d

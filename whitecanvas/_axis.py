@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, SupportsIndex, TypeVar
+from typing import Any, Generic, SupportsIndex, TypeVar, Union
 
 _T = TypeVar("_T")
 
@@ -66,7 +66,7 @@ class RangeAxis(DimAxis[int]):
         self._value = min(self._value, size - 1)
 
 
-Category = tuple[int | str, ...]
+Category = tuple[Union[int, str], ...]
 
 
 class CategoricalAxis(DimAxis[Category]):

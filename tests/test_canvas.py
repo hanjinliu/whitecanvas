@@ -285,6 +285,7 @@ def test_layer_handling(backend: str):
     canvas.layers.move(1, 0)
     canvas.layers.pop()
     canvas.layers.pop()
+    assert len(canvas.layers) == 0
 
 def test_multidim():
     canvas = new_canvas(backend="matplotlib")

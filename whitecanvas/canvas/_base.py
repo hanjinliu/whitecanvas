@@ -2067,14 +2067,6 @@ class CanvasBase(CanvasNDBase):
             fn(l._backend, _canvas)
             layer._connect_canvas(self)
 
-    def _cb_removed(self, idx: int, layer: _l.Layer):
-        if self._is_grouping:
-            return
-        _canvas = self._canvas()
-        for l in _iter_layers(layer):
-            _canvas._plt_remove_layer(l._backend)
-            l._disconnect_canvas(self)
-
     def _cb_layer_grouped(self, group: _l.LayerGroup):
         indices: list[int] = []  # layers to remove
         not_found: list[_l.PrimitiveLayer] = []  # primitive layers to add

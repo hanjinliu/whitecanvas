@@ -337,13 +337,17 @@ class AxisNamespace(Namespace):
                 f"low must be less than high, but got {lim!r}. If you "
                 f"want to flip the axis, use `canvas.{a}.flipped = True`."
             )
+        self._unsafe_set_lim(low, high)
+        self._draw_canvas()
+        return None
+
+    def _unsafe_set_lim(self, low: float, high: float):
         # Manually emit signal. This is needed when the plot backend is
         # implemented in JS (such as bokeh) and the python callback is not
         # enabled. Otherwise axis linking fails.
         with self.events.blocked():
             self._get_object()._plt_set_limits((low, high))
         self.events.lim.emit((low, high))
-        self._draw_canvas()
         self._lim_updated_by_user = True
         return None
 

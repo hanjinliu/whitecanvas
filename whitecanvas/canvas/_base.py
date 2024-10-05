@@ -445,8 +445,9 @@ class CanvasBase(CanvasNDBase):
         if xmin >= xmax or ymin >= ymax:
             raise ValueError(f"Invalid view rect: {Rect(*lims)}")
         with self.events.lims.blocked():
-            self.x.lim = xmin, xmax
-            self.y.lim = ymin, ymax
+            self.x._unsafe_set_lim(xmin, xmax)
+            self.y._unsafe_set_lim(ymin, ymax)
+        self._draw_canvas()
         self.events.lims.emit(Rect(xmin, xmax, ymin, ymax))
 
     def update_axes(

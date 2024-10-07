@@ -813,3 +813,33 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
             base, df, categories, splitby, color=color, width=width, style=style,
             hatch=hatch,
         )  # fmt: skip
+
+
+class DFRegPlot(_shared.DataFrameLayerWrapper[_lg.LineBand, _DF], Generic[_DF]):
+    @classmethod
+    def from_arrays(
+        cls,
+        df: DataFrameWrapper[_DF],
+        xs: list[np.ndarray],
+        ys: list[np.ndarray],
+        colors: list[ColorType],
+        styles: list[LineStyle],
+        width: float = 1.0,
+        name: str | None = None,
+        backend: str | Backend | None = None,
+    ) -> DFRegPlot[_DF]:
+        layers = []
+        if width is None:
+            width = theme.get_theme().line.width
+        for x, y, color, style in zip(xs, ys, colors, styles):
+            each_layer = _lg.LineBand.regression_linear(
+                x,
+                y,
+                color=color,
+                width=width,
+                style=style,
+                backend=backend,
+            )
+            layers.append(each_layer)
+        base = _lg.LayerCollection(layers, name=name)
+        return cls(base, df)

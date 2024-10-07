@@ -417,6 +417,7 @@ class CanvasGrid:
         if _is_inline():
             from IPython.display import display
 
+            self._fig.tight_layout()
             plt.close(self._fig)
             display(self._fig)
         else:

@@ -26,11 +26,8 @@ from whitecanvas.types import (
     LineStyle,
     Orientation,
     OrientationLike,
-    _Void,
 )
 from whitecanvas.utils.normalize import as_any_1d_array, as_color_array
-
-_void = _Void()
 
 
 class BoxPlot(LayerContainer, AbstractFaceEdgeMixin["BoxFace", "BoxEdge"]):

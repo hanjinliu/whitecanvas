@@ -83,6 +83,19 @@ def test_cat_plots(backend: str, orient: str):
     cat_plt.add_heatmap_hist(bins=4, color="c").copy()
     read_canvas(canvas.write_json())
 
+def test_single_point():
+    import warnings
+
+    warnings.filterwarnings("error")  # to make sure std is not called with single point
+    canvas = new_canvas(backend="mock")
+    df = {"cat": ["a", "b", "b", "c", "c", "c"], "val": np.arange(6)}
+    cat_plt = canvas.cat_x(df, "cat", "val")
+    cat_plt.add_barplot()
+    cat_plt.add_boxplot()
+    cat_plt.add_heatmap_hist()
+    cat_plt.add_pointplot()
+    cat_plt.add_violinplot()
+
 def test_cat_plots_with_sequential_color():
     df = {
         "y": np.arange(30),

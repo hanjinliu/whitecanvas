@@ -301,16 +301,20 @@ class LabeledMarkers(_LabeledLayerBase, Generic[_NFace, _NEdge, _Size]):
         return _legend.MarkerErrorLegendItem(markers, xerr, yerr)
 
 
-def _init_mean_sd(x, data, color):
+def _init_mean_sd(x, data: list[ArrayLike1D], color):
     x, data = check_array_input(x, data)
     color = as_color_array(color, len(x))
 
     est_data = []
     err_data = []
 
-    for sub_data in data:
+    for each in data:
+        sub_data = np.asarray(each)
         _mean = np.mean(sub_data)
-        _sd = np.std(sub_data, ddof=1)
+        if sub_data.size == 1:
+            _sd = 0
+        else:
+            _sd = np.std(sub_data, ddof=1)
         est_data.append(_mean)
         err_data.append(_sd)
 

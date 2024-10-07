@@ -199,12 +199,18 @@ class ViolinPlot(BandCollection):
         xyy_values: list[XYYData] = []
         for offset, values in zip(x, data):
             arr = as_array_1d(values)
-            kde = gaussian_kde(arr, bw_method=kde_band_width)
-
-            sigma = np.sqrt(kde.covariance[0, 0])
-            pad = sigma * 2.5
-            x_ = np.linspace(arr.min() - pad, arr.max() + pad, 100)
-            y = kde(x_)
+            if arr.size > 1:
+                kde = gaussian_kde(arr, bw_method=kde_band_width)
+                sigma = np.sqrt(kde.covariance[0, 0])
+                pad = sigma * 2.5
+                x_ = np.linspace(arr.min() - pad, arr.max() + pad, 100)
+                y = kde(x_)
+            elif arr.size == 1:
+                x_ = np.array([arr[0]])
+                y = np.array([1.0])
+            else:
+                x_ = np.array([])
+                y = np.array([])
             if shape in ("both", "left"):
                 y0 = -y + offset
             else:

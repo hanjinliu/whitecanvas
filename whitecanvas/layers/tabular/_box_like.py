@@ -271,7 +271,6 @@ class _BoxLikeWrapper(_shared.DataFrameLayerWrapper[_L, _DF], _BoxLikeMixin):
 
     @classmethod
     def from_dict(cls, d: dict[str, Any], backend: Backend | str | None = None) -> Self:
-        """Create a DFViolinPlot from a dictionary."""
         from whitecanvas.canvas.dataframe._base import CatIterator
 
         base = d["base"]
@@ -793,8 +792,7 @@ class DFBoxPlot(_BoxLikeWrapper[_lg.BoxPlot, _DF], Generic[_DF]):
             high = q3 + ratio * iqr  # upper bound of inliers
             is_inlier = (low <= arr) & (arr <= high)
             inliers = arr[is_inlier]
-            agg_values[0, idx_cat] = inliers.min()
-            agg_values[4, idx_cat] = inliers.max()
+            agg_values[:, idx_cat] = np.quantile(inliers, [0, 0.25, 0.5, 0.75, 1.0])
             outliers = arr[~is_inlier]
             for _cat, _s in zip(sl, self._splitby):
                 df_outliers[_s].extend([_cat] * outliers.size)
@@ -847,7 +845,7 @@ class _EstimatorWrapper(_BoxLikeWrapper[_L, _DF]):
     def est_by_mean(self) -> Self:
         """Set estimator to mean."""
 
-        def est_func(x):
+        def est_func(x: np.ndarray):
             return np.mean(x)
 
         return self._update_estimate(est_func)
@@ -855,7 +853,7 @@ class _EstimatorWrapper(_BoxLikeWrapper[_L, _DF]):
     def est_by_median(self) -> Self:
         """Set estimator to median."""
 
-        def est_func(x):
+        def est_func(x: np.ndarray):
             return np.median(x)
 
         return self._update_estimate(est_func)
@@ -863,8 +861,10 @@ class _EstimatorWrapper(_BoxLikeWrapper[_L, _DF]):
     def err_by_sd(self, scale: float = 1.0, *, ddof: int = 1) -> Self:
         """Set error to standard deviation."""
 
-        def err_func(x):
+        def err_func(x: np.ndarray):
             _mean = np.mean(x)
+            if x.size <= ddof:
+                return _mean, _mean
             _sd = np.std(x, ddof=ddof) * scale
             return _mean - _sd, _mean + _sd
 
@@ -873,8 +873,10 @@ class _EstimatorWrapper(_BoxLikeWrapper[_L, _DF]):
     def err_by_se(self, scale: float = 1.0, *, ddof: int = 1) -> Self:
         """Set error to standard error."""
 
-        def err_func(x):
+        def err_func(x: np.ndarray):
             _mean = np.mean(x)
+            if x.size <= ddof:
+                return _mean, _mean
             _er = np.std(x, ddof=ddof) / np.sqrt(len(x)) * scale
             return _mean - _er, _mean + _er
 

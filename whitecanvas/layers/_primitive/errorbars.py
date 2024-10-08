@@ -199,6 +199,7 @@ class Errorbars(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, XYYData]):
             "data": self._get_layer_data().to_dict(),
             "orient": self.orient.value,
             "name": self.name,
+            "visible": self.visible,
             "color": self.color,
             "width": self.width,
             "style": self.style,

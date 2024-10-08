@@ -285,8 +285,6 @@ def read_col(path: str | Path) -> CanvasVGrid:
 
 
 @overload
-def load_dataset(name: str, type: None = None, cache: bool = True) -> Any: ...
-@overload
 def load_dataset(
     name: str, type: Literal["pandas"], cache: bool = True
 ) -> pd.DataFrame: ...
@@ -296,7 +294,7 @@ def load_dataset(
 ) -> pl.DataFrame: ...
 
 
-def load_dataset(name, type=None, cache=True) -> Any:
+def load_dataset(name, type="pandas", cache=True):
     from urllib.request import urlopen, urlretrieve
 
     from platformdirs import user_cache_dir

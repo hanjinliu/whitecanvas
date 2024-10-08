@@ -26,7 +26,10 @@ def construct_layer(d: dict[str, Any], backend: Backend | str | None = None) -> 
     typ = d["type"]
     if not isinstance(typ, str):
         raise ValueError(f"Layer type must be a string, got {typ!r}.")
-    return _pick_layer_class(typ).from_dict(d, backend=backend)
+    layer = _pick_layer_class(typ).from_dict(d, backend=backend)
+    if not (visible := d.get("visible", True)):
+        layer.visible = visible
+    return layer
 
 
 def construct_layers(

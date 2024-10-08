@@ -211,6 +211,7 @@ class Vectors(DataBoundLayer[_V, XYVectorData]):
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
+            "visible": self.visible,
             "color": self.color,
             "width": self.width,
             "style": self.style,

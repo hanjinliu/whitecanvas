@@ -15,6 +15,7 @@ from whitecanvas.layers._deserialize import construct_layer
 from whitecanvas.layers._legend import LegendItem
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
+from whitecanvas.layers.tabular._dataframe import DFRegPlot
 from whitecanvas.layers.tabular._df_compat import DataFrameWrapper, from_dict
 from whitecanvas.types import (
     ArrayLike1D,
@@ -27,6 +28,7 @@ from whitecanvas.types import (
     Symbol,
     _Void,
 )
+from whitecanvas.utils.collections import OrderedSet
 from whitecanvas.utils.type_check import is_real_number
 
 if TYPE_CHECKING:
@@ -462,6 +464,91 @@ class DFMarkers(
         extra = dict(self._source.iter_items())
         self.base.with_hover_template(template, extra=extra)
         return self
+
+    def with_reg(
+        self,
+        *,
+        split_by: str | list[str] | None = None,
+        ci: float = 0.95,
+        color=None,
+        width: float | None = None,
+        style: str | LineStyle | None = None,
+    ) -> _lg.MainAndOtherLayers[Self, DFRegPlot[_DF]]:
+        """
+        Add a regression line to the markers.
+
+        Parameters
+        ----------
+        split_by : str, list[str], optional
+            Column names by which data will be split to draw regression lines.
+        color : color-like, optional
+            Constant color to draw regression.
+        width : float, optional
+            Width of the regression lines.
+        style : str or LineStyle, optional
+            Line style of the regression lines.
+        """
+        df = self._source
+        splitby_default: list[str] = []
+        colors_ref = self.base.face.color
+        symbols_ref = self.base.symbol
+        if self._edge_color_by.is_not_const() and isinstance(
+            self._edge_color_by, _p.ColorPlan
+        ):
+            splitby_default.extend(self._edge_color_by.by)
+            colors_ref = self.base.edge.color
+        if self._color_by.is_not_const() and isinstance(self._color_by, _p.ColorPlan):
+            splitby_default.extend(self._color_by.by)
+            colors_ref = self.base.face.color
+        if self._symbol_by.is_not_const():
+            splitby_default.extend(self._symbol_by.by)
+
+        # normalize split_by
+        if split_by is None:
+            split_by = splitby_default
+        elif isinstance(split_by, str):
+            if split_by not in splitby_default:
+                raise ValueError(f"`split_by` must be one of {split_by!r}.")
+            split_by = [split_by]
+        else:
+            split_by = list(split_by)
+            for sb in split_by:
+                if sb not in splitby_default:
+                    raise ValueError(f"`split_by` must be one of {split_by!r}.")
+
+        xs = []
+        ys = []
+        colors = []
+        symbols = []
+        data = self.base.data
+        for sl, _ in df.group_by(split_by):
+            arr_indices = np.all(
+                np.stack([df[c] == v for c, v in zip(split_by, sl)], axis=0),
+                axis=0,
+            )
+            xs.append(data.x[arr_indices])
+            ys.append(data.y[arr_indices])
+            colors.append(colors_ref[arr_indices][0][:3])
+            symbols.append(symbols_ref[arr_indices][0])
+
+        if color is not None:
+            colors = [Color(color)] * len(xs)
+        if style is not None:
+            styles = [LineStyle(style)] * len(xs)
+        else:
+            # make symbol to linestyle mapping
+            linestyles = _p.StylePlan._default_values()
+            _mapping = {
+                sym: linestyles[i % len(linestyles)]
+                for i, sym in enumerate(OrderedSet(symbols))
+            }
+            styles = [LineStyle(_mapping[sym]) for sym in symbols]
+        regplot = DFRegPlot.from_arrays(
+            self._source, xs, ys, colors=colors, width=width, styles=styles,
+            ci=ci, backend=self._base_layer._backend_name,
+            name=f"{self.name}:regression",
+        )  # fmt: skip
+        return _lg.MainAndOtherLayers(self, regplot)
 
     def _as_legend_item(self) -> LegendItem:
         items = []

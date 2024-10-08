@@ -317,7 +317,10 @@ class MonoFace(SinglePropertyFaceBase):
 class ConstFace(SinglePropertyFaceBase):
     @property
     def color(self) -> NDArray[np.floating]:
-        return self._layer._backend._plt_get_face_color()[0]
+        colors = self._layer._backend._plt_get_face_color()
+        if len(colors) > 0:
+            return colors[0]
+        return np.zeros(4, dtype=np.float32)
 
     @color.setter
     def color(self, value: ColorType):
@@ -327,7 +330,10 @@ class ConstFace(SinglePropertyFaceBase):
 
     @property
     def hatch(self) -> Hatch:
-        return self._layer._backend._plt_get_face_hatch()[0]
+        hatches = self._layer._backend._plt_get_face_hatch()
+        if len(hatches) > 0:
+            return hatches[0]
+        return Hatch.SOLID
 
     @hatch.setter
     def hatch(self, value: str | Hatch):
@@ -408,7 +414,7 @@ class ConstEdge(SinglePropertyEdgeBase):
         colors = self._layer._backend._plt_get_edge_color()
         if len(colors) > 0:
             return colors[0]
-        return np.array([0, 0, 0, 0], dtype=np.float32)
+        return np.zeros(4, dtype=np.float32)
 
     @color.setter
     def color(self, value: ColorType):

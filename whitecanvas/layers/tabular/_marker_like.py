@@ -469,6 +469,7 @@ class DFMarkers(
         self,
         *,
         split_by: str | list[str] | None = None,
+        ci: float = 0.95,
         color=None,
         width: float | None = None,
         style: str | LineStyle | None = None,
@@ -543,15 +544,10 @@ class DFMarkers(
             }
             styles = [LineStyle(_mapping[sym]) for sym in symbols]
         regplot = DFRegPlot.from_arrays(
-            self._source,
-            xs,
-            ys,
-            colors=colors,
-            width=width,
-            styles=styles,
-            backend=self._base_layer._backend_name,
+            self._source, xs, ys, colors=colors, width=width, styles=styles,
+            ci=ci, backend=self._base_layer._backend_name,
             name=f"{self.name}:regression",
-        )
+        )  # fmt: skip
         return _lg.MainAndOtherLayers(self, regplot)
 
     def _as_legend_item(self) -> LegendItem:

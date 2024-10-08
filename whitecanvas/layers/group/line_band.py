@@ -77,6 +77,7 @@ class LineBand(LayerContainer, Generic[_L]):
         x: np.ndarray,
         y: np.ndarray,
         *,
+        ci: float = 0.95,
         color: ColorType = "black",
         width: float = 1,
         style: str | LineStyle = "-",
@@ -92,9 +93,14 @@ class LineBand(LayerContainer, Generic[_L]):
         yfit = ols.predict(sm.add_constant(xfit))
 
         pred = ols.get_prediction(sm.add_constant(xfit))
-        pred_summary = pred.summary_frame(alpha=0.05)  # 95% ci
-        ylow = pred_summary["mean_ci_lower"]
-        yhigh = pred_summary["mean_ci_upper"]
+        if ci == 0:
+            ylow = yhigh = yfit
+        elif ci >= 1:
+            raise ValueError(f"ci must be in the range 0 <= ci < 1, got {ci!r}")
+        else:
+            pred_summary = pred.summary_frame(alpha=1 - ci)
+            ylow = pred_summary["mean_ci_lower"]
+            yhigh = pred_summary["mean_ci_upper"]
 
         line = Line(
             xfit,
@@ -105,5 +111,5 @@ class LineBand(LayerContainer, Generic[_L]):
             alpha=alpha,
             backend=backend,
         )
-        band = Band(xfit, ylow, yhigh, color=color, alpha=alpha * 0.4, backend=backend)
+        band = Band(xfit, ylow, yhigh, color=color, alpha=alpha * 0.33, backend=backend)
         return cls(line, band, name=name)

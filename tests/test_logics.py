@@ -155,7 +155,6 @@ def test_load_dataset():
     import pandas as pd
     import polars as pl
 
-    df = load_dataset("iris")
     df = load_dataset("iris", type="pandas")
     assert isinstance(df, pd.DataFrame)
     df = load_dataset("iris", type="polars")

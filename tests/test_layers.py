@@ -93,6 +93,12 @@ def test_markers(backend: str):
     assert layer.symbol == layer_copy.symbol
     layer.read_json(layer.write_json(), backend=backend)
 
+def test_regression(backend: str):
+    rng = np.random.default_rng(14453)
+    canvas = new_canvas(backend=backend)
+    layer = canvas.add_markers(rng.random(10), rng.random(10), color="red").with_regression()
+    assert_color_equal(layer[1].line.color, "red")
+
 def test_bars(backend: str):
     canvas = new_canvas(backend=backend)
     canvas.add_bars(np.arange(10), np.zeros(10), bottom=np.ones(10))

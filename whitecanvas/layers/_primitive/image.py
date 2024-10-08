@@ -253,6 +253,7 @@ class Image(DataBoundLayer[ImageProtocol, NDArray[np.number]]):
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data(),
             "name": self.name,
+            "visible": self.visible,
             "cmap": self.cmap,
             "clim": self.clim,
             "shift": self.shift,

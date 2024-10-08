@@ -465,7 +465,7 @@ class DFMarkers(
         self.base.with_hover_template(template, extra=extra)
         return self
 
-    def with_regression(
+    def with_reg(
         self,
         *,
         split_by: str | list[str] | None = None,

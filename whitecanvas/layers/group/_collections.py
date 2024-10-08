@@ -95,6 +95,7 @@ class LayerContainer(LayerGroup):
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "children": [child.to_dict() for child in self._children],
             "name": self.name,
+            "visible": self.visible,
         }
 
     def _connect_canvas(self, canvas: Canvas):

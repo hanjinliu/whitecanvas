@@ -1,6 +1,7 @@
 from pathlib import Path
 import tempfile
 import pytest
+import matplotlib.pyplot as plt
 from whitecanvas import new_canvas
 import numpy as np
 from numpy.testing import assert_allclose
@@ -149,6 +150,7 @@ def test_matplotlib_tooltip():
     canvas.add_markers([1, 2, 3], [4, 5, 6])
     canvas._canvas()._set_tooltip((2, 5), "tooltip")
     canvas._canvas()._hide_tooltip()
+    plt.close("all")
 
 def test_load_dataset():
     from whitecanvas import load_dataset
@@ -171,6 +173,7 @@ def test_add_operation():
     l_mb = l + (m + b)
     lm._repr_png_()
     lmb._repr_png_()
+    plt.close("all")
 
 def test_read_write_json_file():
     from whitecanvas.layers import Markers
@@ -181,3 +184,4 @@ def test_read_write_json_file():
         markers = Markers.read_json(tmpdir / "layer.json")
     assert_allclose(markers.data.x, [1, 2, 3])
     assert_allclose(markers.data.y, [4, 5, 6])
+    plt.close("all")

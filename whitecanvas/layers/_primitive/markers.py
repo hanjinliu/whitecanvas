@@ -161,6 +161,7 @@ class Markers(
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
+            "visible": self.visible,
             "size": self.size,
             "symbol": self.symbol,
             "face": self.face.to_dict(),
@@ -599,7 +600,7 @@ class Markers(
         )  # fmt: skip
         return StemPlot(self, mline, orient=orient, name=self.name)
 
-    def with_regression(
+    def with_reg(
         self,
         *,
         ci: float = 0.95,

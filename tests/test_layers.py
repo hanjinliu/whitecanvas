@@ -96,7 +96,7 @@ def test_markers(backend: str):
 def test_regression(backend: str):
     rng = np.random.default_rng(14453)
     canvas = new_canvas(backend=backend)
-    layer = canvas.add_markers(rng.random(10), rng.random(10), color="red").with_regression()
+    layer = canvas.add_markers(rng.random(10), rng.random(10), color="red").with_reg()
     assert_color_equal(layer[1].line.color, "red")
 
 def test_bars(backend: str):

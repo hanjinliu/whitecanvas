@@ -214,6 +214,7 @@ class Texts(TextMixin[_Face, _Edge, _Font]):
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
+            "visible": self.visible,
             "face": self.face.to_dict(),
             "edge": self.edge.to_dict(),
             "font": self.font.to_dict(),

@@ -6,6 +6,7 @@ from typing import Callable
 
 import matplotlib as mpl
 import numpy as np
+from cmap import Color
 from matplotlib import pyplot as plt
 from matplotlib.artist import Artist
 from matplotlib.backend_bases import MouseButton as mplMouseButton
@@ -317,7 +318,10 @@ class Canvas:
                 prop={"size": font_size},
             )  # fmt: skip
             for item, text in zip(leg.legend_handles, leg.texts):
-                if isinstance(item, plt.Rectangle):
+                if (
+                    isinstance(item, plt.Rectangle)
+                    and Color(item.get_facecolor()).alpha == 0
+                ):
                     extent = item.get_window_extent(leg.figure.canvas.get_renderer())
                     width = extent.width
                     text.set_fontweight("bold")

@@ -243,6 +243,7 @@ class Bars(
             "orient": self.orient.value,
             "extent": self.bar_width,
             "name": self.name,
+            "visible": self.visible,
             "face": self.face.to_dict(),
             "edge": self.edge.to_dict(),
         }

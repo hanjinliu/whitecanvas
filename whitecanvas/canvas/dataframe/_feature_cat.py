@@ -339,6 +339,23 @@ class CatPlotter(BaseCatPlotter[_C, _DF]):
         )  # fmt: skip
         return canvas.add_layer(layer)
 
+    def add_regplot(
+        self,
+        *,
+        name: str | None = None,
+        ci: float = 0.95,
+        color: NStr | None = None,
+        width: float | None = None,
+        style: NStr | None = None,
+    ):
+        canvas = self._canvas()
+        layer = _lt.DFRegPlot.from_table(
+            self._df, self._get_x(), self._get_y(), name=name, color=color, width=width,
+            style=style, ci=ci, palette=canvas._color_palette,
+            backend=canvas._get_backend(),
+        )  # fmt: skip
+        return canvas.add_layer(layer)
+
     def add_hist(
         self,
         *,

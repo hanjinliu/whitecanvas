@@ -301,6 +301,8 @@ class _BoxLikeWrapper(_shared.DataFrameLayerWrapper[_L, _DF], _BoxLikeMixin):
             "split_by": self._splitby,
             "color_by": self._color_by,
             "hatch_by": self._hatch_by,
+            "name": self.name,
+            "visible": self.visible,
         }
 
 

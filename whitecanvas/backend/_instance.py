@@ -114,3 +114,14 @@ def patch_dummy_backend():
         yield dummy_name
     finally:
         del _INSTALLED_MODULES[dummy_name]
+
+
+@contextmanager
+def use_backend(name: str):
+    """Context manager to temporarily change the backend."""
+    old = Backend._default
+    try:
+        Backend(name)
+        yield
+    finally:
+        Backend._default = old

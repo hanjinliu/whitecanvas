@@ -84,6 +84,7 @@ docs = [
   "matplotlib>=3.8.2",
   "imageio>=2.9.0",
   "plotly>=5.3.1",
+  "statsmodels>=0.13.0",
 ]
 
 [project.urls]

@@ -95,6 +95,7 @@ class LayerContainer(LayerGroup):
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "children": [child.to_dict() for child in self._children],
             "name": self.name,
+            "visible": self.visible,
         }
 
     def _connect_canvas(self, canvas: Canvas):
@@ -205,7 +206,7 @@ class MainAndOtherLayers(LayerTuple, Generic[_L0, _L1]):
     def __getitem__(self, n: Literal[0]) -> _L0: ...
 
     @overload
-    def __getitem__(self, n: Literal[0]) -> _L1: ...
+    def __getitem__(self, n: Literal[1]) -> _L1: ...
 
     @overload
     def __getitem__(self, n: int) -> Layer: ...

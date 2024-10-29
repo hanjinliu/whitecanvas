@@ -114,6 +114,9 @@ class DataFrameWrapper(ABC, Generic[_T]):
     @abstractmethod
     def wrapper_type() -> str: ...
 
+    def copy(self) -> Self:
+        return self.from_dict(self.to_dict())
+
 
 class DictWrapper(DataFrameWrapper[dict[str, np.ndarray]]):
     def __getitem__(self, item: str) -> np.ndarray:

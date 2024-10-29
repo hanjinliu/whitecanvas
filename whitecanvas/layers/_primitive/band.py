@@ -105,6 +105,7 @@ class Band(DataBoundLayer[BandProtocol, XYYData], FaceEdgeMixin):
             "data": self._get_layer_data().to_dict(),
             "orient": self.orient.value,
             "name": self.name,
+            "visible": self.visible,
             "face": self.face.to_dict(),
             "edge": self.edge.to_dict(),
         }

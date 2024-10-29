@@ -12,7 +12,7 @@ from numpy.typing import NDArray
 from whitecanvas import layers as _l
 from whitecanvas import theme
 from whitecanvas.backend import Backend
-from whitecanvas.layers import _legend
+from whitecanvas.layers import _legend, _mixin
 from whitecanvas.layers import group as _lg
 from whitecanvas.layers.tabular import _jitter, _shared
 from whitecanvas.layers.tabular import _plans as _p
@@ -523,7 +523,12 @@ def _gen_cmap_from_color(next_color: Color):
     return [next_background, next_color]
 
 
-class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic[_DF]):
+_PointPlot = _lg.LabeledPlot[
+    _mixin.MultiFace, _mixin.MultiEdge, NDArray[np.float32], _l.Line
+]
+
+
+class DFPointPlot2D(_shared.DataFrameLayerWrapper[_PointPlot, _DF], Generic[_DF]):
     @classmethod
     def from_arrays(
         cls,
@@ -536,16 +541,22 @@ class DFPointPlot2D(_shared.DataFrameLayerWrapper[_lg.LabeledPlot, _DF], Generic
         size: float | None = None,
         capsize: float = 0.15,
         name: str | None = None,
+        palette: _p.ColorPalette | None = None,
         backend: str | Backend | None = None,
     ):
         cols = _shared.join_columns(color, hatch, source=source)
-        xdata = []
-        ydata = []
-        for _, sub in source.group_by(cols):
-            xdata.append(sub[x])
-            ydata.append(sub[y])
+        xs = []
+        ys = []
+        df_unique = {col: [] for col in cols}
+        for sl, sub in source.group_by(cols):
+            xs.append(sub[x])
+            ys.append(sub[y])
+            for _each_sl, _each_col in zip(sl, cols):
+                df_unique[_each_col].append(_each_sl)
+        df_unique = parse(df_unique)
+        colors = _norm_color(color, palette, df_unique)
         base = _lg.LabeledPlot.from_arrays_2d(
-            xdata, ydata, name=name, capsize=capsize, backend=backend
+            xs, ys, name=name, capsize=capsize, color=colors, backend=backend
         )
         if size is not None:
             base.markers.size = size
@@ -813,3 +824,92 @@ class DFKde(DFLineFillBase[_lg.Kde, _DF], Generic[_DF]):
             base, df, categories, splitby, color=color, width=width, style=style,
             hatch=hatch,
         )  # fmt: skip
+
+
+class DFRegPlot(_shared.DataFrameLayerWrapper[_lg.LineBand, _DF], Generic[_DF]):
+    @classmethod
+    def from_arrays(
+        cls,
+        df: DataFrameWrapper[_DF],
+        xs: list[np.ndarray],
+        ys: list[np.ndarray],
+        colors: list[ColorType],
+        styles: list[LineStyle],
+        width: float = 1.0,
+        name: str | None = None,
+        ci: float = 0.95,
+        backend: str | Backend | None = None,
+    ) -> DFRegPlot[_DF]:
+        layers = []
+        if width is None:
+            width = theme.get_theme().line.width
+        for x, y, color, style in zip(xs, ys, colors, styles):
+            each_layer = _lg.LineBand.regression_linear(
+                x, y, color=color, width=width, style=style, ci=ci, backend=backend,
+            )  # fmt: skip
+            layers.append(each_layer)
+        base = _lg.LayerCollection(layers, name=name)
+        return cls(base, df)
+
+    @classmethod
+    def from_table(
+        cls,
+        df: DataFrameWrapper[_DF],
+        x: str,
+        y: str,
+        name: str | None = None,
+        color: str | tuple[str, ...] | None = None,
+        width: float = 1.0,
+        style: str | tuple[str, ...] | None = None,
+        ci: float = 0.95,
+        palette: _p.ColorPalette | None = None,
+        backend: str | Backend | None = None,
+    ):
+        cols = _shared.join_columns(color, style, source=df)
+        xs = []
+        ys = []
+
+        df_unique = {col: [] for col in cols}
+        for sl, sub in df.group_by(cols):
+            xs.append(sub[x])
+            ys.append(sub[y])
+            for _each_sl, _each_col in zip(sl, cols):
+                df_unique[_each_col].append(_each_sl)
+        df_unique = parse(df_unique)
+        colors = _norm_color(color, palette, df_unique)
+        styles = _norm_style(style, df_unique)
+        return cls.from_arrays(
+            df,
+            xs,
+            ys,
+            colors=colors,
+            styles=styles,
+            width=width,
+            ci=ci,
+            name=name,
+            backend=backend,
+        )
+
+
+def _norm_color(
+    color, palette: _p.ColorPalette, df_unique: DataFrameWrapper[_DF]
+) -> list[Color]:
+    if color is None:
+        color = palette.next()
+    cov_color = _shared.ColumnOrValue(color, df_unique)
+    if cov_color.is_column:
+        color_by = _p.ColorPlan.from_palette(cov_color.columns, palette)
+    else:
+        color_by = _p.ColorPlan.from_const(Color(cov_color.value))
+    return color_by.map(df_unique)
+
+
+def _norm_style(style, df_unique: DataFrameWrapper[_DF]) -> list[LineStyle]:
+    if style is None:
+        style = LineStyle.SOLID
+    cov_style = _shared.ColumnOrValue(style, df_unique)
+    if cov_style.is_column:
+        style_by = _p.StylePlan.new(cov_style.columns)
+    else:
+        style_by = _p.StylePlan.from_const(LineStyle(cov_style.value))
+    return style_by.map(df_unique)

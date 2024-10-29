@@ -114,6 +114,7 @@ class Rects(
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self.data,
             "name": self.name,
+            "visible": self.visible,
             "face": self.face.to_dict(),
             "edge": self.edge.to_dict(),
         }

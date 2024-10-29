@@ -7,6 +7,7 @@ from cmap import Colormap
 from numpy.typing import ArrayLike, NDArray
 from psygnal import Signal
 
+from whitecanvas import theme
 from whitecanvas.backend import Backend
 from whitecanvas.layers import _legend, _text_utils
 from whitecanvas.layers._base import HoverableDataBoundLayer
@@ -37,6 +38,7 @@ from whitecanvas.utils.normalize import as_array_1d, normalize_xy, parse_texts
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+    from whitecanvas.layers import Line
     from whitecanvas.layers import group as _lg
     from whitecanvas.layers._mixin import ConstEdge, ConstFace, MultiEdge, MultiFace
 
@@ -159,6 +161,7 @@ class Markers(
             "type": f"{self.__module__}.{self.__class__.__name__}",
             "data": self._get_layer_data().to_dict(),
             "name": self.name,
+            "visible": self.visible,
             "size": self.size,
             "symbol": self.symbol,
             "face": self.face.to_dict(),
@@ -596,6 +599,54 @@ class Markers(
             antialias=antialias, alpha = alpha, backend=self._backend_name,
         )  # fmt: skip
         return StemPlot(self, mline, orient=orient, name=self.name)
+
+    def with_reg(
+        self,
+        *,
+        ci: float = 0.95,
+        color: ColorType | None = None,
+        width: float | None = None,
+        style: LineStyle | str = LineStyle.SOLID,
+        alpha: float = 1.0,
+    ) -> _lg.MainAndOtherLayers[Self, _lg.LineBand[Line]]:
+        """
+        Add a linear regression line of the markers.
+
+        Parameters
+        ----------
+        ci : float, optional
+            Confidence interval of the regression line.
+        color : color-like, optional
+            Color of the regression line and interval. If not given, the marker face
+            color with be used, or if it is transparent, the edge colro will be used.
+        width : float, optional
+            The width of the regression line.
+        style : str or LineStyle, default LineStyle.SOLID
+            Line style of the regression line.
+        alpha : float, default 1.0
+            Alpha value of the regression line.
+        """
+        from whitecanvas.layers.group import LineBand, MainAndOtherLayers
+
+        x, y = self.data
+        if color is None:
+            fc = self.face.color
+            if fc.ndim == 2:  # multi-face
+                fc = fc[0]
+            if fc[3] < 1e-6:  # transparent
+                ec = self.edge.color
+                if ec.ndim == 2:  # multi-edge
+                    ec = ec[0]
+                color = ec
+            else:
+                color = fc
+        if width is None:
+            width = theme.get_theme().line.width
+        reg = LineBand.regression_linear(
+            x, y, color=color, width=width, style=style, ci=ci, alpha=alpha,
+            backend=self._backend_name,
+        )  # fmt: skip
+        return MainAndOtherLayers(self, reg)
 
     def with_face(
         self,

@@ -1425,6 +1425,16 @@ different colors are used for each group.</p>
 </code></pre></div>
 <iframe src=../../_images/categorical_add_markers_hover_text.html frameborder="0" width="400px" height="300px" scrolling="no"></iframe>
 
+<p>Group-wise line regression can be easily added by <code>with_reg</code> method.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">canvas</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_markers</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
+<span class="hll">    <span class="o">.</span><span class="n">with_reg</span><span class="p">()</span>
+</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<img alt="" loading="lazy," src="../../_images/categorical_add_markers_symbol.png" width="360px" /></p>
 <h2 id="automatic-creation-of-legends">Automatic Creation of Legends</h2>
 <p>As mentioned in <a href="../../canvas/legend/">Legend for the Layers</a>, legends can be
 automatically created by <code>add_legend</code> function. In the case of the categorical plot,

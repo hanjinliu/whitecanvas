@@ -11,6 +11,7 @@ from whitecanvas.layers.tabular._dataframe import (
     DFLines,
     DFMultiHeatmap,
     DFPointPlot2D,
+    DFRegPlot,
 )
 from whitecanvas.layers.tabular._df_compat import parse
 from whitecanvas.layers.tabular._marker_like import (
@@ -39,5 +40,6 @@ __all__ = [
     "DFRug",
     "DFRugGroups",
     "DFPointPlot2D",
+    "DFRegPlot",
     "parse",
 ]

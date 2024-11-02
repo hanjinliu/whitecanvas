@@ -55,6 +55,19 @@ canvas.cat(df, "x", "y").add_markers(color="label")
 canvas.show()
 ```
 
+Group-wise line regression can be easily added by `with_reg` method.
+
+``` python hl_lines="5"
+#!name: categorical_add_markers_symbol
+canvas = new_canvas("matplotlib")
+(
+    canvas.cat(df, "x", "y")
+    .add_markers(color="label")
+    .with_reg()
+)
+canvas.show()
+```
+
 ## Automatic Creation of Legends
 
 As mentioned in [Legend for the Layers](../canvas/legend.md), legends can be

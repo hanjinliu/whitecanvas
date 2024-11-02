@@ -183,12 +183,11 @@ class Layer(ABC):
             if backend.name == "matplotlib":
                 import matplotlib.pyplot as plt
 
-                _old_mpl_backend = plt.get_backend()
-                plt.switch_backend("Agg")
+                ca = plt.gca()
                 try:
                     canvas = new_canvas(backend=backend, size=(360, 240))
                 finally:
-                    plt.switch_backend(_old_mpl_backend)
+                    plt.sca(ca)
             else:
                 canvas = new_canvas(backend=backend, size=(360, 240))
             canvas.add_layer(self.copy())

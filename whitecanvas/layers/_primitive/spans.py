@@ -151,6 +151,7 @@ class Spans(
             "data": self._get_layer_data(),
             "orient": self.orient.value,
             "name": self.name,
+            "visible": self.visible,
             "face": self.face.to_dict(),
             "edge": self.edge.to_dict(),
         }

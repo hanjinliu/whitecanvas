@@ -139,6 +139,7 @@ class Rug(MultiLine, HoverableDataBoundLayer[MultiLineProtocol, NDArray[np.numbe
             "high": self.high,
             "orient": self.orient.value,
             "name": self.name,
+            "visible": self.visible,
             "color": self.color,
             "width": self.width,
             "style": self.style,

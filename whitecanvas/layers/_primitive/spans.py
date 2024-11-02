@@ -102,7 +102,11 @@ class Spans(
             return np.column_stack([y0, y1])
 
     def _norm_layer_data(self, data: Any) -> NDArray[np.number]:
-        _spans = np.asarray(data)
+        _spans = np.asarray(data, dtype=np.float32)
+        if _spans.ndim == 1:
+            if _spans.shape != (2,):
+                raise ValueError(f"spans must be 2-dimensional, got {_spans.shape}")
+            _spans = _spans[np.newaxis, :]
         if _spans.ndim != 2:
             raise ValueError(f"spans must be 2-dimensional, got {_spans.ndim}")
         if _spans.shape[1] != 2:

@@ -462,6 +462,8 @@ def test_spans(backend: str):
     assert_allclose(layer.data, layer_copy.data)
     layer.read_json(layer.write_json(), backend=backend)
 
+    canvas.add_spans([2, 4])  # 1D input
+
 def test_rects(backend: str):
     canvas = new_canvas(backend=backend)
 

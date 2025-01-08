@@ -1434,8 +1434,8 @@
 
 <h1 id="markers">Markers</h1>
 <p><code>Markers</code> is a layer for scatter plots. It can be created with the <code>add_markers</code> method.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="n">layer</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">add_markers</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
@@ -1444,8 +1444,8 @@
 <img alt="" loading="lazy," src="../../_images/markers_layer.png" width="360px" /></p>
 <p>Symbol and size of the markers can easily be configured with the <code>symbol</code> and <code>size</code>
 arguments.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">]):</span>
@@ -1486,8 +1486,8 @@ ensure the markers are informative.</p>
 arguments. You can use the <code>with_edge</code> method of the output layer to set edge
 properties. This separation is very helpful to prevent the confusion of the arguments,
 especially the colors.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1513,8 +1513,8 @@ method.</p>
 with multiple colors, widths, etc.</p>
 <p>To do this, you have to call <code>with_face_multi</code> or <code>with_edge_multi</code> method.
 Here's an example of <code>Markers</code> with multi-faces.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1539,8 +1539,8 @@ is a generic class with type variables for the face types. Since <code>with_face
 is correctly typed, IDE will recognize the returned layer as a multi-face layer.</p>
 </div>
 <p>Similarly, you can use <code>with_edge_multi</code> to create multi-edge markers.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1554,8 +1554,8 @@ is correctly typed, IDE will recognize the returned layer as a multi-face layer.
 <img alt="" loading="lazy," src="../../_images/markers_layer_multiedges.png" width="360px" /></p>
 <h2 id="multi-size-markers">Multi-size Markers</h2>
 <p><code>with_size_multi</code> method can be used to create multi-size markers.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1573,8 +1573,8 @@ is correctly typed, IDE will recognize the returned layer as a multi-face layer.
 <p>Scatter plot is good at visualizing the outliers, but not at telling the distribution
 when the density is high. In this case, <code>color_by_density</code> method is very useful. It
 colors the markers by the density of the points using kernel density estimation.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_row</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_row</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">999</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>

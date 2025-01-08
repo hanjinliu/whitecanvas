@@ -1417,8 +1417,8 @@
 <h1 id="working-with-the-backend-objects">Working with the Backend Objects</h1>
 <h2 id="convert-a-backend-object-to-whitecanvas-canvas">Convert a backend object to <code>whitecanvas</code> canvas</h2>
 <p>The <code>wrap_canvas</code> converts a backend object to a <code>whitecanvas</code> canvas.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">wrap_canvas</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrap_canvas</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 <span class="n">axes</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Title&quot;</span><span class="p">)</span>  <span class="c1"># operations in the backend side</span>
@@ -1430,7 +1430,7 @@
 </code></pre></div>
 <h2 id="retrieve-the-backend-object-from-a-whitecanvas-canvas">Retrieve the backend object from a <code>whitecanvas</code> canvas</h2>
 <p>The backend object is available at the <code>native</code> property.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">native</span>
@@ -1441,9 +1441,9 @@
 <h3 id="1-control-matplotlib-qt-application-with-whitecanvas">1. Control <code>matplotlib</code> Qt application with <code>whitecanvas</code></h3>
 <div class="highlight"><pre><span></span><code><span class="ch">#!skip</span>
 <span class="c1"># use `%gui qt` in IPython</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">qtpy</span> <span class="kn">import</span> <span class="n">QtWidgets</span> <span class="k">as</span> <span class="n">QtW</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qtpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">QtWidgets</span> <span class="k">as</span> <span class="n">QtW</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib:qt&quot;</span><span class="p">)</span>
 <span class="n">qt_canvas</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">native</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">canvas</span>

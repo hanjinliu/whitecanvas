@@ -1289,13 +1289,13 @@ handling systems, <code>whitecanvas</code> provides a unified system using the
 <a href="https://psygnal.readthedocs.io">psygnal</a> library.</p>
 <p>The common syntax is to use <code>connect</code> function to connect callback function to the
 event handler.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">()</span>
 
 <span class="c1"># connect callback function</span>
 <span class="nd">@canvas</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">lim</span><span class="o">.</span><span class="n">connect</span>
-<span class="k">def</span> <span class="nf">_xlim_changed</span><span class="p">(</span><span class="n">lim</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_xlim_changed</span><span class="p">(</span><span class="n">lim</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;canvas.x.lim changed to </span><span class="si">{</span><span class="n">lim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
 <ul>

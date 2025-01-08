@@ -1413,8 +1413,8 @@ way to add these types of plot elements.</p>
 <p>Inset plot is a smaller plot that is embedded within the main plot. <code>install_inset</code>
 method installs an inset plot to the main plot. A new canvas pointing at the inset
 plot is returned.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="hll"><span class="n">inset</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">install_inset</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
@@ -1436,8 +1436,8 @@ plot is returned.</p>
 <h2 id="secondary-axis">Secondary Axis</h2>
 <p>Secondary axis is another axis that is added to the main plot. <code>install_second_x</code> and
 <code>install_second_y</code> methods install secondary x/y-axis, respectively.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="hll"><span class="n">other</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">install_second_y</span><span class="p">()</span>

@@ -1295,7 +1295,7 @@
 <h1 id="texts">Texts</h1>
 <p>Text layer is a collection of text elements. It is usually created by the <a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas.CanvasBase.add_text"><code>add_text</code></a> method.</p>
 <p>A text can be added by specifying the x and y coordinates, and the text string.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Hello, World!&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
@@ -1304,7 +1304,7 @@
 <img alt="" loading="lazy," src="../../_images/text_layer_scalar.png" width="360px" /></p>
 <p>Multiple texts can be added by specifying the array of x and y coordinates, and the text
 strings.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
@@ -1317,7 +1317,7 @@ strings.</p>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/text_layer.png" width="360px" /></p>
 <p>The <code>anchor=</code> argument can be used to specify the text anchor position.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_row</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_row</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_row</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
 
@@ -1335,7 +1335,7 @@ strings.</p>
 <p><code>matplotlib</code>, <code>pyqtgraph</code> and <code>bokeh</code> backends support background rectangles for the
 texts. As for the layers with both faces and edges, <code>with_face</code> and <code>with_edge</code> methods
 can be used to set the background face and edge properties.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="p">(</span>

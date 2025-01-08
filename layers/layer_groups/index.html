@@ -1517,7 +1517,7 @@ with the individual plot elements.</p>
 <h2 id="layer-groups-with-lines">Layer Groups with Lines</h2>
 <p>In this section, we will introduce layer groups that are derived from the <code>Line</code> layer.</p>
 <h3 id="add-markers-andor-error-bars">Add markers and/or error bars</h3>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1541,7 +1541,7 @@ list.</p>
 </code></pre></div>
 <p>The <code>Plot</code> layer can be further converted into a <code>LabeledPlot</code> layer by adding error
 bars using <code>with_xerr</code> and/or <code>with_yerr</code> method.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1564,7 +1564,7 @@ bars using <code>with_xerr</code> and/or <code>with_yerr</code> method.</p>
 <p>Both cases can be achieved using the <code>Line</code> methods.</p>
 <p>To fill the area that represents the errors, such as confidence interval and standard
 deviation, use the <code>with_xband</code> or <code>with_yband</code> method.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1586,7 +1586,7 @@ deviation, use the <code>with_xband</code> or <code>with_yband</code> method.</p
 <img alt="" loading="lazy," src="../../_images/layer_groups_line_yband.png" width="360px" /></p>
 <p>To fill the area between the line and the axis, use the <code>with_xfill</code> or <code>with_yfill</code>
 respectively.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1612,7 +1612,7 @@ methods such as <code>with_xband</code> and <code>with_xerr</code>.</p>
 </div>
 <h3 id="add-texts">Add texts</h3>
 <p>Adding text at the data points can be done using the <code>with_text</code> method.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1625,7 +1625,7 @@ methods such as <code>with_xband</code> and <code>with_xerr</code>.</p>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/layer_groups_line_text.png" width="360px" /></p>
 <p>You can use text alignment and text offset to adjust the position of the text.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1645,7 +1645,7 @@ methods such as <code>with_xband</code> and <code>with_xerr</code>.</p>
 <img alt="" loading="lazy," src="../../_images/layer_groups_line_text_align.png" width="360px" /></p>
 <p>You can use "x", "y" and "i" as the placeholders in the text to format the text using
 the x/y data and the indices.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1660,7 +1660,7 @@ the x/y data and the indices.</p>
 <h3 id="markers-with-error-bars">Markers with error bars</h3>
 <p><a href="#add-markers-andor-error-bars">Similar to the <code>Line</code> layer</a>, the <code>Markers</code> layer can
 also be grouped with the <code>Errorbar</code> layer.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1676,8 +1676,8 @@ also be grouped with the <code>Errorbar</code> layer.</p>
 <h3 id="markers-as-stems">Markers as stems</h3>
 <p>The <code>Stem</code> layer is a layer group of <code>Markers</code> and <code>MultiLine</code>. It can be created using
 the <code>with_stem</code> method.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1694,7 +1694,7 @@ the <code>with_stem</code> method.</p>
 <p>A network graph is a collection of nodes and edges. The <code>Graph</code> layer is a layer group
 that can created using the <code>with_network</code> method of <code>Markers</code>. It uses the list of
 index pairs to connect markers.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 

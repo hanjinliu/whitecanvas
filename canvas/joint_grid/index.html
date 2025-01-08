@@ -1370,7 +1370,7 @@
 <p>A joint plot is a plot that combines a main plot and two marginal plots. The main plot is usually a scatter plot, and the marginal plots are layers of histograms, KDE or rug
 plot.</p>
 <p><code>whitecanvas</code> provides a canvas grid class that is specifically designed for creating joint plots. It can be constructed using the <code>new_jointgrid</code> function.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_jointgrid</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_jointgrid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -1378,7 +1378,7 @@ plot.</p>
 <img alt="" loading="lazy," src="../../_images/joint_grid_empty.png" width="360px" /></p>
 <p>The layout of the joint grid can be customized using the <code>loc</code> argument. It indicates
 the indices of the main canvas. The default value is <code>(1, 0)</code>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_jointgrid</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_jointgrid</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 <span class="n">grid</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -1393,8 +1393,8 @@ the indices of the main canvas. The default value is <code>(1, 0)</code>.</p>
 <img alt="" loading="lazy," src="../../_images/joint_grid_with_text.png" width="360px" /></p>
 <h2 id="plotting-data-on-the-joint-grid">Plotting Data on the Joint Grid</h2>
 <p>Joint grid provides methods to plot the 2D distribution on the main canvas and the marginal distributions on the marginal canvases.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_jointgrid</span>
 
 <span class="c1"># sample data</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span>
@@ -1410,8 +1410,8 @@ the indices of the main canvas. The default value is <code>(1, 0)</code>.</p>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/joint_grid_scatter.png" width="360px" /></p>
 <p>Joint grid uses histograms to visualize the marginal distributions by default. You can change the type of the marginal plots using <code>with_*</code> methods on construction.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_jointgrid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_jointgrid</span>
 
 <span class="c1"># sample data</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span>
@@ -1436,7 +1436,7 @@ the indices of the main canvas. The default value is <code>(1, 0)</code>.</p>
 <h2 id="categorical-plots-on-joint-grid">Categorical Plots on Joint Grid</h2>
 <p><code>whitecanvas</code> has a flexible API for creating <a href="../../categorical/">categorical plots</a>. With the similar API, you can create a joint grid similarly. Here, we use the same
 data as <a href="../../categorical/num_num/">here</a>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="c1"># sample data</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>

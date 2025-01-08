@@ -1463,8 +1463,8 @@ your canvas. Currently, the selection tool is only available for following backe
 function. Because selection temporarily adds a new layer to the canvas, the selection
 tool requires a canvas object as an argument. Once selection is done, a selector emits a
 <code>changed</code> signal.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">line_selector</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">line_selector</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1472,7 +1472,7 @@ tool requires a canvas object as an argument. Once selection is done, a selector
 </span>
 <span class="c1"># connect a callback function</span>
 <span class="nd">@selector</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">connect</span>
-<span class="k">def</span> <span class="nf">_on_selection</span><span class="p">(</span><span class="n">sel</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_on_selection</span><span class="p">(</span><span class="n">sel</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
 
 <span class="n">canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">emulate_drag</span><span class="p">([(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)],</span> <span class="n">button</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
@@ -1489,8 +1489,8 @@ signal emitted during the mouse drag,</p>
 </code></pre></div>
 <h3 id="styling-selection">Styling Selection</h3>
 <p>As all the selection is a layer, you can style the selection.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">line_selector</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">line_selector</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 <span class="n">selector</span> <span class="o">=</span> <span class="n">line_selector</span><span class="p">(</span><span class="n">canvas</span><span class="p">)</span>  <span class="c1"># make a selector</span>
@@ -1506,8 +1506,8 @@ signal emitted during the mouse drag,</p>
 <h2 id="rectangle-selection-tool">Rectangle Selection Tool</h2>
 <p>Rectangle selector(<a class="autorefs autorefs-internal" href="../../api/tools/#whitecanvas.tools.rect_selector"><code>rect_selector</code></a>) is similar to
 the line selector, but it emits a <code>Rect</code> object.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">rect_selector</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">rect_selector</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1515,7 +1515,7 @@ the line selector, but it emits a <code>Rect</code> object.</p>
 </span>
 <span class="c1"># connect a callback function</span>
 <span class="nd">@selector</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">connect</span>
-<span class="k">def</span> <span class="nf">_on_selection</span><span class="p">(</span><span class="n">sel</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_on_selection</span><span class="p">(</span><span class="n">sel</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
 
 <span class="n">canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">emulate_drag</span><span class="p">([(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)],</span> <span class="n">button</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
@@ -1536,9 +1536,9 @@ the line selector, but it emits a <code>Rect</code> object.</p>
 callback function that checks if points are inside the selection area.</p>
 <p>Following example demonstrates how to highlight selected points by a rectangle
 selection.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.tools</span> <span class="kn">import</span> <span class="n">rect_selector</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">rect_selector</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
@@ -1547,7 +1547,7 @@ selection.</p>
 <span class="n">selector</span> <span class="o">=</span> <span class="n">rect_selector</span><span class="p">(</span><span class="n">canvas</span><span class="p">)</span>
 
 <span class="nd">@selector</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">connect</span>
-<span class="k">def</span> <span class="nf">_on_selection</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_on_selection</span><span class="p">():</span>
     <span class="c1"># get the indices of points inside the selection area</span>
 <span class="hll">    <span class="n">indices</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 </span>    <span class="c1"># highlight selected points</span>

@@ -1602,8 +1602,8 @@
 
 <h1 id="categorical-numerical-data">Categorical &times; Numerical Data</h1>
 <p>In this section, following data will be used as an example:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">df</span> <span class="o">=</span> <span class="p">{</span>
@@ -1716,7 +1716,7 @@ after the layer is added, use <code>update_color_palette</code> method.</p>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/categorical_axis_violin_6.png" width="360px" /></p>
 <p><code>add_boxplot</code>, <code>add_pointplot</code> and <code>add_barplot</code> is very similar to <code>add_violinplot</code>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_row</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_row</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_row</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1600</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 

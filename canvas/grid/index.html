@@ -1392,7 +1392,7 @@ either layers or the <code>add_*</code> methods.</p>
 The signature of the method differs between 1D and 2D grid.</p>
 <h2 id="verticalhorizontal-grid">Vertical/Horizontal Grid</h2>
 <p>This is an example of a grid with a single column, and the canvases are added one by one.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_col</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_col</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_col</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1406,7 +1406,7 @@ The signature of the method differs between 1D and 2D grid.</p>
 </code></pre></div>
 <img alt="" loading="lazy," src="../../_images/canvas_grid_vertical.png" width="360px" /></p>
 <p>This is an example of a grid with a single row, and the canvases are added at once.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_row</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_row</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_row</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
 
@@ -1419,7 +1419,7 @@ The signature of the method differs between 1D and 2D grid.</p>
 <h2 id="2d-grid">2D Grid</h2>
 <p>The <code>new_grid</code> function creates a 2D grid. Since it is a 2D grid, you need to specify
 two integers for the number of rows and columns.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_grid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_grid</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_grid</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 
@@ -1435,7 +1435,7 @@ two integers for the number of rows and columns.</p>
 <p class="admonition-title">Note</p>
 <p>This feature is work in progress. Some backends does not support it yet.</p>
 </div>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_grid</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_grid</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="n">new_grid</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
 

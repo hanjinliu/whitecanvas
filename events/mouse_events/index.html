@@ -1390,32 +1390,32 @@
 <p>The click events can be captured by <code>clicked</code>. Use <code>connect()</code> method to connect a
 callback function to the event. The callback function must accept a single argument of
 type <code>MouseEvent</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">MouseEvent</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MouseEvent</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib:qt&quot;</span><span class="p">)</span>
 
 <span class="hll"><span class="nd">@canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span>
-</span><span class="k">def</span> <span class="nf">_on_click</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
+</span><span class="k">def</span><span class="w"> </span><span class="nf">_on_click</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pos:&quot;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>  <span class="c1"># the (x, y) coordinate</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">button</span><span class="p">)</span>  <span class="c1"># mouse button enum</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;modifiers&quot;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">modifiers</span><span class="p">)</span>  <span class="c1"># mouse modifier enums</span>
 </code></pre></div>
 <p>Double-click events are very similar. They can be captured by <code>double_clicked</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">MouseEvent</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MouseEvent</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib:qt&quot;</span><span class="p">)</span>
 
 <span class="hll"><span class="nd">@canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">double_clicked</span><span class="o">.</span><span class="n">connect</span>
-</span><span class="k">def</span> <span class="nf">_on_click</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
+</span><span class="k">def</span><span class="w"> </span><span class="nf">_on_click</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pos:&quot;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>  <span class="c1"># the (x, y) coordinate</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">button</span><span class="p">)</span>  <span class="c1"># mouse button enum</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;modifiers&quot;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">modifiers</span><span class="p">)</span>  <span class="c1"># mouse modifier enums</span>
 </code></pre></div>
 <p>It is useful to filter the mouse button and modifier inside the callback function.</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span>
-<span class="k">def</span> <span class="nf">_on_click</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_on_click</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
 <span class="hll">    <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">button</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
 </span>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;left button clicked&quot;</span><span class="p">)</span>
 <span class="hll">    <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">modifiers</span> <span class="o">==</span> <span class="s2">&quot;ctrl&quot;</span><span class="p">:</span>
@@ -1425,13 +1425,13 @@ type <code>MouseEvent</code>.</p>
 <p>Mouse move events need a different architecture. Unlike other events, the callback
 function must be a generator function. every time the mouse moves, the generator
 proceeds.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">MouseEvent</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MouseEvent</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib:qt&quot;</span><span class="p">)</span>
 
 <span class="hll"><span class="nd">@canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">moved</span><span class="o">.</span><span class="n">connect</span>
-</span><span class="k">def</span> <span class="nf">_on_move</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
+</span><span class="k">def</span><span class="w"> </span><span class="nf">_on_move</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">MouseEvent</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;press&quot;</span><span class="p">:</span>
         <span class="k">return</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pressed&quot;</span><span class="p">)</span>
@@ -1449,8 +1449,8 @@ proceeds.</p>
 <li><a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas._namespaces.MouseNamespace.emulate_hover">emulate_hover()</a></li>
 <li><a class="autorefs autorefs-internal" href="../../api/canvas/#whitecanvas.canvas._namespaces.MouseNamespace.emulate_drag">emulate_drag()</a></li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">whitecanvas</span> <span class="kn">import</span> <span class="n">new_canvas</span>
-<span class="kn">from</span> <span class="nn">whitecanvas.types</span> <span class="kn">import</span> <span class="n">MouseEvent</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_canvas</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">whitecanvas.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MouseEvent</span>
 
 <span class="n">canvas</span> <span class="o">=</span> <span class="n">new_canvas</span><span class="p">(</span><span class="s2">&quot;matplotlib:qt&quot;</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">mouse</span><span class="o">.</span><span class="n">emulate_click</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">button</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
